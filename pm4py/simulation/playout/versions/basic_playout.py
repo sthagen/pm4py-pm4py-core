@@ -1,14 +1,21 @@
+import datetime
 from copy import copy
 from random import choice
 
 import pm4py.objects.log.log as log_instance
 from pm4py.objects.petri import semantics
-from pm4py.simulation.playout.parameters import Parameters
 from pm4py.util import exec_utils
 from pm4py.util import xes_constants
+from enum import Enum
+from pm4py.util import constants
 
-import time
-import datetime
+
+class Parameters(Enum):
+    ACTIVITY_KEY = constants.PARAMETER_CONSTANT_ACTIVITY_KEY
+    TIMESTAMP_KEY = constants.PARAMETER_CONSTANT_TIMESTAMP_KEY
+    CASE_ID_KEY = constants.PARAMETER_CONSTANT_CASEID_KEY
+    NO_TRACES = "noTraces"
+    MAX_TRACE_LENGTH = "maxTraceLength"
 
 
 def apply_playout(net, initial_marking, no_traces=100, max_trace_length=100,
@@ -89,8 +96,8 @@ def apply(net, initial_marking, final_marking=None, parameters=None):
     activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
     timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
                                                xes_constants.DEFAULT_TIMESTAMP_KEY)
-    no_traces = exec_utils.get_param_value(Parameters.NO_TRACES, parameters, 100)
-    max_trace_length = exec_utils.get_param_value(Parameters.MAX_TRACE_LENGTH, parameters, 100)
+    no_traces = exec_utils.get_param_value(Parameters.NO_TRACES, parameters, 1000)
+    max_trace_length = exec_utils.get_param_value(Parameters.MAX_TRACE_LENGTH, parameters, 1000)
 
     return apply_playout(net, initial_marking, max_trace_length=max_trace_length, no_traces=no_traces,
                          case_id_key=case_id_key, activity_key=activity_key, timestamp_key=timestamp_key,
