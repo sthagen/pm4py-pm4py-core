@@ -3,6 +3,9 @@ import tempfile
 import numpy as np
 
 from ortools.linear_solver import pywraplp
+from pm4py.util.lp.parameters import Parameters
+from pm4py.util import exec_utils
+
 
 MIN_THRESHOLD = 10 ** -12
 
@@ -34,6 +37,8 @@ def apply(c, Aub, bub, Aeq, beq, parameters=None):
     if parameters is None:
         parameters = {}
 
+    require_ilp = exec_utils.get_param_value(Parameters.REQUIRE_ILP, parameters, False)
+
     Aub = np.asmatrix(Aub)
     if type(bub) is list and len(bub) == 1:
         bub = bub[0]
@@ -49,7 +54,10 @@ def apply(c, Aub, bub, Aeq, beq, parameters=None):
 
     x_list = []
     for i in range(Aub.shape[1]):
-        x = solver.NumVar(-solver.infinity(), solver.infinity(), "x_" + str(i))
+        if require_ilp:
+            x = solver.IntVar(-solver.infinity(), solver.infinity(), "x_" + str(i))
+        else:
+            x = solver.NumVar(-solver.infinity(), solver.infinity(), "x_" + str(i))
         x_list.append(x)
 
     objective = solver.Objective()
@@ -64,14 +72,7 @@ def apply(c, Aub, bub, Aeq, beq, parameters=None):
                 ok = True
                 break
         if ok:
-            if type(bub[i]) is float:
-                constraint = solver.Constraint(-solver.infinity(), bub[i])
-            elif type(bub[i]) is np.matrix:
-                constraint = solver.Constraint(-solver.infinity(), bub[i].reshape(-1, ).tolist()[0][0])
-            elif type(bub[i]) is np.ndarray:
-                constraint = solver.Constraint(-solver.infinity(), bub[i].tolist()[0])
-            else:
-                constraint = solver.Constraint(-solver.infinity(), bub[i])
+            constraint = solver.Constraint(-solver.infinity(), bub[i].reshape(-1, ).tolist()[0][0])
             for j in range(Aub.shape[1]):
                 if abs(Aub[i, j]) > MIN_THRESHOLD:
                     constraint.SetCoefficient(x_list[j], Aub[i, j])
@@ -84,14 +85,7 @@ def apply(c, Aub, bub, Aeq, beq, parameters=None):
                     ok = True
                     break
             if ok:
-                if type(beq[i]) is float:
-                    constraint = solver.Constraint(-solver.infinity(), beq[i])
-                elif type(beq[i]) is np.matrix:
-                    constraint = solver.Constraint(-solver.infinity(), beq[i].reshape(-1,).tolist()[0][0])
-                elif type(beq[i]) is np.ndarray:
-                    constraint = solver.Constraint(-solver.infinity(), beq[i].tolist()[0])
-                else:
-                    constraint = solver.Constraint(-solver.infinity(), beq[i])
+                constraint = solver.Constraint(beq[i].reshape(-1,).tolist()[0][0], beq[i].reshape(-1,).tolist()[0][0])
                 for j in range(Aeq.shape[1]):
                     if abs(Aeq[i, j]) > MIN_THRESHOLD:
                         constraint.SetCoefficient(x_list[j], Aeq[i, j])

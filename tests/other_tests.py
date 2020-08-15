@@ -14,15 +14,17 @@ from pm4py.objects.dfg.exporter import exporter as dfg_exporter
 from pm4py.algo.discovery.dfg import algorithm as dfg_discovery
 from pm4py.statistics.start_activities.log import get as start_activities
 from pm4py.statistics.end_activities.log import get as end_activities
-from pm4py.evaluation.earth_mover_distance import evaluator as earth_mover_distance
 from pm4py.objects.log.importer.xes import importer as xes_importer
 from pm4py.algo.discovery.inductive import algorithm as inductive_miner
 from pm4py.statistics.variants.log import get as variants_get
 from pm4py.simulation.playout import simulator
+from pm4py.objects.log.adapters.pandas import csv_import_adapter
+from pm4py.objects.conversion.log import converter
 
 
 class OtherPartsTests(unittest.TestCase):
     def test_emd_1(self):
+        from pm4py.evaluation.earth_mover_distance import evaluator as earth_mover_distance
         M = {("a", "b", "d", "e"): 0.49, ("a", "d", "b", "e"): 0.49, ("a", "c", "d", "e"): 0.01,
              ("a", "d", "c", "e"): 0.01}
         L1 = {("a", "b", "d", "e"): 0.49, ("a", "d", "b", "e"): 0.49, ("a", "c", "d", "e"): 0.01,
@@ -30,6 +32,7 @@ class OtherPartsTests(unittest.TestCase):
         earth_mover_distance.apply(M, L1)
 
     def test_emd_2(self):
+        from pm4py.evaluation.earth_mover_distance import evaluator as earth_mover_distance
         log = xes_importer.apply(os.path.join("input_data", "running-example.xes"))
         lang_log = variants_get.get_language(log)
         net1, im1, fm1 = inductive_miner.apply(log)
@@ -83,34 +86,67 @@ class OtherPartsTests(unittest.TestCase):
         aligned_traces = alignments.apply(log, net, im, fm, variant=alignments.Variants.VERSION_STATE_EQUATION_A_STAR)
         aligned_traces = alignments.apply(log, net, im, fm, variant=alignments.Variants.VERSION_DIJKSTRA_NO_HEURISTICS)
 
-
     def test_import_export_ptml(self):
         tree = ptree_importer.apply(os.path.join("input_data", "running-example.ptml"))
         ptree_exporter.apply(tree, os.path.join("test_output_data", "running-example2.ptml"))
         os.remove(os.path.join("test_output_data", "running-example2.ptml"))
-
 
     def test_footprints_net(self):
         log = xes_importer.apply(os.path.join("input_data", "running-example.xes"))
         from pm4py.algo.discovery.alpha import algorithm as alpha_miner
         net, im, fm = alpha_miner.apply(log)
         from pm4py.algo.discovery.footprints import algorithm as footprints_discovery
-        fp_log = footprints_discovery.apply(log)
+        fp_entire_log = footprints_discovery.apply(log, variant=footprints_discovery.Variants.ENTIRE_EVENT_LOG)
+        fp_trace_trace = footprints_discovery.apply(log)
         fp_net = footprints_discovery.apply(net, im)
         from pm4py.algo.conformance.footprints import algorithm as footprints_conformance
-        conf = footprints_conformance.apply(fp_log, fp_net)
-
+        conf1 = footprints_conformance.apply(fp_entire_log, fp_net)
+        conf2 = footprints_conformance.apply(fp_trace_trace, fp_net)
+        conf3 = footprints_conformance.apply(fp_entire_log, fp_net,
+                                             variant=footprints_conformance.Variants.LOG_EXTENSIVE)
+        conf4 = footprints_conformance.apply(fp_trace_trace, fp_net,
+                                             variant=footprints_conformance.Variants.TRACE_EXTENSIVE)
 
     def test_footprints_tree(self):
         log = xes_importer.apply(os.path.join("input_data", "running-example.xes"))
         from pm4py.algo.discovery.inductive import algorithm as inductive_miner
         tree = inductive_miner.apply_tree(log)
         from pm4py.algo.discovery.footprints import algorithm as footprints_discovery
-        fp_log = footprints_discovery.apply(log)
+        fp_entire_log = footprints_discovery.apply(log, variant=footprints_discovery.Variants.ENTIRE_EVENT_LOG)
+        fp_trace_trace = footprints_discovery.apply(log)
         fp_tree = footprints_discovery.apply(tree)
         from pm4py.algo.conformance.footprints import algorithm as footprints_conformance
-        conf = footprints_conformance.apply(fp_log, fp_tree)
+        conf1 = footprints_conformance.apply(fp_entire_log, fp_tree)
+        conf2 = footprints_conformance.apply(fp_trace_trace, fp_tree)
+        conf3 = footprints_conformance.apply(fp_entire_log, fp_tree,
+                                             variant=footprints_conformance.Variants.LOG_EXTENSIVE)
+        conf4 = footprints_conformance.apply(fp_trace_trace, fp_tree,
+                                             variant=footprints_conformance.Variants.TRACE_EXTENSIVE)
 
+    def test_footprints_tree_df(self):
+        df = csv_import_adapter.import_dataframe_from_path(os.path.join("input_data", "running-example.csv"))
+        from pm4py.algo.discovery.inductive import algorithm as inductive_miner
+        log = converter.apply(df)
+        tree = inductive_miner.apply_tree(log)
+        from pm4py.algo.discovery.footprints import algorithm as footprints_discovery
+        fp_df = footprints_discovery.apply(df)
+        fp_tree = footprints_discovery.apply(tree)
+        from pm4py.algo.conformance.footprints import algorithm as footprints_conformance
+        conf = footprints_conformance.apply(fp_df, fp_tree)
+
+    def test_playout_tree_basic(self):
+        log = xes_importer.apply(os.path.join("input_data", "running-example.xes"))
+        from pm4py.algo.discovery.inductive import algorithm as inductive_miner
+        tree = inductive_miner.apply_tree(log)
+        from pm4py.simulation.tree_playout import algorithm as tree_playout
+        new_log = tree_playout.apply(tree)
+
+    def test_playout_tree_extensive(self):
+        log = xes_importer.apply(os.path.join("input_data", "running-example.xes"))
+        from pm4py.algo.discovery.inductive import algorithm as inductive_miner
+        tree = inductive_miner.apply_tree(log)
+        from pm4py.simulation.tree_playout import algorithm as tree_playout
+        new_log = tree_playout.apply(tree, variant=tree_playout.Variants.EXTENSIVE)
 
 
 if __name__ == "__main__":
