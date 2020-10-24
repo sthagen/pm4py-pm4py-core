@@ -18,14 +18,13 @@ if __name__ == "__main__":
     from pm4py.objects.log.importer.xes import importer as xes_importer
     from pm4py.algo.discovery.inductive import algorithm as inductive
     from pm4py.algo.conformance.alignments import algorithm as align_algorithm
-    from pm4py.algo.conformance.alignments.versions import state_equation_less_memory, state_equation_a_star, \
+    from pm4py.algo.conformance.alignments.variants import state_equation_less_memory, state_equation_a_star, \
         dijkstra_less_memory, dijkstra_no_heuristics
-    from pm4py.algo.conformance.decomp_alignments.versions import recompos_maximal
+    from pm4py.algo.conformance.decomp_alignments.variants import recompos_maximal
     from pm4py.algo.discovery.footprints import algorithm as footprints_discovery
     from pm4py.algo.conformance.footprints import algorithm as footprints_conformance
     from pm4py.algo.discovery.alpha import algorithm as alpha
     from pm4py.algo.discovery.heuristics import algorithm as heuristics_miner
-    from pm4py.objects.petri import check_soundness
     from pm4py.objects.conversion.process_tree import converter as pt_converter
     from pm4py.evaluation.replay_fitness import evaluator as fitness_evaluator
     from pm4py.evaluation.precision import evaluator as precision_evaluator
@@ -36,6 +35,7 @@ if __name__ == "__main__":
     from pm4py.visualization.petrinet import visualizer as petri_vis
     from pm4py.visualization.common.save import save as vis_save
     from pm4py import util as pmutil
+    from pm4py.evaluation.soundness.woflan import algorithm as woflan
 
 
     def get_elonged_string(stru):
@@ -58,8 +58,12 @@ if __name__ == "__main__":
     ENABLE_ALIGNMENTS = False
     ENABLE_PRECISION = True
     ENABLE_PETRI_EXPORTING = False
-    CHECK_SOUNDNESS = False
-    INDUCTIVE_MINER_VARIANT = inductive.Variants.DFG_BASED
+    ENABLE_PETRI_EXPORTING_DEBUG = True
+    CHECK_SOUNDNESS = True
+    WOFLAN_RETURN_ASAP = True
+    WOFLAN_PRINT_DIAGNOSTICS = True
+    WOFLAN_RETURN_DIAGNOSTICS = True
+    INDUCTIVE_MINER_VARIANT = inductive.Variants.IM
     ALIGN_VARIANT = state_equation_less_memory
     logFolder = os.path.join("..", "compressed_input_data")
     pnmlFolder = "pnml_folder"
@@ -187,20 +191,46 @@ if __name__ == "__main__":
             t2 = time.time()
             print("time interlapsed for calculating Alpha Model", (t2 - t1))
             if CHECK_SOUNDNESS:
-                print("alpha is_sound_wfnet", check_soundness.check_petri_wfnet_and_soundness(alpha_model, debug=True))
-
+                try:
+                    res_woflan, diagn = woflan.apply(alpha_model, alpha_initial_marking, alpha_final_marking,
+                                              parameters={"return_asap_when_not_sound": WOFLAN_RETURN_ASAP,
+                                                          "print_diagnostics": WOFLAN_PRINT_DIAGNOSTICS,
+                                                          "return_diagnostics": WOFLAN_RETURN_DIAGNOSTICS})
+                    print("alpha woflan", res_woflan)
+                except:
+                    if ENABLE_PETRI_EXPORTING_DEBUG:
+                        exce = traceback.format_exc()
+                        pnml_exporter.export_net(alpha_model, alpha_initial_marking,
+                                                 os.path.join(pnmlFolder, logNamePrefix + "_alpha.pnml"),
+                                                 final_marking=alpha_final_marking)
+                        F = open(logNamePrefix + "_alpha.txt", "w")
+                        F.write(exce)
+                        F.close()
             t1 = time.time()
             heu_model, heu_initial_marking, heu_final_marking = heuristics_miner.apply(log,
                                                                                        parameters=parameters_discovery)
             if ENABLE_PETRI_EXPORTING:
                 pnml_exporter.export_net(heu_model, heu_initial_marking,
-                                         os.path.join(pnmlFolder, logNamePrefix + "_alpha.pnml"),
+                                         os.path.join(pnmlFolder, logNamePrefix + "_heuristics.pnml"),
                                          final_marking=heu_final_marking)
             t2 = time.time()
             print("time interlapsed for calculating Heuristics Model", (t2 - t1))
             if CHECK_SOUNDNESS:
-                print("heuristics is_sound_wfnet",
-                      check_soundness.check_petri_wfnet_and_soundness(heu_model, debug=True))
+                try:
+                    res_woflan, diagn = woflan.apply(heu_model, heu_initial_marking, heu_initial_marking,
+                                              parameters={"return_asap_when_not_sound": WOFLAN_RETURN_ASAP,
+                                                          "print_diagnostics": WOFLAN_PRINT_DIAGNOSTICS,
+                                                          "return_diagnostics": WOFLAN_RETURN_DIAGNOSTICS})
+                    print("heuristics woflan", res_woflan)
+                except:
+                    if ENABLE_PETRI_EXPORTING_DEBUG:
+                        exce = traceback.format_exc()
+                        pnml_exporter.export_net(heu_model, heu_initial_marking,
+                                                 os.path.join(pnmlFolder, logNamePrefix + "_heuristics.pnml"),
+                                                 final_marking=heu_final_marking)
+                        F = open(logNamePrefix + "_heuristics.txt", "w")
+                        F.write(exce)
+                        F.close()
 
             t1 = time.time()
             tree = inductive.apply_tree(log, parameters=parameters_discovery, variant=INDUCTIVE_MINER_VARIANT)
@@ -222,8 +252,11 @@ if __name__ == "__main__":
             t2 = time.time()
             print("time interlapsed for calculating Inductive Model", (t2 - t1))
             if CHECK_SOUNDNESS:
-                print("inductive is_sound_wfnet",
-                      check_soundness.check_petri_wfnet_and_soundness(inductive_model, debug=True))
+                res_woflan, diagn = woflan.apply(inductive_model, inductive_im, inductive_fm,
+                                          parameters={"return_asap_when_not_sound": WOFLAN_RETURN_ASAP,
+                                                          "print_diagnostics": WOFLAN_PRINT_DIAGNOSTICS,
+                                                          "return_diagnostics": WOFLAN_RETURN_DIAGNOSTICS})
+                print("inductive woflan", res_woflan)
 
             parameters = {fitness_evaluator.Variants.TOKEN_BASED.value.Parameters.ACTIVITY_KEY: activity_key,
                           fitness_evaluator.Variants.TOKEN_BASED.value.Parameters.ATTRIBUTE_KEY: activity_key,

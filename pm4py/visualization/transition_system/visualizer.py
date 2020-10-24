@@ -1,6 +1,6 @@
 from pm4py.visualization.common import gview
 from pm4py.visualization.common import save as gsave
-from pm4py.visualization.transition_system.versions import view_based
+from pm4py.visualization.transition_system.variants import view_based
 from enum import Enum
 from pm4py.util import exec_utils
 
@@ -58,3 +58,16 @@ def view(gviz):
         GraphViz diagram
     """
     return gview.view(gviz)
+
+
+def matplotlib_view(gviz):
+    """
+    Views the diagram using Matplotlib
+
+    Parameters
+    ---------------
+    gviz
+        Graphviz
+    """
+
+    return gview.matplotlib_view(gviz)

@@ -1,7 +1,105 @@
+===== PM4Py 2.0.0 =====
+This is a *major* release, consisting of the following *major* changes:
+1. commit f408a181
+    - add streaming token-based replay and footprint-based comparison
+2. commit a9c5aa34
+    - compatibility with Python 3.9 (limited to windows)
+3. commit 7a89d4dd
+    - remove deprecated factories
+
+The following *minor* changes included in this release:
+1. commit 1a8f9281
+    - bug fix in PANDAS case size filter
+2. commit fde08b03
+    - output conformance checking diagnostics in a dataframe
+3. commit 62801513
+    - improved performance of token-based replay with duplicate labels
+
+
+===== PM4Py 1.5.2.2 =====
+This is a minor release, consisting of the following changes:
+1. commit 2d4a8b67e25164838030dca709816918ddbf9279
+    - fixed dependencies on factories. fixed some release notes. fixed some deprecations.
+2. commit 0d75241676a736919952e5c9ab96ab2be4c71046
+    - added utility for trace attributes filtering
+3. commit d8433ac1bbb57082b19b3b97bc726b353096c76e
+    - better specification of 'stable' requirements
+
+
+===== PM4Py 1.5.2.1 =====
+This is a minor release, consisting of the following changes:
+1. commit a5befe62f84af0f3dbe734c713cc8c2c1fc22a04
+    - added WOFLAN to the simplified interface
+2. commit a6fde4ccfdf0465d8919d3c72d4400bce8d4ab0e
+    - fixed some deprecation warnings for external libraries
+
+
+===== PM4Py 1.5.2 =====
+This is a minor release, consisting of the following changes:
+1. commit c42bad174247eb13134e0cb4acb0703c301aa869
+    - fixed the compatibility with Python 3.5
+2. commit 13cd96da7fe22427839f1b21dd38a5ac8ff8c231
+    - provided alternative visualizations through Matplotlib of the main visualizations
+3. commit 7bf3aea0b4638f6eceaa192ec37e17370e47f560
+    - fixing a parameter issue on stochastic playout
+4. commit e7e3dfa11264a7e737ca7b65165eb7f719817f59
+    - utility to remove an arc
+
+
+===== PM4PY 1.5.1 =====
+This is a minor release, consisting of the following changes:
+1. commit 526342e3e96c7386dc7451ac0d9ec74c76b86b4f
+    - performance improvement of the 'less memory' alignment variant
+2. commit 9e926a5d1a373d124a041c72f909eb34083f4649
+    - removed the old soundness check
+3. commit 83c71eaaa9bb4ee55e2f773dd3fc9704c6324704
+    - generalization of the heuristics miner visualization
+4. commit 7e7d9ba9e9b4f94d9801f5c8df3c5e4b3afd5971
+    - improved speed of event log sampling
+5. commit 11d06ba2a44fd7d0a83e439b6615befad5e3c4ba
+    - faster process tree playout (recursive, ignoring PT statespace)
+6. commit ce3a8609013bd7f5890b52cb44e155b57b2fc1c0
+    - allow adding (arbitrary) data to transition system
+
+
+===== PM4PY 1.5.0 =====
+This is a *major* release, consisting of the following *major* changes:
+1. commit 3bb5125f1849985ec9e2ba7962a287a25ede8e43
+    - new implementation of the (classical) Inductive Miner, based on the PhD thesis of Sander Leemans.
+    the implementation covers the following fall through functions:
+        - empty trace
+        - strict tau loop
+        - tau loop
+        - activity once per trace
+        - activity concurrent
+        - flower loop
+2. commit 1639d7a17660b4641a58cb435f7061d4168ce422
+    - implemention of 'WOFLAN', based on the PhD thesis of Eric (H.M.W.) Verbeek.
+
+The following *minor* changes included in this release:
+1. commit 3c9ed4b5e1860e2494d3b68668e3e1021ee59585
+    - invisible transition reduction in process tree to Petri net transformation
+2. commit 26ac905fed4703724805f8fb1b5daa21475df147
+    - minor optimizations in process tree alignment approximation algorithm
+3. commit c5b5ffdd51cd832be14d3078948e29f88f6c2673
+    - add time-out parameter to decomposed alignment calculation
+4. commit 4a5fb9ff5ab395529062ce92747b9624a1799b0e
+    - add bipartite graph matching for correlation mining to obtain exact matching results
+5. commit 30b9059fac3d59abac1c973637bd66388d7dd6db
+    - bug fix in parameter parsing of log conversions
+6. commit acc46269040a3b60bdcc6f5afe9ea55ddb5549e1
+    - minor performance improvement of process tree playout
+7. commit 5dd0fe17d5a07a2096afc647306a5673d86508ba
+    - apply trace-level directly on pandas data frames
+8. commit 4c35335da6a6d4419b68a49af3cbd358eca8881d
+    - add 'COUNT' functionality for log/dfg statistics, e.g., in how many cases does act 'A' appear?
+
+
 ===== PM4PY 1.4.1.1 =====
 This is a hotfixes release, consisting of the following changes:
 1. commit 76df914ad48b93a72127b0d79e5547669d3148db
     - fixed bug in less-memory alignments when im == fm
+
 
 ===== PM4PY 1.4.1 =====
 This is a minor release, consisting of the following changes:
@@ -14,6 +112,7 @@ This is a minor release, consisting of the following changes:
     - discovery of log skeleton from the list of variants
 4. commit e18021f06e4431628a84b441acf136d44c9baed6
     - revision/enrichment of simplified API
+
 
 ===== PM4PY 1.4.0 =====
 This is a *major* release, consisting of the following *major* changes:

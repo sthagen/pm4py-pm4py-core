@@ -1,4 +1,4 @@
-from pm4py.visualization.decisiontree.versions import classic
+from pm4py.visualization.decisiontree.variants import classic
 from pm4py.visualization.common import gview
 from pm4py.visualization.common import save as gsave
 from enum import Enum
@@ -63,3 +63,16 @@ def view(gviz):
         GraphViz diagram
     """
     return gview.view(gviz)
+
+
+def matplotlib_view(gviz):
+    """
+    Views the diagram using Matplotlib
+
+    Parameters
+    ---------------
+    gviz
+        Graphviz
+    """
+
+    return gview.matplotlib_view(gviz)

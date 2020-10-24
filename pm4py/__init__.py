@@ -31,7 +31,12 @@ if pkgutil.find_loader("matplotlib"):
 else:
     logging.error("matplotlib is not available. This can lead some features of PM4Py to not work correctly!")
 
-__version__ = '1.4.1.1'
+if pkgutil.find_loader("lxml"):
+    import matplotlib
+else:
+    logging.error("lxml is not available. This can lead some features of PM4Py to not work correctly!")
+
+__version__ = '2.0.0'
 __doc__ = "Process Mining for Python (PM4Py)"
 __author__ = 'Fraunhofer Institute for Applied Technology'
 __author_email__ = 'pm4py@fit.fraunhofer.de'
@@ -45,10 +50,11 @@ from pm4py.discovery import discover_petri_net_alpha, discover_petri_net_alpha_p
     discover_petri_net_inductive, discover_tree_inductive, discover_heuristics_net, discover_dfg
 from pm4py.conformance import conformance_tbr, conformance_alignments, evaluate_fitness_tbr, \
     evaluate_fitness_alignments, evaluate_precision_tbr, \
-    evaluate_precision_alignments
+    evaluate_precision_alignments, soundness_woflan
 from pm4py.vis import view_petri_net, save_vis_petri_net, view_dfg, save_vis_dfg, view_process_tree, \
     save_vis_process_tree, \
     view_heuristics_net, save_vis_heuristics_net
 from pm4py.filtering import filter_start_activities, filter_end_activities, filter_attribute_values, filter_variants, \
-    filter_variants_percentage, filter_paths, filter_timestamp
-from pm4py.stats import get_start_activities, get_end_activities, get_attributes, get_attribute_values, get_variants
+    filter_variants_percentage, filter_paths, filter_timestamp, filter_trace_attribute
+from pm4py.stats import get_start_activities, get_end_activities, get_attributes, get_attribute_values, get_variants, \
+    get_trace_attributes

@@ -2,7 +2,7 @@ import os
 import shutil
 import subprocess
 import sys
-from pm4py.visualization.heuristics_net.versions import pydotplus
+from pm4py.visualization.heuristics_net.variants import pydotplus
 from enum import Enum
 from pm4py.util import exec_utils
 
@@ -94,3 +94,27 @@ def save(figure, output_file_path):
         pass
 
     shutil.copyfile(figure, output_file_path)
+
+
+def matplotlib_view(figure):
+    """
+    Views the figure using Matplotlib
+
+    Parameters
+    ---------------
+    figure
+        Figure
+    """
+    try:
+        filename = figure.name
+        figure = filename
+    except AttributeError:
+        # continue without problems, a proper path has been provided
+        pass
+
+    import matplotlib.pyplot as plt
+    import matplotlib.image as mpimg
+
+    img = mpimg.imread(figure)
+    plt.imshow(img)
+    plt.show()
