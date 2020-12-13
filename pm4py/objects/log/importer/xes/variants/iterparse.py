@@ -1,22 +1,20 @@
 import logging
+import pkgutil
+import sys
 from enum import Enum
 
 from pm4py.objects.log.log import EventLog, Trace, Event
-from pm4py.objects.log.util import sorting, index_attribute
-from pm4py.objects.log.util import xes as xes_util
-from pm4py.util import parameters as param_util
+from pm4py.objects.log.util import sorting
+from pm4py.util import exec_utils, constants
 from pm4py.util import xes_constants
 from pm4py.util.dt_parsing import parser as dt_parser
 
-import pkgutil
-
 
 class Parameters(Enum):
-    TIMESTAMP_SORT = False
-    TIMESTAMP_KEY = xes_util.DEFAULT_TIMESTAMP_KEY
-    REVERSE_SORT = False
-    INSERT_TRACE_INDICES = False
-    MAX_TRACES = 1000000000
+    TIMESTAMP_SORT = "timestamp_sort"
+    TIMESTAMP_KEY = constants.PARAMETER_CONSTANT_TIMESTAMP_KEY
+    REVERSE_SORT = "reverse_sort"
+    MAX_TRACES = "max_traces"
 
 
 # ITERPARSE EVENTS
@@ -26,6 +24,37 @@ _EVENT_START = 'start'
 
 def apply(filename, parameters=None):
     return import_log(filename, parameters)
+
+
+def count_traces(filename):
+    """
+    Efficiently count the number of traces of a XES event log
+
+    Parameters
+    -------------
+    filename
+        Path to the XES log
+
+    Returns
+    -------------
+    num_traces
+        Number of traces of the XES log
+    """
+    from lxml import etree
+
+    num_traces = 0
+
+    context = etree.iterparse(filename, events=[_EVENT_START, _EVENT_END])
+
+    for tree_event, elem in context:
+        if tree_event == _EVENT_START:  # starting to read
+            if elem.tag.endswith(xes_constants.TAG_TRACE):
+                num_traces = num_traces + 1
+        elem.clear()
+
+    del context
+
+    return num_traces
 
 
 def import_log(filename, parameters=None):
@@ -41,7 +70,6 @@ def import_log(filename, parameters=None):
             Parameters.TIMESTAMP_SORT -> Specify if we should sort log by timestamp
             Parameters.TIMESTAMP_KEY -> If sort is enabled, then sort the log by using this key
             Parameters.REVERSE_SORT -> Specify in which direction the log should be sorted
-            Parameters.INSERT_TRACE_INDICES -> Specify if trace indexes should be added as event attribute for each event
             Parameters.MAX_TRACES -> Specify the maximum number of traces to import from the log (read in order in the XML file)
 
     Returns
@@ -51,27 +79,27 @@ def import_log(filename, parameters=None):
     """
     from lxml import etree
 
-    parameters = dict() if parameters is None else parameters
+    if parameters is None:
+        parameters = {}
 
-    insert_trace_indexes = param_util.fetch(Parameters.INSERT_TRACE_INDICES, parameters)
-    max_no_traces_to_import = param_util.fetch(Parameters.MAX_TRACES, parameters)
+    max_no_traces_to_import = exec_utils.get_param_value(Parameters.MAX_TRACES, parameters, sys.maxsize)
+    timestamp_sort = exec_utils.get_param_value(Parameters.TIMESTAMP_SORT, parameters, False)
+    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
+                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
+    reverse_sort = exec_utils.get_param_value(Parameters.REVERSE_SORT, parameters, False)
 
     date_parser = dt_parser.get()
+
+    # count number of traces and setup progress bar
+    no_trace = count_traces(filename)
+
     context = etree.iterparse(filename, events=[_EVENT_START, _EVENT_END])
-
-    # check to see if log has a namespace before looking for traces  (but this might be more effort than worth)
-    # but you could just assume that log use on the standard namespace desbried in XES
-    # to only find elements that start a trace use tag="{http://www.xes-standard.org}trace"
-    # or just use the {*} syntax to match to all namespaces with a trace element
-
-    #count number of traces and setup progress bar
-    no_trace = sum ( [ 1 for trace in  etree.iterparse(filename, events=[_EVENT_START],tag="{*}trace") ])
 
     # make tqdm facultative
     progress = None
     if pkgutil.find_loader("tqdm"):
         from tqdm.auto import tqdm
-        progress = tqdm(total=no_trace,desc="parsing log, completed traces :: ")
+        progress = tqdm(total=no_trace, desc="parsing log, completed traces :: ")
 
     log = None
     trace = None
@@ -212,7 +240,7 @@ def import_log(filename, parameters=None):
             elif elem.tag.endswith(xes_constants.TAG_TRACE):
                 log.append(trace)
 
-                #update progress bar as we have a completed trace
+                # update progress bar as we have a completed trace
                 if progress is not None:
                     progress.update()
 
@@ -221,18 +249,14 @@ def import_log(filename, parameters=None):
 
             elif elem.tag.endswith(xes_constants.TAG_LOG):
                 continue
-            
-    #gracefully close progress bar
+
+    # gracefully close progress bar
     if progress is not None:
         progress.close()
     del context, progress
 
-    if Parameters.TIMESTAMP_SORT in parameters and parameters[Parameters.TIMESTAMP_SORT]:
-        log = sorting.sort_timestamp(log,
-                                     timestamp_key=param_util.fetch(Parameters.TIMESTAMP_KEY, parameters),
-                                     reverse_sort=param_util.fetch(Parameters.REVERSE_SORT, parameters))
-    if insert_trace_indexes:
-        log = index_attribute.insert_event_index_as_event_attribute(log)
+    if timestamp_sort:
+        log = sorting.sort_timestamp(log, timestamp_key=timestamp_key, reverse_sort=reverse_sort)
 
     return log
 
