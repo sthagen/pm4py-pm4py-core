@@ -1,9 +1,10 @@
 # PM4Py
-PM4Py is a python library that supports (state-of-the-art) process mining algorithms in python. It is completely open source and intended to be used in both academia and industry projects.
+PM4Py is a python library that supports (state-of-the-art) process mining algorithms in python. 
+It is completely open source and intended to be used in both academia and industry projects.
 PM4Py is a product of the Fraunhofer Institute for Applied Information Technology.
 
 ## Documentation / API
-The documentation about PM4Py is offered at http://pm4py.org/
+Full documentation of PM4Py is available at http://pm4py.org/
 
 ## First Example
 A very simple example, to whet your appetite:
@@ -13,9 +14,9 @@ import pm4py
 
 log = pm4py.read_xes('<path-to-xes-log-file.xes>')
 
-net, initial_marking, final_marking = pm4py.discover_petri_net_inductive(log)
+process_model, initial_marking, final_marking = pm4py.discover_petri_net_inductive(log)
 
-pm4py.view_petri_net(pnet, initial_marking, final_marking, format="svg")
+pm4py.view_petri_net(process_model, initial_marking, final_marking, format="svg")
 ```
 
 ## Installation
