@@ -1,6 +1,9 @@
-VERSION = '2.1.2'
+VERSION = '2.1.3.2'
 
-import time, pkgutil, logging, sys
+import logging
+import pkgutil
+import sys
+import time
 
 time.clock = time.process_time
 
@@ -28,32 +31,32 @@ else:
     logging.error("networkx is not available. This can lead some features of PM4Py to not work correctly!")
 
 if pkgutil.find_loader("matplotlib"):
-    import matplotlib
+    pass
 else:
     logging.error("matplotlib is not available. This can lead some features of PM4Py to not work correctly!")
 
 if pkgutil.find_loader("lxml"):
-    import lxml
+    pass
 else:
     logging.error("lxml is not available. This can lead some features of PM4Py to not work correctly!")
 
 if pkgutil.find_loader("pandas"):
-    import pandas
+    pass
 else:
     logging.error("pandas is not available. This can lead some features of PM4Py to not work correctly!")
 
 if pkgutil.find_loader("pulp"):
-    import pulp
+    pass
 else:
     logging.error("pulp is not available. This can lead some features of PM4Py to not work correctly!")
 
 if pkgutil.find_loader("graphviz"):
-    import graphviz
+    pass
 else:
     logging.error("graphviz is not available. This can lead some features of PM4Py to not work correctly!")
 
 if pkgutil.find_loader("intervaltree"):
-    import intervaltree
+    pass
 else:
     logging.error("intervaltree is not available. This can lead some features of PM4Py to not work correctly!")
 
@@ -76,18 +79,20 @@ from pm4py.vis import view_petri_net, save_vis_petri_net, view_dfg, save_vis_dfg
     save_vis_process_tree, \
     view_heuristics_net, save_vis_heuristics_net, view_bpmn, save_vis_bpmn
 from pm4py.filtering import filter_start_activities, filter_end_activities, filter_attribute_values, filter_variants, \
-    filter_variants_percentage, filter_paths, filter_timestamp, filter_trace_attribute
+    filter_variants_percentage, filter_directly_follows_relation, filter_time_range, filter_trace_attribute, \
+    filter_eventually_follows_relation, filter_event_attribute_values, filter_trace_attribute_values
 from pm4py.stats import get_start_activities, get_end_activities, get_attributes, get_attribute_values, get_variants, \
     get_trace_attributes
 from pm4py.convert import convert_to_event_log, convert_to_event_stream, convert_to_dataframe, convert_to_bpmn, \
     convert_to_petri_net, convert_to_process_tree
 from pm4py.utils import format_dataframe
+from pm4py.hof import filter_log, filter_trace, sort_trace, sort_log
 
 # this package is available only for Python >= 3.5
 if sys.version_info >= (3, 5):
     from pm4py import streaming
 
     if pkgutil.find_loader("sympy"):
-        import sympy
+        pass
     else:
         logging.error("sympy is not available. This can lead some features of PM4Py to not work correctly!")
