@@ -1,3 +1,19 @@
+'''
+    This file is part of PM4Py (More Info: https://pm4py.fit.fraunhofer.de).
+
+    PM4Py is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    PM4Py is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
+'''
 def convert_to_event_log(obj):
     """
     Converts a log object to an event log
@@ -70,8 +86,12 @@ def convert_to_bpmn(*args):
         BPMN diagram
     """
     from pm4py.objects.process_tree.process_tree import ProcessTree
+    from pm4py.objects.bpmn.bpmn_graph import BPMN
 
-    if isinstance(args[0], ProcessTree):
+    if isinstance(args[0], BPMN):
+        # the object is already a BPMN
+        return args[0]
+    elif isinstance(args[0], ProcessTree):
         from pm4py.objects.conversion.process_tree.variants import to_bpmn
         return to_bpmn.apply(args[0])
     else:
@@ -109,7 +129,11 @@ def convert_to_petri_net(*args):
     from pm4py.objects.process_tree.process_tree import ProcessTree
     from pm4py.objects.bpmn.bpmn_graph import BPMN
     from pm4py.objects.heuristics_net.net import HeuristicsNet
-    if isinstance(args[0], ProcessTree):
+    from pm4py.objects.petri.petrinet import PetriNet
+    if isinstance(args[0], PetriNet):
+        # the object is already a Petri net
+        return args[0], args[1], args[2]
+    elif isinstance(args[0], ProcessTree):
         from pm4py.objects.conversion.process_tree.variants import to_petri_net
         return to_petri_net.apply(args[0])
     elif isinstance(args[0], BPMN):
@@ -142,7 +166,12 @@ def convert_to_process_tree(*args):
     tree
         Process tree (when the model is block-structured)
     """
+    from pm4py.objects.process_tree.process_tree import ProcessTree
     from pm4py.objects.petri.petrinet import PetriNet
+    if isinstance(args[0], ProcessTree):
+        # the object is already a process tree
+        return args[0]
+
     if isinstance(args[0], PetriNet):
         net, im, fm = args[0], args[1], args[2]
     else:

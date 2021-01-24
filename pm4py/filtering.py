@@ -1,3 +1,21 @@
+'''
+    This file is part of PM4Py (More Info: https://pm4py.fit.fraunhofer.de).
+
+    PM4Py is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    PM4Py is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
+'''
+import warnings
+
 import deprecation
 
 from pm4py import VERSION as PM4PY_CURRENT_VERSION
@@ -338,6 +356,9 @@ def filter_time_range(log, dt1, dt2, mode="events"):
             return timestamp_filter.filter_traces_contained(log, dt1, dt2)
         elif mode == "traces_intersecting":
             return timestamp_filter.filter_traces_intersecting(log, dt1, dt2)
+        else:
+            warnings.warn('mode provided: ' + mode + ' is not recognized; original log returned!')
+            return log
     else:
         from pm4py.algo.filtering.log.timestamp import timestamp_filter
         if mode == "events":
@@ -346,3 +367,6 @@ def filter_time_range(log, dt1, dt2, mode="events"):
             return timestamp_filter.filter_traces_contained(log, dt1, dt2)
         elif mode == "traces_intersecting":
             return timestamp_filter.filter_traces_intersecting(log, dt1, dt2)
+        else:
+            warnings.warn('mode provided: ' + mode + ' is not recognized; original log returned!')
+            return log

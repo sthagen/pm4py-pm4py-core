@@ -1,3 +1,19 @@
+'''
+    This file is part of PM4Py (More Info: https://pm4py.fit.fraunhofer.de).
+
+    PM4Py is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    PM4Py is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
+'''
 from enum import Enum
 
 from pm4py.algo.filtering.common.filtering_constants import DECREASING_FACTOR
@@ -41,10 +57,14 @@ def apply(log, admitted_start_activities, parameters=None):
     positive = exec_utils.get_param_value(Parameters.POSITIVE, parameters, True)
     if positive:
         filtered_log = EventLog(
-            [trace for trace in log if trace and trace[0][attribute_key] in admitted_start_activities])
+            [trace for trace in log if trace and trace[0][attribute_key] in admitted_start_activities],
+            attributes=log.attributes, extensions=log.extensions, classifiers=log.classifiers,
+            omni_present=log.omni_present)
     else:
         filtered_log = EventLog(
-            [trace for trace in log if trace and trace[0][attribute_key] not in admitted_start_activities])
+            [trace for trace in log if trace and trace[0][attribute_key] not in admitted_start_activities],
+            attributes=log.attributes, extensions=log.extensions, classifiers=log.classifiers,
+            omni_present=log.omni_present)
 
     return filtered_log
 

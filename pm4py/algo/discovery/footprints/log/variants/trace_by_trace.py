@@ -1,3 +1,19 @@
+'''
+    This file is part of PM4Py (More Info: https://pm4py.fit.fraunhofer.de).
+
+    PM4Py is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    PM4Py is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
+'''
 from enum import Enum
 from pm4py.util import constants
 from pm4py.algo.discovery.dfg import algorithm as dfg_discovery
@@ -43,10 +59,11 @@ def apply(log, parameters=None):
         dfg = dfg_discovery.apply(EventLog([trace]), parameters=parameters)
         parallel = {(x, y) for (x, y) in dfg if (y, x) in dfg}
         sequence = {(x, y) for (x, y) in dfg if not (y, x) in dfg}
-        activities = set(x[activity_key] for x in trace)
+        trace = tuple(x[activity_key] for x in trace)
+        activities = set(trace)
         if len(trace) > 0:
-            start_activities = set([trace[0][activity_key]])
-            end_activities = set([trace[-1][activity_key]])
+            start_activities = {trace[0]}
+            end_activities = {trace[-1]}
         else:
             start_activities = set()
             end_activities = set()
@@ -54,6 +71,6 @@ def apply(log, parameters=None):
         ret.append(
             {Outputs.DFG.value: dfg, Outputs.SEQUENCE.value: sequence, Outputs.PARALLEL.value: parallel, Outputs.ACTIVITIES.value: activities,
              Outputs.START_ACTIVITIES.value: start_activities, Outputs.END_ACTIVITIES.value: end_activities,
-             Outputs.MIN_TRACE_LENGTH.value: len(trace)})
+             Outputs.MIN_TRACE_LENGTH.value: len(trace), Outputs.TRACE.value: trace})
 
     return ret
