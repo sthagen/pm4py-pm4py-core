@@ -188,7 +188,7 @@ class BPMN(object):
     def __init__(self, name="", nodes=None, flows=None):
         self.__id = uuid.uuid4()
         self.__name = name
-        self.__graph = nx.DiGraph()
+        self.__graph = nx.MultiDiGraph()
         self.__nodes = set() if nodes is None else nodes
         self.__flows = set() if flows is None else flows
 
@@ -240,6 +240,6 @@ class BPMN(object):
         if target not in self.__nodes:
             self.add_node(target)
         self.__flows.add(flow)
-        self.__graph.add_edge(source, target)
+        self.__graph.add_edge(source, target, name=flow.get_name())
         source.add_out_arc(flow)
         target.add_in_arc(flow)
