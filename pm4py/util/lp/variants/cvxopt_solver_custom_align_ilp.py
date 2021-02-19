@@ -25,13 +25,29 @@ this_options["msg_lev"] = "GLP_MSG_OFF"
 this_options["show_progress"] = False
 this_options["presolve"] = "GLP_ON"
 
-def custom_solve_ilp(c, G, h, A, b):
-    size = G.size[1]
-    I = {i for i in range(size)}
-    status, x, y, z = glpk.lp(c, G, h, A, b, options=this_options)
-    if status == "optimal":
-        status, x = glpk.ilp(c, G, h, A, b, I=I, options=this_options)
+this_options_lp = {}
+this_options_lp["LPX_K_MSGLEV"] = 0
+this_options_lp["msg_lev"] = "GLP_MSG_OFF"
+this_options_lp["show_progress"] = False
+this_options_lp["presolve"] = "GLP_ON"
 
+TOL = 10**(-5)
+
+
+def check_lp_sol_is_integer(x):
+    for i in range(len(x)):
+        if abs(x[i] - round(x[i])) > TOL:
+            return False
+    return True
+
+
+def custom_solve_ilp(c, G, h, A, b):
+    status, x, y, z = glpk.lp(c, G, h, A, b, options=this_options_lp)
+    if status == "optimal":
+        if not check_lp_sol_is_integer(x):
+            size = G.size[1]
+            I = {i for i in range(size)}
+            status, x = glpk.ilp(c, G, h, A, b, I=I, options=this_options)
         if status == 'optimal':
             pcost = blas.dot(c, x)
         else:
