@@ -21,8 +21,8 @@ from typing import List, Tuple
 
 import numpy as np
 
-from pm4py.objects.petri import semantics
-from pm4py.objects.petri.petrinet import Marking, PetriNet
+from pm4py.objects.petri import semantics, properties
+from pm4py.objects.petri.obj import Marking, PetriNet
 from pm4py.util.lp import solver as lp_solver
 
 SKIP = '>>'
@@ -60,55 +60,51 @@ def search_path_among_sol(sync_net: PetriNet, ini: Marking, fin: Marking,
     explained_events
         Number of explained events
     """
+    reach_fm = False
     trans_empty_preset = set(t for t in sync_net.transitions if len(t.in_arcs) == 0)
-    activated_transitions = tuple(sorted(activated_transitions, key=lambda x: x.name))
-    open_set = [(0, 0, 0, activated_transitions, ini, tuple())]
+    trans_with_index = {}
+    trans_wo_index = set()
+    for t in activated_transitions:
+        if properties.TRACE_NET_TRANS_INDEX in t.properties:
+            trans_with_index[t.properties[properties.TRACE_NET_TRANS_INDEX]] = t
+        else:
+            trans_wo_index.add(t)
+    keys = sorted(list(trans_with_index.keys()))
+    trans_with_index = [trans_with_index[i] for i in keys]
+    best_tuple = (0, 0, ini, list())
+    open_set = [best_tuple]
     heapq.heapify(open_set)
-    firing_sequence = []
-    firing_sequence_explained_events = 0
+    visited = 0
     closed = set()
-    count = 0
+    len_trace_with_index = len(trans_with_index)
     while len(open_set) > 0:
         curr = heapq.heappop(open_set)
-        explained_events = -curr[0]
-        curr_cost = curr[1]
-        activated_transitions = curr[3]
-        marking = curr[4]
-        visited = curr[5]
-        if not activated_transitions:
-            if marking == fin:
-                return visited, True, explained_events
-        if (activated_transitions, marking) in closed:
+        index = -curr[0]
+        marking = curr[2]
+        if marking in closed:
             continue
-        closed.add((activated_transitions, marking))
-        possible_enabling_transitions = copy(trans_empty_preset)
-        for p in marking:
-            for t in p.ass_trans:
-                possible_enabling_transitions.add(t)
-        enabled = set(t for t in possible_enabling_transitions if t.sub_marking <= marking)
-        enabled = enabled.intersection(set(activated_transitions))
-        vis_enabled = set(x for x in enabled if x.label[0] is not skip)
-        if vis_enabled:
-            enabled = vis_enabled
-        if not enabled:
-            if explained_events > firing_sequence_explained_events:
-                firing_sequence = visited
-                firing_sequence_explained_events = explained_events
-        for tr in enabled:
-            count = count + 1
-            this_cost = 1 if tr.label[0] is skip else 0
-            new_trans = list(activated_transitions)
-            idx = new_trans.index(tr)
-            del new_trans[idx]
-            new_trans = tuple(new_trans)
-            new_visited = list(visited)
-            new_visited.append(tr)
-            new_visited = tuple(new_visited)
-            new_marking = semantics.weak_execute(tr, marking)
-            new_explained_events = len(list(x for x in new_visited if x.label[0] is not skip))
-            heapq.heappush(open_set,
-                           (-new_explained_events, this_cost + curr_cost, count, new_trans, new_marking, new_visited))
-    return firing_sequence, False, firing_sequence_explained_events
+        if index == len_trace_with_index:
+            reach_fm = True
+            break
+        if curr[0] < best_tuple[0]:
+            best_tuple = curr
+        closed.add(marking)
+        corr_trans = trans_with_index[index]
+        if corr_trans.sub_marking <= marking:
+            visited += 1
+            new_marking = semantics.weak_execute(corr_trans, marking)
+            heapq.heappush(open_set, (-index-1, visited, new_marking, curr[3]+[corr_trans]))
+        else:
+            enabled = copy(trans_empty_preset)
+            for p in marking:
+                for t in p.ass_trans:
+                    if t in trans_wo_index and t.sub_marking <= marking:
+                        enabled.add(t)
+            for new_trans in enabled:
+                visited += 1
+                new_marking = semantics.weak_execute(new_trans, marking)
+                heapq.heappush(open_set, (-index, visited, new_marking, curr[3]+[new_trans]))
+    return best_tuple[-1], reach_fm, -best_tuple[0]
 
 
 def construct_standard_cost_function(synchronous_product_net, skip):
@@ -208,17 +204,19 @@ def __get_alt(open_set, new_marking):
 
 
 def __reconstruct_alignment(state, visited, queued, traversed, ret_tuple_as_trans_desc=False, lp_solved=0):
-    parent = state.p
-    if ret_tuple_as_trans_desc:
-        alignment = [(state.t.name, state.t.label)]
-        while parent.p is not None:
-            alignment = [(parent.t.name, parent.t.label)] + alignment
-            parent = parent.p
-    else:
-        alignment = [state.t.label]
-        while parent.p is not None:
-            alignment = [parent.t.label] + alignment
-            parent = parent.p
+    alignment = list()
+    if state.p is not None and state.t is not None:
+        parent = state.p
+        if ret_tuple_as_trans_desc:
+            alignment = [(state.t.name, state.t.label)]
+            while parent.p is not None:
+                alignment = [(parent.t.name, parent.t.label)] + alignment
+                parent = parent.p
+        else:
+            alignment = [state.t.label]
+            while parent.p is not None:
+                alignment = [parent.t.label] + alignment
+                parent = parent.p
     return {'alignment': alignment, 'cost': state.g, 'visited_states': visited, 'queued_states': queued,
             'traversed_arcs': traversed, 'lp_solved': lp_solved}
 
@@ -245,10 +243,16 @@ def __trust_solution(x):
 
 
 def __compute_exact_heuristic_new_version(sync_net, a_matrix, h_cvx, g_matrix, cost_vec, incidence_matrix,
-                                          marking, fin_vec, variant, use_cvxopt=False):
+                                          marking, fin_vec, variant, use_cvxopt=False, strict=True):
     m_vec = incidence_matrix.encode_marking(marking)
     b_term = [i - j for i, j in zip(fin_vec, m_vec)]
     b_term = np.matrix([x * 1.0 for x in b_term]).transpose()
+
+    if not strict:
+        g_matrix = np.vstack([g_matrix, a_matrix])
+        h_cvx = np.vstack([h_cvx, b_term])
+        a_matrix = np.zeros((0, a_matrix.shape[1]))
+        b_term = np.zeros((0, b_term.shape[1]))
 
     if use_cvxopt:
         # not available in the latest version of PM4Py
@@ -399,7 +403,8 @@ def get_visible_transitions_eventually_enabled_by_marking(net, marking):
     marking
         Current marking
     """
-    all_enabled_transitions = list(semantics.enabled_transitions(net, marking))
+    all_enabled_transitions = sorted(list(semantics.enabled_transitions(net, marking)),
+                                     key=lambda x: (str(x.name), id(x)))
     initial_all_enabled_transitions_marking_dictio = {}
     all_enabled_transitions_marking_dictio = {}
     for trans in all_enabled_transitions:
@@ -419,7 +424,8 @@ def get_visible_transitions_eventually_enabled_by_marking(net, marking):
             else:
                 if semantics.is_enabled(t, net, marking_copy):
                     new_marking = semantics.execute(t, net, marking_copy)
-                    new_enabled_transitions = list(semantics.enabled_transitions(net, new_marking))
+                    new_enabled_transitions = sorted(list(semantics.enabled_transitions(net, new_marking)),
+                                                     key=lambda x: (str(x.name), id(x)))
                     for t2 in new_enabled_transitions:
                         all_enabled_transitions.append(t2)
                         all_enabled_transitions_marking_dictio[t2] = new_marking

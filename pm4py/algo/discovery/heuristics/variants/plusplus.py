@@ -25,11 +25,11 @@ from pm4py.algo.discovery.dfg.adapters.pandas import df_statistics
 from pm4py.objects.conversion.heuristics_net import converter as hn_conv_alg
 from pm4py.objects.conversion.log import converter as log_converter
 from pm4py.objects.heuristics_net import defaults
-from pm4py.objects.heuristics_net.net import HeuristicsNet
+from pm4py.objects.heuristics_net.obj import HeuristicsNet
 from pm4py.objects.heuristics_net.node import Node
-from pm4py.objects.log.log import EventLog
+from pm4py.objects.log.obj import EventLog
 from pm4py.objects.log.util import interval_lifecycle
-from pm4py.objects.petri.petrinet import PetriNet, Marking
+from pm4py.objects.petri.obj import PetriNet, Marking
 from pm4py.statistics.attributes.log import get as log_attributes
 from pm4py.statistics.attributes.pandas import get as pd_attributes
 from pm4py.statistics.concurrent_activities.log import get as conc_act_get
@@ -177,7 +177,7 @@ def apply_heu(log: EventLog, parameters: Optional[Dict[Any, Any]] = None) -> Heu
     start_activities, end_activities, activities_occurrences, dfg, performance_dfg, sojourn_time, concurrent_activities = discover_abstraction_log(
         log, parameters=parameters)
     return discover_heu_net_plus_plus(start_activities, end_activities, activities_occurrences, dfg, performance_dfg,
-                                      sojourn_time, concurrent_activities)
+                                      sojourn_time, concurrent_activities, parameters=parameters)
 
 
 def discover_abstraction_log(log: EventLog, parameters: Optional[Dict[Any, Any]] = None) -> Tuple[
@@ -378,6 +378,7 @@ def discover_heu_net_plus_plus(start_activities, end_activities, activities_occu
     min_dfg_occurrences = exec_utils.get_param_value(Parameters.MIN_DFG_OCCURRENCES, parameters,
                                                      defaults.DEFAULT_MIN_DFG_OCCURRENCES)
     heu_net_decoration = exec_utils.get_param_value(Parameters.HEU_NET_DECORATION, parameters, "frequency")
+
     # filter on activity and paths occurrence
     activities_occurrences = {x: y for x, y in activities_occurrences.items() if y >= min_act_count}
     dfg = {x: y for x, y in dfg.items() if
