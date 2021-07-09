@@ -43,12 +43,14 @@ from pm4py.sim import play_out, generate_process_tree
 from pm4py.stats import get_start_activities, get_end_activities, get_attributes, get_attribute_values, get_variants, \
     get_trace_attributes, get_variants_as_tuples, get_trace_attribute_values, get_case_arrival_average, \
     get_minimum_self_distances, get_minimum_self_distance_witnesses
-from pm4py.utils import format_dataframe, parse_process_tree, serialize, deserialize
+from pm4py.utils import format_dataframe, parse_process_tree, serialize, deserialize, set_classifier
 from pm4py.vis import view_petri_net, save_vis_petri_net, view_dfg, save_vis_dfg, view_process_tree, \
     save_vis_process_tree, \
-    view_heuristics_net, save_vis_heuristics_net, view_bpmn, save_vis_bpmn, view_sna, save_vis_sna
+    view_heuristics_net, save_vis_heuristics_net, view_bpmn, save_vis_bpmn, view_sna, save_vis_sna,\
+    view_dotted_chart, save_vis_dotted_chart, view_performance_spectrum, save_vis_performance_spectrum, view_case_duration_graph, view_events_per_time_graph, save_vis_case_duration_graph, save_vis_events_per_time_graph
 from pm4py.write import write_xes, write_petri_net, write_process_tree, write_dfg, write_bpmn, write_pnml, write_ptml
 from pm4py.org import discover_handover_of_work_network, discover_activity_based_resource_similarity, discover_subcontracting_network, discover_working_together_network, discover_organizational_roles
+from pm4py.ml import split_train_test, get_prefixes_from_log
 
 time.clock = time.process_time
 

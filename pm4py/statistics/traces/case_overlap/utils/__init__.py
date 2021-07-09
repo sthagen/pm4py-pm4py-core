@@ -14,13 +14,4 @@
     You should have received a copy of the GNU General Public License
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
-from enum import Enum
-
-import warnings
-
-warnings.warn("pm4py.statistics.performance_spectrum.outputs is deprecated. please use the algorithm entrypoint")
-
-
-class Outputs(Enum):
-    LIST_ACTIVITIES = "list_activities"
-    POINTS = "points"
+from pm4py.statistics.traces.case_overlap.utils import compute

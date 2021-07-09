@@ -14,11 +14,13 @@
     You should have received a copy of the GNU General Public License
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
+import datetime
 from enum import Enum
+from typing import Union, Dict, Optional, Any
 
 from pm4py.algo.filtering.common.timestamp.timestamp_common import get_dt_from_string
 from pm4py.objects.conversion.log import converter as log_converter
-from pm4py.objects.log.obj import EventLog, EventStream
+from pm4py.objects.log.obj import EventLog, EventStream, Trace
 from pm4py.util import exec_utils
 from pm4py.util.constants import PARAMETER_CONSTANT_TIMESTAMP_KEY
 from pm4py.util.xes_constants import DEFAULT_TIMESTAMP_KEY
@@ -26,6 +28,68 @@ from pm4py.util.xes_constants import DEFAULT_TIMESTAMP_KEY
 
 class Parameters(Enum):
     TIMESTAMP_KEY = PARAMETER_CONSTANT_TIMESTAMP_KEY
+
+
+def trace_attr_is_contained(trace: Trace, dt1: Union[str, datetime.datetime], dt2: Union[str, datetime.datetime],
+                            trace_attr: str) -> bool:
+    """
+    Checks if the given attribute at the trace level is contained in the provided range
+
+    Parameters
+    ----------------
+    trace
+        Trace object
+    dt1
+        Left extreme of the time interval
+    dt2
+        Right extreme of the time interval
+    trace_attr
+        Attribute at the trace level that is considered for the filtering
+
+    Returns
+    ----------------
+    boolean
+        Boolean value
+    """
+    if trace_attr in trace.attributes:
+        if dt1 <= trace.attributes[trace_attr].replace(tzinfo=None) <= dt2:
+            return True
+    return False
+
+
+def filter_on_trace_attribute(log: EventLog, dt1: Union[str, datetime.datetime], dt2: Union[str, datetime.datetime],
+                              parameters: Optional[Dict[str, Any]] = None):
+    """
+    Filters the traces of the event log that have a given trace attribute
+    falling in the provided range
+
+    Parameters
+    -----------------
+    log
+        Event log
+    dt1
+        Left extreme of the time interval
+    dt2
+        Right extreme of the time interval
+    parameters
+        Parameters of the filtering, including:
+        - Parameters.TIMESTAMP_KEY => trace attribute to use for the filtering
+
+    Returns
+    ------------------
+    filtered_log
+        Filtered event log
+    """
+    if parameters is None:
+        parameters = {}
+
+    trace_attribute = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY)
+    dt1 = get_dt_from_string(dt1)
+    dt2 = get_dt_from_string(dt2)
+    filtered_log = EventLog([trace for trace in log if trace_attr_is_contained(trace, dt1, dt2, trace_attribute)],
+                            attributes=log.attributes, extensions=log.extensions, omni_present=log.omni_present,
+                            classifiers=log.classifiers, properties=log.properties)
+    return filtered_log
 
 
 def is_contained(trace, dt1, dt2, timestamp_key):
@@ -82,7 +146,7 @@ def filter_traces_contained(log, dt1, dt2, parameters=None):
     dt2 = get_dt_from_string(dt2)
     filtered_log = EventLog([trace for trace in log if is_contained(trace, dt1, dt2, timestamp_key)],
                             attributes=log.attributes, extensions=log.extensions, omni_present=log.omni_present,
-                            classifiers=log.classifiers)
+                            classifiers=log.classifiers, properties=log.properties)
     return filtered_log
 
 
@@ -109,8 +173,10 @@ def is_intersecting(trace, dt1, dt2, timestamp_key):
     if trace:
         condition1 = dt1 <= trace[0][timestamp_key].replace(tzinfo=None) <= dt2
         condition2 = dt1 <= trace[-1][timestamp_key].replace(tzinfo=None) <= dt2
-        condition3 = trace[0][timestamp_key].replace(tzinfo=None) <= dt1 <= trace[-1][timestamp_key].replace(tzinfo=None)
-        condition4 = trace[0][timestamp_key].replace(tzinfo=None) <= dt2 <= trace[-1][timestamp_key].replace(tzinfo=None)
+        condition3 = trace[0][timestamp_key].replace(tzinfo=None) <= dt1 <= trace[-1][timestamp_key].replace(
+            tzinfo=None)
+        condition4 = trace[0][timestamp_key].replace(tzinfo=None) <= dt2 <= trace[-1][timestamp_key].replace(
+            tzinfo=None)
 
         if condition1 or condition2 or condition3 or condition4:
             return True
@@ -146,7 +212,7 @@ def filter_traces_intersecting(log, dt1, dt2, parameters=None):
     dt2 = get_dt_from_string(dt2)
     filtered_log = EventLog([trace for trace in log if is_intersecting(trace, dt1, dt2, timestamp_key)],
                             attributes=log.attributes, extensions=log.extensions, omni_present=log.omni_present,
-                            classifiers=log.classifiers)
+                            classifiers=log.classifiers, properties=log.properties)
     return filtered_log
 
 
@@ -177,12 +243,58 @@ def apply_events(log, dt1, dt2, parameters=None):
     dt1 = get_dt_from_string(dt1)
     dt2 = get_dt_from_string(dt2)
 
-    stream = log_converter.apply(log, variant=log_converter.TO_EVENT_STREAM)
+    stream = log_converter.apply(log, variant=log_converter.TO_EVENT_STREAM, parameters={"deepcopy": False})
     filtered_stream = EventStream([x for x in stream if dt1 <= x[timestamp_key].replace(tzinfo=None) <= dt2],
                                   attributes=log.attributes, extensions=log.extensions, omni_present=log.omni_present,
-                                  classifiers=log.classifiers)
+                                  classifiers=log.classifiers, properties=log.properties)
     filtered_log = log_converter.apply(filtered_stream)
 
+    return filtered_log
+
+
+def has_attribute_in_timeframe(trace, attribute, attribute_value, dt1, dt2, timestamp_key):
+    for e in trace:
+        if attribute in e and e[attribute] == attribute_value and dt1 <= e[timestamp_key].replace(tzinfo=None) <= dt2:
+            return True
+    return False
+
+
+def filter_traces_attribute_in_timeframe(log, attribute, attribute_value, dt1, dt2, parameters=None):
+    """
+    Get a new log containing all the traces that have an event in the given interval with the specified attribute value 
+
+    Parameters
+    -----------
+    log
+        Log
+    attribute
+        The attribute to filter on
+    attribute_value
+        The attribute value to filter on
+    dt1
+        Lower bound to the interval
+    dt2
+        Upper bound to the interval
+    parameters
+        Possible parameters of the algorithm, including:
+            Parameters.TIMESTAMP_KEY -> Attribute to use as timestamp
+
+    Returns
+    ------------
+    filtered_log
+        Filtered log
+    """
+    if parameters is None:
+        parameters = {}
+
+    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY)
+    dt1 = get_dt_from_string(dt1)
+    dt2 = get_dt_from_string(dt2)
+
+    filtered_log = EventLog([trace for trace in log if
+                             has_attribute_in_timeframe(trace, attribute, attribute_value, dt1, dt2, timestamp_key)],
+                            attributes=log.attributes, extensions=log.extensions, omni_present=log.omni_present,
+                            classifiers=log.classifiers)
     return filtered_log
 
 

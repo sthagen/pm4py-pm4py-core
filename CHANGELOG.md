@@ -1,5 +1,136 @@
 # PM4Py Changelog
 
+## PM4PY 2.2.9 (2021.06.25)
+
+### Fixed
+
+* daf74e83
+    * update imports in feature extraction
+* 74be3e3c
+    * minor bug fix in alpha plus (place that was created was not always added to the resulting Petri net)
+
+### Removed
+
+### Deprecated
+
+### Changed
+
+* d97b1790
+    * drop deepcopy in event log sorting (enhances performance)
+* 1d4e625b
+    * revised IMf implementation (more close to ProM / PhD thesis Sander Leemans)
+* 20aabd95
+    * calculation of minimum self distance now adheres to the standard invocation structure
+
+### Added
+
+* 598c6ecb
+    * simplified interface now stores properties (using attr attribute) to dataframes
+* 1f7a3fa8
+    * add computation of rework statistic (cases containing the same activity more than once)
+* 32c7d330
+    * add computation of cycle time (active time of process divided by the number of instances of the process)
+* 8187f0e9
+    * add distribution plots over different time-frames (matplotlib)
+* 269d826c
+    * add batch detection based on Martin, N., Swennen, M., Depaire, B., Jans, M., Caris, A., & Vanhoof, K. (2015,
+      December). Batch Processing: Definition and Event Log Identification. In SIMPDA (pp. 137-140).
+* d5326d46
+    * compute case overlap of a case with all other cases
+
+### Other
+
+* 92a70586
+    * performance optimization for calculation of performance spectrum
+* b0fc57c4
+    * performance optimization for Pandas datetime conversion non-ISO8601 (regular formats)
+
+---
+
+## PM4PY 2.2.8 (2021.06.11)
+
+### Fixed
+
+* c11bab8f
+    * bug fix in eventually-follows filter
+* d3fd1bc1
+    * bug fix in activity frequency constraints of the log skeleton conformance checking
+
+### Removed
+
+### Deprecated
+
+### Changed
+
+* d96d9d69
+    * improved performance of the df-based performance spectrum code
+* 499d8a1c
+    * improved performance of log conversions when (for internal use) deep copy is not required
+
+### Added
+
+* 4d679934
+    * allow the possibility to filter on a trace attribute that has a type date (e.g., does the planned start date of
+      the case fall in a given time window?)
+* b7ef36e8
+    * add properties object to trace attributes (used for internal storage of statistics, will not be exported to disk)
+* d7029365
+    * added some basic ML utilities for event logs, e.g., getting all prefixes of traces, get a train/test split
+* 1ec5802e
+    * new subtrace selection mechanism that gets all events inbetween two given activity labels (uses first match on
+      both 1st and 2nd label)
+* 9b65bbd9
+    * allow specification of business hours in sojourn time computation of the DFG
+* 4d529d6e
+    * generic support for feature extraction
+
+### Other
+
+---
+
+## PM4PY 2.2.7 (2021.04.30)
+
+### Fixed
+
+* 908e06d7
+    * fix error in loop detection of inductive miner
+* b7b63e0b
+    * add internal log conversion in the flexible heuristics miner
+* e9d61bdb
+    * fix minor bug in bpmn model importing
+* 52cc0c7a
+    * fix minor bug in xes exporting (type of concept:name was not checked)
+
+### Removed
+
+### Deprecated
+
+* 9c1a9610
+    * various old utility functions are now deprecated
+
+### Changed
+
+* 424c9ad9
+    * avoid warnings when visualizing long place names in debug visualization mode
+
+### Added
+
+* c2a9633e, 52e340b1
+    * add simple visualization of performance spectrum.
+* b6ae4b25
+    * add simple dotted chart visualization to the simplified interface.
+* 6e3a0bac
+    * add properties attribute to event logs and event streams for storage of custom meta-data that is not exported to
+      xes.
+* fb142359
+    * add version of dfg discovery that adds case-level attributes to nodes and edges
+* d902609d
+    * add basic visualization of events per time and cas distribution graphs
+
+### Other
+
+---
+
 ## PM4PY 2.2.6 (2021.04.23)
 
 ### Fixed
@@ -22,8 +153,10 @@
       using ```pm4py.conformance_diagnostics_alignments(..., multi_processing=True)```
 * de84e5f4
     * add ```pm4py.discover_bpmn_inductive(log)```
-  
+
 ### Other
+
+---
 
 ## PM4PY 2.2.5 (2021.04.16)
 
@@ -64,6 +197,8 @@
 
 ### Other
 
+---
+
 ## PM4PY 2.2.4 (2021.04.01)
 
 ### Fixed
@@ -94,6 +229,8 @@
       and ```pm4py.deserialize()```
 
 ### Other
+
+---
 
 ## PM4PY 2.2.3 (2021.03.19)
 
@@ -149,6 +286,8 @@
     * the process tree operator class is now embedded within the process tree object definition (
       pm4py.objects.process_tree.process_tree.py)
 
+---
+
 ## PM4PY 2.2.2 (2021.03.03)
 
 ### Fixed
@@ -184,6 +323,8 @@
     * variants can now be represented as a tuple of activities, rather than a single string
 
 ### Other
+
+---
 
 ## PM4PY 2.2.1 (2021.02.15)
 

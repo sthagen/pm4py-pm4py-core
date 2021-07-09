@@ -14,4 +14,4 @@
     You should have received a copy of the GNU General Public License
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
-from pm4py.statistics.performance_spectrum.variants import dataframe, log
+from pm4py.visualization.performance_spectrum import visualizer, variants

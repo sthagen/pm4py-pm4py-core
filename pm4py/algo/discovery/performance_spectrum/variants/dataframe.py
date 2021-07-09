@@ -14,13 +14,12 @@
     You should have received a copy of the GNU General Public License
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
+from enum import Enum
+
+from pm4py.util import constants
+from pm4py.util import exec_utils, pandas_utils
 from pm4py.util import xes_constants as xes
 from pm4py.util.constants import CASE_CONCEPT_NAME
-from pm4py.util import exec_utils, pandas_utils, constants
-
-
-from enum import Enum
-from pm4py.util import constants
 
 
 class Parameters(Enum):
@@ -29,6 +28,7 @@ class Parameters(Enum):
     CASE_ID_KEY = constants.PARAMETER_CONSTANT_CASEID_KEY
     ATTRIBUTE_KEY = constants.PARAMETER_CONSTANT_ATTRIBUTE_KEY
     PARAMETER_SAMPLE_SIZE = "sample_size"
+    SORT_LOG_REQUIRED = "sort_log_required"
 
 
 def apply(dataframe, list_activities, sample_size, parameters):
@@ -64,39 +64,35 @@ def apply(dataframe, list_activities, sample_size, parameters):
     case_id_glue = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME)
     activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes.DEFAULT_NAME_KEY)
     timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes.DEFAULT_TIMESTAMP_KEY)
+    sort_log_required = exec_utils.get_param_value(Parameters.SORT_LOG_REQUIRED, parameters, True)
 
     dataframe = dataframe[[case_id_glue, activity_key, timestamp_key]]
     dataframe = dataframe[dataframe[activity_key].isin(list_activities)]
     dataframe = pandas_utils.insert_index(dataframe, constants.DEFAULT_EVENT_INDEX_KEY)
-    dataframe = dataframe.sort_values([case_id_glue, timestamp_key, constants.DEFAULT_EVENT_INDEX_KEY])
-    dataframe[timestamp_key] = dataframe[timestamp_key].astype(np.int64) / 10**9
-    list_replicas = []
-    activity_names = []
-    filt_col_names = []
-    for i in range(len(list_activities)):
-        if i > 0:
-            dataframe = dataframe.shift(-1)
-            activity_names.append("+'@@'+")
-        ren = {x: x+"_"+str(i) for x in dataframe.columns}
-        list_replicas.append(dataframe.rename(columns=ren))
-        filt_col_names.append(timestamp_key+"_"+str(i))
+    if sort_log_required:
+        dataframe = dataframe.sort_values([case_id_glue, timestamp_key, constants.DEFAULT_EVENT_INDEX_KEY])
+    dataframe[timestamp_key] = dataframe[timestamp_key].astype(np.int64) / 10 ** 9
 
-        activity_names.append("dataframe[activity_key+'_"+str(i)+"']")
+    def key(k, n):
+        return k + str(n)
 
-    dataframe = pd.concat(list_replicas, axis=1)
-    for i in range(len(list_activities)-1):
-        dataframe = dataframe[dataframe[case_id_glue+"_"+str(i)] == dataframe[case_id_glue+"_"+str(i+1)]]
-    dataframe["@@merged_activity"] = eval("".join(activity_names))
-    desidered_act = "@@".join(list_activities)
-    dataframe = dataframe[dataframe["@@merged_activity"] == desidered_act]
-    dataframe = dataframe[filt_col_names]
+    # create a dataframe with all needed columns to check for the activities pattern 
+    dfs = [dataframe.add_suffix(str(i)).shift(-i) for i in range(len(list_activities))]
+    dataframe = pd.concat(dfs, axis=1)
+    # keep only rows that belong to exactly one case
+    for i in range(len(list_activities) - 1):
+        dataframe = dataframe[dataframe[key(case_id_glue, i)] == dataframe[key(case_id_glue, i + 1)]]
 
-    if len(dataframe) > sample_size:
-        dataframe = dataframe.sample(n=sample_size)
+    column_list = [key(activity_key, i) for i in range(len(list_activities))]
+    pattern = "".join(list_activities)
+    # keep only rows that have the desired activities pattern
+    matches = dataframe[np.equal(dataframe[column_list].sum(axis=1), pattern)]
+    if len(matches) > sample_size:
+        matches = matches.sample(n=sample_size)
 
-    points = pandas_utils.to_dict_records(dataframe)
+    filt_col_names = [timestamp_key + str(i) for i in range(len(list_activities))]
+    points = pandas_utils.to_dict_records(matches)
     points = [[p[tk] for tk in filt_col_names] for p in points]
     points = sorted(points, key=lambda x: x[0])
 
     return points
-
