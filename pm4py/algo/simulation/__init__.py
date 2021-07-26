@@ -14,4 +14,9 @@
     You should have received a copy of the GNU General Public License
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
-from pm4py.algo.simulation import montecarlo, playout, tree_generator
+
+from pm4py.algo.simulation import montecarlo, playout
+
+import pkgutil
+if pkgutil.find_loader("tree_generator"):
+    from pm4py.algo.simulation import tree_generator

@@ -14,39 +14,9 @@
     You should have received a copy of the GNU General Public License
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
-from pm4py.algo.simulation.tree_generator.variants import basic, ptandloggenerator
-from enum import Enum
-from pm4py.util import exec_utils
 
+import warnings
 
-class Variants(Enum):
-    BASIC = basic
-    PTANDLOGGENERATOR = ptandloggenerator
+warnings.warn("Please use pm4py.algo.simulation.tree_generator.algorithm instead")
 
-
-BASIC = Variants.BASIC
-PTANDLOGGENERATOR = Variants.PTANDLOGGENERATOR
-DEFAULT_VARIANT = Variants.PTANDLOGGENERATOR
-
-VERSIONS = {Variants.BASIC, Variants.PTANDLOGGENERATOR}
-
-
-def apply(variant=DEFAULT_VARIANT, parameters=None):
-    """
-    Generate a process tree
-
-    Parameters
-    ------------
-    variant
-        Variant of the algorithm. Admitted values:
-            - Variants.BASIC
-            - Variants.PTANDLOGGENERATOR
-    parameters
-        Specific parameters of the algorithm
-
-    Returns
-    ------------
-    tree
-        Process tree
-    """
-    return exec_utils.get_variant(variant).apply(parameters=parameters)
+from pm4py.algo.simulation.tree_generator.algorithm import *

@@ -15,5 +15,8 @@
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
-from pm4py.util import variants_util, lp, constants, points_subset, business_hours, regex, xes_constants, vis_utils, \
-    dt_parsing, colors, exec_utils, pandas_utils, typing
+import warnings
+
+warnings.warn("please use pm4py.algo.simulation.playout.petri_net.algorithm instead.")
+
+from pm4py.algo.simulation.playout.petri_net.algorithm import *

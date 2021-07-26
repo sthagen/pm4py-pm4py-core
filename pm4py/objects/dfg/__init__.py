@@ -14,5 +14,5 @@
     You should have received a copy of the GNU General Public License
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
-from pm4py.objects.dfg import utils, importer, exporter, filtering, retrieval
 
+from pm4py.objects.dfg import importer, exporter, utils

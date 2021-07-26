@@ -14,5 +14,6 @@
     You should have received a copy of the GNU General Public License
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
-from pm4py.algo.filtering.log import attributes, auto_filter, end_activities, paths, \
+
+from pm4py.algo.filtering.log import attributes, end_activities, paths, \
     cases, start_activities, timestamp, variants, ltl
