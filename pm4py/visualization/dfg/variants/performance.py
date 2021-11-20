@@ -127,11 +127,45 @@ def get_activities_color_soj_time(soj_time):
 
     return activities_color
 
+def get_edges_color(duration_list: list) -> str:
+    """
+    Gets the color for the activities based on the sojourn time
+
+    Parameters
+    ----------------
+    soj_time
+        Sojourn time
+
+    Returns
+    ----------------
+    act_color
+        Dictionary associating each activity to a color based on the sojourn time
+    """
+    LIGHTEST_COLOR = 55
+    edges_color = {}
+
+    min_time, max_time = get_min_max_value(duration_list)
+    min_color = 255 - LIGHTEST_COLOR
+
+    for ac in duration_list:
+        current_time = duration_list[ac]
+
+        trans_base_color = int(min_color - 
+            min_color * (current_time - min_time) / 
+                (max_time - min_time + 0.00001))
+        trans_base_color_hex = str(hex(trans_base_color))[2:].upper()
+
+        if len(trans_base_color_hex) == 1:
+            trans_base_color_hex = "0" + trans_base_color_hex
+
+        edges_color[ac] = "#" + 3 * trans_base_color_hex
+
+    return edges_color
 
 def graphviz_visualization(activities_count, dfg, image_format="png", measure="frequency",
                            max_no_of_edges_in_diagram=100000, start_activities=None, 
                            end_activities=None, soj_time=None, font_size="12", 
-                           bgcolor="transparent", stat_locale: dict = {}):
+                           bgcolor="transparent", stat_locale: dict = None):
     """
     Do GraphViz visualization of a DFG graph
 
@@ -144,7 +178,7 @@ def graphviz_visualization(activities_count, dfg, image_format="png", measure="f
     image_format
         GraphViz should be represented in this format
     measure
-        Describes which measure is assigned to edges in direcly follows graph (frequency/performance)
+        Describes which measure is assigned to edges in directly follows graph (frequency/performance)
     max_no_of_edges_in_diagram
         Maximum number of edges in the diagram allowed for visualization
     start_activities
@@ -165,6 +199,8 @@ def graphviz_visualization(activities_count, dfg, image_format="png", measure="f
         start_activities = []
     if end_activities is None:
         end_activities = []
+    if stat_locale is None:
+        stat_locale = {}
 
     filename = tempfile.NamedTemporaryFile(suffix='.gv')
     viz = Digraph("", filename=filename.name, engine='dot', graph_attr={'bgcolor': bgcolor})
@@ -194,6 +230,7 @@ def graphviz_visualization(activities_count, dfg, image_format="png", measure="f
 
     # assign attributes color
     activities_color = get_activities_color_soj_time(soj_time)
+    edges_color = get_edges_color(dfg)
 
     # represent nodes
     viz.attr('node', shape='box')
@@ -212,8 +249,11 @@ def graphviz_visualization(activities_count, dfg, image_format="png", measure="f
                      fillcolor=activities_color[act], fontsize=font_size)
             activities_map[act] = str(hash(act))
         else:
-            stat_string = human_readable_stat(soj_time[act], stat_locale)
-            viz.node(str(hash(act)), act + f" ({stat_string})", fontsize=font_size,
+            node_label = act
+            if soj_time[act] > -1:
+                stat_string = human_readable_stat(soj_time[act])
+                node_label = f"{act} ({stat_string})"
+            viz.node(str(hash(act)), node_label, fontsize=font_size,
                      style='filled', fillcolor=activities_color[act])
             activities_map[act] = str(hash(act))
 
@@ -226,20 +266,25 @@ def graphviz_visualization(activities_count, dfg, image_format="png", measure="f
             label = str(dfg[edge])
         else:
             label = human_readable_stat(dfg[edge], stat_locale)
-        viz.edge(str(hash(edge[0])), str(hash(edge[1])), label=label, penwidth=str(penwidth[edge]), fontsize=font_size)
+        viz.edge(str(hash(edge[0])), str(hash(edge[1])), label=label, 
+                 color=edges_color[edge], style = "bold",
+                 penwidth=str(penwidth[edge]), fontsize=font_size)
 
     start_activities_to_include = [act for act in start_activities if act in activities_map]
     end_activities_to_include = [act for act in end_activities if act in activities_map]
 
     if start_activities_to_include:
-        viz.node("@@startnode", "@@S", style='filled', shape='circle', fillcolor="#32CD32", fontcolor="#32CD32")
+        viz.node("@@startnode", "<&#9679;>", shape='circle', fontsize="34")
         for act in start_activities_to_include:
-            viz.edge("@@startnode", activities_map[act], fontsize=font_size)
+            label = str(start_activities[act]) if isinstance(start_activities, dict) else ""
+            viz.edge("@@startnode", activities_map[act], label=label, fontsize=font_size)
 
     if end_activities_to_include:
-        viz.node("@@endnode", "@@E", style='filled', shape='circle', fillcolor="#FFA500", fontcolor="#FFA500")
+        # <&#9632;>
+        viz.node("@@endnode", "<&#9632;>", shape='doublecircle', fontsize="32")
         for act in end_activities_to_include:
-            viz.edge(activities_map[act], "@@endnode", fontsize=font_size)
+            label = str(end_activities[act]) if isinstance(end_activities, dict) else ""
+            viz.edge(activities_map[act], "@@endnode", label=label, fontsize=font_size)
 
     viz.attr(overlap='false')
     viz.attr(fontsize='11')
@@ -284,7 +329,10 @@ def apply(dfg: Dict[Tuple[str, str], int], log: EventLog = None, parameters: Opt
     activities = dfg_utils.get_activities_from_dfg(dfg)
     aggregation_measure = exec_utils.get_param_value(Parameters.AGGREGATION_MEASURE, parameters, "mean")
     bgcolor = exec_utils.get_param_value(Parameters.BGCOLOR, parameters, "transparent")
-    stat_locale = exec_utils.get_param_value(Parameters.STAT_LOCALE, parameters, {})
+    stat_locale = exec_utils.get_param_value(Parameters.STAT_LOCALE, parameters, None)
+
+    if stat_locale is None:
+        stat_locale = {}
 
     if activities_count is None:
         if log is not None:
@@ -296,7 +344,7 @@ def apply(dfg: Dict[Tuple[str, str], int], log: EventLog = None, parameters: Opt
         if log is not None:
             soj_time = soj_time_get.apply(log, parameters=parameters)
         else:
-            soj_time = {key: 0 for key in activities}
+            soj_time = {key: -1 for key in activities}
 
     # if all the aggregation measures are provided for a given key,
     # then pick one of the values for the representation

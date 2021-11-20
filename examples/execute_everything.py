@@ -4,6 +4,24 @@ import sys
 import traceback
 
 
+def network_analysis():
+    from examples import network_analysis
+    print("\n\nnetwork_analysis")
+    network_analysis.execute_script()
+
+
+def read_write_ocel():
+    from examples import read_write_ocel
+    print("\n\nread_write_ocel")
+    read_write_ocel.execute_script()
+
+
+def ocdfg_discovery():
+    from examples import ocdfg_discovery
+    print("\n\nocdfg_discovery")
+    ocdfg_discovery.execute_script()
+
+
 def enrich_log_with_align():
     from examples import enrich_log_with_align
     print("\n\nenrich_log_with_align")
@@ -459,6 +477,9 @@ def execute_script(f):
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))))
 
 if __name__ == "__main__":
+    execute_script(network_analysis)
+    execute_script(read_write_ocel)
+    execute_script(ocdfg_discovery)
     execute_script(enrich_log_with_align)
     execute_script(extended_marking_equation)
     execute_script(features_locally_linear_embedding)

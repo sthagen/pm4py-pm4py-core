@@ -1,5 +1,45 @@
 # PM4Py Changelog
 
+## PM4Py 2.2.16 (2021.11.16)
+
+### Added
+
+* 32af0c81
+    * time-stamp based interleaving mining for OCEL logs
+* 10dffb58
+    * support probability visualization in transition system visualizer
+* 51c069fb
+    * add discovery of object-centric directly follows multigraphs
+* fa3031aa
+    * add several filters for OCEL.
+* d4747f71
+    * implementation of OCEL-based process discovery according to Reference paper: van der Aalst, Wil MP, and Alessandro
+      Berti. "Discovering object-centric Petri nets." Fundamenta informaticae 175.1-4 (2020): 1-40.
+* 9fbd1c45
+    * add the support for generic network creation based on a given IN/OUT column in which events are connected if the
+      columns match.
+* 2b867f0d
+    * add projection utility to fetch lists of event attributes
+
+### Changed
+
+* 43a076c8
+    * add artificial timestamps to artificial start and end events
+* d65f8077
+    * case attributes are replicated in events of an event stream (for xes input)
+* 9075cbfc
+    * add trace attributes to the interval tree
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Other
+
+---
+
 ## PM4Py 2.2.15 (2021.10.15)
 
 ### Fixed
@@ -27,7 +67,8 @@
 * d5d0b49c
     * change the visualization of initial and final markings
 * fcc4eeb0
-  * variant separator (between activities of the same variant) is now a pm4py constant, for increased compatibility with other tools, e.g., celonis.
+    * variant separator (between activities of the same variant) is now a pm4py constant, for increased compatibility
+      with other tools, e.g., celonis.
 
 ### Added
 
@@ -38,19 +79,19 @@
 * a87a39c9
     * add support for importing XES 2.0
 * b43d425b
-  * add artificial start and end events to event logs
+    * add artificial start and end events to event logs
 * d22dd490
-  * add initial support for OCEL 1.0
+    * add initial support for OCEL 1.0
 * 829f091c & 56fca738
-  * support for business hours in the pandas dfg calculation
-  * support for business hours in the temporal profiles for pandas dataframes
-  * support for business hours in pandas df case duration
-  * support for business hours in filtering for case performance (pandas)
-  * support for calculating of sojourn time with different aggregation metrics
+    * support for business hours in the pandas dfg calculation
+    * support for business hours in the temporal profiles for pandas dataframes
+    * support for business hours in pandas df case duration
+    * support for business hours in filtering for case performance (pandas)
+    * support for calculating of sojourn time with different aggregation metrics
 * 841e3e55
-  * add etc conformance for dfg models
+    * add etc conformance for dfg models
 * 04caa3d3
-  * add dfg filtering that keeps the dfg connected
+    * add dfg filtering that keeps the dfg connected
 
 ### Other
 
