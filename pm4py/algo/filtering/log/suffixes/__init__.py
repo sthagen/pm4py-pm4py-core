@@ -15,4 +15,4 @@
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
-from pm4py.algo.transformation.ocel.features import objects, events, events_objects
+from pm4py.algo.filtering.log.suffixes import suffix_filter
