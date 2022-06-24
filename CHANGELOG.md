@@ -1,11 +1,40 @@
 # Changelog of pm4py
 
+## pm4py 2.2.23 (2022.06.24)
+
+### Added
+* 09c97115cfaafa033c595ddff089701a28bf1599
+  * added starts-with and ends-with filter on Pandas dataframes.
+* f373955163ad58e6da3d762380b4f9802ac806f0
+  * new OCEL filters made available (event identifiers, object identifiers, collection of object types, connected component per object)
+* 2051ff1f5985ec34362a16d1f369e062220d7d1b
+  * new footprints visualizer (symmetric comparison between differences in footprint matrix)
+* 0c6d023535f18318f1f7f78fec21f3565ce229cd
+  * new OCEL statistics made available (temporal summary of the log, objects summary)
+
+### Changed
+* 1f36b168d33d6dd48f4e20fd16b7a71e25c6de67
+  * allow exporting trace-by-trace to disk in .xes
+
+### Deprecated
+
+### Fixed
+* 3396465f6d6944c84bbdfcf2bbe380b80c442350
+  * fixed inductive miner example's path
+
+### Removed
+
+### Other
+
+---
+
 ## pm4py 2.2.22 (2022.06.10)
 
 ### Added
+* c7e04d3e8d4a3fc1859e50793a0693040602dd3c
+  * add starts-with and ends-with filter
 
 ### Changed
-
 * 9bb6ad473bf46b2ca6a378193e2e3042bed98d31
   * added the possibility to provide additional parameters to Matplotlib's plots
 * 0489353a21ce7a4044d775ed505f476556d2b4e4
