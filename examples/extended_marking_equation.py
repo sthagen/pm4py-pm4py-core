@@ -2,12 +2,16 @@ import pm4py
 from pm4py.algo.discovery.inductive import algorithm as inductive_miner
 from pm4py.algo.analysis.marking_equation import algorithm as marking_equation
 from pm4py.algo.analysis.extended_marking_equation import algorithm as extended_marking_equation
+from pm4py.objects.conversion.process_tree import converter as process_tree_converter
 import os
+from pm4py.objects.log.importer.xes import importer as xes_importer
+
 
 
 def execute_script():
-    log = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"))
-    net, im, fm = inductive_miner.apply(log, variant=inductive_miner.Variants.IM_CLEAN)
+    log = xes_importer.apply(os.path.join("..", "tests", "input_data", "receipt.xes"))
+    process_tree = inductive_miner.apply(log)
+    net, im, fm = process_tree_converter.apply(process_tree)
     idx = 0
     # try to resolve the marking equation to find an heuristics and possible a vector of transitions
     # leading from im to fm
