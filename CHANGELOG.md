@@ -1,5 +1,47 @@
 # Changelog of pm4py
 
+## pm4py 2.3.4 (2022.12.XX)
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+* 4b5c035f4a744c8de4efb7969a6f0abcfdd966d2
+  * bug fix between filter on EventLog
+
+### Removed
+
+### Other
+
+---
+
+## pm4py 2.3.3 (2022.12.09)
+
+### Added
+* e2e4d357e2218a48f9b2d6b89690fbbe61cd6906
+  * PMPY-1952 OCEL - importing/exporting from/to SQLite
+
+### Changed
+* 246be6c1aa1a3216faebf1440c38d59485621f4b
+  * PMPY-1975 Visualization of heuristics net - avoid totally unconnected nodes
+
+### Deprecated
+
+### Fixed
+* 2e560757b4717a94e8f774de4b42bbb26bcdfc12
+  * PMPY-1974 Bug fix TBR decorations in Petri net
+* 743151159a3f240ea6cf0756bd9ae24ac5cac10b
+  * PMPY-1976 cope with changes in the deprecation/packaging packages
+
+### Removed
+
+### Other
+
+---
+
 ## pm4py 2.3.2 (2022.12.02)
 
 ### Added
