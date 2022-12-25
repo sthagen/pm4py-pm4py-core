@@ -4,7 +4,7 @@ This page provides an overview of all public ``pm4py`` objects, functions and me
 
 Input (:mod:`pm4py.read`)
 ---------------------------------
-``pm4py`` supports importing the follwing standardized *event data* format:
+``pm4py`` supports importing the following standardized *event data* format:
 
 * ``.xes`` files (`xes-standard <https://xes-standard.org/>`_); General interchange format for event data. :meth:`pm4py.read.read_xes`
 
@@ -18,6 +18,11 @@ Additional file formats that are currently supported by pm4py are:
 * ``.pnml`` files; File format specifying *Petri net* models :meth:`pm4py.read.read_pnml`
 * ``.ptml`` files; File format specifying *Process Tree* models :meth:`pm4py.read.read_ptml`
 
+Importing object-centric event logs is possible given the following formats:
+* ``.csv`` specification :meth:`pm4py.read.read_ocel_csv`
+* ``.jsonocel`` specification :meth:`pm4py.read.read_ocel_jsonocel`
+* ``.xmlocel`` specification :meth:`pm4py.read.read_ocel_xmlocel`
+* ``.sqlite`` specification :meth:`pm4py.read.read_ocel_sqlite`
 
 Output (:mod:`pm4py.write`)
 -------------------------------------
@@ -29,6 +34,12 @@ Similarly to event data importing, ``pm4py`` supports export functionalities to:
 * ``.ptml`` files, :meth:`pm4py.write.write_ptml`
 * ``.xes`` files. :meth:`pm4py.write.write_xes`
 
+Exporting object-centric event logs is possible to the following formats:
+* ``.csv`` specification :meth:`pm4py.write.write_ocel_csv`
+* ``.jsonocel`` specification :meth:`pm4py.write.write_ocel_jsonocel`
+* ``.xmlocel`` specification :meth:`pm4py.write.write_ocel_xmlocel`
+* ``.sqlite`` specification :meth:`pm4py.write.write_ocel_sqlite`
+
 Conversion (:mod:`pm4py.convert`)
 -------------------------------------
 Several conversions are available from/to different objects supported by ``pm4py``.
@@ -38,6 +49,10 @@ The following conversions are currently available:
 * :meth:`pm4py.convert.convert_to_petri_net` converts a process model to Petri net
 * :meth:`pm4py.convert.convert_to_process_tree` converts a process model to a process tree
 * :meth:`pm4py.convert.convert_to_reachability_graph` converts a process model to a reachability graph
+* :meth:`pm4py.convert.convert_log_to_ocel` converts an event log to an object-centric event log
+* :meth:`pm4py.convert.convert_log_to_networkx` converts a traditional event log (dataframe) to a directed graph (NetworkX)
+* :meth:`pm4py.convert.convert_ocel_to_networkx` converts an object-centric event log to a directed graph (NetworkX)
+
 
 Process Discovery (:mod:`pm4py.discovery`)
 ------------------------------------------
@@ -98,30 +113,32 @@ Among the on-screen visualizations, ``pmp4py`` currently supports:
   * :meth:`pm4py.vis.view_performance_spectrum`; views the *performance spectrum*.
   * :meth:`pm4py.vis.view_events_distribution_graph`; views the *events distribution graph*.
   * :meth:`pm4py.vis.view_ocdfg`; views an *object-centric directly-follows graph*.
-  * :meth:`pm4py.vis.view_ocpn`; views an *object-centric object-centric Petri net*.
+  * :meth:`pm4py.vis.view_ocpn`; views an *object-centric Petri net*.
+  * :meth:`pm4py.vis.view_object_graph`; views an *object-based graph*.
   * :meth:`pm4py.vis.view_network_analysis`; views the results of a *network analysis*.
   * :meth:`pm4py.vis.view_transition_system`; views the results of a *transition system*.
   * :meth:`pm4py.vis.view_prefix_tree`; views a *prefix tree*.
 
 We offer also some methods to store the visualizations on the disk:
 
-  * :meth:`pm4py.vis.save_vis_petri_net`; views a *Petri net* model.
-  * :meth:`pm4py.vis.save_vis_dfg`; views a *directly-follows graph* annotated with the frequency.
-  * :meth:`pm4py.vis.save_vis_performance_dfg`; views a *directly-follows graph* annotated with the performance.
-  * :meth:`pm4py.vis.save_vis_process_tree`; views a *process tree*.
-  * :meth:`pm4py.vis.save_vis_bpmn`; views a *BPMN model*.
-  * :meth:`pm4py.vis.save_vis_heuristics_net`; views an *heuristics net*.
-  * :meth:`pm4py.vis.save_vis_dotted_chart`; views a *dotted chart*
-  * :meth:`pm4py.vis.save_vis_sna`; views the results of a *social network analysis*.
-  * :meth:`pm4py.vis.save_vis_case_duration_graph`; views the *case duration graph*.
-  * :meth:`pm4py.vis.save_vis_events_per_time_graph`; views the *events per time graph*.
-  * :meth:`pm4py.vis.save_vis_performance_spectrum`; views the *performance spectrum*.
-  * :meth:`pm4py.vis.save_vis_events_distribution_graph`; views the *events distribution graph*.
-  * :meth:`pm4py.vis.save_vis_ocdfg`; views an *object-centric directly-follows graph*.
-  * :meth:`pm4py.vis.save_vis_ocpn`; views an *object-centric object-centric Petri net*.
-  * :meth:`pm4py.vis.save_vis_network_analysis`; views the results of a *network analysis*.
-  * :meth:`pm4py.vis.save_vis_transition_system`; views the results of a *transition system*.
-  * :meth:`pm4py.vis.save_vis_prefix_tree`; views a *prefix tree*.
+  * :meth:`pm4py.vis.save_vis_petri_net`; saves the visualization of a *Petri net* model.
+  * :meth:`pm4py.vis.save_vis_dfg`; saves the visualization of a *directly-follows graph* annotated with the frequency.
+  * :meth:`pm4py.vis.save_vis_performance_dfg`; saves the visualization of a *directly-follows graph* annotated with the performance.
+  * :meth:`pm4py.vis.save_vis_process_tree`; saves the visualization of a *process tree*.
+  * :meth:`pm4py.vis.save_vis_bpmn`; saves the visualization of a *BPMN model*.
+  * :meth:`pm4py.vis.save_vis_heuristics_net`; saves the visualization of an *heuristics net*.
+  * :meth:`pm4py.vis.save_vis_dotted_chart`; saves the visualization of a *dotted chart*
+  * :meth:`pm4py.vis.save_vis_sna`; saves the visualization of the results of a *social network analysis*.
+  * :meth:`pm4py.vis.save_vis_case_duration_graph`; saves the visualization of the *case duration graph*.
+  * :meth:`pm4py.vis.save_vis_events_per_time_graph`; saves the visualization of the *events per time graph*.
+  * :meth:`pm4py.vis.save_vis_performance_spectrum`; saves the visualization of the *performance spectrum*.
+  * :meth:`pm4py.vis.save_vis_events_distribution_graph`; saves the visualization of the *events distribution graph*.
+  * :meth:`pm4py.vis.save_vis_ocdfg`; saves the visualization of an *object-centric directly-follows graph*.
+  * :meth:`pm4py.vis.save_vis_ocpn`; saves the visualization of an *object-centric Petri net*.
+  * :meth:`pm4py.vis.save_vis_object_graph`; saves the visualization of an *object-based graph*.
+  * :meth:`pm4py.vis.save_vis_network_analysis`; saves the visualization of the results of a *network analysis*.
+  * :meth:`pm4py.vis.save_vis_transition_system`; saves the visualization of the results of a *transition system*.
+  * :meth:`pm4py.vis.save_vis_prefix_tree`; saves the visualization of a *prefix tree*.
 
 Statistics (:mod:`pm4py.stats`)
 ------------------------------------------
@@ -173,6 +190,10 @@ Also, some filtering techniques are offered on top of object-centric event logs:
   * :meth:`pm4py.filtering.filter_ocel_start_events_per_object_type`; filters the events of an object-centric event log that start the lifecycle of an object of a given object type.
   * :meth:`pm4py.filtering.filter_ocel_end_events_per_object_type`; filters the events of an object-centric event log that end the lifecycle of an object of a given object type.
   * :meth:`pm4py.filtering.filter_ocel_events_timestamp`; filters the events of an object-centric event log based on a timestamp range.
+  * :meth:`pm4py.filtering.filter_ocel_object_types`; filters a specified collection of object types from the object-centric event log.
+  * :meth:`pm4py.filtering.filter_ocel_events`; filters a specified collection of event identifiers from the object-centric event log.
+  * :meth:`pm4py.filtering.filter_ocel_objects`; filters a specified collection of object identifiers from the object-centric event log.
+  * :meth:`pm4py.filtering.filter_ocel_cc_object`; filters a connected component from the object-centric event log to which the object with the provided identifier belongs.
 
 Machine Learning (:mod:`pm4py.ml`)
 ------------------------------------------
@@ -216,11 +237,21 @@ In PM4Py, we offer object-centric process mining features:
   * :meth:`pm4py.ocel.ocel_flattening`; flattens object-centric event log with the selection of an object type.
   * :meth:`pm4py.ocel.ocel_object_type_activities`; gets the activities related to an object type in an object-centric event log.
   * :meth:`pm4py.ocel.ocel_objects_ot_count`; counts the objects for an object type.
+  * :meth:`pm4py.ocel.ocel_temporal_summary`; returns the temporal summary from an object-centric event log.
+  * :meth:`pm4py.ocel.ocel_objects_summary`; returns the objects summary from an object-centric event log.
+  * :meth:`pm4py.ocel.ocel_objects_interactions_summary`; returns the objects interactions from an object-centric event log.
+  * :meth:`pm4py.ocel.sample_ocel_objects`; returns a sampled object-centric event log picking a subset of the objects of the original one.
+  * :meth:`pm4py.ocel.sample_ocel_connected_components`; returns a sampled object-centric event log containing the provided number of connected components.
+  * :meth:`pm4py.ocel.ocel_drop_duplicates`; drops relations between events and objects happening at the same time.
+  * :meth:`pm4py.ocel.ocel_merge_duplicates`; merge events in the OCEL which are happening with the same activity at the same timestamp.
+
 
 Some object-centric process discovery algorithms are also offered:
 
   * :meth:`pm4py.ocel.discover_ocdfg`; discovers an object-centric directly-follows graph from the object-centric event log.
   * :meth:`pm4py.ocel.discover_oc_petri_net`; discovers an object-centric Petri net from the object-centric event log.
+  * :meth:`pm4py.ocel.discover_objects_graph`; discovers an object-based graph from the object-centric event log.
+
 
 Social Network Analysis (:mod:`pm4py.org`)
 ------------------------------------------
@@ -232,6 +263,19 @@ We offer different algorithms for the analysis of the organizational networks st
   * :meth:`pm4py.org.discover_subcontracting_network`; calculates the Subcontracting metric from the event log.
   * :meth:`pm4py.org.discover_organizational_roles`; discovers the organizational roles from the event log.
   * :meth:`pm4py.org.discover_network_analysis`; discovers the network analysis from the event log.
+
+Utilities (:mod:`pm4py.utils`)
+------------------------------------------
+
+Other algorithms, which do not belong to the aforementioned categories, are collected in this section:
+
+  * :meth:`pm4py.utils.parse_process_tree`; parses a process tree from a string.
+  * :meth:`pm4py.utils.parse_event_log_string`; parses an event log from a collection of comma-separated traces.
+  * :meth:`pm4py.utils.project_on_event_attribute`; projects an event log on top of a given attribute (e.g., the activity), obtaining a list of list of values for the attribute.
+  * :meth:`pm4py.utils.sample_cases`; samples a traditional event log returning the specified amount of cases.
+  * :meth:`pm4py.utils.sample_events`; samples a traditional event log / OCEL returning the specified amount of events.
+  * :meth:`pm4py.utils.serialize`; serializes mainstream pm4py objects as strings.
+  * :meth:`pm4py.utils.deserialize`; de-serializes mainstream pm4py objects given their string representation.
 
 Overall List of Methods
 ------------------------------------------
@@ -245,12 +289,20 @@ Overall List of Methods
    pm4py.read.read_pnml
    pm4py.read.read_ptml
    pm4py.read.read_xes
+   pm4py.read.read_ocel_csv
+   pm4py.read.read_ocel_jsonocel
+   pm4py.read.read_ocel_xmlocel
+   pm4py.read.read_ocel_sqlite
    pm4py.write
    pm4py.write.write_bpmn
    pm4py.write.write_dfg
    pm4py.write.write_pnml
    pm4py.write.write_ptml
    pm4py.write.write_xes
+   pm4py.write.write_ocel_csv
+   pm4py.write.write_ocel_jsonocel
+   pm4py.write.write_ocel_xmlocel
+   pm4py.write.write_ocel_sqlite
    pm4py.convert
    pm4py.convert.convert_to_event_log
    pm4py.convert.convert_to_event_stream
@@ -259,6 +311,9 @@ Overall List of Methods
    pm4py.convert.convert_to_petri_net
    pm4py.convert.convert_to_process_tree
    pm4py.convert.convert_to_reachability_graph
+   pm4py.convert.convert_log_to_ocel
+   pm4py.convert.convert_log_to_networkx
+   pm4py.convert.convert_ocel_to_networkx
    pm4py.discovery
    pm4py.discovery.discover_dfg
    pm4py.discovery.discover_performance_dfg
@@ -314,6 +369,8 @@ Overall List of Methods
    pm4py.vis.save_vis_ocdfg
    pm4py.vis.view_ocpn
    pm4py.vis.save_vis_ocpn
+   pm4py.vis.view_object_graph
+   pm4py.vis.save_vis_object_graph
    pm4py.vis.view_network_analysis
    pm4py.vis.save_vis_network_analysis
    pm4py.vis.view_transition_system
@@ -365,6 +422,10 @@ Overall List of Methods
    pm4py.filtering.filter_ocel_events_timestamp
    pm4py.filtering.filter_four_eyes_principle
    pm4py.filtering.filter_activity_done_different_resources
+   pm4py.filtering.filter_ocel_object_types
+   pm4py.filtering.filter_ocel_events
+   pm4py.filtering.filter_ocel_objects
+   pm4py.filtering.filter_ocel_cc_object
    pm4py.ml
    pm4py.ml.split_train_test
    pm4py.ml.get_prefixes_from_log
@@ -380,6 +441,13 @@ Overall List of Methods
    pm4py.ocel.ocel_objects_ot_count
    pm4py.ocel.discover_ocdfg
    pm4py.ocel.discover_oc_petri_net
+   pm4py.ocel.ocel_temporal_summary
+   pm4py.ocel.ocel_objects_summary
+   pm4py.ocel.ocel_objects_interactions_summary
+   pm4py.ocel.sample_ocel_objects
+   pm4py.ocel.sample_ocel_connected_components
+   pm4py.ocel.ocel_drop_duplicates
+   pm4py.ocel.ocel_merge_duplicates
    pm4py.org
    pm4py.org.discover_handover_of_work_network
    pm4py.org.discover_working_together_network
