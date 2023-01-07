@@ -203,6 +203,7 @@ Among those:
   * :meth:`pm4py.ml.split_train_test`; splits an event log into a *training event log* (default 80% of the cases) and a *test event log* (default 20% of the cases).
   * :meth:`pm4py.ml.get_prefixes_from_log`; gets fixed-length prefixes for the cases of an event log.
   * :meth:`pm4py.ml.extract_features_dataframe`; extracts machine learning features from an event log.
+  * :meth:`pm4py.ml.extract_temporal_features_dataframe`; extracts temporal features from an event log.
 
 Simulation (:mod:`pm4py.sim`)
 ------------------------------------------
@@ -263,6 +264,12 @@ We offer different algorithms for the analysis of the organizational networks st
   * :meth:`pm4py.org.discover_subcontracting_network`; calculates the Subcontracting metric from the event log.
   * :meth:`pm4py.org.discover_organizational_roles`; discovers the organizational roles from the event log.
   * :meth:`pm4py.org.discover_network_analysis`; discovers the network analysis from the event log.
+
+Privacy (:mod:`pm4py.privacy`)
+------------------------------------------
+We offer the following algorithms for the anonymization of event logs:
+
+  * :meth:`pm4py.privacy.anonymize_differential_privacy`; PRIPEL (Privacy-preserving event log publishing with contextual information) is a framework to publish event logs that fulfill differential privacy.
 
 Utilities (:mod:`pm4py.utils`)
 ------------------------------------------
@@ -430,6 +437,7 @@ Overall List of Methods
    pm4py.ml.split_train_test
    pm4py.ml.get_prefixes_from_log
    pm4py.ml.extract_features_dataframe
+   pm4py.ml.extract_temporal_features_dataframe
    pm4py.sim
    pm4py.sim.play_out
    pm4py.sim.generate_process_tree
@@ -462,6 +470,7 @@ Overall List of Methods
    pm4py.analysis.check_is_workflow_net
    pm4py.analysis.maximal_decomposition
    pm4py.analysis.generate_marking
+   pm4py.privacy.anonymize_differential_privacy
    pm4py.utils
    pm4py.utils.rebase
    pm4py.utils.parse_process_tree
