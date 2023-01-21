@@ -14,7 +14,8 @@
     You should have received a copy of the GNU General Public License
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
-from pm4py.algo.evaluation.simplicity.variants import arc_degree
+
+from pm4py.algo.evaluation.simplicity.variants import arc_degree, extended_cardoso, extended_cyclomatic
 from enum import Enum
 from pm4py.util import exec_utils
 from typing import Optional, Dict, Any, Union, Tuple
@@ -25,11 +26,15 @@ import pandas as pd
 
 class Variants(Enum):
     SIMPLICITY_ARC_DEGREE = arc_degree
+    EXTENDED_CARDOSO = extended_cardoso
+    EXTENDED_CYCLOMATIC = extended_cyclomatic
 
 
 SIMPLICITY_ARC_DEGREE = Variants.SIMPLICITY_ARC_DEGREE
+EXTENDED_CARDOSO = Variants.EXTENDED_CARDOSO
+EXTENDED_CYCLOMATIC = Variants.EXTENDED_CYCLOMATIC
 
-VERSIONS = {SIMPLICITY_ARC_DEGREE}
+VERSIONS = {SIMPLICITY_ARC_DEGREE, EXTENDED_CARDOSO, EXTENDED_CYCLOMATIC}
 
 
 def apply(petri_net: PetriNet, parameters: Optional[Dict[Any, Any]] = None, variant=SIMPLICITY_ARC_DEGREE) -> float:
