@@ -15,4 +15,4 @@
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
-from pm4py.visualization.dfg import visualizer, variants, util
+from pm4py.visualization.dfg.util import dfg_gviz

@@ -15,6 +15,8 @@
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
+
+
 from pm4py.statistics.attributes.log import get as attr_get
 from pm4py.objects.dfg.utils import dfg_utils
 from pm4py.util import xes_constants as xes
@@ -22,6 +24,7 @@ from pm4py.util import exec_utils
 from pm4py.statistics.sojourn_time.log import get as soj_time_get
 from enum import Enum
 from pm4py.util import constants
+
 from typing import Optional, Dict, Any, Tuple
 import graphviz
 from pm4py.objects.log.obj import EventLog
@@ -38,18 +41,19 @@ class Parameters(Enum):
     TIMESTAMP_KEY = constants.PARAMETER_CONSTANT_TIMESTAMP_KEY
     START_TIMESTAMP_KEY = constants.PARAMETER_CONSTANT_START_TIMESTAMP_KEY
     FONT_SIZE = "font_size"
+    AGGREGATION_MEASURE = "aggregation_measure"
     BGCOLOR = "bgcolor"
-    STAT_LOCALE = "stat_locale"
 
 
-def apply(dfg: Dict[Tuple[str, str], int], log: EventLog = None, parameters: Optional[Dict[Any, Any]] = None, activities_count : Dict[str, int] = None, soj_time: Dict[str, float] = None) -> graphviz.Digraph:
+def apply(dfg: Dict[Tuple[str, str], int], log: EventLog = None, parameters: Optional[Dict[Any, Any]] = None,
+          activities_count: Dict[str, int] = None, soj_time: Dict[str, float] = None) -> graphviz.Digraph:
     """
-    Visualize a frequency directly-follows graph
+    Visualize a cost-based directly-follows graph
 
     Parameters
     -----------------
     dfg
-        Frequency Directly-follows graph
+        Performance Directly-follows graph
     log
         (if provided) Event log for the calculation of statistics
     activities_count
@@ -70,13 +74,26 @@ def apply(dfg: Dict[Tuple[str, str], int], log: EventLog = None, parameters: Opt
     activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes.DEFAULT_NAME_KEY)
     image_format = exec_utils.get_param_value(Parameters.FORMAT, parameters, "png")
     max_no_of_edges_in_diagram = exec_utils.get_param_value(Parameters.MAX_NO_EDGES_IN_DIAGRAM, parameters, 100000)
-    start_activities = exec_utils.get_param_value(Parameters.START_ACTIVITIES, parameters, {})
-    end_activities = exec_utils.get_param_value(Parameters.END_ACTIVITIES, parameters, {})
+    start_activities = exec_utils.get_param_value(Parameters.START_ACTIVITIES, parameters, [])
+    end_activities = exec_utils.get_param_value(Parameters.END_ACTIVITIES, parameters, [])
     font_size = exec_utils.get_param_value(Parameters.FONT_SIZE, parameters, 12)
     font_size = str(font_size)
     activities = dfg_utils.get_activities_from_dfg(dfg)
+    aggregation_measure = exec_utils.get_param_value(Parameters.AGGREGATION_MEASURE, parameters, "mean")
     bgcolor = exec_utils.get_param_value(Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR)
-    stat_locale = exec_utils.get_param_value(Parameters.STAT_LOCALE, parameters, {})
+
+    # if all the aggregation measures are provided for a given key,
+    # then pick one of the values for the representation
+    dfg0 = dfg
+    dfg = {}
+    for key in dfg0:
+        try:
+            if aggregation_measure in dfg0[key]:
+                dfg[key] = dfg0[key][aggregation_measure]
+            else:
+                dfg[key] = dfg0[key]
+        except:
+            dfg[key] = dfg0[key]
 
     if activities_count is None:
         if log is not None:
@@ -96,9 +113,9 @@ def apply(dfg: Dict[Tuple[str, str], int], log: EventLog = None, parameters: Opt
         if log is not None:
             soj_time = soj_time_get.apply(log, parameters=parameters)
         else:
-            soj_time = {key: 0 for key in activities}
+            soj_time = {key: -1 for key in activities}
 
-    return dfg_gviz.graphviz_visualization(activities_count, dfg, image_format=image_format, measure="frequency",
+    return dfg_gviz.graphviz_visualization(activities_count, dfg, image_format=image_format, measure="cost",
                                   max_no_of_edges_in_diagram=max_no_of_edges_in_diagram,
-                                  start_activities=start_activities, end_activities=end_activities, 
-                                  soj_time=soj_time, font_size=font_size, bgcolor=bgcolor, stat_locale=stat_locale)
+                                  start_activities=start_activities, end_activities=end_activities, soj_time=soj_time,
+                                  font_size=font_size, bgcolor=bgcolor)
