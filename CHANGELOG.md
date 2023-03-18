@@ -1,8 +1,65 @@
 # Changelog of pm4py
 
-## pm4py 2.5.4 (2023.03.XX)
+## pm4py 2.6.2 (2023.03.XX)
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Other
+
+---
+
+## pm4py 2.6.1 (2023.03.14)
+
+### Added
+* c9eac43f4b55883056a3540857b470ac18cc922e
+  * extract_ocel_features method in the simplified interface
+* d2744bf87b0ce80ddc8d42a5b935424c36ffb82f
+  * possibility to conisder additional event attributes in the convert_log_to_ocel method
+
+### Changed
+* 84e85c6e4715fe58159f6cfb83248d1cfa28bc8e
+  * possibility to return additional information during the conversion of BPMN to Petri net
+
+### Deprecated
+
+### Fixed
+* e1b126c5adca8d5767375a6737a9d9378a9093c6
+  * bug fix object-centric Petri nets discovery
+
+### Removed
+
+### Other
+
+---
+
+## pm4py 2.6.0 (2023.03.13)
+
+### Added
+* 73254a80b3430140fac2ff023a6e356edc48dd0f
+  * ILP miner (process discovery in ILP)
+* 7016026a2a514d529fe5cf9a49b4aa607d30183c
+  * "timestamp grouping filter" and "consecutive activities"
+    filters for Pandas dataframes
+* 4ba2a9e873c972c96fed8f3912f0dbaa8dfc96a1
+  * added pm4py.insert_case_arrival_finish_rate,
+    pm4py.insert_case_service_waiting_time,
+    pm4py.extract_outcome_enriched_dataframe
+    methods to the simplified interface (Pandas dataframes)
+* 18b250e38bcfeb08cda549df94de98ce5c5b484e
+  * added baseline log clustering based on profiles
+    (Song, Minseok, Christian W. Günther, and Wil MP Van der Aalst.
+    "Trace clustering in process mining."
+    Business Process Management Workshops: BPM 2008. )
+* 690716015f2452702b8f045e35e2029659bbd226
+  * log to target vectors (for ML purposes): next_activity, next_time, remaining_time
 
 ### Changed
 * d6d2301dd0d2ea57cba76015eba124f726f4544e
@@ -14,8 +71,6 @@
 ### Fixed
 * 0a1c6f9c6e0ff45a0e732978589ed17513899be8
   * fixed dependency on Simpy in __init__.py
-* 9663a863cc342cfe16800a2893e7b0e6b9df48d2
-  * fixed bug in WOFLAN (crashing after LP solving)
 
 ### Removed
 
