@@ -1,10 +1,41 @@
 # Changelog of pm4py
 
-## pm4py 2.6.2 (2023.03.XX)
+## pm4py 2.7.1 (2023.XX.YY)
 
 ### Added
+* af4f00bca1ec7a3b0acc0421efe4bf895b324995
+  * insertion graph-based O2O relationships in the OCEL
+* 0bb0bad37311fd45113440d97f53a5c8255ce89c
+  * insertion lifecycle-based E2O relations in the OCEL
+* e6076a50216de31fdbd4dd00edd631a01c9e1bb7
+  * another algorithm to split/sample OCELs (ancestors/descendants based)
+* 564e2c0ec976291c283fc1b24c5ebc2b6e452f12
+  * algorithm for textual representation of OCEL
 
 ### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Other
+
+
+---
+
+## pm4py 2.7.0 (2023.03.23) -- Million Edition --
+
+### Added
+* ba126d3f4211cb237dae4b09dec5574224666237
+  * initial OpenAI integration
+* 05b6425637768312bf4768a252ee410c3bd5a35c
+  * easy-to-use (local computer) log extractors for Outlook, Windows events registry, Mozilla Firefox and Google Chrome
+
+### Changed
+* b3c17fe017bd57889845f398e08fa95d94a8c800
+  * add flow id to silent transitions in BPMN Petri net conversion
 
 ### Deprecated
 
