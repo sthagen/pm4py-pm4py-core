@@ -1,6 +1,23 @@
 # Changelog of pm4py
 
-## pm4py 2.7.1 (2023.XX.YY)
+## pm4py 2.7.2 (2023.XX.YY)
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Other
+
+
+---
+
+## pm4py 2.7.1 (2023.03.28)
 
 ### Added
 * af4f00bca1ec7a3b0acc0421efe4bf895b324995
@@ -13,6 +30,10 @@
   * algorithm for textual representation of OCEL
 * 3e5164b72835aaa29051f4fd6ce4329253a17f95
   * algorithm to cluster OCEL based on the lifecycle/interactions similarity
+* 70131091d88e5e8f2627b4ff7f70f8d479bd7738
+  * new GPT-4 queries
+* f584641df13504f71c796752da1befc963f3ce3b
+  * included some simplified single-SQL-query extractors
 
 ### Changed
 * 70198faa1b674c3a4e4351ff251a9af504e16a4e

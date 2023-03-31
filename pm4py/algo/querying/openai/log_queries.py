@@ -18,7 +18,7 @@
 from typing import Optional, Dict, Any, Collection
 import pandas as pd
 from pm4py.objects.log.obj import EventLog, EventStream
-from pm4py.algo.querying.openai import log_to_dfg_descr, log_to_variants_descr
+from pm4py.algo.querying.openai import log_to_dfg_descr, log_to_variants_descr, log_to_cols_descr
 from pm4py.algo.querying.openai import perform_query
 from typing import Union, Tuple
 from enum import Enum
@@ -28,6 +28,11 @@ from pm4py.util import exec_utils, constants
 class Parameters(Enum):
     EXECUTE_QUERY = "execute_query"
     API_KEY = "api_key"
+
+
+AVAILABLE_LOG_QUERIES = ["describe_process", "describe_path", "describe_activity", "suggest_improvements", "code_for_log_generation",
+                         "root_cause_analysis", "describe_variant", "compare_logs", "anomaly_detection", "suggest_clusters",
+                         "conformance_checking"]
 
 
 def query_wrapper(log_obj: Union[pd.DataFrame, EventLog, EventStream], type: str, args: Optional[Dict[Any, Any]] = None, parameters: Optional[Dict[Any, Any]] = None) -> str:
@@ -50,9 +55,15 @@ def query_wrapper(log_obj: Union[pd.DataFrame, EventLog, EventStream], type: str
     elif type == "root_cause_analysis":
         return root_cause_analysis(log_obj, parameters=parameters)
     elif type == "describe_variant":
-        return describe_variant(log_obj, parameters=parameters)
+        return describe_variant(log_obj, args["variant"], parameters=parameters)
     elif type == "compare_logs":
         return compare_logs(log_obj, args["log2"], parameters=parameters)
+    elif type == "anomaly_detection":
+        return anomaly_detection(log_obj, parameters=parameters)
+    elif type == "suggest_clusters":
+        return suggest_clusters(log_obj, parameters=parameters)
+    elif type == "conformance_checking":
+        return conformance_checking(log_obj, args["rule"], parameters=parameters)
 
 
 def describe_process(log_obj: Union[pd.DataFrame, EventLog, EventStream], parameters: Optional[Dict[Any, Any]] = None) -> str:
@@ -182,6 +193,74 @@ def compare_logs(log1: Union[pd.DataFrame, EventLog, EventStream], log2: Union[p
     query += "ith the event log of a process containing the following steps (the frequency is relative to the number of cases):"
     query += log2_descr
     query += "what are the main differences?"
+
+    if not execute_query:
+        return query
+
+    return perform_query.apply(query, parameters=parameters)
+
+
+def anomaly_detection(log_obj: Union[pd.DataFrame, EventLog, EventStream], parameters: Optional[Dict[Any, Any]] = None) -> str:
+    if parameters is None:
+        parameters = {}
+
+    api_key = exec_utils.get_param_value(Parameters.API_KEY, parameters, constants.OPENAI_API_KEY)
+    execute_query = exec_utils.get_param_value(Parameters.EXECUTE_QUERY, parameters, api_key is not None)
+
+    query = log_to_variants_descr.apply(log_obj, parameters=parameters)
+    query += "what are the main anomalies? An anomaly involves a strange ordering of the activities, or a significant amount of rework. Please only data and process specific considerations, not general considerations. Please sort the anomalies based on their seriousness."
+
+    if not execute_query:
+        return query
+
+    return perform_query.apply(query, parameters=parameters)
+
+
+def suggest_clusters(log_obj: Union[pd.DataFrame, EventLog, EventStream], parameters: Optional[Dict[Any, Any]] = None) -> str:
+    if parameters is None:
+        parameters = {}
+
+    api_key = exec_utils.get_param_value(Parameters.API_KEY, parameters, constants.OPENAI_API_KEY)
+    execute_query = exec_utils.get_param_value(Parameters.EXECUTE_QUERY, parameters, api_key is not None)
+
+    query = log_to_variants_descr.apply(log_obj, parameters=parameters)
+    query += "can you suggest some groups of variants (clusters) with intrinsic different behavior?"
+
+    if not execute_query:
+        return query
+
+    return perform_query.apply(query, parameters=parameters)
+
+
+def conformance_checking(log_obj: Union[pd.DataFrame, EventLog, EventStream], rule: str, parameters: Optional[Dict[Any, Any]] = None) -> str:
+    if parameters is None:
+        parameters = {}
+
+    api_key = exec_utils.get_param_value(Parameters.API_KEY, parameters, constants.OPENAI_API_KEY)
+    execute_query = exec_utils.get_param_value(Parameters.EXECUTE_QUERY, parameters, api_key is not None)
+
+    query = log_to_variants_descr.apply(log_obj, parameters=parameters)
+    query += "given the following conformance rule:\n"
+    query += rule
+    query += "\nwhat is the fitness level of the variants? can you identify some variants that violate such rule?"
+
+    if not execute_query:
+        return query
+
+    return perform_query.apply(query, parameters=parameters)
+
+
+def suggest_verify_hypotheses(log_obj: Union[pd.DataFrame, EventLog, EventStream], parameters: Optional[Dict[Any, Any]] = None) -> str:
+    if parameters is None:
+        parameters = {}
+
+    api_key = exec_utils.get_param_value(Parameters.API_KEY, parameters, constants.OPENAI_API_KEY)
+    execute_query = exec_utils.get_param_value(Parameters.EXECUTE_QUERY, parameters, api_key is not None)
+
+    query = log_to_variants_descr.apply(log_obj, parameters=parameters)
+    query += "\n\nand the log of the process contains the following attributes:\n\n"
+    query += log_to_cols_descr.apply(log_obj, parameters=parameters)
+    query += "\n\ncan you make some hyphothesis between the execution of the process and its attributes? I mean, can you provide me a DuckDB SQL query that I can execute, and return the results to you, in order for you to evaluate such hyphothesis about the process? More in detail, the data is stored in a Pandas dataframe where each row is an event having the provided attributes (so there are no separate table containing the variant). Can you tell me in advance which hyphothesis you want to verify?"
 
     if not execute_query:
         return query
