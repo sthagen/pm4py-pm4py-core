@@ -5,13 +5,19 @@
 ### Added
 * e561089945951e91b2ecfe0f223b35bd2d351630
   * other NLP/LLM abstractions
+* 42b0d2a6f6fe7430d382117bf0ce54e8fd60ce23
+  * return diagnostics dataframe in pm4py.conformance methods
 
 ### Changed
+* 44fc2aecd0885534dd2083a4011be9e031c3a04a
+  * improved integration possibilities with PowerBI
 
 ### Deprecated
 
 ### Fixed
-
+* 7dfeac5ddc4f4f6a8b5410fc2e04016590b6f22a
+  * fixed OCEL2 XML importer
+  
 ### Removed
 
 ### Other
