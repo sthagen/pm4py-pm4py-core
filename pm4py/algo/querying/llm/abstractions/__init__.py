@@ -15,3 +15,4 @@
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
+from pm4py.algo.querying.llm.abstractions import case_to_descr, log_to_cols_descr, log_to_dfg_descr, log_to_fea_descr, log_to_variants_descr, logske_to_descr, net_to_descr, ocel_fea_descr, ocel_ocdfg_descr, stream_to_descr
