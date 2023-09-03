@@ -169,7 +169,7 @@ def abstract_ocel_ocdfg(ocel: OCEL, include_header: bool = True, include_timesta
     return ocel_ocdfg_descr.apply(ocel, parameters=parameters)
 
 
-def abstract_ocel_features(ocel: OCEL, obj_type: str, include_header: bool = True, max_len: int = constants.OPENAI_MAX_LEN) -> str:
+def abstract_ocel_features(ocel: OCEL, obj_type: str, include_header: bool = True, max_len: int = constants.OPENAI_MAX_LEN, debug: bool = False, enable_object_lifecycle_paths: bool = True) -> str:
     """
     Obtains the abstraction of an object-centric event log, representing in text the features and their values.
 
@@ -177,6 +177,8 @@ def abstract_ocel_features(ocel: OCEL, obj_type: str, include_header: bool = Tru
     :param obj_type: the object type that should be considered in the feature extraction
     :param include_header: (boolean) includes the header in the abstraction
     :param max_len: maximum length of the abstraction
+    :param debug: enables debugging mode (telling at which point of the feature extraction you are)
+    :param enable_object_lifecycle_paths: enables the "lifecycle paths" feature
     :rtype: ``str``
 
     .. code-block:: python3
@@ -189,6 +191,8 @@ def abstract_ocel_features(ocel: OCEL, obj_type: str, include_header: bool = Tru
     parameters = {}
     parameters["include_header"] = include_header
     parameters["max_len"] = max_len
+    parameters["debug"] = debug
+    parameters["enable_object_lifecycle_paths"] = enable_object_lifecycle_paths
 
     from pm4py.algo.querying.llm.abstractions import ocel_fea_descr
     return ocel_fea_descr.apply(ocel, obj_type, parameters=parameters)
@@ -362,6 +366,29 @@ def abstract_case(case: Trace, include_case_attributes: bool = True, include_eve
 
     from pm4py.algo.querying.llm.abstractions import case_to_descr
     return case_to_descr.apply(case, parameters=parameters)
+
+
+def abstract_declare(declare_model, include_header: bool = True) -> str:
+    """
+    Textually abstracts a DECLARE model
+
+    :param declare: DECLARE model
+    :param include_header: (boolean) includes the header of the response
+    :rtype: ``str``
+
+    .. code-block:: python3
+
+        import pm4py
+
+        log = pm4py.read_xes("tests/input_data/roadtraffic100traces.xes", return_legacy_log_object=True)
+        log_ske = pm4py.discover_declare(log)
+        print(pm4py.llm.abstract_declare(log_ske))
+    """
+    parameters = {}
+    parameters["include_header"] = include_header
+
+    from pm4py.algo.querying.llm.abstractions import declare_to_descr
+    return declare_to_descr.apply(declare_model, parameters=parameters)
 
 
 def abstract_log_skeleton(log_skeleton, include_header: bool = True) -> str:

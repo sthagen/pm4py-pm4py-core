@@ -92,6 +92,7 @@ Among *procedural process models*, ``pm4py`` currently supports:
 
 Among *declarative process models*, ``pm4py`` currently supports:
 
+  * :meth:`pm4py.discovery.discover_declare`; discovers a *DECLARE* model.
   * :meth:`pm4py.discovery.discover_log_skeleton`; discovers a *log skeleton*.
   * :meth:`pm4py.discovery.discover_temporal_profile`; discovers a *temporal profile*.
 
@@ -112,6 +113,7 @@ Among procedural process models, ``pm4py`` currently supports:
 Among declarative process models, ``pm4py`` currently supports:
 
   * :meth:`pm4py.conformance.conformance_log_skeleton`; conformance checking using the *log skeleton*.
+  * :meth:`pm4py.conformance.conformance_declare`; conformance checking using a *DECLARE model*.
   * :meth:`pm4py.conformance.conformance_temporal_profile`; conformance checking using the *temporal profile*.
 
 
@@ -224,6 +226,7 @@ Also, some filtering techniques are offered on top of object-centric event logs:
   * :meth:`pm4py.filtering.filter_ocel_cc_object`; filters a connected component from the object-centric event log to which the object with the provided identifier belongs.
   * :meth:`pm4py.filtering.filter_ocel_cc_length`; filter the connected components from an object-centric event log having a number of objects falling in a provided range.
   * :meth:`pm4py.filtering.filter_ocel_cc_otype`; filter the connected components from an object-centric event log having at least an object of the specified object type.
+  * :meth:`pm4py.filtering.filter_ocel_cc_activity`; filter the connected components from an object-centric event log having at least an event with the specified activity.
 
 Machine Learning (:mod:`pm4py.ml`)
 ------------------------------------------
@@ -308,6 +311,7 @@ The following methods provides just the abstractions of the given objects:
   * :meth:`pm4py.llm.abstract_event_stream`; provides an abstraction of the (last) events of the stream related to a traditional event log
   * :meth:`pm4py.llm.abstract_temporal_profile`; provides the abstraction of a temporal profile model
   * :meth:`pm4py.llm.abstract_petri_net`; provides the abstraction of a Petri net
+  * :meth:`pm4py.llm.abstract_declare`; provides the abstraction of a DECLARE model
   * :meth:`pm4py.llm.abstract_log_skeleton`; provides the abstraction of a log skeleton model
 
 The following methods can be executed directly against the LLM APIs:
@@ -445,6 +449,7 @@ Overall List of Methods
    pm4py.discovery.discover_transition_system
    pm4py.discovery.discover_prefix_tree
    pm4py.discovery.discover_temporal_profile
+   pm4py.discovery.discover_declare
    pm4py.discovery.discover_log_skeleton
    pm4py.discovery.discover_batches
    pm4py.conformance
@@ -456,6 +461,7 @@ Overall List of Methods
    pm4py.conformance.precision_alignments
    pm4py.conformance.replay_prefix_tbr
    pm4py.conformance.conformance_temporal_profile
+   pm4py.conformance.conformance_declare
    pm4py.conformance.conformance_log_skeleton
    pm4py.vis
    pm4py.vis.view_petri_net
@@ -550,6 +556,7 @@ Overall List of Methods
    pm4py.filtering.filter_ocel_cc_object
    pm4py.filtering.filter_ocel_cc_length
    pm4py.filtering.filter_ocel_cc_otype
+   pm4py.filtering.filter_ocel_cc_activity
    pm4py.ml
    pm4py.ml.split_train_test
    pm4py.ml.get_prefixes_from_log
@@ -591,6 +598,7 @@ Overall List of Methods
    pm4py.llm.abstract_log_features
    pm4py.llm.abstract_temporal_profile
    pm4py.llm.abstract_case
+   pm4py.llm.abstract_declare
    pm4py.llm.abstract_log_skeleton
    pm4py.llm.openai_query
    pm4py.connectors.extract_log_outlook_mails
