@@ -14,12 +14,20 @@
     You should have received a copy of the GNU General Public License
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
+def translate_infix_to_regex(infix):
+    regex = "^"
+    for i, act in enumerate(infix):
+        is_last_activity = i == (len(infix) - 1)
+        if act == "...":
+            if is_last_activity:
+                regex = f"{regex[:-1]}(,[^,]*)*"
+            else:
+                regex = f"{regex}([^,]*,)*"
+        else:
+            if is_last_activity:
+                regex = f"{regex}{act}"
+            else:
+                regex = f"{regex}{act},"
 
-__name__ = 'pm4py'
-VERSION = '2.7.8.3'
-__version__ = VERSION
-__doc__ = 'Process mining for Python'
-__author__ = 'Fraunhofer Institute for Applied Information Technology FIT'
-__author_email__ = 'pm4py@fit.fraunhofer.de'
-__maintainer__ = 'Fraunhofer Institute for Applied Information Technology FIT'
-__maintainer_email__ = "pm4py@fit.fraunhofer.de"
+    regex = f"{regex}$"
+    return regex
