@@ -14,6 +14,8 @@
     You should have received a copy of the GNU General Public License
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
+from pm4py.util import constants, pandas_utils
+
 def get_freq_triples(df, activity_key="concept:name", case_id_glue="case:concept:name", timestamp_key="time:timestamp",
                      sort_caseid_required=True, sort_timestamp_along_case_id=True):
     """
@@ -55,7 +57,7 @@ def get_freq_triples(df, activity_key="concept:name", case_id_glue="case:concept
     df_reduced_1.columns = [str(col) + '_2' for col in df_reduced_1.columns]
     df_reduced_2.columns = [str(col) + '_3' for col in df_reduced_2.columns]
 
-    df_successive_rows = pd.concat([df_reduced, df_reduced_1, df_reduced_2], axis=1)
+    df_successive_rows = pandas_utils.concat([df_reduced, df_reduced_1, df_reduced_2], axis=1)
     df_successive_rows = df_successive_rows[df_successive_rows[case_id_glue] == df_successive_rows[case_id_glue + '_2']]
     df_successive_rows = df_successive_rows[df_successive_rows[case_id_glue] == df_successive_rows[case_id_glue + '_3']]
     all_columns = set(df_successive_rows.columns)

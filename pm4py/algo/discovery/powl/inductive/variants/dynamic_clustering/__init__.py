@@ -14,10 +14,4 @@
     You should have received a copy of the GNU General Public License
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
-
-from enum import Enum, auto
-
-class POWLDiscoveryVariant(Enum):
-    IM_BASE = auto()  # this is base IM with no partial orders
-    BRUTE_FORCE = auto()  # BPM paper
-    CLUSTER = auto() # ICPM paper
+from pm4py.algo.discovery.powl.inductive.variants.dynamic_clustering import *

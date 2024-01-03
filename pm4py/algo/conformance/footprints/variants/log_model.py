@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
-from pm4py.util import exec_utils, xes_constants, constants
+from pm4py.util import exec_utils, xes_constants, constants, pandas_utils
 from typing import Optional, Dict, Any, Union, List
 from pm4py.objects.log.obj import EventLog
 import pandas as pd
@@ -144,4 +144,4 @@ def get_diagnostics_dataframe(log: EventLog, conf_result: Union[List[Dict[str, A
 
         diagn_stream.append({"case_id": case_id, "num_violations": num_violations, "is_fit": is_fit})
 
-    return pd.DataFrame(diagn_stream)
+    return pandas_utils.instantiate_dataframe(diagn_stream)

@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
-from pm4py.util import constants, exec_utils, xes_constants
+from pm4py.util import constants, exec_utils, xes_constants, pandas_utils
 from pm4py.streaming.util.dictio import generator
 from pm4py.streaming.algo.interface import StreamingAlgorithm
 import logging
@@ -311,7 +311,7 @@ class FootprintsStreamingConformance(StreamingAlgorithm):
             status = self.get_status(case)
             diagn_stream.append({"case": case, "is_fit": status})
 
-        return pd.DataFrame(diagn_stream)
+        return pandas_utils.instantiate_dataframe(diagn_stream)
 
 
 def apply(footprints, parameters=None):

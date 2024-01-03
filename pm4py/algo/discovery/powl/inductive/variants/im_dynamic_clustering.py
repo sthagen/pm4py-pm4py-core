@@ -14,19 +14,22 @@
     You should have received a copy of the GNU General Public License
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
+from typing import Optional, Tuple, List, TypeVar, Dict, Any
 
-from typing import Optional, Tuple, List, Dict, Any
-
-from pm4py.algo.discovery.powl.inductive.variants.clustering.factory import CutFactoryPOCluster
-from pm4py.algo.discovery.powl.inductive.variants.im_base import IMBasePOWL, T
-from pm4py.algo.discovery.powl.inductive.variants.powl_discovery_variants import POWLDiscoveryVariant
+from pm4py.algo.discovery.inductive.dtypes.im_ds import IMDataStructureLog
+from pm4py.algo.discovery.powl.inductive.variants.dynamic_clustering.factory import CutFactoryPOWLDynamicClustering
+from pm4py.algo.discovery.powl.inductive.variants.im_tree import IMBasePOWL
+from pm4py.algo.discovery.powl.inductive.variants.powl_discovery_varaints import POWLDiscoveryVariant
 from pm4py.objects.powl.obj import POWL
 
-class ClusterPOWL(IMBasePOWL):
+T = TypeVar('T', bound=IMDataStructureLog)
+
+
+class POWLInductiveMinerDynamicClustering(IMBasePOWL):
 
     def instance(self) -> POWLDiscoveryVariant:
-        return POWLDiscoveryVariant.CLUSTER
+        return POWLDiscoveryVariant.DYNAMIC_CLUSTERING
 
     def find_cut(self, obj: T, parameters: Optional[Dict[str, Any]] = None) -> Optional[Tuple[POWL, List[T]]]:
-        res = CutFactoryPOCluster.find_cut(obj, parameters=parameters)
+        res = CutFactoryPOWLDynamicClustering.find_cut(obj, parameters=parameters)
         return res

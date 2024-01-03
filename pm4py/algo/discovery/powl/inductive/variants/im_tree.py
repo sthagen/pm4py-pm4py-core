@@ -25,7 +25,10 @@ from pm4py.algo.discovery.inductive.variants.abc import InductiveMinerFramework
 from pm4py.algo.discovery.powl.inductive.base_case.factory import BaseCaseFactory
 from pm4py.algo.discovery.powl.inductive.cuts.factory import CutFactory
 from pm4py.algo.discovery.powl.inductive.fall_through.factory import FallThroughFactory
-from pm4py.algo.discovery.powl.inductive.variants.powl_discovery_variants import POWLDiscoveryVariant
+from pm4py.algo.discovery.powl.inductive.utils.filtering import FILTERING_TYPE, FilteringType, \
+    filter_most_frequent_variants, FILTERING_THRESHOLD, filter_most_frequent_variants_with_decreasing_factor, \
+    DEFAULT_FILTERING_TYPE
+from pm4py.algo.discovery.powl.inductive.variants.powl_discovery_varaints import POWLDiscoveryVariant
 
 from pm4py.objects.powl.obj import POWL, StrictPartialOrder, Sequence
 
@@ -35,20 +38,52 @@ T = TypeVar('T', bound=IMDataStructureUVCL)
 class IMBasePOWL(Generic[T], InductiveMinerFramework[T]):
 
     def instance(self) -> POWLDiscoveryVariant:
-        return POWLDiscoveryVariant.IM_BASE
+        return POWLDiscoveryVariant.TREE
+
     def apply(self, obj: IMDataStructureUVCL, parameters: Optional[Dict[str, Any]] = None) -> POWL:
+        if FILTERING_TYPE not in parameters.keys():
+            filtering_type = DEFAULT_FILTERING_TYPE
+        else:
+            filtering_type = parameters[FILTERING_TYPE]
+            if filtering_type not in FilteringType:
+                raise KeyError("Invalid FILTERING_TYPE: " + str(filtering_type))
+
         empty_traces = POWLEmptyTracesUVCL.apply(obj, parameters)
         if empty_traces is not None:
             return self._recurse(empty_traces[0], empty_traces[1], parameters)
+
         powl = self.apply_base_cases(obj, parameters)
-        if powl is None:
-            cut = self.find_cut(obj, parameters)
-            if cut is not None:
-                powl = self._recurse(cut[0], cut[1], parameters=parameters)
-        if powl is None:
+        if powl is not None:
+            return powl
+
+        cut = self.find_cut(obj, parameters)
+        if cut is not None:
+            powl = self._recurse(cut[0], cut[1], parameters=parameters)
+
+        if powl is not None:
+            return powl
+        else:
+            if filtering_type is FilteringType.DYNAMIC:
+                filtered_log = filter_most_frequent_variants(obj.data_structure)
+                if len(filtered_log.data_structure) > 0:
+                    return self.apply(filtered_log, parameters=parameters)
+
+            elif filtering_type is FilteringType.DECREASING_FACTOR:
+                if FILTERING_THRESHOLD in parameters.keys():
+                    t = parameters[FILTERING_THRESHOLD]
+                    if isinstance(t, float) and 0 <= t < 1:
+                        if t > 0:
+                            filtered_log = filter_most_frequent_variants_with_decreasing_factor(obj.data_structure,
+                                                                                                decreasing_factor=t)
+                            if 0 < len(filtered_log.data_structure) < len(obj.data_structure):
+                                return self.apply(filtered_log, parameters=parameters)
+                    else:
+                        raise KeyError("Invalid filtering threshold!")
+            else:
+                raise KeyError("Invalid filtering type!")
+
             ft = self.fall_through(obj, parameters)
-            powl = self._recurse(ft[0], ft[1], parameters=parameters)
-        return powl
+            return self._recurse(ft[0], ft[1], parameters=parameters)
 
     def apply_base_cases(self, obj: T, parameters: Optional[Dict[str, Any]] = None) -> Optional[POWL]:
         return BaseCaseFactory.apply_base_cases(obj, parameters=parameters)
@@ -62,8 +97,6 @@ class IMBasePOWL(Generic[T], InductiveMinerFramework[T]):
     def _recurse(self, powl: POWL, objs: List[T], parameters: Optional[Dict[str, Any]] = None):
         children = [self.apply(obj, parameters=parameters) for obj in objs]
         if isinstance(powl, StrictPartialOrder):
-            if isinstance(powl, Sequence):
-                return Sequence(children)
             powl_new = StrictPartialOrder(children)
             for i, j in combinations(range(len(powl.children)), 2):
                 if powl.order.is_edge_id(i, j):
@@ -74,4 +107,3 @@ class IMBasePOWL(Generic[T], InductiveMinerFramework[T]):
         else:
             powl.children.extend(children)
             return powl
-
