@@ -14,11 +14,12 @@
     You should have received a copy of the GNU General Public License
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
-from sklearn import tree
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import export_text
 from typing import Dict, Tuple, Set, List
 
 
-def apply(clf: tree.DecisionTreeClassifier, columns: List[str]) -> Tuple[Dict[str, str], Dict[str, Set[str]]]:
+def apply(clf: DecisionTreeClassifier, columns: List[str]) -> Tuple[Dict[str, str], Dict[str, Set[str]]]:
     """
     Translates a decision tree object into a dictionary
     associating a set of conditions for each target class
@@ -35,7 +36,7 @@ def apply(clf: tree.DecisionTreeClassifier, columns: List[str]) -> Tuple[Dict[st
     dict_classes
         Dictionary associating a set of conditions for each target class
     """
-    tree_string = tree.export_text(clf).split("\n")
+    tree_string = export_text(clf).split("\n")
     levels = {}
     target_classes = {}
     variables = {}

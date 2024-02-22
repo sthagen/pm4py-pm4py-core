@@ -14,14 +14,12 @@
     You should have received a copy of the GNU General Public License
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
-import logging
-import importlib.util
 from collections import Counter
 from copy import copy
 
 import numpy as np
 
-from pm4py.util import variants_util
+from pm4py.util import variants_util, nx_utils
 
 
 def get_outgoing_edges(dfg):
@@ -808,21 +806,14 @@ def transform_dfg_to_directed_nx_graph(dfg, activities=None):
     if activities is None:
         activities = get_activities_from_dfg(dfg)
 
-    if importlib.util.find_spec("networkx"):
-        import networkx as nx
-
-        G = nx.DiGraph()
-        for act in activities:
-            G.add_node(act)
-        for el in dfg:
-            act1 = el[0][0]
-            act2 = el[0][1]
-            G.add_edge(act1, act2)
-        return G
-    else:
-        msg = "networkx is not available. inductive miner cannot be used!"
-        logging.error(msg)
-        raise Exception(msg)
+    G = nx_utils.DiGraph()
+    for act in activities:
+        G.add_node(act)
+    for el in dfg:
+        act1 = el[0][0]
+        act2 = el[0][1]
+        G.add_edge(act1, act2)
+    return G
 
 
 def get_successors(dfg, activities_model=None):
