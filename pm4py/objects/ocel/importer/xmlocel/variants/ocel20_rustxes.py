@@ -14,21 +14,29 @@
     You should have received a copy of the GNU General Public License
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
-
-import re
-
-
-match = re.compile(r'[^0-9a-zA-Z]+')
+from typing import Optional, Dict, Any
+from pm4py.objects.ocel.obj import OCEL
 
 
-def apply(X: str, max_len: int = 100) -> str:
-    X = X.split(" ")
-    i = 0
-    while i < len(X):
-        X[i] = X[i].capitalize()
-        i = i + 1
-    X = "".join(X)
-    stru = match.sub('', X).strip()
-    if len(stru) > max_len:
-        stru = stru[:100]
-    return stru
+def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
+    """
+    Imports an OCEL 2.0 XML using the RUSTXES parser.
+
+    Parameters
+    ---------------
+    file_path
+        Path to the OCEL 2.0 XML
+    parameters
+        Optional parameters.
+
+    Returns
+    ---------------
+    ocel
+        Object-centric event log
+    """
+    if parameters is None:
+        parameters = {}
+
+    import rustxes
+
+    return rustxes.import_ocel_xml_pm4py(file_path)
