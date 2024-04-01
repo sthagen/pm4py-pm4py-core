@@ -12,6 +12,11 @@ def get_model_description():
     return description
 
 
+def get_model_implementation():
+    implementation = "The temporal profile is expressed as a Python dictionary associating to some couples of activities the average and the standard deviation of the times. Example: {('A', 'B'): (86400, 3600), ('B', 'C'): (3600, 3600)} indicates that the average time between A and B is 1 day, while the standard deviation is 1 hour. On the other hand, the average time between B and C is 1 hour, while the standard deviation is 1 hour."
+    return implementation
+
+
 def apply(temporal_profile: Dict[Tuple[str, str], Tuple[float, float]],
           parameters: Optional[Dict[Any, Any]] = None) -> str:
     """
