@@ -37,6 +37,14 @@ The Log Skeleton process model contains the following declarative constraints:
     return description
 
 
+def get_model_implementation():
+    implementation = "The Log Skeleton is expressed as a Python dictionary containing the keys: 'equivalence', 'always_before', 'always_after', 'never_together', 'activ_freq', 'directly_follows'.\n"
+    implementation += "The values associated to 'equivalence', 'always_before', 'always_after', 'never_together', 'directly_follows' are sets containing the couples of activities satisfying the constraints.\n"
+    implementation += "The value associated to 'activ_freq' is a dictionary whose keys are the activities, and the values are the allowed number of occurrences for the given activity. For example, {'A': {0, 1}, 'B': {1, 2}} tells that A could occur 0 or 1 time inside a case, while B could occur 1 or 2 times.\n"
+
+    return implementation
+
+
 def apply(lsk: Dict[str, Any], parameters: Optional[Dict[Any, Any]] = None) -> str:
     if parameters is None:
         parameters = {}

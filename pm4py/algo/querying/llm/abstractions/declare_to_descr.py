@@ -52,6 +52,15 @@ def get_model_description():
     return "".join(ret)
 
 
+def get_model_implementation():
+    implementation = "A DECLARE model in pm4py is expressed as a Python dictionary containing the following keys:\n"
+    implementation += "'" + "', '".join([EXISTENCE, ABSENCE, EXACTLY_ONE, INIT, RESPONDED_EXISTENCE, COEXISTENCE, RESPONSE, PRECEDENCE, SUCCESSION, ALTRESPONSE, ALTPRECEDENCE, ALTSUCCESSION, CHAINRESPONSE, CHAINPRECEDENCE, CHAINSUCCESSION, NONCOEXISTENCE, NONSUCCESSION, NONCHAINSUCCESSION]) + "'\n"
+    implementation += "For the keys {'"+"', '".join([EXISTENCE, ABSENCE, EXACTLY_ONE, INIT])+"'}, the value is a dictionary containing as keys the activities and as corresponding value the support (please set it to 1.0) and confidence of the declarative rule.\n"
+    implementation += "For the keys {'"+"', '".join([RESPONDED_EXISTENCE, COEXISTENCE, RESPONSE, PRECEDENCE, SUCCESSION, ALTRESPONSE, ALTPRECEDENCE, ALTSUCCESSION, CHAINRESPONSE, CHAINPRECEDENCE, CHAINSUCCESSION, NONCOEXISTENCE, NONSUCCESSION, NONCHAINSUCCESSION])+"'}, the value is a dictionary containing as keys the activities and as corresponding value the support (please set it to 1.0) and confidence of the declarative rule.\n"
+
+    return implementation
+
+
 def apply(declare: Dict[str, Dict[Any, Dict[str, int]]], parameters: Optional[Dict[Any, Any]] = None) -> str:
     """
     Gets a textual abstraction of a DECLARE model
