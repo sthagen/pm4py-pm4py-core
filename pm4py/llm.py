@@ -401,3 +401,34 @@ def abstract_log_skeleton(log_skeleton, include_header: bool = True) -> str:
 
     from pm4py.algo.querying.llm.abstractions import logske_to_descr
     return logske_to_descr.apply(log_skeleton, parameters=parameters)
+
+
+def explain_visualization(vis_saver, *args, connector=openai_query, **kwargs) -> str:
+    """
+    Explains a process mining visualization by using LLMs (saving that first in a .png image, then providing the .png file to the
+    Large Language Model along with possibly a description of the visualization).
+
+    :param vis_saver: the visualizer (saving to disk) to be used
+    :param args: the mandatory arguments that should be provided to the visualization
+    :param connector: the connector method to the large language model
+    :param kwargs: optional parameters of the visualization or the connector (for example, the annotation of the visualization, or the API key)
+    :rtype: ``str``
+
+    .. code-block:: python3
+
+        import pm4py
+
+        log = pm4py.read_xes("tests/input_data/running-example.xes")
+        descr = pm4py.llm.explain_visualization(pm4py.save_vis_dotted_chart, log, api_key="sk-5HN", show_legend=False)
+        print(descr)
+    """
+    F = NamedTemporaryFile(suffix=".png")
+    image_path = F.name
+    F.close()
+
+    description = vis_saver(*args, image_path, **kwargs)
+
+    parameters = copy(kwargs) if kwargs is not None else {}
+    parameters["image_path"] = image_path
+
+    return connector("Could you explain the included process mining visualization?\n\n" + description, **parameters)
