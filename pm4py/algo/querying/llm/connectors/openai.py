@@ -19,7 +19,6 @@ from enum import Enum
 from pm4py.util import exec_utils
 from typing import Optional, Dict, Any
 import base64
-import requests
 from pm4py.util import constants
 
 
@@ -35,6 +34,8 @@ def encode_image(image_path):
 
 
 def apply(prompt: str, parameters: Optional[Dict[Any, Any]] = None) -> str:
+    import requests
+
     if parameters is None:
         parameters = {}
 
