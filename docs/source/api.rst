@@ -326,6 +326,7 @@ The following methods provides just the abstractions of the given objects:
   * :meth:`pm4py.llm.abstract_petri_net`; provides the abstraction of a Petri net
   * :meth:`pm4py.llm.abstract_declare`; provides the abstraction of a DECLARE model
   * :meth:`pm4py.llm.abstract_log_skeleton`; provides the abstraction of a log skeleton model
+  * :meth:`pm4py.llm.explain_visualization`; explains one of the visualizations provided in pm4py using LVMs.
 
 The following methods can be executed directly against the LLM APIs:
 
@@ -622,6 +623,7 @@ Overall List of Methods
    pm4py.llm.abstract_declare
    pm4py.llm.abstract_log_skeleton
    pm4py.llm.openai_query
+   pm4py.llm.explain_visualization
    pm4py.connectors.extract_log_outlook_mails
    pm4py.connectors.extract_log_outlook_calendar
    pm4py.connectors.extract_log_windows_events
