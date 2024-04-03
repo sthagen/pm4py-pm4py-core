@@ -28,7 +28,6 @@ from pm4py.objects.dfg.utils import dfg_utils
 from pm4py.util import xes_constants as xes
 from pm4py.visualization.common.utils import *
 from pm4py.util import exec_utils
-from pm4py.statistics.sojourn_time.log import get as soj_time_get
 from enum import Enum
 from pm4py.util import constants
 from typing import Optional, Dict, Any, Tuple, no_type_check_decorator
