@@ -4,6 +4,7 @@ from pm4py.objects.log.obj import EventLog, EventStream
 from enum import Enum
 from pm4py.util import exec_utils, constants, xes_constants
 import pandas as pd
+import pm4py
 from copy import copy
 
 
@@ -138,3 +139,9 @@ def apply(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[
         ret = new_ret
 
     return get_abstr_from_dict(ret, activities_dict, response_header)
+
+
+if __name__ == "__main__":
+    log = pm4py.read_xes("../../../tests/input_data/receipt.xes")
+    textual_abstraction = apply(log)
+    print(textual_abstraction)

@@ -1,3 +1,4 @@
+import pm4py
 from pm4py.objects.conversion.log import converter as log_converter
 from typing import Union, Optional, Dict, Any
 from pm4py.objects.log.obj import EventLog, EventStream
@@ -122,3 +123,9 @@ def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame],
     ret += "\n\n"
 
     return ret
+
+
+if __name__ == "__main__":
+    log = pm4py.read_xes("../../../tests/input_data/receipt.xes")
+    textual_abstraction = apply(log)
+    print(textual_abstraction)
