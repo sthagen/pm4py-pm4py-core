@@ -35,11 +35,10 @@ def apply(log: Union[EventLog, pd.DataFrame], parameters: Optional[Dict[Union[st
                     trie = c
                     match = True
                     break
-            if match:
-                continue
-            node = Trie(label=activity, parent=trie, depth=trie.depth + 1)
-            trie.children.append(node)
-            trie = node
+            if not match:
+                node = Trie(label=activity, parent=trie, depth=trie.depth + 1)
+                trie.children.append(node)
+                trie = node
             if i == len(variant) - 1:
                 trie.final = True
     return root
