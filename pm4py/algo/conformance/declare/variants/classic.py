@@ -284,7 +284,7 @@ def apply_list(projected_log: List[List[str]], model: Dict[str, Dict[Any, Dict[s
         __check_non_coexistence(trace, model, ret, parameters)
 
         ret["no_dev_total"] = len(ret["deviations"])
-        ret["dev_fitness"] = 1 - ret["no_dev_total"] / ret["no_constr_total"]
+        ret["dev_fitness"] = 1.0 - ret["no_dev_total"] / ret["no_constr_total"] if ret["no_constr_total"] > 0 else 1.0
         ret["is_fit"] = ret["no_dev_total"] == 0
 
         conf_cases.append(ret)

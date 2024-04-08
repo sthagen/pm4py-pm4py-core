@@ -560,19 +560,20 @@ def get_rules_from_rules_df(rules_df, parameters: Optional[Dict[Any, Any]] = Non
         min_support_ratio = float(supp) / float(len(rules_df)) * auto_selection_multiplier
         min_confidence_ratio = float(len(col[col == 1])) / float(supp) * auto_selection_multiplier
 
-    for col_name in rules_df:
-        col = rules_df[col_name]
-        supp = len(col[col != 0])
+    if rules_df is not None and len(rules_df) > 0:
+        for col_name in rules_df:
+            col = rules_df[col_name]
+            supp = len(col[col != 0])
 
-        if supp > len(rules_df) * min_support_ratio:
-            conf = len(col[col == 1])
+            if supp > len(rules_df) * min_support_ratio:
+                conf = len(col[col == 1])
 
-            if conf > supp * min_confidence_ratio:
-                rule, key = __col_to_dict_rule(col_name)
-                if rule not in rules:
-                    rules[rule] = {}
+                if conf > supp * min_confidence_ratio:
+                    rule, key = __col_to_dict_rule(col_name)
+                    if rule not in rules:
+                        rules[rule] = {}
 
-                rules[rule][key] = {"support": supp, "confidence": conf}
+                    rules[rule][key] = {"support": supp, "confidence": conf}
 
     return rules
 
