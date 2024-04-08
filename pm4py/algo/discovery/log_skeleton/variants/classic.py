@@ -92,7 +92,10 @@ def always_after(logs_traces, all_activs, noise_threshold=0):
         for k in rs:
             rs[k] = rs[k] * logs_traces[trace]
         ret0 += rs
-    ret = set(x for x, y in ret0.items() if y >= all_activs[x[0]] * (1.0 - noise_threshold))
+    first_count = Counter()
+    for x, y in ret0.items():
+        first_count[x[0]] += y
+    ret = set(x for x, y in ret0.items() if y >= first_count[x[0]] * (1.0 - noise_threshold))
     return ret
 
 
@@ -120,7 +123,10 @@ def always_before(logs_traces, all_activs, noise_threshold=0):
         for k in rs:
             rs[k] = rs[k] * logs_traces[trace]
         ret0 += rs
-    ret = set(x for x, y in ret0.items() if y >= all_activs[x[0]] * (1.0 - noise_threshold))
+    first_count = Counter()
+    for x, y in ret0.items():
+        first_count[x[0]] += y
+    ret = set(x for x, y in ret0.items() if y >= first_count[x[0]] * (1.0 - noise_threshold))
     return ret
 
 
