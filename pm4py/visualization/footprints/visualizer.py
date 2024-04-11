@@ -16,7 +16,7 @@
 '''
 from pm4py.visualization.footprints.variants import comparison, single, comparison_symmetric
 from enum import Enum
-from pm4py.util import exec_utils
+from pm4py.util import exec_utils, constants
 from pm4py.visualization.common import gview
 from pm4py.visualization.common import save as gsave
 from pm4py.visualization.common.gview import serialize, serialize_dot
@@ -90,7 +90,8 @@ def view(gviz, parameters=None):
     gviz
         GraphViz diagram
     """
-    return gview.view(gviz, parameters=parameters)
+    if constants.DEFAULT_ENABLE_VISUALIZATIONS_VIEW:
+        return gview.view(gviz, parameters=parameters)
 
 
 def matplotlib_view(gviz, parameters=None):
@@ -102,5 +103,5 @@ def matplotlib_view(gviz, parameters=None):
     gviz
         Graphviz
     """
-
-    return gview.matplotlib_view(gviz, parameters=parameters)
+    if constants.DEFAULT_ENABLE_VISUALIZATIONS_VIEW:
+        return gview.matplotlib_view(gviz, parameters=parameters)
