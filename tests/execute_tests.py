@@ -2,6 +2,7 @@ import inspect
 import os
 import sys
 import unittest
+import importlib.util
 
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
@@ -26,180 +27,300 @@ enabled_tests = ["SimplifiedInterfaceTest", "SimplifiedInterface2Test", "DocTest
 loader = unittest.TestLoader()
 suite = unittest.TestSuite()
 
-if "SimplifiedInterfaceTest" in enabled_tests:
-    from tests.simplified_interface import SimplifiedInterfaceTest
+failed = 0
 
-    suite.addTests(loader.loadTestsFromTestCase(SimplifiedInterfaceTest))
+if not importlib.util.find_spec("graphviz"):
+    print("important! install 'grapviz' from pip")
+    failed +=1
+
+if not importlib.util.find_spec("lxml"):
+    print("important! install 'lxml' from pip")
+    failed += 1
+
+if "SimplifiedInterfaceTest" in enabled_tests:
+    try:
+        from tests.simplified_interface import SimplifiedInterfaceTest
+        suite.addTests(loader.loadTestsFromTestCase(SimplifiedInterfaceTest))
+    except:
+        print("SimplifiedInterfaceTest import failed!")
+        failed += 1
 
 if "SimplifiedInterface2Test" in enabled_tests:
-    from tests.simplified_interface_2 import SimplifiedInterface2Test
-
-    suite.addTests(loader.loadTestsFromTestCase(SimplifiedInterface2Test))
+    try:
+        from tests.simplified_interface_2 import SimplifiedInterface2Test
+        suite.addTests(loader.loadTestsFromTestCase(SimplifiedInterface2Test))
+    except:
+        print("SimplifiedInterface2Test import failed!")
+        failed += 1
 
 if "DocTests" in enabled_tests:
-    from tests.doc_tests import DocTests
-
-    suite.addTests(loader.loadTestsFromTestCase(DocTests))
+    try:
+        from tests.doc_tests import DocTests
+        suite.addTests(loader.loadTestsFromTestCase(DocTests))
+    except:
+        print("DocTests import failed!")
+        failed += 1
 
 if "RoleDetectionTest" in enabled_tests:
-    from tests.role_detection import RoleDetectionTest
-
-    suite.addTests(loader.loadTestsFromTestCase(RoleDetectionTest))
+    try:
+        from tests.role_detection import RoleDetectionTest
+        suite.addTests(loader.loadTestsFromTestCase(RoleDetectionTest))
+    except:
+        print("RoleDetectionTest import failed!")
+        failed += 1
 
 if "PassedTimeTest" in enabled_tests:
-    from tests.passed_time import PassedTimeTest
-
-    suite.addTests(loader.loadTestsFromTestCase(PassedTimeTest))
+    try:
+        from tests.passed_time import PassedTimeTest
+        suite.addTests(loader.loadTestsFromTestCase(PassedTimeTest))
+    except:
+        print("PassedTimeTest import failed!")
+        failed += 1
 
 if "Pm4pyImportPackageTest" in enabled_tests:
-    from tests.imp_everything import Pm4pyImportPackageTest
-
-    suite.addTests(loader.loadTestsFromTestCase(Pm4pyImportPackageTest))
+    try:
+        from tests.imp_everything import Pm4pyImportPackageTest
+        suite.addTests(loader.loadTestsFromTestCase(Pm4pyImportPackageTest))
+    except:
+        print("Pm4pyImportPackageTest import failed!")
+        failed += 1
 
 if "XesImportExportTest" in enabled_tests:
-    from tests.xes_impexp_test import XesImportExportTest
-
-    suite.addTests(loader.loadTestsFromTestCase(XesImportExportTest))
+    try:
+        from tests.xes_impexp_test import XesImportExportTest
+        suite.addTests(loader.loadTestsFromTestCase(XesImportExportTest))
+    except:
+        print("XesImportExportTest import failed!")
+        failed += 1
 
 if "CsvImportExportTest" in enabled_tests:
-    from tests.csv_impexp_test import CsvImportExportTest
-
-    suite.addTests(loader.loadTestsFromTestCase(CsvImportExportTest))
+    try:
+        from tests.csv_impexp_test import CsvImportExportTest
+        suite.addTests(loader.loadTestsFromTestCase(CsvImportExportTest))
+    except:
+        print("CsvImportExportTest import failed!")
+        failed += 1
 
 if "OtherPartsTests" in enabled_tests:
-    from tests.other_tests import OtherPartsTests
-
-    suite.addTests(loader.loadTestsFromTestCase(OtherPartsTests))
+    try:
+        from tests.other_tests import OtherPartsTests
+        suite.addTests(loader.loadTestsFromTestCase(OtherPartsTests))
+    except:
+        print("OtherPartsTests import failed!")
+        failed += 1
 
 if "AlphaMinerTest" in enabled_tests:
-    from tests.alpha_test import AlphaMinerTest
-
-    suite.addTests(loader.loadTestsFromTestCase(AlphaMinerTest))
+    try:
+        from tests.alpha_test import AlphaMinerTest
+        suite.addTests(loader.loadTestsFromTestCase(AlphaMinerTest))
+    except:
+        print("AlphaMinerTest import failed!")
+        failed += 1
 
 if "InductiveMinerTest" in enabled_tests:
-    from tests.inductive_test import InductiveMinerTest
-
-    suite.addTests(loader.loadTestsFromTestCase(InductiveMinerTest))
+    try:
+        from tests.inductive_test import InductiveMinerTest
+        suite.addTests(loader.loadTestsFromTestCase(InductiveMinerTest))
+    except:
+        print("InductiveMinerTest import failed!")
+        failed += 1
 
 if "InductiveMinerTreeTest" in enabled_tests:
-    from tests.inductive_tree_test import InductiveMinerTreeTest
-
-    suite.addTests(loader.loadTestsFromTestCase(InductiveMinerTreeTest))
+    try:
+        from tests.inductive_tree_test import InductiveMinerTreeTest
+        suite.addTests(loader.loadTestsFromTestCase(InductiveMinerTreeTest))
+    except:
+        print("InductiveMinerTreeTest import failed!")
+        failed += 1
 
 if "AlignmentTest" in enabled_tests:
-    from tests.alignment_test import AlignmentTest
-
-    suite.addTests(loader.loadTestsFromTestCase(AlignmentTest))
+    try:
+        from tests.alignment_test import AlignmentTest
+        suite.addTests(loader.loadTestsFromTestCase(AlignmentTest))
+    except:
+        print("AlignmentTest import failed!")
+        failed += 1
 
 if "DfgTests" in enabled_tests:
-    from tests.dfg_tests import DfgTests
-
-    suite.addTests(loader.loadTestsFromTestCase(DfgTests))
+    try:
+        from tests.dfg_tests import DfgTests
+        suite.addTests(loader.loadTestsFromTestCase(DfgTests))
+    except:
+        print("DfgTests import failed!")
+        failed += 1
 
 if "SnaTests" in enabled_tests:
-    from tests.sna_test import SnaTests
-
-    suite.addTests(loader.loadTestsFromTestCase(SnaTests))
+    try:
+        from tests.sna_test import SnaTests
+        suite.addTests(loader.loadTestsFromTestCase(SnaTests))
+    except:
+        print("SnaTests import failed!")
+        failed += 1
 
 if "PetriImportExportTest" in enabled_tests:
-    from tests.petri_imp_exp_test import PetriImportExportTest
-
-    suite.addTests(loader.loadTestsFromTestCase(PetriImportExportTest))
+    try:
+        from tests.petri_imp_exp_test import PetriImportExportTest
+        suite.addTests(loader.loadTestsFromTestCase(PetriImportExportTest))
+    except:
+        print("PetriImportExportTest import failed!")
+        failed += 1
 
 if "BPMNTests" in enabled_tests:
-    from tests.bpmn_tests import BPMNTests
-
-    suite.addTests(loader.loadTestsFromTestCase(BPMNTests))
+    try:
+        from tests.bpmn_tests import BPMNTests
+        suite.addTests(loader.loadTestsFromTestCase(BPMNTests))
+    except:
+        print("BPMNTests import failed!")
+        failed += 1
 
 if "ETCTest" in enabled_tests:
-    from tests.etc_tests import ETCTest
-
-    suite.addTests(loader.loadTestsFromTestCase(ETCTest))
+    try:
+        from tests.etc_tests import ETCTest
+        suite.addTests(loader.loadTestsFromTestCase(ETCTest))
+    except:
+        print("ETCTest import failed!")
+        failed += 1
 
 if "DiagnDfConfChecking" in enabled_tests:
-    from tests.diagn_df_conf_checking import DiagnDfConfChecking
-
-    suite.addTests(loader.loadTestsFromTestCase(DiagnDfConfChecking))
+    try:
+        from tests.diagn_df_conf_checking import DiagnDfConfChecking
+        suite.addTests(loader.loadTestsFromTestCase(DiagnDfConfChecking))
+    except:
+        print("DiagnDfConfChecking import failed!")
+        failed += 1
 
 if "ProcessModelEvaluationTests" in enabled_tests:
-    from tests.evaluation_tests import ProcessModelEvaluationTests
-
-    suite.addTests(loader.loadTestsFromTestCase(ProcessModelEvaluationTests))
+    try:
+        from tests.evaluation_tests import ProcessModelEvaluationTests
+        suite.addTests(loader.loadTestsFromTestCase(ProcessModelEvaluationTests))
+    except:
+        print("ProcessModelEvaluationTests import failed!")
+        failed += 1
 
 if "DecisionTreeTest" in enabled_tests:
-    from tests.dec_tree_test import DecisionTreeTest
-
-    suite.addTests(loader.loadTestsFromTestCase(DecisionTreeTest))
+    try:
+        from tests.dec_tree_test import DecisionTreeTest
+        suite.addTests(loader.loadTestsFromTestCase(DecisionTreeTest))
+    except:
+        print("DecisionTreeTest import failed!")
+        failed += 1
 
 if "GraphsForming" in enabled_tests:
-    from tests.graphs_forming import GraphsForming
-
-    suite.addTests(loader.loadTestsFromTestCase(GraphsForming))
+    try:
+        from tests.graphs_forming import GraphsForming
+        suite.addTests(loader.loadTestsFromTestCase(GraphsForming))
+    except:
+        print("GraphsForming import failed!")
+        failed += 1
 
 if "HeuMinerTest" in enabled_tests:
-    from tests.heuminer_test import HeuMinerTest
-
-    suite.addTests(loader.loadTestsFromTestCase(HeuMinerTest))
+    try:
+        from tests.heuminer_test import HeuMinerTest
+        suite.addTests(loader.loadTestsFromTestCase(HeuMinerTest))
+    except:
+        print("HeuMinerTest import failed!")
+        failed += 1
 
 if "MainFactoriesTest" in enabled_tests:
-    from tests.main_fac_test import MainFactoriesTest
-
-    suite.addTests(loader.loadTestsFromTestCase(MainFactoriesTest))
+    try:
+        from tests.main_fac_test import MainFactoriesTest
+        suite.addTests(loader.loadTestsFromTestCase(MainFactoriesTest))
+    except:
+        print("MainFactoriesTest import failed!")
+        failed += 1
 
 if "AlgorithmTest" in enabled_tests:
-    from tests.algorithm_test import AlgorithmTest
-
-    suite.addTests(loader.loadTestsFromTestCase(AlgorithmTest))
+    try:
+        from tests.algorithm_test import AlgorithmTest
+        suite.addTests(loader.loadTestsFromTestCase(AlgorithmTest))
+    except:
+        print("AlgorithmTest import failed!")
+        failed += 1
 
 if "LogFilteringTest" in enabled_tests:
-    from tests.filtering_log_test import LogFilteringTest
-
-    suite.addTests(loader.loadTestsFromTestCase(LogFilteringTest))
+    try:
+        from tests.filtering_log_test import LogFilteringTest
+        suite.addTests(loader.loadTestsFromTestCase(LogFilteringTest))
+    except:
+        print("LogFilteringTest import failed!")
+        failed += 1
 
 if "DataframePrefilteringTest" in enabled_tests:
-    from tests.filtering_pandas_test import DataframePrefilteringTest
-
-    suite.addTests(loader.loadTestsFromTestCase(DataframePrefilteringTest))
+    try:
+        from tests.filtering_pandas_test import DataframePrefilteringTest
+        suite.addTests(loader.loadTestsFromTestCase(DataframePrefilteringTest))
+    except:
+        print("DataframePrefilteringTest import failed!")
+        failed += 1
 
 if "StatisticsLogTest" in enabled_tests:
-    from tests.statistics_log_test import StatisticsLogTest
-
-    suite.addTests(loader.loadTestsFromTestCase(StatisticsLogTest))
+    try:
+        from tests.statistics_log_test import StatisticsLogTest
+        suite.addTests(loader.loadTestsFromTestCase(StatisticsLogTest))
+    except:
+        print("StatisticsLogTest import failed!")
+        failed += 1
 
 if "StatisticsDfTest" in enabled_tests:
-    from tests.statistics_df_test import StatisticsDfTest
-
-    suite.addTests(loader.loadTestsFromTestCase(StatisticsDfTest))
+    try:
+        from tests.statistics_df_test import StatisticsDfTest
+        suite.addTests(loader.loadTestsFromTestCase(StatisticsDfTest))
+    except:
+        print("StatisticsDfTest import failed!")
+        failed += 1
 
 if "TransitionSystemTest" in enabled_tests:
-    from tests.trans_syst_tests import TransitionSystemTest
-
-    suite.addTests(loader.loadTestsFromTestCase(TransitionSystemTest))
+    try:
+        from tests.trans_syst_tests import TransitionSystemTest
+        suite.addTests(loader.loadTestsFromTestCase(TransitionSystemTest))
+    except:
+        print("TransitionSystemTest import failed!")
+        failed += 1
 
 if "ImpExpFromString" in enabled_tests:
-    from tests.imp_exp_from_string import ImpExpFromString
-
-    suite.addTests(loader.loadTestsFromTestCase(ImpExpFromString))
+    try:
+        from tests.imp_exp_from_string import ImpExpFromString
+        suite.addTests(loader.loadTestsFromTestCase(ImpExpFromString))
+    except:
+        print("ImpExpFromString import failed!")
+        failed += 1
 
 if "WoflanTest" in enabled_tests:
-    from tests.woflan_tests import WoflanTest
-
-    suite.addTests(loader.loadTestsFromTestCase(WoflanTest))
+    try:
+        from tests.woflan_tests import WoflanTest
+        suite.addTests(loader.loadTestsFromTestCase(WoflanTest))
+    except:
+        print("WoflanTest import failed!")
+        failed += 1
 
 if "OcelFilteringTest" in enabled_tests:
-    from tests.ocel_filtering_test import OcelFilteringTest
-
-    suite.addTests(loader.loadTestsFromTestCase(OcelFilteringTest))
+    try:
+        from tests.ocel_filtering_test import OcelFilteringTest
+        suite.addTests(loader.loadTestsFromTestCase(OcelFilteringTest))
+    except:
+        print("OcelFilteringTest import failed!")
+        failed += 1
 
 if "OcelDiscoveryTest" in enabled_tests:
-    from tests.ocel_discovery_test import OcelDiscoveryTest
-
-    suite.addTests(loader.loadTestsFromTestCase(OcelDiscoveryTest))
+    try:
+        from tests.ocel_discovery_test import OcelDiscoveryTest
+        suite.addTests(loader.loadTestsFromTestCase(OcelDiscoveryTest))
+    except:
+        print("OcelDiscoveryTest import failed!")
+        failed += 1
 
 if "LlmTest" in enabled_tests:
-    from tests.llm_test import LlmTest
+    try:
+        from tests.llm_test import LlmTest
+        suite.addTests(loader.loadTestsFromTestCase(LlmTest))
+    except:
+        print("LlmTest import failed!")
+        failed += 1
 
-    suite.addTests(loader.loadTestsFromTestCase(LlmTest))
+
+if failed > 0:
+    print("-- PRESS ENTER TO CONTINUE --")
+    input()
 
 
 def main():
