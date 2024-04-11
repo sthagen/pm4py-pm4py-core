@@ -7,14 +7,22 @@ import requests
 REMOVE_DEPS_AT_END = True
 UPDATE_DOCKERFILE = True
 UPDATE_OTHER_FILES = True
+INCLUDE_BETAS = False
 
 
 def get_version(package):
     url = "https://pypi.org/project/" + package
     r = requests.get(url)
-    res = r.text
-    version = res.split("<p class=\"release__version\">")[1].split("</p>")[0].strip().split(" ")[0].strip()
-    license = res.split("<p><strong>License:</strong>")[1].split("</p>")[0].strip()
+    res0 = r.text
+    res = res0.split("<p class=\"release__version\">")[1:]
+    version = ""
+    i = 0
+    while i < len(res):
+        if "pre-release" not in res[i] or INCLUDE_BETAS:
+            version = res[i].split("</p>")[0].strip().split(" ")[0].strip()
+            break
+        i = i + 1
+    license = res0.split("<p><strong>License:</strong>")[1].split("</p>")[0].strip()
     time.sleep(0.1)
     return package, url, version, license
 
@@ -123,6 +131,7 @@ while i < len(dockerfile_contents):
     i = i + 1
 
 stru = "".join(before_lines + ["RUN pip install " + x + "\n" for x in [first_packages_line, second_packages_line]] + after_lines)
+stru = stru.strip() + "\n"
 
 if UPDATE_DOCKERFILE:
     F = open("../Dockerfile", "w")
