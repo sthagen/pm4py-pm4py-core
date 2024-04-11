@@ -44,7 +44,7 @@ def filter_traces_contained(df: pd.DataFrame, dt1: Union[str, datetime.datetime]
     dt1 = get_dt_from_string(dt1)
     dt2 = get_dt_from_string(dt2)
 
-    grouped_df = df[[case_id_glue, timestamp_key]].groupby(df[case_id_glue])
+    grouped_df = df[[case_id_glue, timestamp_key]].groupby(case_id_glue)
     first = grouped_df.first()
     last = grouped_df.last()
     last.columns = [str(col) + '_2' for col in last.columns]
@@ -52,7 +52,7 @@ def filter_traces_contained(df: pd.DataFrame, dt1: Union[str, datetime.datetime]
     stacked = stacked[stacked[timestamp_key] >= dt1]
     stacked = stacked[stacked[timestamp_key + "_2"] <= dt2]
     i1 = df.set_index(case_id_glue).index
-    i2 = stacked.set_index(case_id_glue).index
+    i2 = stacked.index
     ret = df[i1.isin(i2)]
 
     ret.attrs = copy(df.attrs) if hasattr(df, 'attrs') else {}
@@ -87,7 +87,7 @@ def filter_traces_intersecting(df: pd.DataFrame, dt1: Union[str, datetime.dateti
     case_id_glue = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME)
     dt1 = get_dt_from_string(dt1)
     dt2 = get_dt_from_string(dt2)
-    grouped_df = df[[case_id_glue, timestamp_key]].groupby(df[case_id_glue])
+    grouped_df = df[[case_id_glue, timestamp_key]].groupby(case_id_glue)
     first = grouped_df.first()
     last = grouped_df.last()
     last.columns = [str(col) + '_2' for col in last.columns]
@@ -100,7 +100,7 @@ def filter_traces_intersecting(df: pd.DataFrame, dt1: Union[str, datetime.dateti
     stacked3 = stacked3[stacked3[timestamp_key + "_2"] > dt2]
     stacked = pandas_utils.concat([stacked1, stacked2, stacked3], axis=0)
     i1 = df.set_index(case_id_glue).index
-    i2 = stacked.set_index(case_id_glue).index
+    i2 = stacked.index
     ret = df[i1.isin(i2)]
 
     ret.attrs = copy(df.attrs) if hasattr(df, 'attrs') else {}

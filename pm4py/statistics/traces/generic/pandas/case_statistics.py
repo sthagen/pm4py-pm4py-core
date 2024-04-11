@@ -156,8 +156,8 @@ def get_cases_description(df: pd.DataFrame, parameters: Optional[Dict[Union[str,
     business_hours_slots = exec_utils.get_param_value(Parameters.BUSINESS_HOUR_SLOTS, parameters, constants.DEFAULT_BUSINESS_HOUR_SLOTS)
     workcalendar = exec_utils.get_param_value(Parameters.WORKCALENDAR, parameters, constants.DEFAULT_BUSINESS_HOURS_WORKCALENDAR)
 
-    grouped_df = df[[case_id_glue, timestamp_key]].groupby(df[case_id_glue])
-    # grouped_df = df[[case_id_glue, timestamp_key]].groupby(df[case_id_glue])
+    grouped_df = df[[case_id_glue, timestamp_key]].groupby(case_id_glue)
+    # grouped_df = df[[case_id_glue, timestamp_key]].groupby(case_id_glue)
     first_eve_df = grouped_df.first()
     last_eve_df = grouped_df.last()
     del grouped_df
@@ -165,8 +165,10 @@ def get_cases_description(df: pd.DataFrame, parameters: Optional[Dict[Union[str,
     stacked_df = pandas_utils.concat([first_eve_df, last_eve_df], axis=1)
     del first_eve_df
     del last_eve_df
-    del stacked_df[case_id_glue]
-    del stacked_df[case_id_glue + "_2"]
+    if case_id_glue in stacked_df.columns:
+        del stacked_df[case_id_glue]
+    if case_id_glue + "_2" in stacked_df.columns:
+        del stacked_df[case_id_glue + "_2"]
 
     if business_hours:
         stacked_df['caseDuration'] = stacked_df.apply(
@@ -250,7 +252,7 @@ def get_variants_df_with_case_duration(df, parameters=None):
 
     workcalendar = exec_utils.get_param_value(Parameters.WORKCALENDAR, parameters, constants.DEFAULT_BUSINESS_HOURS_WORKCALENDAR)
 
-    grouped_df = df[[case_id_glue, timestamp_key, activity_key]].groupby(df[case_id_glue])
+    grouped_df = df[[case_id_glue, timestamp_key, activity_key]].groupby(case_id_glue)
 
     df1 = grouped_df[activity_key].agg(tuple).to_frame()
     new_cols = list(df1.columns)
@@ -263,8 +265,10 @@ def get_variants_df_with_case_duration(df, parameters=None):
     stacked_df = pandas_utils.concat([first_eve_df, last_eve_df], axis=1)
     del first_eve_df
     del last_eve_df
-    del stacked_df[case_id_glue]
-    del stacked_df[case_id_glue + "_2"]
+    if case_id_glue in stacked_df.columns:
+        del stacked_df[case_id_glue]
+    if case_id_glue + "_2" in stacked_df.columns:
+        del stacked_df[case_id_glue + "_2"]
     stacked_df['caseDuration'] = stacked_df[timestamp_key + "_2"] - stacked_df[timestamp_key]
     stacked_df['caseDuration'] = pandas_utils.get_total_seconds(stacked_df['caseDuration'])
     if business_hours:

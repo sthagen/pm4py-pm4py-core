@@ -65,7 +65,7 @@ def filter_on_case_size(df0: pd.DataFrame, case_id_glue: str = "case:concept:nam
         Filtered dataframe
     """
     df = df0.copy()
-    element_group_size = df[case_id_glue].groupby(df[case_id_glue]).transform('size')
+    element_group_size = df[[case_id_glue]].groupby(case_id_glue).transform('size')
     df = df[element_group_size >= min_case_size]
     if max_case_size is not None:
         df = df[element_group_size <= max_case_size]
@@ -98,7 +98,7 @@ def filter_on_case_performance(df: pd.DataFrame, case_id_glue: str = constants.C
     df
         Filtered dataframe
     """
-    grouped_df = df[[case_id_glue, timestamp_key]].groupby(df[case_id_glue])
+    grouped_df = df[[case_id_glue, timestamp_key]].groupby(case_id_glue)
     start_events = grouped_df.first()
     end_events = grouped_df.last()
     end_events.columns = [str(col) + '_2' for col in end_events.columns]
@@ -112,7 +112,7 @@ def filter_on_case_performance(df: pd.DataFrame, case_id_glue: str = constants.C
     stacked_df = stacked_df[stacked_df['caseDuration'] <= max_case_performance]
     stacked_df = stacked_df[stacked_df['caseDuration'] >= min_case_performance]
     i1 = df.set_index(case_id_glue).index
-    i2 = stacked_df.set_index(case_id_glue).index
+    i2 = stacked_df.index
     ret = df[i1.isin(i2)]
     ret.attrs = copy(df.attrs) if hasattr(df, 'attrs') else {}
     return ret
