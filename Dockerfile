@@ -23,6 +23,7 @@ RUN pip install contourpy==1.2.1 fonttools==4.51.0 kiwisolver==1.4.5 matplotlib=
 #RUN cd / && git clone https://github.com/pandas-dev/pandas.git && cd /pandas && pip3 install .
 #RUN cd / && git clone https://github.com/scipy/scipy.git && cd /scipy && git submodule update --init && pip3 install .
 #RUN cd / && git clone https://github.com/lxml/lxml.git && cd /lxml && pip3 install .
+#RUN pip3 install matplotlib
 
 COPY . /app
 RUN cd /app && python setup.py install
