@@ -150,7 +150,8 @@ def view(gviz: graphviz.Digraph, parameters=None):
     gviz
         GraphViz diagram
     """
-    return gview.view(gviz, parameters=parameters)
+    if constants.DEFAULT_ENABLE_VISUALIZATIONS_VIEW:
+        return gview.view(gviz, parameters=parameters)
 
 
 def matplotlib_view(gviz: graphviz.Digraph, parameters=None):
@@ -162,5 +163,5 @@ def matplotlib_view(gviz: graphviz.Digraph, parameters=None):
     gviz
         Graphviz
     """
-
-    return gview.matplotlib_view(gviz, parameters=parameters)
+    if constants.DEFAULT_ENABLE_VISUALIZATIONS_VIEW:
+        return gview.matplotlib_view(gviz, parameters=parameters)

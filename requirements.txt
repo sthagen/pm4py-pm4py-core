@@ -1,12 +1,11 @@
-cvxopt;python_version<'3.13'
+numpy<2
+pandas<3
 deprecation
+networkx
 graphviz
 intervaltree
 lxml
 matplotlib
-networkx
-numpy
-pandas
 pydotplus
 pytz
 scipy

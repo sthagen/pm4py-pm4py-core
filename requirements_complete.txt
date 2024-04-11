@@ -9,9 +9,9 @@ kiwisolver
 lxml
 matplotlib
 networkx
-numpy
+numpy<2
 packaging
-pandas
+pandas<3
 pillow
 pydotplus
 pyparsing
