@@ -110,14 +110,19 @@ if UPDATE_OTHER_FILES:
     F.close()
 
 first_line_packages = ["deprecation", "packaging", "networkx", "graphviz", "six", "python-dateutil", "pytz", "tzdata", "intervaltree", "sortedcontainers"]
+second_line_packages = ["pydotplus", "pyparsing", "tqdm", "colorama", "cycler"]
+
 first_packages_line = ""
 second_packages_line = ""
+third_packages_line = ""
 for x in packages:
     cont = x[0] + "==" + x[2] + " "
     if x[0] in first_line_packages:
         first_packages_line += cont
-    else:
+    elif x[0] in second_line_packages:
         second_packages_line += cont
+    else:
+        third_packages_line += cont
 
 F = open("../Dockerfile", "r")
 dockerfile_contents = F.readlines()
@@ -137,7 +142,7 @@ while i < len(dockerfile_contents):
         before_lines.append(dockerfile_contents[i])
     i = i + 1
 
-stru = "".join(before_lines + ["RUN pip install " + x + "\n" for x in [first_packages_line, second_packages_line]] + after_lines)
+stru = "".join(before_lines + ["RUN pip install " + x + "\n" for x in [first_packages_line, second_packages_line, third_packages_line]] + after_lines)
 stru = stru.strip() + "\n"
 
 if UPDATE_DOCKERFILE:
