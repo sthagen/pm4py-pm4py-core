@@ -15,7 +15,7 @@ RUN apt-get -y install libxml2-dev libxslt-dev libfreetype6-dev libsuitesparse-d
 RUN pip install -U wheel six pytest
 RUN pip install -U meson-python>=0.13.1 Cython>=3.0.6 ninja spin==0.8 build
 RUN pip install deprecation==2.1.0 graphviz==0.20.3 intervaltree==3.1.0 networkx==3.3 packaging==24.0 python-dateutil==2.9.0.post0 pytz==2024.1 six==1.16.0 sortedcontainers==2.4.0 tzdata==2024.1 
-RUN pip install colorama==0.4.6 cycler==0.12.1 pydotplus==2.0.2 pyparsing==3.1.2 tqdm==4.66.2 
+RUN pip install colorama==0.4.6 cycler==0.12.1 joblib==1.4.0 pydotplus==2.0.2 pyparsing==3.1.2 threadpoolctl==3.4.0 tqdm==4.66.2 
 RUN pip install contourpy==1.2.1 fonttools==4.51.0 kiwisolver==1.4.5 lxml==5.2.1 matplotlib==3.8.4 numpy==1.26.4 pandas==2.2.2 pillow==10.3.0 scipy==1.13.0 
 
 #RUN cd / && git clone https://github.com/numpy/numpy.git && cd /numpy && git submodule update --init && pip3 install .
