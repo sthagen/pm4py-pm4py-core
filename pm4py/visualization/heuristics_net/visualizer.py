@@ -72,27 +72,28 @@ def view(figure):
     figure
         figure
     """
-    try:
-        filename = figure.name
-        figure = filename
-    except AttributeError:
-        # continue without problems, a proper path has been provided
-        pass
+    if constants.DEFAULT_ENABLE_VISUALIZATIONS_VIEW:
+        try:
+            filename = figure.name
+            figure = filename
+        except AttributeError:
+            # continue without problems, a proper path has been provided
+            pass
 
-    if constants.DEFAULT_GVIZ_VIEW == "matplotlib_view":
-        import matplotlib.pyplot as plt
-        import matplotlib.image as mpimg
-        img = mpimg.imread(figure)
-        plt.axis('off')
-        plt.tight_layout(pad=0, w_pad=0, h_pad=0)
-        plt.imshow(img)
-        plt.show()
-        return
+        if constants.DEFAULT_GVIZ_VIEW == "matplotlib_view":
+            import matplotlib.pyplot as plt
+            import matplotlib.image as mpimg
+            img = mpimg.imread(figure)
+            plt.axis('off')
+            plt.tight_layout(pad=0, w_pad=0, h_pad=0)
+            plt.imshow(img)
+            plt.show()
+            return
 
-    if vis_utils.check_visualization_inside_jupyter():
-        vis_utils.view_image_in_jupyter(figure)
-    else:
-        vis_utils.open_opsystem_image_viewer(figure)
+        if vis_utils.check_visualization_inside_jupyter():
+            vis_utils.view_image_in_jupyter(figure)
+        else:
+            vis_utils.open_opsystem_image_viewer(figure)
 
 
 def save(figure, output_file_path):
@@ -139,16 +140,17 @@ def matplotlib_view(figure):
     figure
         Figure
     """
-    try:
-        filename = figure.name
-        figure = filename
-    except AttributeError:
-        # continue without problems, a proper path has been provided
-        pass
+    if constants.DEFAULT_ENABLE_VISUALIZATIONS_VIEW:
+        try:
+            filename = figure.name
+            figure = filename
+        except AttributeError:
+            # continue without problems, a proper path has been provided
+            pass
 
-    import matplotlib.pyplot as plt
-    import matplotlib.image as mpimg
+        import matplotlib.pyplot as plt
+        import matplotlib.image as mpimg
 
-    img = mpimg.imread(figure)
-    plt.imshow(img)
-    plt.show()
+        img = mpimg.imread(figure)
+        plt.imshow(img)
+        plt.show()

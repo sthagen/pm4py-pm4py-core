@@ -72,18 +72,19 @@ def view(temp_file_name, parameters=None):
     if parameters is None:
         parameters = {}
 
-    iframe_width = exec_utils.get_param_value(Parameters.IFRAME_WIDTH, parameters, 900)
-    iframe_height = exec_utils.get_param_value(Parameters.IFRAME_HEIGHT, parameters, 600)
-    local_jupyter_file_name = exec_utils.get_param_value(Parameters.LOCAL_JUPYTER_FILE_NAME, parameters, "jupyter_bpmn_vis.html")
+    if constants.DEFAULT_ENABLE_VISUALIZATIONS_VIEW:
+        iframe_width = exec_utils.get_param_value(Parameters.IFRAME_WIDTH, parameters, 900)
+        iframe_height = exec_utils.get_param_value(Parameters.IFRAME_HEIGHT, parameters, 600)
+        local_jupyter_file_name = exec_utils.get_param_value(Parameters.LOCAL_JUPYTER_FILE_NAME, parameters, "jupyter_bpmn_vis.html")
 
-    if vis_utils.check_visualization_inside_jupyter():
-        from IPython.display import IFrame
-        shutil.copyfile(temp_file_name, local_jupyter_file_name)
-        iframe = IFrame(local_jupyter_file_name, width=iframe_width, height=iframe_height)
-        from IPython.display import display
-        return display(iframe)
-    else:
-        vis_utils.open_opsystem_image_viewer(temp_file_name)
+        if vis_utils.check_visualization_inside_jupyter():
+            from IPython.display import IFrame
+            shutil.copyfile(temp_file_name, local_jupyter_file_name)
+            iframe = IFrame(local_jupyter_file_name, width=iframe_width, height=iframe_height)
+            from IPython.display import display
+            return display(iframe)
+        else:
+            vis_utils.open_opsystem_image_viewer(temp_file_name)
 
 
 def save(temp_file_name, dest_file, parameters=None):

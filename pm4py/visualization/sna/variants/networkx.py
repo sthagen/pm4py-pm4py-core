@@ -98,20 +98,21 @@ def view(temp_file_name, parameters=None):
     if parameters is None:
         parameters = {}
 
-    if constants.DEFAULT_GVIZ_VIEW == "matplotlib_view":
-        import matplotlib.pyplot as plt
-        import matplotlib.image as mpimg
-        img = mpimg.imread(temp_file_name)
-        plt.axis('off')
-        plt.tight_layout(pad=0, w_pad=0, h_pad=0)
-        plt.imshow(img)
-        plt.show()
-        return
+    if constants.DEFAULT_ENABLE_VISUALIZATIONS_VIEW:
+        if constants.DEFAULT_GVIZ_VIEW == "matplotlib_view":
+            import matplotlib.pyplot as plt
+            import matplotlib.image as mpimg
+            img = mpimg.imread(temp_file_name)
+            plt.axis('off')
+            plt.tight_layout(pad=0, w_pad=0, h_pad=0)
+            plt.imshow(img)
+            plt.show()
+            return
 
-    if vis_utils.check_visualization_inside_jupyter():
-        vis_utils.view_image_in_jupyter(temp_file_name)
-    else:
-        vis_utils.open_opsystem_image_viewer(temp_file_name)
+        if vis_utils.check_visualization_inside_jupyter():
+            vis_utils.view_image_in_jupyter(temp_file_name)
+        else:
+            vis_utils.open_opsystem_image_viewer(temp_file_name)
 
 
 def save(temp_file_name, dest_file, parameters=None):

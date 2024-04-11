@@ -56,20 +56,21 @@ def view(figure: str):
     figure
         Path to the dotted chart
     """
-    if constants.DEFAULT_GVIZ_VIEW == "matplotlib_view":
-        import matplotlib.pyplot as plt
-        import matplotlib.image as mpimg
-        img = mpimg.imread(figure)
-        plt.axis('off')
-        plt.tight_layout(pad=0, w_pad=0, h_pad=0)
-        plt.imshow(img)
-        plt.show()
-        return
+    if constants.DEFAULT_ENABLE_VISUALIZATIONS_VIEW:
+        if constants.DEFAULT_GVIZ_VIEW == "matplotlib_view":
+            import matplotlib.pyplot as plt
+            import matplotlib.image as mpimg
+            img = mpimg.imread(figure)
+            plt.axis('off')
+            plt.tight_layout(pad=0, w_pad=0, h_pad=0)
+            plt.imshow(img)
+            plt.show()
+            return
 
-    if vis_utils.check_visualization_inside_jupyter():
-        vis_utils.view_image_in_jupyter(figure)
-    else:
-        vis_utils.open_opsystem_image_viewer(figure)
+        if vis_utils.check_visualization_inside_jupyter():
+            vis_utils.view_image_in_jupyter(figure)
+        else:
+            vis_utils.open_opsystem_image_viewer(figure)
 
 
 def save(figure: str, output_file_path: str):
@@ -109,9 +110,10 @@ def matplotlib_view(figure: str):
     figure
         Path to the dotted chart
     """
-    import matplotlib.pyplot as plt
-    import matplotlib.image as mpimg
+    if constants.DEFAULT_ENABLE_VISUALIZATIONS_VIEW:
+        import matplotlib.pyplot as plt
+        import matplotlib.image as mpimg
 
-    img = mpimg.imread(figure)
-    plt.imshow(img)
-    plt.show()
+        img = mpimg.imread(figure)
+        plt.imshow(img)
+        plt.show()
