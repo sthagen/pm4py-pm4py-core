@@ -19,6 +19,8 @@ RUN pip install colorama==0.4.6 contourpy==1.2.1 cycler==0.12.1 fonttools==4.51.
 
 #RUN cd / && git clone https://github.com/numpy/numpy.git && cd /numpy && git submodule update --init && pip3 install .
 #RUN cd / && git clone https://github.com/pandas-dev/pandas/ && cd /pandas && pip3 install .
+#RUN cd / && git clone https://github.com/scipy/scipy.git && cd /scipy && git submodule update --init && pip3 install .
+#RUN cd / && git clone https://github.com/lxml/lxml.git && cd /lxml && pip3 install .
 
 COPY . /app
 RUN cd /app && python setup.py install
