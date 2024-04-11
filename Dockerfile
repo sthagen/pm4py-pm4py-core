@@ -20,7 +20,7 @@ RUN pip install lxml==5.2.1 numpy==1.26.4 pandas==2.2.2 scipy==1.13.0
 RUN pip install contourpy==1.2.1 fonttools==4.51.0 kiwisolver==1.4.5 matplotlib==3.8.4 pillow==10.3.0 
 
 #RUN cd / && git clone https://github.com/numpy/numpy.git && cd /numpy && git submodule update --init && pip3 install .
-#RUN cd / && git clone https://github.com/pandas-dev/pandas/ && cd /pandas && pip3 install .
+#RUN cd / && git clone https://github.com/pandas-dev/pandas.git && cd /pandas && pip3 install .
 #RUN cd / && git clone https://github.com/scipy/scipy.git && cd /scipy && git submodule update --init && pip3 install .
 #RUN cd / && git clone https://github.com/lxml/lxml.git && cd /lxml && pip3 install .
 
