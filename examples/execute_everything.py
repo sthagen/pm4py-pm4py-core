@@ -878,6 +878,10 @@ def execute_script(f):
         import time
         traceback.print_exc()
         time.sleep(3)
+    except KeyError:
+        import time
+        traceback.print_exc()
+        time.sleep(3)
     except:
         traceback.print_exc()
         input("\npress INPUT if you want to continue")

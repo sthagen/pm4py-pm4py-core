@@ -1,5 +1,4 @@
 import pm4py
-from pm4py.visualization.networkx import visualizer as nx_to_gv_vis
 from examples import examples_conf
 import importlib.util
 
@@ -11,6 +10,8 @@ def execute_script():
     event_graph = pm4py.convert_ocel_to_networkx(ocel)
 
     if importlib.util.find_spec("graphviz"):
+        from pm4py.visualization.networkx import visualizer as nx_to_gv_vis
+
         # visualize the NX DiGraph using Graphviz
         gviz = nx_to_gv_vis.apply(event_graph, parameters={"format": examples_conf.TARGET_IMG_FORMAT})
         nx_to_gv_vis.view(gviz)
