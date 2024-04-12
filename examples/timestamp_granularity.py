@@ -12,17 +12,15 @@ def execute_script():
 
     # Here are some common options that you can use as a granularity:
     #
-    # 'D': Day
-    # 'H': Hour
-    # 'T' or 'min': Minute
-    # 'S': Second
-    # 'L' or 'ms': Millisecond
-    # 'U': Microsecond
-    # 'N': Nanosecond
+    # 'h': Hour
+    # 'min': Minute
+    # 's': Second
+    # 'ms': Millisecond
+    # 'ns': Nanosecond
 
     st = time.time_ns()
     # cast on the minute
-    dataframe["time:timestamp"] = dataframe["time:timestamp"].dt.floor('T')
+    dataframe["time:timestamp"] = dataframe["time:timestamp"].dt.floor(freq='min')
     ct = time.time_ns()
 
     print("required time for the timestamp casting: %.2f seconds" % ((ct-st)/10**9))

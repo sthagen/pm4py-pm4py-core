@@ -1,5 +1,6 @@
 import os
 import unittest
+import importlib.util
 from pm4py.algo.discovery.log_skeleton import algorithm as lsk_alg
 from pm4py.algo.conformance.log_skeleton import algorithm as lsk_conf_alg
 from pm4py.objects.process_tree.importer import importer as ptree_importer
@@ -22,23 +23,25 @@ from pm4py.objects.conversion.process_tree import converter as process_tree_conv
 
 class OtherPartsTests(unittest.TestCase):
     def test_emd_1(self):
-        from pm4py.algo.evaluation.earth_mover_distance import algorithm as earth_mover_distance
-        M = {("a", "b", "d", "e"): 0.49, ("a", "d", "b", "e"): 0.49, ("a", "c", "d", "e"): 0.01,
-             ("a", "d", "c", "e"): 0.01}
-        L1 = {("a", "b", "d", "e"): 0.49, ("a", "d", "b", "e"): 0.49, ("a", "c", "d", "e"): 0.01,
-              ("a", "d", "c", "e"): 0.01}
-        earth_mover_distance.apply(M, L1)
+        if importlib.util.find_spec("pyemd"):
+            from pm4py.algo.evaluation.earth_mover_distance import algorithm as earth_mover_distance
+            M = {("a", "b", "d", "e"): 0.49, ("a", "d", "b", "e"): 0.49, ("a", "c", "d", "e"): 0.01,
+                 ("a", "d", "c", "e"): 0.01}
+            L1 = {("a", "b", "d", "e"): 0.49, ("a", "d", "b", "e"): 0.49, ("a", "c", "d", "e"): 0.01,
+                  ("a", "d", "c", "e"): 0.01}
+            earth_mover_distance.apply(M, L1)
 
     def test_emd_2(self):
-        from pm4py.algo.evaluation.earth_mover_distance import algorithm as earth_mover_distance
-        log = xes_importer.apply(os.path.join("input_data", "running-example.xes"))
-        lang_log = variants_get.get_language(log)
-        process_tree = inductive_miner.apply(log)
-        net1, im1, fm1 = process_tree_converter.apply(process_tree)
-        lang_model1 = variants_get.get_language(
-            algorithm.apply(net1, im1, fm1, variant=algorithm.Variants.STOCHASTIC_PLAYOUT,
-                            parameters={algorithm.Variants.STOCHASTIC_PLAYOUT.value.Parameters.LOG: log}))
-        emd = earth_mover_distance.apply(lang_model1, lang_log)
+        if importlib.util.find_spec("pyemd"):
+            from pm4py.algo.evaluation.earth_mover_distance import algorithm as earth_mover_distance
+            log = xes_importer.apply(os.path.join("input_data", "running-example.xes"))
+            lang_log = variants_get.get_language(log)
+            process_tree = inductive_miner.apply(log)
+            net1, im1, fm1 = process_tree_converter.apply(process_tree)
+            lang_model1 = variants_get.get_language(
+                algorithm.apply(net1, im1, fm1, variant=algorithm.Variants.STOCHASTIC_PLAYOUT,
+                                parameters={algorithm.Variants.STOCHASTIC_PLAYOUT.value.Parameters.LOG: log}))
+            emd = earth_mover_distance.apply(lang_model1, lang_log)
 
     def test_importing_dfg(self):
         dfg, sa, ea = dfg_importer.apply(os.path.join("input_data", "running-example.dfg"))
