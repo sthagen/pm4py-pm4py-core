@@ -4,9 +4,9 @@ import traceback
 import pm4py
 from pm4py.algo.discovery.inductive import algorithm as inductive
 from pm4py.objects.log.importer.xes import importer as xes_importer
-from pm4py.visualization.petri_net import visualizer as pn_vis
 from pm4py.objects.conversion.process_tree import converter as process_tree_converter
 from examples import examples_conf
+import importlib.util
 
 
 def execute_script():
@@ -19,10 +19,13 @@ def execute_script():
         print("initial marking " + place.name)
     for place in final_marking:
         print("final marking " + place.name)
-    gviz = pn_vis.apply(net, marking, final_marking,
-                        parameters={pn_vis.Variants.WO_DECORATION.value.Parameters.FORMAT: examples_conf.TARGET_IMG_FORMAT,
-                                    pn_vis.Variants.WO_DECORATION.value.Parameters.DEBUG: True})
-    pn_vis.view(gviz)
+
+    if importlib.util.find_spec("graphviz"):
+        from pm4py.visualization.petri_net import visualizer as pn_vis
+        gviz = pn_vis.apply(net, marking, final_marking,
+                            parameters={pn_vis.Variants.WO_DECORATION.value.Parameters.FORMAT: examples_conf.TARGET_IMG_FORMAT,
+                                        pn_vis.Variants.WO_DECORATION.value.Parameters.DEBUG: True})
+        pn_vis.view(gviz)
 
     if True:
         fit_traces = []

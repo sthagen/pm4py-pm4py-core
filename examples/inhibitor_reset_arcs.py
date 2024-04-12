@@ -4,6 +4,7 @@ from pm4py.objects.petri_net.utils.petri_utils import add_arc_from_to
 from pm4py.objects.petri_net.inhibitor_reset import semantics
 from copy import deepcopy
 from examples import examples_conf
+import importlib.util
 
 
 def execute_script():
@@ -42,7 +43,10 @@ def execute_script():
     reset_arc = add_arc_from_to(p_reset, trans_C, net, type="reset")
     im = Marking({source: 1})
     fm = Marking({sink: 1})
-    pm4py.view_petri_net(net, im, fm, format=examples_conf.TARGET_IMG_FORMAT)
+
+    if importlib.util.find_spec("graphviz"):
+        pm4py.view_petri_net(net, im, fm, format=examples_conf.TARGET_IMG_FORMAT)
+
     m = semantics.execute(trans_A, net, im)
     print(m)
     # B is enabled in m because no tokens in the "inhibitor" place
