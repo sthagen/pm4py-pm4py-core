@@ -6,8 +6,7 @@ from pm4py.statistics.service_time.pandas import get as soj_time_get
 from pm4py.statistics.start_activities.pandas import get as sa_get
 from pm4py.statistics.end_activities.pandas import get as ea_get
 from examples import examples_conf
-
-from pm4py.visualization.dfg import visualizer as dfg_vis
+import importlib.util
 
 
 def execute_script():
@@ -25,13 +24,16 @@ def execute_script():
     soj_time = soj_time_get.apply(df, parameters=parameters)
     dfg, performance_dfg = correlation_miner.apply(df, variant=correlation_miner.Variants.CLASSIC,
                                                    parameters=parameters)
-    gviz_freq = dfg_vis.apply(dfg, activities_count=act_count, serv_time=soj_time, variant=dfg_vis.Variants.FREQUENCY,
-                              parameters=parameters)
-    dfg_vis.view(gviz_freq)
-    gviz_perf = dfg_vis.apply(performance_dfg, activities_count=act_count, serv_time=soj_time,
-                              variant=dfg_vis.Variants.PERFORMANCE,
-                              parameters=parameters)
-    dfg_vis.view(gviz_perf)
+
+    if importlib.util.find_spec("grapviz"):
+        from pm4py.visualization.dfg import visualizer as dfg_vis
+        gviz_freq = dfg_vis.apply(dfg, activities_count=act_count, serv_time=soj_time, variant=dfg_vis.Variants.FREQUENCY,
+                                  parameters=parameters)
+        dfg_vis.view(gviz_freq)
+        gviz_perf = dfg_vis.apply(performance_dfg, activities_count=act_count, serv_time=soj_time,
+                                  variant=dfg_vis.Variants.PERFORMANCE,
+                                  parameters=parameters)
+        dfg_vis.view(gviz_perf)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 import os
 import unittest
+import importlib.util
 
 from pm4py.algo.organizational_mining.sna import algorithm as sna_alg, util as sna_util, util
 from pm4py.objects.log.importer.xes import importer as xes_importer
@@ -38,12 +39,13 @@ class SnaTests(unittest.TestCase):
         algorithm.apply_from_group_attribute(log)
 
     def test_log_orgmining_local_clustering(self):
-        from pm4py.algo.organizational_mining.local_diagnostics import algorithm
-        from pm4py.algo.organizational_mining.sna.variants.log import jointactivities
-        log = xes_importer.apply(os.path.join("input_data", "receipt.xes"))
-        ja = jointactivities.apply(log)
-        clustering = util.cluster_affinity_propagation(ja)
-        algorithm.apply_from_clustering_or_roles(log, clustering)
+        if importlib.util.find_spec("sklearn"):
+            from pm4py.algo.organizational_mining.local_diagnostics import algorithm
+            from pm4py.algo.organizational_mining.sna.variants.log import jointactivities
+            log = xes_importer.apply(os.path.join("input_data", "receipt.xes"))
+            ja = jointactivities.apply(log)
+            clustering = util.cluster_affinity_propagation(ja)
+            algorithm.apply_from_clustering_or_roles(log, clustering)
 
     def test_log_orgmining_local_roles(self):
         from pm4py.algo.organizational_mining.local_diagnostics import algorithm
@@ -53,9 +55,10 @@ class SnaTests(unittest.TestCase):
         algorithm.apply_from_clustering_or_roles(log, roles)
 
     def test_sna_clustering(self):
-        log = xes_importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
-        hw_values = sna_alg.apply(log, variant=sna_alg.Variants.HANDOVER_LOG)
-        clusters = sna_util.cluster_affinity_propagation(hw_values)
+        if importlib.util.find_spec("sklearn"):
+            log = xes_importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
+            hw_values = sna_alg.apply(log, variant=sna_alg.Variants.HANDOVER_LOG)
+            clusters = sna_util.cluster_affinity_propagation(hw_values)
 
     def test_res_profiles_log(self):
         from pm4py.algo.organizational_mining.resource_profiles import algorithm

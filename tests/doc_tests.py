@@ -1,5 +1,6 @@
 from pm4py.objects.log.util import dataframe_utils
 import unittest
+import importlib.util
 import os
 from pm4py.util import constants, pandas_utils
 from pm4py.objects.conversion.process_tree import converter as process_tree_converter
@@ -601,51 +602,53 @@ class DocTests(unittest.TestCase):
         gviz = pt_visualizer.apply(tree, parameters={pt_visualizer.Variants.WO_DECORATION.value.Parameters.FORMAT: "png"})
 
     def test_60(self):
-        import os
-        from pm4py.objects.log.importer.xes import importer as xes_importer
-        log = xes_importer.apply(os.path.join("input_data", "roadtraffic50traces.xes"))
+        if importlib.util.find_spec("sklearn"):
+            import os
+            from pm4py.objects.log.importer.xes import importer as xes_importer
+            log = xes_importer.apply(os.path.join("input_data", "roadtraffic50traces.xes"))
 
-        from pm4py.algo.transformation.log_to_features.variants import trace_based
-        str_trace_attributes = []
-        str_event_attributes = ["concept:name"]
-        num_trace_attributes = []
-        num_event_attributes = ["amount"]
-        data, feature_names = trace_based.apply(log)
-        data, feature_names = trace_based.apply(log, parameters={"str_tr_attr": str_trace_attributes, "str_ev_attr": str_event_attributes, "num_tr_attr": num_trace_attributes, "num_ev_attr": num_event_attributes})
+            from pm4py.algo.transformation.log_to_features.variants import trace_based
+            str_trace_attributes = []
+            str_event_attributes = ["concept:name"]
+            num_trace_attributes = []
+            num_event_attributes = ["amount"]
+            data, feature_names = trace_based.apply(log)
+            data, feature_names = trace_based.apply(log, parameters={"str_tr_attr": str_trace_attributes, "str_ev_attr": str_event_attributes, "num_tr_attr": num_trace_attributes, "num_ev_attr": num_event_attributes})
 
-        from pm4py.objects.log.util import get_class_representation
-        target, classes = get_class_representation.get_class_representation_by_str_ev_attr_value_value(log,
-                                                                                                       "concept:name")
+            from pm4py.objects.log.util import get_class_representation
+            target, classes = get_class_representation.get_class_representation_by_str_ev_attr_value_value(log,
+                                                                                                           "concept:name")
 
-        from pm4py.util import ml_utils
-        clf = ml_utils.DecisionTreeClassifier()
-        clf.fit(data, target)
+            from pm4py.util import ml_utils
+            clf = ml_utils.DecisionTreeClassifier()
+            clf.fit(data, target)
 
-        from pm4py.visualization.decisiontree import visualizer as dectree_visualizer
-        gviz = dectree_visualizer.apply(clf, feature_names, classes)
+            from pm4py.visualization.decisiontree import visualizer as dectree_visualizer
+            gviz = dectree_visualizer.apply(clf, feature_names, classes)
 
     def test_61(self):
-        import os
-        from pm4py.objects.log.importer.xes import importer as xes_importer
-        log = xes_importer.apply(os.path.join("input_data", "roadtraffic50traces.xes"))
+        if importlib.util.find_spec("sklearn"):
+            import os
+            from pm4py.objects.log.importer.xes import importer as xes_importer
+            log = xes_importer.apply(os.path.join("input_data", "roadtraffic50traces.xes"))
 
-        from pm4py.algo.transformation.log_to_features.variants import trace_based
-        str_trace_attributes = []
-        str_event_attributes = ["concept:name"]
-        num_trace_attributes = []
-        num_event_attributes = ["amount"]
-        data, feature_names = trace_based.apply(log)
-        data, feature_names = trace_based.apply(log, parameters={"str_tr_attr": str_trace_attributes, "str_ev_attr": str_event_attributes, "num_tr_attr": num_trace_attributes, "num_ev_attr": num_event_attributes})
+            from pm4py.algo.transformation.log_to_features.variants import trace_based
+            str_trace_attributes = []
+            str_event_attributes = ["concept:name"]
+            num_trace_attributes = []
+            num_event_attributes = ["amount"]
+            data, feature_names = trace_based.apply(log)
+            data, feature_names = trace_based.apply(log, parameters={"str_tr_attr": str_trace_attributes, "str_ev_attr": str_event_attributes, "num_tr_attr": num_trace_attributes, "num_ev_attr": num_event_attributes})
 
-        from pm4py.objects.log.util import get_class_representation
-        target, classes = get_class_representation.get_class_representation_by_trace_duration(log, 2 * 8640000)
+            from pm4py.objects.log.util import get_class_representation
+            target, classes = get_class_representation.get_class_representation_by_trace_duration(log, 2 * 8640000)
 
-        from pm4py.util import ml_utils
-        clf = ml_utils.DecisionTreeClassifier()
-        clf.fit(data, target)
+            from pm4py.util import ml_utils
+            clf = ml_utils.DecisionTreeClassifier()
+            clf.fit(data, target)
 
-        from pm4py.visualization.decisiontree import visualizer as dectree_visualizer
-        gviz = dectree_visualizer.apply(clf, feature_names, classes)
+            from pm4py.visualization.decisiontree import visualizer as dectree_visualizer
+            gviz = dectree_visualizer.apply(clf, feature_names, classes)
 
     def test_62(self):
         from pm4py.objects.log.importer.xes import importer as xes_importer
@@ -718,56 +721,57 @@ class DocTests(unittest.TestCase):
             pass
 
     def test_tbr_diagn_2(self):
-        import os
-        from pm4py.objects.log.importer.xes import importer as xes_importer
-        log = xes_importer.apply(os.path.join("input_data", "receipt.xes"))
+        if importlib.util.find_spec("sklearn"):
+            import os
+            from pm4py.objects.log.importer.xes import importer as xes_importer
+            log = xes_importer.apply(os.path.join("input_data", "receipt.xes"))
 
-        from pm4py.algo.filtering.log.variants import variants_filter
-        filtered_log = variants_filter.filter_log_variants_percentage(log, 0.2)
+            from pm4py.algo.filtering.log.variants import variants_filter
+            filtered_log = variants_filter.filter_log_variants_percentage(log, 0.2)
 
-        from pm4py.algo.discovery.inductive import algorithm as inductive_miner
-        process_tree = inductive_miner.apply(log)
-        net, initial_marking, final_marking = process_tree_converter.apply(process_tree)
+            from pm4py.algo.discovery.inductive import algorithm as inductive_miner
+            process_tree = inductive_miner.apply(log)
+            net, initial_marking, final_marking = process_tree_converter.apply(process_tree)
 
-        # build decision trees
-        string_attributes = ["org:group"]
-        numeric_attributes = []
-        parameters = {"string_attributes": string_attributes, "numeric_attributes": numeric_attributes}
+            # build decision trees
+            string_attributes = ["org:group"]
+            numeric_attributes = []
+            parameters = {"string_attributes": string_attributes, "numeric_attributes": numeric_attributes}
 
-        from pm4py.algo.conformance.tokenreplay import algorithm as token_based_replay
-        parameters_tbr = {token_based_replay.Variants.TOKEN_REPLAY.value.Parameters.DISABLE_VARIANTS: True,
-                          token_based_replay.Variants.TOKEN_REPLAY.value.Parameters.ENABLE_PLTR_FITNESS: True}
-        replayed_traces, place_fitness, trans_fitness, unwanted_activities = token_based_replay.apply(log, net,
-                                                                                                      initial_marking,
-                                                                                                      final_marking,
-                                                                                                      parameters=parameters_tbr)
+            from pm4py.algo.conformance.tokenreplay import algorithm as token_based_replay
+            parameters_tbr = {token_based_replay.Variants.TOKEN_REPLAY.value.Parameters.DISABLE_VARIANTS: True,
+                              token_based_replay.Variants.TOKEN_REPLAY.value.Parameters.ENABLE_PLTR_FITNESS: True}
+            replayed_traces, place_fitness, trans_fitness, unwanted_activities = token_based_replay.apply(log, net,
+                                                                                                          initial_marking,
+                                                                                                          final_marking,
+                                                                                                          parameters=parameters_tbr)
 
-        from pm4py.algo.conformance.tokenreplay.diagnostics import root_cause_analysis
-        trans_root_cause = root_cause_analysis.diagnose_from_trans_fitness(log, trans_fitness, parameters=parameters)
+            from pm4py.algo.conformance.tokenreplay.diagnostics import root_cause_analysis
+            trans_root_cause = root_cause_analysis.diagnose_from_trans_fitness(log, trans_fitness, parameters=parameters)
 
 
-        from pm4py.visualization.decisiontree import visualizer as dt_vis
-        for trans in trans_root_cause:
-            clf = trans_root_cause[trans]["clf"]
-            feature_names = trans_root_cause[trans]["feature_names"]
-            classes = trans_root_cause[trans]["classes"]
+            from pm4py.visualization.decisiontree import visualizer as dt_vis
+            for trans in trans_root_cause:
+                clf = trans_root_cause[trans]["clf"]
+                feature_names = trans_root_cause[trans]["feature_names"]
+                classes = trans_root_cause[trans]["classes"]
 
-            # visualization could be called
-            gviz = dt_vis.apply(clf, feature_names, classes)
-            break
+                # visualization could be called
+                gviz = dt_vis.apply(clf, feature_names, classes)
+                break
 
-        from pm4py.algo.conformance.tokenreplay.diagnostics import root_cause_analysis
-        act_root_cause = root_cause_analysis.diagnose_from_notexisting_activities(log, unwanted_activities,
-                                                                                  parameters=parameters)
+            from pm4py.algo.conformance.tokenreplay.diagnostics import root_cause_analysis
+            act_root_cause = root_cause_analysis.diagnose_from_notexisting_activities(log, unwanted_activities,
+                                                                                      parameters=parameters)
 
-        from pm4py.visualization.decisiontree import visualizer as dt_vis
-        for act in act_root_cause:
-            clf = act_root_cause[act]["clf"]
-            feature_names = act_root_cause[act]["feature_names"]
-            classes = act_root_cause[act]["classes"]
-            # visualization could be called
-            gviz = dt_vis.apply(clf, feature_names, classes)
-            break
+            from pm4py.visualization.decisiontree import visualizer as dt_vis
+            for act in act_root_cause:
+                clf = act_root_cause[act]["clf"]
+                feature_names = act_root_cause[act]["feature_names"]
+                classes = act_root_cause[act]["classes"]
+                # visualization could be called
+                gviz = dt_vis.apply(clf, feature_names, classes)
+                break
 
     def test_max_decomp(self):
         import os
@@ -1015,37 +1019,38 @@ class DocTests(unittest.TestCase):
         simp = simplicity_evaluator.apply(net)
 
     def test_sna(self):
-        import os
-        from pm4py.objects.log.importer.xes import importer as xes_importer
+        if importlib.util.find_spec("pyvis"):
+            import os
+            from pm4py.objects.log.importer.xes import importer as xes_importer
 
-        log = xes_importer.apply(os.path.join("input_data", "running-example.xes"))
+            log = xes_importer.apply(os.path.join("input_data", "running-example.xes"))
 
-        from pm4py.algo.organizational_mining.sna import algorithm as sna
-        hw_values = sna.apply(log, variant=sna.Variants.HANDOVER_LOG)
+            from pm4py.algo.organizational_mining.sna import algorithm as sna
+            hw_values = sna.apply(log, variant=sna.Variants.HANDOVER_LOG)
 
-        from pm4py.visualization.sna import visualizer as sna_visualizer
-        gviz_hw_py = sna_visualizer.apply(hw_values, variant=sna_visualizer.Variants.PYVIS)
+            from pm4py.visualization.sna import visualizer as sna_visualizer
+            gviz_hw_py = sna_visualizer.apply(hw_values, variant=sna_visualizer.Variants.PYVIS)
 
-        from pm4py.algo.organizational_mining.sna import algorithm as sna
-        sub_values = sna.apply(log, variant=sna.Variants.SUBCONTRACTING_LOG)
+            from pm4py.algo.organizational_mining.sna import algorithm as sna
+            sub_values = sna.apply(log, variant=sna.Variants.SUBCONTRACTING_LOG)
 
-        from pm4py.visualization.sna import visualizer as sna_visualizer
-        gviz_sub_py = sna_visualizer.apply(sub_values, variant=sna_visualizer.Variants.PYVIS)
+            from pm4py.visualization.sna import visualizer as sna_visualizer
+            gviz_sub_py = sna_visualizer.apply(sub_values, variant=sna_visualizer.Variants.PYVIS)
 
-        from pm4py.algo.organizational_mining.sna import algorithm as sna
-        wt_values = sna.apply(log, variant=sna.Variants.WORKING_TOGETHER_LOG)
+            from pm4py.algo.organizational_mining.sna import algorithm as sna
+            wt_values = sna.apply(log, variant=sna.Variants.WORKING_TOGETHER_LOG)
 
-        from pm4py.visualization.sna import visualizer as sna_visualizer
-        gviz_wt_py = sna_visualizer.apply(wt_values, variant=sna_visualizer.Variants.PYVIS)
+            from pm4py.visualization.sna import visualizer as sna_visualizer
+            gviz_wt_py = sna_visualizer.apply(wt_values, variant=sna_visualizer.Variants.PYVIS)
 
-        from pm4py.algo.organizational_mining.sna import algorithm as sna
-        ja_values = sna.apply(log, variant=sna.Variants.JOINTACTIVITIES_LOG)
+            from pm4py.algo.organizational_mining.sna import algorithm as sna
+            ja_values = sna.apply(log, variant=sna.Variants.JOINTACTIVITIES_LOG)
 
-        from pm4py.visualization.sna import visualizer as sna_visualizer
-        gviz_ja_py = sna_visualizer.apply(ja_values, variant=sna_visualizer.Variants.PYVIS)
+            from pm4py.visualization.sna import visualizer as sna_visualizer
+            gviz_ja_py = sna_visualizer.apply(ja_values, variant=sna_visualizer.Variants.PYVIS)
 
-        from pm4py.algo.organizational_mining.roles import algorithm as roles_discovery
-        roles = roles_discovery.apply(log)
+            from pm4py.algo.organizational_mining.roles import algorithm as roles_discovery
+            roles = roles_discovery.apply(log)
 
     def test_playout(self):
         import os

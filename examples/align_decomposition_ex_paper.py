@@ -1,8 +1,8 @@
 from pm4py.objects.petri_net.obj import PetriNet, Marking
 from pm4py.objects.petri_net.utils.petri_utils import add_arc_from_to
-from pm4py.visualization.petri_net import visualizer
 from pm4py.objects.petri_net.utils import decomposition
 from examples import examples_conf
+import importlib.util
 
 
 def execute_script():
@@ -82,13 +82,17 @@ def execute_script():
     im[start] = 1
     fm = Marking()
     fm[end] = 1
-    gvizs = []
-    gvizs.append(visualizer.apply(net, im, final_marking=fm, parameters={"format": examples_conf.TARGET_IMG_FORMAT}))
-    visualizer.view(gvizs[len(gvizs) - 1])
     decomposed_net = decomposition.decompose(net, im, fm)
-    for snet, sim, sfm in decomposed_net:
-        gvizs.append(visualizer.apply(snet, sim, final_marking=sfm, parameters={"format": examples_conf.TARGET_IMG_FORMAT}))
+    gvizs = []
+
+    if importlib.util.find_spec("graphviz"):
+        from pm4py.visualization.petri_net import visualizer
+
+        gvizs.append(visualizer.apply(net, im, final_marking=fm, parameters={"format": examples_conf.TARGET_IMG_FORMAT}))
         visualizer.view(gvizs[len(gvizs) - 1])
+        for snet, sim, sfm in decomposed_net:
+            gvizs.append(visualizer.apply(snet, sim, final_marking=sfm, parameters={"format": examples_conf.TARGET_IMG_FORMAT}))
+            visualizer.view(gvizs[len(gvizs) - 1])
 
 
 if __name__ == "__main__":

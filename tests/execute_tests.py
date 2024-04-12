@@ -8,7 +8,12 @@ current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfra
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 
+EXECUTE_TESTS = True
+
 import pm4py
+import numpy
+import pandas
+import networkx
 
 pm4py.util.constants.SHOW_PROGRESS_BAR = False
 pm4py.util.constants.SHOW_EVENT_LOG_DEPRECATION = False
@@ -324,8 +329,31 @@ if failed > 0:
 
 
 def main():
-    runner = unittest.TextTestRunner()
-    runner.run(suite)
+    if EXECUTE_TESTS:
+        runner = unittest.TextTestRunner()
+        runner.run(suite)
+
+    print("numpy version: "+str(numpy.__version__))
+    print("pandas version: "+str(pandas.__version__))
+    print("networkx version: "+str(networkx.__version__))
+
+    if importlib.util.find_spec("scipy"):
+        import scipy
+        print("scipy version: "+str(scipy.__version__))
+
+    if importlib.util.find_spec("lxml"):
+        import lxml
+        print("lxml version: "+str(lxml.__version__))
+
+    if importlib.util.find_spec("matplotlib"):
+        import matplotlib
+        print("matplotlib version: "+str(matplotlib.__version__))
+
+    if importlib.util.find_spec("sklearn"):
+        import sklearn
+        print("sklearn version: "+str(sklearn.__version__))
+
+    print("pm4py version: "+str(pm4py.__version__))
 
 
 if __name__ == "__main__":

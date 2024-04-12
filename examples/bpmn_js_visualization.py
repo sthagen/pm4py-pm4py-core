@@ -1,4 +1,5 @@
 import pm4py
+import importlib.util
 
 
 def execute_script():
@@ -6,7 +7,8 @@ def execute_script():
 
     bpmn_model = pm4py.discover_bpmn_inductive(log)
 
-    pm4py.view_bpmn(bpmn_model, variant_str="dagrejs")
+    if importlib.util.find_spec("graphviz"):
+        pm4py.view_bpmn(bpmn_model, variant_str="dagrejs")
 
 
 if __name__ == "__main__":
