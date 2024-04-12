@@ -12,6 +12,7 @@ RUN apt-get -y install g++ libboost-all-dev libncurses5-dev wget
 RUN apt-get -y install libtool flex bison pkg-config g++ libssl-dev automake
 RUN apt-get -y install libjemalloc-dev libboost-dev libboost-filesystem-dev libboost-system-dev libboost-regex-dev python3-dev autoconf flex bison cmake
 RUN apt-get -y install libxml2-dev libxslt-dev libfreetype6-dev libsuitesparse-dev
+RUN apt-get -y install libclang-16-dev llvm-16-dev
 RUN pip install -U wheel six pytest
 RUN pip install -U meson-python>=0.13.1 Cython>=3.0.6 ninja spin==0.8 build
 RUN pip install deprecation==2.1.0 graphviz==0.20.3 intervaltree==3.1.0 networkx==3.3 packaging==24.0 python-dateutil==2.9.0.post0 pytz==2024.1 six==1.16.0 sortedcontainers==2.4.0 tzdata==2024.1 
@@ -24,6 +25,7 @@ RUN pip install contourpy==1.2.1 fonttools==4.51.0 kiwisolver==1.4.5 matplotlib=
 #RUN cd / && git clone https://github.com/scipy/scipy.git && cd /scipy && git submodule update --init && pip3 install .
 #RUN cd / && git clone https://github.com/lxml/lxml.git && cd /lxml && pip3 install .
 #RUN pip3 install matplotlib
+#RUN cd / && git clone https://github.com/duckdb/duckdb.git && cd /duckdb && make && cd /duckdb/tools/pythonpkg && python3 setup.py install
 
 COPY . /app
 RUN cd /app && python setup.py install
