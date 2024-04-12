@@ -4,9 +4,9 @@ from pm4py.algo.discovery.inductive import algorithm as inductive_miner
 from pm4py.objects.conversion.process_tree import converter
 from pm4py.algo.discovery.footprints import algorithm as footprints_discovery
 from pm4py.algo.conformance.footprints import algorithm as footprints_conformance
-from pm4py.visualization.footprints import visualizer as fp_visualizer
 import os
 from examples import examples_conf
+import importlib.util
 
 
 
@@ -40,9 +40,12 @@ def execute_script():
     # finds the footprints for the entire log (not case-by-case, but taking
     # the relations that appear inside the entire log)
     fp_log_entire = footprints_discovery.apply(log, variant=footprints_discovery.Variants.ENTIRE_EVENT_LOG)
-    # visualize the footprint table
-    gviz = fp_visualizer.apply(fp_log_entire, fp_net, parameters={"format": examples_conf.TARGET_IMG_FORMAT})
-    fp_visualizer.view(gviz)
+
+    if importlib.util.find_spec("graphviz"):
+        # visualize the footprint table
+        from pm4py.visualization.footprints import visualizer as fp_visualizer
+        gviz = fp_visualizer.apply(fp_log_entire, fp_net, parameters={"format": examples_conf.TARGET_IMG_FORMAT})
+        fp_visualizer.view(gviz)
 
 
 if __name__ == "__main__":

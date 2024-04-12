@@ -10,9 +10,8 @@ from pm4py.statistics.service_time.pandas import get as soj_time_get
 from pm4py.statistics.concurrent_activities.pandas import get as conc_act_get
 from pm4py.statistics.eventually_follows.pandas import get as efg_get
 from pm4py.statistics.start_activities.pandas import get as sa_get
-from pm4py.visualization.dfg import visualizer as dfg_vis_fact
-from pm4py.visualization.petri_net import visualizer as pn_vis
 from examples import examples_conf
+import importlib.util
 
 
 def execute_script():
@@ -42,16 +41,20 @@ def execute_script():
     efg = efg_get.apply(dataframe, parameters=parameters)
     print("efg")
     print(efg)
-    dfg_freq, dfg_perf = df_statistics.get_dfg_graph(dataframe, measure="both", start_timestamp_key="start_timestamp")
-    dfg_gv_freq = dfg_vis_fact.apply(dfg_freq, activities_count=att_count, variant=dfg_vis_fact.Variants.FREQUENCY,
-                                     serv_time=soj_time, parameters=parameters)
-    dfg_vis_fact.view(dfg_gv_freq)
-    dfg_gv_perf = dfg_vis_fact.apply(dfg_perf, activities_count=att_count, variant=dfg_vis_fact.Variants.PERFORMANCE,
-                                     serv_time=soj_time, parameters=parameters)
-    dfg_vis_fact.view(dfg_gv_perf)
-    net, im, fm = dfg_conv.apply(dfg_freq)
-    gviz = pn_vis.apply(net, im, fm, parameters=parameters)
-    pn_vis.view(gviz)
+
+    if importlib.util.find_spec("graphviz"):
+        from pm4py.visualization.dfg import visualizer as dfg_vis_fact
+        from pm4py.visualization.petri_net import visualizer as pn_vis
+        dfg_freq, dfg_perf = df_statistics.get_dfg_graph(dataframe, measure="both", start_timestamp_key="start_timestamp")
+        dfg_gv_freq = dfg_vis_fact.apply(dfg_freq, activities_count=att_count, variant=dfg_vis_fact.Variants.FREQUENCY,
+                                         serv_time=soj_time, parameters=parameters)
+        dfg_vis_fact.view(dfg_gv_freq)
+        dfg_gv_perf = dfg_vis_fact.apply(dfg_perf, activities_count=att_count, variant=dfg_vis_fact.Variants.PERFORMANCE,
+                                         serv_time=soj_time, parameters=parameters)
+        dfg_vis_fact.view(dfg_gv_perf)
+        net, im, fm = dfg_conv.apply(dfg_freq)
+        gviz = pn_vis.apply(net, im, fm, parameters=parameters)
+        pn_vis.view(gviz)
 
 
 if __name__ == "__main__":

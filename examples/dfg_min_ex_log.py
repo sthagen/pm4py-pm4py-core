@@ -9,9 +9,8 @@ from pm4py.statistics.service_time.log import get as soj_time_get
 from pm4py.statistics.concurrent_activities.log import get as conc_act_get
 from pm4py.statistics.eventually_follows.log import get as efg_get
 from pm4py.util import constants
-from pm4py.visualization.dfg import visualizer as dfg_vis_fact
-from pm4py.visualization.petri_net import visualizer as pn_vis
 from examples import examples_conf
+import importlib.util
 
 
 def execute_script():
@@ -39,15 +38,19 @@ def execute_script():
     print(efg)
     dfg_freq = dfg_algorithm.apply(log, parameters=parameters, variant=dfg_algorithm.Variants.FREQUENCY)
     dfg_perf = dfg_algorithm.apply(log, parameters=parameters, variant=dfg_algorithm.Variants.PERFORMANCE)
-    dfg_gv_freq = dfg_vis_fact.apply(dfg_freq, log=log, variant=dfg_vis_fact.Variants.FREQUENCY,
-                                     parameters=parameters)
-    dfg_vis_fact.view(dfg_gv_freq)
-    dfg_gv_perf = dfg_vis_fact.apply(dfg_perf, log=log, variant=dfg_vis_fact.Variants.PERFORMANCE,
-                                     parameters=parameters)
-    dfg_vis_fact.view(dfg_gv_perf)
-    net, im, fm = dfg_conv.apply(dfg_freq)
-    gviz = pn_vis.apply(net, im, fm, parameters=parameters)
-    pn_vis.view(gviz)
+
+    if importlib.util.find_spec("graphviz"):
+        from pm4py.visualization.dfg import visualizer as dfg_vis_fact
+        from pm4py.visualization.petri_net import visualizer as pn_vis
+        dfg_gv_freq = dfg_vis_fact.apply(dfg_freq, log=log, variant=dfg_vis_fact.Variants.FREQUENCY,
+                                         parameters=parameters)
+        dfg_vis_fact.view(dfg_gv_freq)
+        dfg_gv_perf = dfg_vis_fact.apply(dfg_perf, log=log, variant=dfg_vis_fact.Variants.PERFORMANCE,
+                                         parameters=parameters)
+        dfg_vis_fact.view(dfg_gv_perf)
+        net, im, fm = dfg_conv.apply(dfg_freq)
+        gviz = pn_vis.apply(net, im, fm, parameters=parameters)
+        pn_vis.view(gviz)
 
 
 if __name__ == "__main__":
