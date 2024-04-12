@@ -12,9 +12,9 @@ RUN apt-get -y install g++ libboost-all-dev libncurses5-dev wget
 RUN apt-get -y install libtool flex bison pkg-config g++ libssl-dev automake
 RUN apt-get -y install libjemalloc-dev libboost-dev libboost-filesystem-dev libboost-system-dev libboost-regex-dev python3-dev autoconf flex bison cmake
 RUN apt-get -y install libxml2-dev libxslt-dev libfreetype6-dev libsuitesparse-dev
-RUN apt-get -y install libclang-16-dev llvm-16-dev
+RUN apt-get -y install libclang-16-dev llvm-16-dev libthrift-dev
 RUN pip install -U wheel six pytest
-RUN pip install -U meson-python>=0.13.1 Cython>=3.0.6 ninja spin==0.8 build
+RUN pip install -U meson-python>=0.13.1 Cython>=3.0.6 ninja spin==0.8 build setuptools_scm setuptools>=38.6.0
 RUN pip install deprecation==2.1.0 graphviz==0.20.3 intervaltree==3.1.0 networkx==3.3 packaging==24.0 python-dateutil==2.9.0.post0 pytz==2024.1 six==1.16.0 sortedcontainers==2.4.0 tzdata==2024.1 
 RUN pip install colorama==0.4.6 cycler==0.12.1 joblib==1.4.0 pydotplus==2.0.2 pyparsing==3.1.2 threadpoolctl==3.4.0 tqdm==4.66.2 
 RUN pip install lxml==5.2.1 numpy==1.26.4 pandas==2.2.2 scipy==1.13.0 
