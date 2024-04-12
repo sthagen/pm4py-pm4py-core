@@ -7,6 +7,7 @@ from pm4py.algo.analysis.workflow_net import algorithm as is_wf_net
 from pm4py.objects.conversion.process_tree import converter as pt_converter
 from pm4py.objects.conversion.wf_net import converter as wf_net_converter
 from examples import examples_conf
+import importlib.util
 
 
 def execute_script():

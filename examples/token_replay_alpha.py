@@ -3,8 +3,8 @@ import os
 from pm4py.algo.conformance.tokenreplay import algorithm as token_replay
 from pm4py.algo.discovery.alpha import algorithm as alpha_miner
 from pm4py.objects.log.importer.xes import importer as xes_importer
-from pm4py.visualization.petri_net import visualizer as pn_vis
 from examples import examples_conf
+import importlib.util
 
 
 def execute_script():
@@ -15,9 +15,13 @@ def execute_script():
         print("initial marking " + place.name)
     for place in final_marking:
         print("final marking " + place.name)
-    gviz = pn_vis.apply(net, marking, final_marking,
-                        parameters={pn_vis.Variants.WO_DECORATION.value.Parameters.FORMAT: examples_conf.TARGET_IMG_FORMAT})
-    pn_vis.view(gviz)
+
+    if importlib.util.find_spec("graphviz"):
+        from pm4py.visualization.petri_net import visualizer as pn_vis
+        gviz = pn_vis.apply(net, marking, final_marking,
+                            parameters={pn_vis.Variants.WO_DECORATION.value.Parameters.FORMAT: examples_conf.TARGET_IMG_FORMAT})
+        pn_vis.view(gviz)
+
     print("started token replay")
     aligned_traces = token_replay.apply(log, net, marking, final_marking)
     fit_traces = [x for x in aligned_traces if x['trace_is_fit']]

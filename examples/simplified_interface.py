@@ -4,6 +4,7 @@ import pm4py
 from pm4py.util import constants, pandas_utils
 from pm4py.objects.log.util import dataframe_utils
 from examples import examples_conf
+import importlib.util
 
 
 def execute_script():
@@ -46,25 +47,39 @@ def execute_script():
     petri_heuristics, im_heuristics, fm_heuristics = pm4py.read_pnml("ru_heuristics.pnml", auto_guess_final_marking=True)
     tree_inductive = pm4py.read_ptml("ru_inductive.ptml")
 
-    pm4py.save_vis_petri_net(petri_alpha, im_alpha, fm_alpha, "ru_alpha.png")
-    pm4py.save_vis_petri_net(petri_inductive, im_inductive, fm_inductive, "ru_inductive.png")
-    pm4py.save_vis_petri_net(petri_heuristics, im_heuristics, fm_heuristics, "ru_heuristics.png")
-    pm4py.save_vis_process_tree(tree_inductive, "ru_inductive_tree.png")
-    pm4py.save_vis_heuristics_net(heu_net, "ru_heunet.png")
-    pm4py.save_vis_dfg(dfg, dfg_sa, dfg_ea, "ru_dfg.png")
-
-    pm4py.save_vis_events_per_time_graph(log1, "ev_time.png")
-    pm4py.save_vis_case_duration_graph(log1, "cd.png")
-    pm4py.save_vis_dotted_chart(log1, "dotted_chart.png")
-    pm4py.save_vis_performance_spectrum(log1, ["register request", "decide"], "ps.png")
-
     if ENABLE_VISUALIZATION:
-        pm4py.view_petri_net(petri_alpha, im_alpha, fm_alpha, format=examples_conf.TARGET_IMG_FORMAT)
-        pm4py.view_petri_net(petri_inductive, im_inductive, fm_inductive, format=examples_conf.TARGET_IMG_FORMAT)
-        pm4py.view_petri_net(petri_heuristics, im_heuristics, fm_heuristics, format=examples_conf.TARGET_IMG_FORMAT)
-        pm4py.view_process_tree(tree_inductive, format=examples_conf.TARGET_IMG_FORMAT)
-        pm4py.view_heuristics_net(heu_net, format=examples_conf.TARGET_IMG_FORMAT)
-        pm4py.view_dfg(dfg, dfg_sa, dfg_ea, format=examples_conf.TARGET_IMG_FORMAT)
+        if importlib.util.find_spec("graphviz"):
+            pm4py.view_petri_net(petri_alpha, im_alpha, fm_alpha, format=examples_conf.TARGET_IMG_FORMAT)
+            pm4py.view_petri_net(petri_inductive, im_inductive, fm_inductive, format=examples_conf.TARGET_IMG_FORMAT)
+            pm4py.view_petri_net(petri_heuristics, im_heuristics, fm_heuristics, format=examples_conf.TARGET_IMG_FORMAT)
+            pm4py.view_process_tree(tree_inductive, format=examples_conf.TARGET_IMG_FORMAT)
+            pm4py.view_dfg(dfg, dfg_sa, dfg_ea, format=examples_conf.TARGET_IMG_FORMAT)
+            pm4py.save_vis_petri_net(petri_alpha, im_alpha, fm_alpha, "ru_alpha.png")
+            pm4py.save_vis_petri_net(petri_inductive, im_inductive, fm_inductive, "ru_inductive.png")
+            pm4py.save_vis_petri_net(petri_heuristics, im_heuristics, fm_heuristics, "ru_heuristics.png")
+            pm4py.save_vis_process_tree(tree_inductive, "ru_inductive_tree.png")
+            pm4py.save_vis_dfg(dfg, dfg_sa, dfg_ea, "ru_dfg.png")
+            pm4py.save_vis_dotted_chart(log1, "dotted_chart.png")
+            pm4py.save_vis_performance_spectrum(log1, ["register request", "decide"], "ps.png")
+
+            if importlib.util.find_spec("pydotplus"):
+                pm4py.view_heuristics_net(heu_net, format=examples_conf.TARGET_IMG_FORMAT)
+                pm4py.save_vis_heuristics_net(heu_net, "ru_heunet.png")
+                os.remove("ru_heunet.png")
+
+            if importlib.util.find_spec("matplotlib"):
+                pm4py.save_vis_events_per_time_graph(log1, "ev_time.png")
+                pm4py.save_vis_case_duration_graph(log1, "cd.png")
+                os.remove("ev_time.png")
+                os.remove("cd.png")
+
+            os.remove("ru_alpha.png")
+            os.remove("ru_inductive.png")
+            os.remove("ru_inductive_tree.png")
+            os.remove("ru_dfg.png")
+            os.remove("ru_heuristics.png")
+            os.remove("dotted_chart.png")
+            os.remove("ps.png")
 
     aligned_traces = pm4py.conformance_diagnostics_alignments(log1, petri_inductive, im_inductive, fm_inductive, return_diagnostics_dataframe=False)
     replayed_traces = pm4py.conformance_diagnostics_token_based_replay(log1, petri_inductive, im_inductive, fm_inductive, return_diagnostics_dataframe=False)
@@ -108,8 +123,11 @@ def execute_script():
     print("cases overlap log = ", pm4py.get_case_overlap(log2))
     print("cycle time df = ", pm4py.get_cycle_time(df2, case_id_key="case:concept:name", activity_key="concept:name", timestamp_key="time:timestamp"))
     print("cycle time log = ", pm4py.get_cycle_time(log2))
-    pm4py.view_events_distribution_graph(df2, case_id_key="case:concept:name", activity_key="concept:name", timestamp_key="time:timestamp", format=examples_conf.TARGET_IMG_FORMAT)
-    pm4py.view_events_distribution_graph(log2, format=examples_conf.TARGET_IMG_FORMAT)
+
+    if ENABLE_VISUALIZATION:
+        if importlib.util.find_spec("graphviz") and importlib.util.find_spec("matplotlib"):
+            pm4py.view_events_distribution_graph(df2, case_id_key="case:concept:name", activity_key="concept:name", timestamp_key="time:timestamp", format=examples_conf.TARGET_IMG_FORMAT)
+            pm4py.view_events_distribution_graph(log2, format=examples_conf.TARGET_IMG_FORMAT)
 
     print("variants log = ", pm4py.get_variants_as_tuples(log2))
     print("variants df = ", pm4py.get_variants_as_tuples(df2, case_id_key="case:concept:name", activity_key="concept:name", timestamp_key="time:timestamp"))
@@ -145,17 +163,6 @@ def execute_script():
     os.remove("ru_inductive.pnml")
     os.remove("ru_heuristics.pnml")
     os.remove("ru_inductive.ptml")
-    os.remove("ru_alpha.png")
-    os.remove("ru_inductive.png")
-    os.remove("ru_heuristics.png")
-    os.remove("ru_inductive_tree.png")
-    os.remove("ru_heunet.png")
-    os.remove("ru_dfg.png")
-
-    os.remove("ev_time.png")
-    os.remove("cd.png")
-    os.remove("dotted_chart.png")
-    os.remove("ps.png")
 
     wt_log = pm4py.discover_working_together_network(log2)
     wt_df = pm4py.discover_working_together_network(df2, case_id_key="case:concept:name", resource_key="org:resource", timestamp_key="time:timestamp")
@@ -169,21 +176,24 @@ def execute_script():
     print("df similar activities", pm4py.discover_activity_based_resource_similarity(df2, case_id_key="case:concept:name", resource_key="org:resource", timestamp_key="time:timestamp", activity_key="concept:name"))
     print("log org roles", pm4py.discover_organizational_roles(log2))
     print("df org roles", pm4py.discover_organizational_roles(df2, case_id_key="case:concept:name", resource_key="org:resource", timestamp_key="time:timestamp", activity_key="concept:name"))
-    pm4py.view_sna(wt_log)
 
-    pm4py.save_vis_sna(wt_df, "ru_wt_df.png")
-    os.remove("ru_wt_df.png")
+    if ENABLE_VISUALIZATION:
+        if importlib.util.find_spec("graphviz") and importlib.util.find_spec("pyvis") and importlib.util.find_spec("networkx"):
+            pm4py.view_sna(wt_log)
+            pm4py.save_vis_sna(wt_df, "ru_wt_df.png")
+            os.remove("ru_wt_df.png")
 
     footprints = pm4py.discover_footprints(log1)
     alignments = pm4py.conformance_diagnostics_alignments(log1, petri_inductive, im_inductive, fm_inductive, return_diagnostics_dataframe=False)
 
-    pm4py.view_footprints(footprints, format=examples_conf.TARGET_IMG_FORMAT)
-    pm4py.view_alignments(log1, alignments, format=examples_conf.TARGET_IMG_FORMAT)
-
-    pm4py.save_vis_footprints(footprints, "footprints.png")
-    pm4py.save_vis_alignments(log1, aligned_traces, "alignments.png")
-    os.remove("footprints.png")
-    os.remove("alignments.png")
+    if ENABLE_VISUALIZATION:
+        if importlib.util.find_spec("graphviz"):
+            pm4py.view_footprints(footprints, format=examples_conf.TARGET_IMG_FORMAT)
+            pm4py.view_alignments(log1, alignments, format=examples_conf.TARGET_IMG_FORMAT)
+            pm4py.save_vis_footprints(footprints, "footprints.png")
+            pm4py.save_vis_alignments(log1, aligned_traces, "alignments.png")
+            os.remove("footprints.png")
+            os.remove("alignments.png")
 
 
 if __name__ == "__main__":
