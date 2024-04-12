@@ -1,3 +1,4 @@
+import importlib.util
 import os
 import unittest
 
@@ -200,16 +201,18 @@ class SimplifiedInterfaceTest(unittest.TestCase):
         pm4py.get_case_arrival_average(df, case_id_key="CaseID", activity_key="Activity", timestamp_key="Timestamp")
 
     def test_serialization_log(self):
-        for legacy_obj in [True, False]:
-            log = pm4py.read_xes("input_data/running-example.xes", return_legacy_log_object=legacy_obj)
-            ser = pm4py.serialize(log)
-            log2 = pm4py.deserialize(ser)
+        if importlib.util.find_spec("pyarrow"):
+            for legacy_obj in [True, False]:
+                log = pm4py.read_xes("input_data/running-example.xes", return_legacy_log_object=legacy_obj)
+                ser = pm4py.serialize(log)
+                log2 = pm4py.deserialize(ser)
 
     def test_serialization_dataframe(self):
-        df = pandas_utils.read_csv("input_data/running-example.csv")
-        df = dataframe_utils.convert_timestamp_columns_in_df(df, timest_format=constants.DEFAULT_TIMESTAMP_PARSE_FORMAT, timest_columns=["time:timestamp"])
-        ser = pm4py.serialize(df)
-        df2 = pm4py.deserialize(ser)
+        if importlib.util.find_spec("pyarrow"):
+            df = pandas_utils.read_csv("input_data/running-example.csv")
+            df = dataframe_utils.convert_timestamp_columns_in_df(df, timest_format=constants.DEFAULT_TIMESTAMP_PARSE_FORMAT, timest_columns=["time:timestamp"])
+            ser = pm4py.serialize(df)
+            df2 = pm4py.deserialize(ser)
 
     def test_serialization_petri_net(self):
         net, im, fm = pm4py.read_pnml("input_data/running-example.pnml")
