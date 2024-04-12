@@ -5,7 +5,7 @@ import traceback
 import importlib.util
 
 
-EXECUTE_EXAMPLES = False
+EXECUTE_EXAMPLES = True
 
 
 def bpmn_js_visualization():
