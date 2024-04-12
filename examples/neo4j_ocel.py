@@ -2,6 +2,7 @@ import pm4py
 from neo4j import GraphDatabase
 from examples import examples_conf
 from pm4py.util import nx_utils
+import importlib.util
 
 
 def execute_script():
@@ -34,9 +35,10 @@ def execute_script():
         print(ocel2)
 
         # shows the object-centric directly-follows graph on the screen
-        ocdfg = pm4py.discover_ocdfg(ocel2)
-        pm4py.view_ocdfg(ocdfg, annotation="frequency", format=examples_conf.TARGET_IMG_FORMAT)
-        pm4py.view_ocdfg(ocdfg, annotation="performance", format=examples_conf.TARGET_IMG_FORMAT)
+        if importlib.util.find_spec("graphviz"):
+            ocdfg = pm4py.discover_ocdfg(ocel2)
+            pm4py.view_ocdfg(ocdfg, annotation="frequency", format=examples_conf.TARGET_IMG_FORMAT)
+            pm4py.view_ocdfg(ocdfg, annotation="performance", format=examples_conf.TARGET_IMG_FORMAT)
 
 
 if __name__ == "__main__":

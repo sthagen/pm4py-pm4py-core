@@ -2,8 +2,8 @@ from pm4py.objects.petri_net.obj import Marking
 from pm4py.objects.petri_net.utils import petri_utils
 from pm4py.objects.petri_net.saw_net.obj import StochasticArcWeightNet
 from uuid import uuid4
-from pm4py.visualization.petri_net import visualizer as pn_visualizer
 import os
+import importlib.util
 
 
 def execute_script():
@@ -61,8 +61,11 @@ def execute_script():
     arc11o.weight = {1: 3}
     arc12o.weight = {1: 3}
 
-    gviz = pn_visualizer.apply(neto, imo, fmo)
-    pn_visualizer.save(gviz, "folded_order.png")
+    if importlib.util.find_spec("graphviz"):
+        from pm4py.visualization.petri_net import visualizer as pn_visualizer
+        gviz = pn_visualizer.apply(neto, imo, fmo)
+        pn_visualizer.save(gviz, "folded_order.png")
+        os.remove("folded_order.png")
 
     nete = StochasticArcWeightNet()
     ime = Marking()
@@ -110,11 +113,11 @@ def execute_script():
     arc9.weight = {2: 1, 3: 2}
     arc10.weight = {2: 1, 3: 2}
 
-    gviz = pn_visualizer.apply(nete, ime, fme)
-    pn_visualizer.save(gviz, "folded_item.png")
-
-    os.remove("folded_order.png")
-    os.remove("folded_item.png")
+    if importlib.util.find_spec("graphviz"):
+        from pm4py.visualization.petri_net import visualizer as pn_visualizer
+        gviz = pn_visualizer.apply(nete, ime, fme)
+        pn_visualizer.save(gviz, "folded_item.png")
+        os.remove("folded_item.png")
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 import pm4py
-from pm4py.visualization.dfg import visualizer as dfg_visualizer
 from pm4py.algo.filtering.dfg import dfg_filtering
 from examples import examples_conf
+import importlib.util
 
 
 def execute_script():
@@ -12,11 +12,14 @@ def execute_script():
     dfg, sa, ea, act_count = dfg_filtering.filter_dfg_on_activities_percentage(dfg, sa, ea, act_count, 0.3)
     # keep the specified amount of paths
     dfg, sa, ea, act_count = dfg_filtering.filter_dfg_on_paths_percentage(dfg, sa, ea, act_count, 0.3)
-    # view the DFG
-    gviz = dfg_visualizer.apply(dfg, activities_count=act_count, parameters={dfg_visualizer.Variants.FREQUENCY.value.Parameters.START_ACTIVITIES: sa,
-                                                                             dfg_visualizer.Variants.FREQUENCY.value.Parameters.END_ACTIVITIES: ea,
-                                                                             dfg_visualizer.Variants.FREQUENCY.value.Parameters.FORMAT: examples_conf.TARGET_IMG_FORMAT})
-    dfg_visualizer.view(gviz)
+
+    if importlib.util.find_spec("graphviz"):
+        # view the DFG
+        from pm4py.visualization.dfg import visualizer as dfg_visualizer
+        gviz = dfg_visualizer.apply(dfg, activities_count=act_count, parameters={dfg_visualizer.Variants.FREQUENCY.value.Parameters.START_ACTIVITIES: sa,
+                                                                                 dfg_visualizer.Variants.FREQUENCY.value.Parameters.END_ACTIVITIES: ea,
+                                                                                 dfg_visualizer.Variants.FREQUENCY.value.Parameters.FORMAT: examples_conf.TARGET_IMG_FORMAT})
+        dfg_visualizer.view(gviz)
 
 
 if __name__ == "__main__":

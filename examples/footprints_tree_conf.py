@@ -2,8 +2,6 @@ from pm4py.objects.log.importer.xes import importer as xes_importer
 from pm4py.algo.discovery.inductive import algorithm as inductive_miner
 from pm4py.algo.discovery.footprints import algorithm as fp_discovery
 from pm4py.algo.conformance.footprints import algorithm as fp_conformance
-from pm4py.algo.conformance.footprints.util import tree_visualization
-from pm4py.visualization.process_tree import visualizer as pt_visualizer
 from pm4py.statistics.traces.generic.log import case_statistics
 from pm4py.algo.discovery.dfg import algorithm as dfg_discovery
 from pm4py.algo.filtering.log.paths import paths_filter
@@ -12,6 +10,7 @@ from pm4py.algo.filtering.log.variants import variants_filter
 from pm4py.statistics.variants.log import get as variants_get
 from examples import examples_conf
 import os
+import importlib.util
 
 
 def execute_script():
@@ -49,13 +48,17 @@ def execute_script():
         var_throughput = case_statistics.get_median_case_duration(variants[var])
         print("%s\t\t%d\t\t%s\t\t%s\t\t%s" % (vark, occ, is_fit, throughput_time, human_readable_stat(var_throughput)))
 
-    # print(conf_occ)
-    conf_colors = tree_visualization.apply(tree, conf)
-    if True:
-        gviz = pt_visualizer.apply(tree, parameters={"format": examples_conf.TARGET_IMG_FORMAT,
-                                                     pt_visualizer.Variants.WO_DECORATION.value.Parameters.COLOR_MAP: conf_colors,
-                                                     pt_visualizer.Variants.WO_DECORATION.value.Parameters.ENABLE_DEEPCOPY: False})
-        pt_visualizer.view(gviz)
+
+    if importlib.util.find_spec("graphviz"):
+        from pm4py.algo.conformance.footprints.util import tree_visualization
+        from pm4py.visualization.process_tree import visualizer as pt_visualizer
+        # print(conf_occ)
+        conf_colors = tree_visualization.apply(tree, conf)
+        if True:
+            gviz = pt_visualizer.apply(tree, parameters={"format": examples_conf.TARGET_IMG_FORMAT,
+                                                         pt_visualizer.Variants.WO_DECORATION.value.Parameters.COLOR_MAP: conf_colors,
+                                                         pt_visualizer.Variants.WO_DECORATION.value.Parameters.ENABLE_DEEPCOPY: False})
+            pt_visualizer.view(gviz)
 
 
 if __name__ == "__main__":

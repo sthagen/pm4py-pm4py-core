@@ -3,8 +3,8 @@ import os
 import pm4py
 from pm4py.streaming.algo.discovery.dfg import algorithm as dfg_discovery
 from pm4py.streaming.stream.live_event_stream import LiveEventStream
-from pm4py.visualization.dfg import visualizer as dfg_visualizer
 from examples import examples_conf
+import importlib.util
 
 
 def execute_script():
@@ -28,11 +28,14 @@ def execute_script():
     live_stream.stop()
     # gets the DFG along with the start and end activities from the stream
     dfg, activities, start_activities, end_activities = stream_dfg_disc.get()
-    # visualize the DFG
-    gviz = dfg_visualizer.apply(dfg, variant=dfg_visualizer.Variants.FREQUENCY, activities_count=activities,
-                                parameters={"format": examples_conf.TARGET_IMG_FORMAT, "start_activities": start_activities,
-                                            "end_activities": end_activities})
-    dfg_visualizer.view(gviz)
+
+    if importlib.util.find_spec("graphviz"):
+        # visualize the DFG
+        from pm4py.visualization.dfg import visualizer as dfg_visualizer
+        gviz = dfg_visualizer.apply(dfg, variant=dfg_visualizer.Variants.FREQUENCY, activities_count=activities,
+                                    parameters={"format": examples_conf.TARGET_IMG_FORMAT, "start_activities": start_activities,
+                                                "end_activities": end_activities})
+        dfg_visualizer.view(gviz)
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@ from pm4py.objects.petri_net.obj import Marking
 from pm4py.objects.petri_net.utils import petri_utils
 from pm4py.objects.petri_net.saw_net.obj import StochasticArcWeightNet
 from uuid import uuid4
-from pm4py.visualization.petri_net import visualizer as pn_visualizer
+import importlib.util
 import os
 
 
@@ -135,10 +135,11 @@ def execute_script():
     decorations[p3e] = {"color": "red"}
     decorations[skip_e] = {"color": "red"}
 
-    gviz = pn_visualizer.apply(neto, imo, fmo, parameters={"decorations": decorations})
-    pn_visualizer.save(gviz, "total.png")
-
-    os.remove("total.png")
+    if importlib.util.find_spec("graphviz"):
+        from pm4py.visualization.petri_net import visualizer as pn_visualizer
+        gviz = pn_visualizer.apply(neto, imo, fmo, parameters={"decorations": decorations})
+        pn_visualizer.save(gviz, "total.png")
+        os.remove("total.png")
 
 
 if __name__ == "__main__":

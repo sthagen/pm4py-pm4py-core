@@ -2,6 +2,7 @@ import os
 import networkx as nx
 import time
 import requests
+import importlib.util
 
 
 REMOVE_DEPS_AT_END = True
@@ -107,7 +108,12 @@ deps, packages = get_all_third_party_dependencies("pm4py", deps, packages_dictio
 if UPDATE_OTHER_FILES:
     F = open("../requirements_complete.txt", "w")
     for x in packages:
-        F.write("%s\n" % (x[0]))
+        if x[0] == "numpy":
+            F.write("%s<2\n" % (x[0]))
+        elif x[0] == "pandas":
+            F.write("%s<3\n" % (x[0]))
+        else:
+            F.write("%s\n" % (x[0]))
     F.close()
     F = open("../requirements_stable.txt", "w")
     for x in packages:
@@ -127,7 +133,8 @@ if UPDATE_OTHER_FILES:
         F.write("| %s | %s | %s | %s |\n" % (x[0].strip(), x[1].strip(), x[3].strip(), x[2].strip()))
     F.close()
 
-deps, packages = get_all_third_party_dependencies("scikit-learn", deps, packages_dictio)
+if importlib.util.find_spec("sklearn"):
+    deps, packages = get_all_third_party_dependencies("scikit-learn", deps, packages_dictio)
 
 first_line_packages = ["deprecation", "packaging", "networkx", "graphviz", "six", "python-dateutil", "pytz", "tzdata", "intervaltree", "sortedcontainers"]
 second_line_packages = ["pydotplus", "pyparsing", "tqdm", "colorama", "cycler", "joblib", "threadpoolctl"]
