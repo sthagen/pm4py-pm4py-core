@@ -354,6 +354,7 @@ def main():
         print("sklearn version: "+str(sklearn.__version__))
 
     print("pm4py version: "+str(pm4py.__version__))
+    print("Python version: "+str(sys.version))
 
 
 if __name__ == "__main__":
