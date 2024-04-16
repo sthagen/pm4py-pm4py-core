@@ -32,4 +32,4 @@ RUN pip install contourpy==1.2.1 fonttools==4.51.0 kiwisolver==1.4.5 matplotlib=
 #RUN cd / && git clone https://github.com/mkleehammer/pyodbc.git && cd /pyodbc && pip3 install .
 
 COPY . /app
-RUN cd /app && python setup.py install
+RUN cd /app && pip3 install --no-deps .
