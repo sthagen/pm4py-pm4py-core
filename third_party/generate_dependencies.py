@@ -136,7 +136,7 @@ if UPDATE_OTHER_FILES:
 if importlib.util.find_spec("sklearn"):
     deps, packages = get_all_third_party_dependencies("scikit-learn", deps, packages_dictio)
 
-first_line_packages = ["deprecation", "packaging", "networkx", "graphviz", "six", "python-dateutil", "pytz", "tzdata", "intervaltree", "sortedcontainers"]
+first_line_packages = ["deprecation", "packaging", "networkx", "graphviz", "six", "python-dateutil", "pytz", "tzdata", "intervaltree", "sortedcontainers", "wheel", "setuptools"]
 second_line_packages = ["pydotplus", "pyparsing", "tqdm", "colorama", "cycler", "joblib", "threadpoolctl"]
 third_line_packages = ["lxml", "numpy", "pandas", "scipy"]
 
@@ -166,7 +166,7 @@ found_line = False
 
 i = 0
 while i < len(dockerfile_contents):
-    if dockerfile_contents[i].startswith("RUN pip install") and not "-U" in dockerfile_contents[i]:
+    if dockerfile_contents[i].startswith("RUN pip3 install") and not "-U" in dockerfile_contents[i]:
         found_line = True
     elif found_line:
         after_lines.append(dockerfile_contents[i])
@@ -174,7 +174,7 @@ while i < len(dockerfile_contents):
         before_lines.append(dockerfile_contents[i])
     i = i + 1
 
-stru = "".join(before_lines + ["RUN pip install " + x + "\n" for x in [first_packages_line, second_packages_line, third_packages_line, fourth_package_line]] + after_lines)
+stru = "".join(before_lines + ["RUN pip3 install " + x + "\n" for x in [first_packages_line, second_packages_line, third_packages_line, fourth_package_line]] + after_lines)
 stru = stru.strip() + "\n"
 
 if UPDATE_DOCKERFILE:
