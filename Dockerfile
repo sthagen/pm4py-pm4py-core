@@ -5,12 +5,13 @@ RUN apt-get -y upgrade
 RUN apt-get -y install aptitude locate apt-file nano vim git zip unzip wget graphviz curl gnupg gnupg2 tini iputils-ping
 RUN apt-get -y install gcc gfortran g++ python3-dev python3-pydot python3-tk flex bison pkg-config automake autoconf cmake
 RUN apt-get -y install libopenblas-dev liblapack-dev libboost-all-dev libncurses5-dev libtool libssl-dev libjemalloc-dev libboost-dev libboost-filesystem-dev libboost-system-dev libboost-regex-dev libxml2-dev libxslt-dev libfreetype6-dev libsuitesparse-dev libclang-16-dev llvm-16-dev libthrift-dev unixodbc-dev
-RUN pip install -U wheel six pytest
-RUN pip install -U meson-python>=0.13.1 Cython>=3.0.6 ninja spin==0.8 build setuptools_scm setuptools>=38.6.0
-RUN pip install deprecation==2.1.0 graphviz==0.20.3 intervaltree==3.1.0 networkx==3.3 packaging==24.0 python-dateutil==2.9.0.post0 pytz==2024.1 six==1.16.0 sortedcontainers==2.4.0 tzdata==2024.1 
-RUN pip install colorama==0.4.6 cycler==0.12.1 joblib==1.4.0 pydotplus==2.0.2 pyparsing==3.1.2 threadpoolctl==3.4.0 tqdm==4.66.2 
-RUN pip install lxml==5.2.1 numpy==1.26.4 pandas==2.2.2 scipy==1.13.0 
-RUN pip install contourpy==1.2.1 fonttools==4.51.0 kiwisolver==1.4.5 matplotlib==3.8.4 pillow==10.3.0 
+RUN python3 -m pip install --upgrade pip
+RUN pip3 install -U wheel six pytest
+RUN pip3 install -U meson-python==0.15.0 Cython==3.0.10 ninja==1.11.1.1 spin==0.8 build==1.2.1 setuptools_scm==8.0.4 setuptools==69.5.1
+RUN pip3 install deprecation==2.1.0 graphviz==0.20.3 intervaltree==3.1.0 networkx==3.3 packaging==24.0 python-dateutil==2.9.0.post0 pytz==2024.1 six==1.16.0 sortedcontainers==2.4.0 tzdata==2024.1
+RUN pip3 install colorama==0.4.6 cycler==0.12.1 joblib==1.4.0 pydotplus==2.0.2 pyparsing==3.1.2 threadpoolctl==3.4.0 tqdm==4.66.2
+RUN pip3 install lxml==5.2.1 numpy==1.26.4 pandas==2.2.2 scipy==1.13.0
+RUN pip3 install contourpy==1.2.1 fonttools==4.51.0 kiwisolver==1.4.5 matplotlib==3.8.4 pillow==10.3.0
 
 #RUN cd / && git clone https://github.com/numpy/numpy.git && cd /numpy && git submodule update --init && pip3 install .
 #RUN cd / && git clone https://github.com/pandas-dev/pandas.git && cd /pandas && pip3 install .
