@@ -3,7 +3,8 @@ FROM python:3.12.3-bookworm
 RUN apt-get update
 RUN apt-get -y upgrade
 RUN apt-get -y install aptitude locate apt-file nano vim git zip unzip wget graphviz curl gnupg gnupg2 tini iputils-ping
-RUN apt-get -y install gcc gfortran g++ python3-dev python3-pydot python3-tk flex bison pkg-config automake autoconf cmake
+RUN apt-get -y install gcc gfortran g++ flex bison pkg-config automake autoconf cmake
+RUN apt-get -y install python3-dev python3-pydot python3-tk
 RUN apt-get -y install libopenblas-dev liblapack-dev libboost-all-dev libncurses5-dev libtool libssl-dev libjemalloc-dev libboost-dev libboost-filesystem-dev libboost-system-dev libboost-regex-dev libxml2-dev libxslt-dev libfreetype6-dev libsuitesparse-dev libclang-16-dev llvm-16-dev libthrift-dev unixodbc-dev
 RUN python3 -m pip install --upgrade pip
 RUN pip3 install -U wheel six pytest
