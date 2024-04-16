@@ -1,5 +1,7 @@
 numpy<2
 pandas<3
+wheel
+setuptools
 deprecation
 networkx
 graphviz
