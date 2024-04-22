@@ -108,12 +108,13 @@ deps, packages = get_all_third_party_dependencies("pm4py", deps, packages_dictio
 if UPDATE_OTHER_FILES:
     F = open("../requirements_complete.txt", "w")
     for x in packages:
-        if x[0] == "numpy":
+        """if x[0] == "numpy":
             F.write("%s<2\n" % (x[0]))
         elif x[0] == "pandas":
             F.write("%s<3\n" % (x[0]))
         else:
-            F.write("%s\n" % (x[0]))
+            F.write("%s\n" % (x[0]))"""
+        F.write("%s\n" % (x[0]))
     F.close()
     F = open("../requirements_stable.txt", "w")
     for x in packages:
