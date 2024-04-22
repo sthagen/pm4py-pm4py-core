@@ -10,13 +10,14 @@ from copy import copy
 from pm4py.objects.petri_net.obj import PetriNet, Marking
 
 
-def openai_query(prompt: str, api_key: Optional[str] = None, openai_model: Optional[str] = None, **kwargs) -> str:
+def openai_query(prompt: str, api_key: Optional[str] = None, openai_model: Optional[str] = None, api_url: Optional[str] = None, **kwargs) -> str:
     """
     Executes the provided prompt, obtaining the answer from the OpenAI APIs.
 
     :param prompt: prompt that should be executed
     :param api_key: OpenAI API key
     :param openai_model: OpenAI model to be used (default: gpt-3.5-turbo)
+    :param api_url: OpenAI API URL
     :rtype: ``str``
 
     .. code-block:: python3
@@ -27,6 +28,8 @@ def openai_query(prompt: str, api_key: Optional[str] = None, openai_model: Optio
         print(resp)
     """
     parameters = copy(kwargs) if kwargs is not None else {}
+    if api_url is not None:
+        parameters["api_url"] = api_url
     if api_key is not None:
         parameters["api_key"] = api_key
     if openai_model is not None:
