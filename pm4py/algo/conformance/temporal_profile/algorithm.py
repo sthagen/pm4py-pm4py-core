@@ -72,7 +72,7 @@ def get_diagnostics_dataframe(elog: Union[EventLog, pd.DataFrame], conf_result: 
     if parameters is None:
         parameters = {}
 
-    if pandas_utils.check_is_pandas_dataframe(log):
+    if pandas_utils.check_is_pandas_dataframe(elog):
         case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
         cases = pandas_utils.format_unique(elog[case_id_key].unique())
     else:
