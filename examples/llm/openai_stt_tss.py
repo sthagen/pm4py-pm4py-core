@@ -2,6 +2,7 @@ from enum import Enum
 from typing import Optional, Dict, Any
 from pm4py.util import exec_utils, constants
 from tempfile import NamedTemporaryFile
+import pm4py
 import os
 import sys
 import subprocess
@@ -23,7 +24,7 @@ def check_ffmpeg_installed():
         result = subprocess.run(["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
         # If the command was executed successfully, ffmpeg is installed
         return True
-    except subprocess.CalledProcessError:
+    except:
         # If the command execution leads to an error, ffmpeg is not installed
         return False
 
@@ -198,12 +199,27 @@ if __name__ == "__main__":
     if not importlib.util.find_spec("pydub") or not importlib.util.find_spec("pyaudio"):
         raise Exception("install pydub and pyaudio using pip!")
 
+    api_key = "sk-"
+
+    log = pm4py.read_xes("../../tests/compressed_input_data/15_bpic2020_permit_log_1t_per_variant.xes.gz")
+    var_abstr = pm4py.llm.abstract_variants(log)
+
     parameters = {}
 
-    parameters["api_key"] = "sk-" # OpenAI key
-    parameters["recording_duration"] = 5  # 10 seconds recording duration
+    parameters["api_key"] = api_key # OpenAI key
+    parameters["recording_duration"] = 6  # 6 seconds recording duration
 
-    transcription = speech_to_text(None, parameters=parameters)
-    print(transcription)
+    print("Please insert your inquiry:")
+    user_inquiry = speech_to_text(None, parameters=parameters)
+    print("This is your inquiry:", user_inquiry)
 
-    text_to_speech(transcription, parameters=parameters)
+    print("Now your inquiry is vocalized before execution:")
+    text_to_speech(user_inquiry, parameters=parameters)
+
+    prompt = var_abstr + "\n\n" + user_inquiry
+
+    response = pm4py.llm.openai_query(prompt, api_key=api_key)
+    print("This is the response of the OpenAI model:", response)
+
+    print("Now the response is vocalized:")
+    text_to_speech(response, parameters=parameters)
