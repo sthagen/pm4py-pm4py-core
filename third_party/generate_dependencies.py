@@ -3,6 +3,7 @@ import networkx as nx
 import time
 import requests
 import importlib.util
+from copy import deepcopy
 
 
 REMOVE_DEPS_AT_END = True
@@ -134,8 +135,12 @@ if UPDATE_OTHER_FILES:
         F.write("| %s | %s | %s | %s |\n" % (x[0].strip(), x[1].strip(), x[3].strip(), x[2].strip()))
     F.close()
 
-if importlib.util.find_spec("sklearn"):
-    deps, packages = get_all_third_party_dependencies("scikit-learn", deps, packages_dictio)
+prev_deps = deepcopy(packages)
+
+extra_packages = ["requests", "pyvis", "jsonschema", "workalendar", "scikit-learn", "openai"]
+for ep in extra_packages:
+    if importlib.util.find_spec(ep):
+        deps, packages = get_all_third_party_dependencies(ep, deps, packages_dictio)
 
 first_line_packages = ["deprecation", "packaging", "networkx", "graphviz", "six", "python-dateutil", "pytz", "tzdata", "intervaltree", "sortedcontainers", "wheel", "setuptools"]
 second_line_packages = ["pydotplus", "pyparsing", "tqdm", "colorama", "cycler", "joblib", "threadpoolctl"]
@@ -145,6 +150,7 @@ first_packages_line = ""
 second_packages_line = ""
 third_packages_line = ""
 fourth_package_line = ""
+fifth_package_line = ""
 
 for x in packages:
     cont = x[0] + "==" + x[2] + " "
@@ -154,8 +160,10 @@ for x in packages:
         second_packages_line += cont
     elif x[0] in third_line_packages:
         third_packages_line += cont
-    else:
+    elif x in prev_deps:
         fourth_package_line += cont
+    else:
+        fifth_package_line += cont
 
 F = open("../Dockerfile", "r")
 dockerfile_contents = F.readlines()
@@ -175,7 +183,7 @@ while i < len(dockerfile_contents):
         before_lines.append(dockerfile_contents[i])
     i = i + 1
 
-stru = "".join(before_lines + ["RUN pip3 install " + x + "\n" for x in [first_packages_line, second_packages_line, third_packages_line, fourth_package_line]] + after_lines)
+stru = "".join(before_lines + ["RUN pip3 install " + x + "\n" for x in [first_packages_line, second_packages_line, third_packages_line, fourth_package_line, fifth_package_line]] + after_lines)
 stru = stru.strip() + "\n"
 
 if UPDATE_DOCKERFILE:
