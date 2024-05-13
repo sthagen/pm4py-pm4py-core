@@ -37,8 +37,7 @@ def get_version(package):
 
 
 def elaborate_single_python_package(package_name, deps, include_self=False):
-    if not os.path.exists("deps.txt"):
-        os.system("pipdeptree -p "+package_name+" >deps.txt")
+    os.system("pipdeptree -p "+package_name+" >deps.txt")
 
     F = open("deps.txt", "r")
     content = F.readlines()
@@ -83,9 +82,12 @@ def elaborate_single_python_package(package_name, deps, include_self=False):
         if not x in deps:
             deps.append(x)
 
+    if "cvxopt" in deps:
+        del deps[deps.index("cvxopt")]
+
     if include_self:
-        if not package_name in deps:
-            deps.append(x)
+        if package_name not in deps:
+            deps.append(package_name)
 
     deps = sorted(deps, key=lambda x: x.lower())
 
@@ -163,7 +165,7 @@ for x in packages:
         third_packages_line += cont
     elif x in prev_deps:
         fourth_package_line += cont
-    elif x in extra_packages:
+    elif x[0] in extra_packages:
         sixth_package_line += cont
     else:
         fifth_package_line += cont
