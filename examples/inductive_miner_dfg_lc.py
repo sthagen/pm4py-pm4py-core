@@ -36,7 +36,7 @@ def __build_dfg_lc(log, act_key, start_timestamp, complete_timestamp):
 
 
 def execute_script():
-    log = pm4py.read_xes(os.path.join("tests", "input_data", "interval_event_log.xes"), return_legacy_log_object=True)
+    log = pm4py.read_xes(os.path.join("..", "tests", "input_data", "interval_event_log.xes"), return_legacy_log_object=True)
 
     process_tree0 = pm4py.discover_process_tree_inductive(log)
     print(process_tree0)
