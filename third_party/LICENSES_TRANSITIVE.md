@@ -25,8 +25,8 @@
 | pyparsing | https://pypi.org/project/pyparsing | MIT License | 3.1.2 |
 | python-dateutil | https://pypi.org/project/python-dateutil | Apache Software License, BSD License (Dual License) | 2.9.0.post0 |
 | pytz | https://pypi.org/project/pytz | MIT License (MIT) | 2024.1 |
-| scipy | https://pypi.org/project/scipy | BSD License | 1.13.0 |
-| setuptools | https://pypi.org/project/setuptools | MIT License | 69.5.1 |
+| scipy | https://pypi.org/project/scipy | BSD License | 1.13.1 |
+| setuptools | https://pypi.org/project/setuptools | MIT License | 70.0.0 |
 | six | https://pypi.org/project/six | MIT License (MIT) | 1.16.0 |
 | sortedcontainers | https://pypi.org/project/sortedcontainers | Apache Software License (Apache 2.0) | 2.4.0 |
 | tqdm | https://pypi.org/project/tqdm | MIT License, Mozilla Public License 2.0 (MPL 2.0) (MPL-2.0 AND MIT) | 4.66.4 |
