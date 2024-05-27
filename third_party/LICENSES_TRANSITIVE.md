@@ -10,7 +10,7 @@
 | contourpy | https://pypi.org/project/contourpy | BSD License | 1.2.1 |
 | cycler | https://pypi.org/project/cycler | BSD License | 0.12.1 |
 | deprecation | https://pypi.org/project/deprecation | Apache Software License (Apache 2) | 2.1.0 |
-| fonttools | https://pypi.org/project/fonttools | MIT License (MIT) | 4.51.0 |
+| fonttools | https://pypi.org/project/fonttools | MIT License (MIT) | 4.52.1 |
 | graphviz | https://pypi.org/project/graphviz | MIT License (MIT) | 0.20.3 |
 | intervaltree | https://pypi.org/project/intervaltree | Apache Software License (Apache License, Version 2.0) | 3.1.0 |
 | kiwisolver | https://pypi.org/project/kiwisolver | BSD License | 1.4.5 |
