@@ -57,19 +57,19 @@ In this section, we explain how to import (and export) event data in PM4Py. We a
 
 File Types: CSV and XES
 ~~~~~~~~~~~~~~~~~~~~~~~~
-As explained in the previous section, process mining exploits Event Logs to generate knowledge of a process. A wide variety of information systems, e.g., SAP, ORACLE, SalesForce, etc., allow us to extract, in one way or the other, event logs similar to the example event log presented in Table 1 and Table 2. All the examples we show in this section and all algorithms implemented in pm4py assume that we have already extracted the event data into an appropriate event log format. Hence, the core of pm4py does not support any data extraction features. However, we provide solutions for data extraction purposes, i.e., please inspect the corresponding `solutions page <https://pm4py.fit.fraunhofer.de/solution-connectors>`_.
+As explained in the previous section, process mining exploits Event Logs to generate knowledge of a process. A wide variety of information systems, e.g., SAP, ORACLE, SalesForce, etc., allow us to extract, in one way or the other, event logs similar to the example event log presented in Table 1 and Table 2. All the examples we show in this section and all algorithms implemented in pm4py assume that we have already extracted the event data into an appropriate event log format. Hence, the core of pm4py does not support any data extraction features. However, we provide solutions for data extraction purposes, i.e., please inspect the corresponding `solutions page </solution-connectors>`_.
 
 In order to support interoperability between different process mining tools and libraries, two standard data formats are used to capture event logs, i.e., Comma Separated Value (CSV) files and eXtensible Event Stream (XES) files. CSV files resemble the example tables shown in the previous section, i.e., Table 1 and Table 2. Each line in such a file describes an event that occurred. The columns represent the same type of data, as shown in the examples, e.g., the case for which the event occurred, the activity, the timestamp, the resource executing the activity, etc. The XES file format is an XML-based format that allows us to describe process behavior. We will not go into details w.r.t. the format of XES files, i.e., we refer to `https://www.xes-standard.org <https://www.xes-standard.org>`_ for an overview.
 
 In the remainder of this tutorial, we will use an oftenly used dummy example event log to explain the basic process mining operations. The process that we are considering is a simplified process related to customer complaint handling, i.e., *taken from the book of van der Aalst*. The process, and the event data we are going to use, looks as follows.
 
-.. image:: https://pm4py.fit.fraunhofer.de/static/assets/images/getting_started/bpmn_running_example.png
+.. image:: /static/assets/images/getting_started/bpmn_running_example.png
 
 *Figure 3: Running example BPMN-based process model describing the behavior of the simple process that we use in this tutorial.*
 
-Let’s get started! We have prepared a small sample event log, containing behavior similar equal to the process model in Figure 3. `You can find the sample event log here <https://pm4py.fit.fraunhofer.de/static/assets/data/getting_started/running-example.csv>`_. Please download the file and store it somewhere on your computer, e.g., your Downloads folder (On Windows: this is 'C:/Users/user_name/Dowloads'). Consider Figure 4, in which we depict the first 25 rows of the example file.
+Let’s get started! We have prepared a small sample event log, containing behavior similar equal to the process model in Figure 3. `You can find the sample event log here </static/assets/data/getting_started/running-example.csv>`_. Please download the file and store it somewhere on your computer, e.g., your Downloads folder (On Windows: this is 'C:/Users/user_name/Dowloads'). Consider Figure 4, in which we depict the first 25 rows of the example file.
 
-.. image:: https://pm4py.fit.fraunhofer.de/static/assets/images/getting_started/csv_snapshot.png
+.. image:: /static/assets/images/getting_started/csv_snapshot.png
 
 *Figure 4: Running example csv data set which we will use in this tutorial.*
 
@@ -131,8 +131,7 @@ Note that, we now import pandas and pm4py. The first line of our script again lo
 
 Note that, in this example, the value of the arguments, i.e., *sep*, *case_id*, *activity_key* and *timestamp_key* are depending on the input data. To obtain the activities that occur first and, respectively, last in any trace in the event log, we call the pm4py.get_start_activities(event_log) and the pm4py.get_end_activities(event_log) functions. The functions return a dictionary, containing the activities as a key, and, the number of observations (i.e., number of traces in which they occur first, respectively, last) in the event log.
 
-PM4Py exploits a built-in pandas function to detect the format of the timestamps in the input data automatically. However, pandas looks at the timestamp values in each row in isolation. In some cases, this can lead to problems. For example, if the provided value is 2020-01-18, i.e., first the year, then the month, and then the day of the date, in some cases, a value of 2020-02-01 may be interpreted wrongly as January 2nd, i.e., rather than February 1st. To alleviate this problem, an additional parameter can be provided to the **format_dataframe()** method, i.e., the timest_format parameter.
-`The default Python timestamp format codes can be used to provide the timestamp format <https://pm4py.fit.fraunhofer.de/%E2%80%9Dhttps://docs.python.org/3/library/datetime.html#strftime-strptime-behavior%E2%80%9D>`_. In this example, the timestamp format is %Y-%m-%d %H:%M:%S%z. In general, we advise to specify the timestamp format!
+PM4Py exploits a built-in pandas function to detect the format of the timestamps in the input data automatically. However, pandas looks at the timestamp values in each row in isolation. In some cases, this can lead to problems. For example, if the provided value is 2020-01-18, i.e., first the year, then the month, and then the day of the date, in some cases, a value of 2020-02-01 may be interpreted wrongly as January 2nd, i.e., rather than February 1st. To alleviate this problem, an additional parameter can be provided to the **format_dataframe()** method, i.e., the timest_format parameter. In this example, the timestamp format is %Y-%m-%d %H:%M:%S%z. In general, we advise to specify the timestamp format!
 
 Loading XES Files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -145,9 +144,9 @@ Loading XES Files
 Next to CSV files, event data can also be stored in an XML-based format, i.e., in XES files. In an XES file, we can describe a containment relation, i.e., a log contains a number of traces, which in turn contain several events. Furthermore, an object, i.e., a log, trace, or event, is allowed to have attributes. The advantage is that certain data attributes that are constant for a log or a trace, can be stored at that level. For example, assume that we only know the total costs of a case, rather than the costs of the individual events. If we want to store this information in a CSV file, we either need to replicate this information (i.e., we can only store data in rows, which directly refer to events), or, we need to explicitly define that certain columns only get a value once, i.e., referring to case-level attributes. The XES standard more naturally supports the storage of this type of information.
 
 Consider Figure 5, in which we depict a snapshot of the running example data stored in the .xes file format. The complete file can be downloaded
-`here <https://pm4py.fit.fraunhofer.de/static/assets/data/getting_started/running-example.xes>`_.
+`here </static/assets/data/getting_started/running-example.xes>`_.
 
-.. image:: https://pm4py.fit.fraunhofer.de/static/assets/images/getting_started/csv_snapshot.png
+.. image:: /static/assets/images/getting_started/csv_snapshot.png
 
 *Figure 5: Running example xes data set.*
 
@@ -334,7 +333,7 @@ Interestingly, none of the algorithms implemented in PM4Py directly discovers a 
 
 Note that the resulting process model is the following image:
 
-.. image:: https://pm4py.fit.fraunhofer.de/static/assets/images/getting_started/bpmn_inductive_running_example.png
+.. image:: /static/assets/images/getting_started/bpmn_inductive_running_example.png
 
 *Figure 6: BPMN model discovered based on the running example event data set, using the Inductive Miner implementation of PM4Py.*
 
@@ -354,7 +353,7 @@ As indicated, the algorithm used in this example actually discovers a Process Tr
         pm4py.view_process_tree(process_tree)
 
 
-.. image:: https://pm4py.fit.fraunhofer.de/static/assets/images/getting_started/process_tree_running_example.png
+.. image:: /static/assets/images/getting_started/process_tree_running_example.png
 
 *Figure 7: Process Tree model discovered based on the running example event data set, using the Inductive Miner implementation of PM4Py.*
 
@@ -377,7 +376,7 @@ Many `commercial process mining solutions <https://www.gartner.com/reviews/marke
 
 
 
-.. image:: https://pm4py.fit.fraunhofer.de/static/assets/images/getting_started/dfg_running_example.png
+.. image:: /static/assets/images/getting_started/dfg_running_example.png
 
 *Figure 8: Process Map (DFG-based) discovered based on the running example event data set.*
 
@@ -396,7 +395,7 @@ In PM4Py, we also implemented the `Heuristics Miner <https://ieeexplore.ieee.org
         pm4py.view_heuristics_net(map)
 
 
-.. image:: https://pm4py.fit.fraunhofer.de/static/assets/images/getting_started/hnet_running_example.png
+.. image:: /static/assets/images/getting_started/hnet_running_example.png
 
 *Figure 9: Process Map (HM-based) discovered based on the running example event data set.*
 

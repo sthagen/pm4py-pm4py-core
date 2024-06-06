@@ -20,8 +20,8 @@ sys.path.insert(0, os.path.abspath('../../'))
 # -- Project information -----------------------------------------------------
 
 project = 'pm4py'
-project_copyright = 'Fraunhofer FIT'
-author = 'Fraunhofer FIT'
+project_copyright = 'Process Intelligence Solutions'
+author = 'Process Intelligence Solutions'
 
 # The short X.Y version
 version = '2.7'
@@ -143,7 +143,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'pm4py.tex', 'pm4py API reference',
-     'pm4py @ Fraunhofer FIT', 'manual'),
+     'pm4py @ Process Intelligence Solutions', 'manual'),
 ]
 
 # -- Options for manual page output ------------------------------------------
