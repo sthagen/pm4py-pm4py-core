@@ -17,7 +17,7 @@
 | lxml | https://pypi.org/project/lxml | BSD License (BSD-3-Clause) | 5.2.2 |
 | matplotlib | https://pypi.org/project/matplotlib | Python Software Foundation License | 3.9.0 |
 | networkx | https://pypi.org/project/networkx | BSD License | 3.3 |
-| numpy | https://pypi.org/project/numpy | BSD License | 1.26.4 |
+| numpy | https://pypi.org/project/numpy | BSD License | 2.0.0 |
 | packaging | https://pypi.org/project/packaging | Apache Software License, BSD License | 24.1 |
 | pandas | https://pypi.org/project/pandas | BSD License | 2.2.2 |
 | pillow | https://pypi.org/project/pillow | Historical Permission Notice and Disclaimer (HPND) (HPND) | 10.3.0 |
