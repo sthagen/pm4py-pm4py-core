@@ -20,7 +20,7 @@
 | numpy | https://pypi.org/project/numpy | BSD License | 2.0.0 |
 | packaging | https://pypi.org/project/packaging | Apache Software License, BSD License | 24.1 |
 | pandas | https://pypi.org/project/pandas | BSD License | 2.2.2 |
-| pillow | https://pypi.org/project/pillow | Historical Permission Notice and Disclaimer (HPND) (HPND) | 10.3.0 |
+| pillow | https://pypi.org/project/pillow | Historical Permission Notice and Disclaimer (HPND) (HPND) | 10.4.0 |
 | pydotplus | https://pypi.org/project/pydotplus | MIT License (UNKNOWN) | 2.0.2 |
 | pyparsing | https://pypi.org/project/pyparsing | MIT License | 3.1.2 |
 | python-dateutil | https://pypi.org/project/python-dateutil | Apache Software License, BSD License (Dual License) | 2.9.0.post0 |
