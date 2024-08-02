@@ -1,10 +1,11 @@
 # pm4py
 pm4py is a python library that supports (state-of-the-art) process mining algorithms in python. 
 It is open source (licensed under GPL) and intended to be used in both academia and industry projects.
-pm4py is a product of the Fraunhofer Institute for Applied Information Technology.
+pm4py is managed and developed by Process Intelligence Solutions (https://processintelligence.solutions/).
+pm4py was initially developed at the Fraunhofer Institute for Applied Information Technology FIT.
 
 ## Documentation / API
-The full documentation of pm4py can be found at https://pm4py.fit.fraunhofer.de
+The full documentation of pm4py can be found at https://processintelligence.solutions/
 
 ## First Example
 A very simple example, to whet your appetite:
