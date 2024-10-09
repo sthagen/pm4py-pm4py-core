@@ -7,6 +7,9 @@ import importlib.util
 
 EXECUTE_EXAMPLES = True
 
+class OutcomeMeasurement:
+    SUCCESS = 0
+    FAILED = 0
 
 def bpmn_js_visualization():
     from examples import bpmn_js_visualization
@@ -874,16 +877,20 @@ def process_tree_reduction():
 def execute_script(f):
     try:
         f()
+        OutcomeMeasurement.SUCCESS += 1
     except ImportError:
         import time
         traceback.print_exc()
+        OutcomeMeasurement.FAILED += 1
         time.sleep(3)
     except KeyError:
         import time
         traceback.print_exc()
+        OutcomeMeasurement.FAILED += 1
         time.sleep(3)
     except:
         traceback.print_exc()
+        OutcomeMeasurement.FAILED += 1
         input("\npress INPUT if you want to continue")
 
 
@@ -1028,8 +1035,8 @@ def main():
         execute_script(streaming_discovery_dfg)
         execute_script(streaming_xes_reader_event_stream)
         execute_script(streaming_xes_reader_trace_stream)
-        execute_script(monte_carlo_dfg)
-        execute_script(monte_carlo_petri_net)
+        #execute_script(monte_carlo_dfg)
+        #execute_script(monte_carlo_petri_net)
 
     print("numpy version: "+str(numpy.__version__))
     print("pandas version: "+str(pandas.__version__))
@@ -1053,6 +1060,8 @@ def main():
 
     print("pm4py version: "+str(pm4py.__version__))
     print("Python version: "+str(sys.version))
+
+    print("\n\nExamples executed correctly: %d\tExamples failed: %d\t" % (OutcomeMeasurement.SUCCESS, OutcomeMeasurement.FAILED))
 
 
 if __name__ == "__main__":
