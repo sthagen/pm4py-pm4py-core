@@ -1035,8 +1035,8 @@ def main():
         execute_script(streaming_discovery_dfg)
         execute_script(streaming_xes_reader_event_stream)
         execute_script(streaming_xes_reader_trace_stream)
-        execute_script(monte_carlo_dfg)
-        execute_script(monte_carlo_petri_net)
+        #execute_script(monte_carlo_dfg)
+        #execute_script(monte_carlo_petri_net)
 
     print("numpy version: "+str(numpy.__version__))
     print("pandas version: "+str(pandas.__version__))
