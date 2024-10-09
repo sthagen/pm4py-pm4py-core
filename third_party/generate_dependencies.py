@@ -24,13 +24,16 @@ def get_version(package):
             version = res[i].split("</p>")[0].strip().split(" ")[0].strip()
             break
         i = i + 1
-    license0 = res0.split("<p><strong>License:</strong>")[1].split("</p>")[0].strip()
-    license0 = license0.replace("(c)", "").split(" (")
+    try:
+        license0 = res0.split("<strong>License:</strong>")[1].split("</span>")[0].strip()
+        license0 = license0.replace("(c)", "").split(" (")
+        license = license0[0]
 
-    license = license0[0]
-    for i in range(1, len(license0)):
-        if "..." not in license0[i]:
-            license += " (" + license0[i]
+        for i in range(1, len(license0)):
+            if "..." not in license0[i]:
+                license += " (" + license0[i]
+    except:
+        license = "Unspecified"
 
     time.sleep(0.1)
     return package, url, version, license
