@@ -18,7 +18,7 @@
 from enum import Enum
 from pm4py.util import exec_utils
 from typing import Optional, Dict, Any
-import base64
+import base64, os
 from pm4py.util import constants
 
 
@@ -27,6 +27,7 @@ class Parameters(Enum):
     API_KEY = "api_key"
     OPENAI_MODEL = "openai_model"
     IMAGE_PATH = "image_path"
+    MAX_TOKENS = "max_tokens"
 
 
 def encode_image(image_path):
@@ -70,9 +71,11 @@ def apply(prompt: str, parameters: Optional[Dict[Any, Any]] = None) -> str:
     }
 
     if image_path is not None:
+        max_tokens = exec_utils.get_param_value(Parameters.MAX_TOKENS, parameters, 4096)
+        image_format = os.path.splitext(image_path)[1][1:].lower()
         base64_image = encode_image(image_path)
-        messages[0]["content"].append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image} "}})
-        payload["max_tokens"] = 4096
+        messages[0]["content"].append({"type": "image_url", "image_url": {"url": f"data:image/{image_format};base64,{base64_image}"}})
+        payload["max_tokens"] = max_tokens
 
     payload["messages"] = messages
 

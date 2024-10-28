@@ -12,4 +12,4 @@ pydotplus
 pytz
 scipy
 tqdm
-cvxopt;python_version<'3.13'
+cvxopt;python_version<'3.14'
