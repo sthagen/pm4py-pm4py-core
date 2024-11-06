@@ -125,8 +125,12 @@ def apply(log: Union[EventLog, EventStream, pd.DataFrame], net: PetriNet, markin
     start_activities = set(get_start_activities(log, parameters=parameters))
     trans_en_ini_marking = set([x.label for x in get_visible_transitions_eventually_enabled_by_marking(net, marking)])
     diff = trans_en_ini_marking.difference(start_activities)
-    sum_at += len(log) * len(trans_en_ini_marking)
-    sum_ee += len(log) * len(diff)
+    if type(log) is EventLog:
+        sum_at += len(log) * len(trans_en_ini_marking)
+        sum_ee += len(log) * len(diff)
+    else:
+        sum_at += log[case_id_key].nunique() * len(trans_en_ini_marking)
+        sum_ee += log[case_id_key].nunique() * len(diff)
     # end fix
 
     if sum_at > 0:

@@ -62,11 +62,11 @@ def human_readable_stat(timedelta, stat_locale: Optional[Dict[str, str]] = None)
     elif seconds > 0:
         return str(seconds) + stat_locale.get("second", "s")
     else:
-        c = int(float(timedelta*1000))
+        c = int(float(timedelta) * 1000)
         if c > 0:
             return str(c) + stat_locale.get("millisecond", "ms")
         else:
-            return str(int(float(timedelta * 10**9))) + stat_locale.get("nanosecond", "ns")
+            return str(int(float(timedelta) * 10**9)) + stat_locale.get("nanosecond", "ns")
 
 
 def get_arc_penwidth(arc_measure, min_arc_measure, max_arc_measure):
