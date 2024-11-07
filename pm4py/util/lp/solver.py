@@ -60,16 +60,9 @@ if importlib.util.find_spec("scipy"):
     DEFAULT_LP_SOLVER_VARIANT = SCIPY
 
 if importlib.util.find_spec("cvxopt"):
-    from pm4py.util.lp.variants import cvxopt_solver, cvxopt_solver_custom_align, cvxopt_solver_custom_align_ilp, \
-        cvxopt_solver_custom_align_arm
+    from pm4py.util.lp.variants import cvxopt_solver, cvxopt_solver_custom_align, cvxopt_solver_custom_align_ilp
 
     custom_solver = cvxopt_solver_custom_align
-    try:
-        # for ARM-based Linux, we need to use a different call to GLPK
-        if "arm" in str(os.uname()[-1]):
-            custom_solver = cvxopt_solver
-    except:
-        pass
 
     CVXOPT = "cvxopt"
     CVXOPT_SOLVER_CUSTOM_ALIGN = "cvxopt_solver_custom_align"

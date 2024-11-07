@@ -15,144 +15,128 @@
     along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
 '''
 import sys
-import tempfile
-
-import pulp
-from pulp import LpProblem, LpMinimize, LpVariable, LpStatus, value
-
-from pm4py.util import exec_utils
-
 from enum import Enum
+
+import numpy as np
+import pulp
+from pulp import LpProblem, LpMinimize, LpVariable, LpStatus, value, lpSum
 
 
 class Parameters(Enum):
     REQUIRE_ILP = "require_ilp"
+    INTEGRALITY = "integrality"
+    BOUNDS = "bounds"
 
 
-MIN_THRESHOLD = 10 ** -12
-# max safe number of constraints (log10)
-MAX_NUM_CONSTRAINTS = 7
+MIN_THRESHOLD = 1e-12
+MAX_NUM_CONSTRAINTS = 7  # Maximum safe number of constraints (log10)
 
-# keeps compatibility with 1.6.x versions of PuLP in which the interface
-# for solving was the latter one
+# Solver function to maintain compatibility with different versions of PuLP
 if hasattr(pulp, "__version__"):
-    # new interface
+    # New interface
     from pulp import PULP_CBC_CMD
 
-    solver = lambda prob: PULP_CBC_CMD(msg=0).solve(prob)
+
+    def solver(prob):
+        return prob.solve(PULP_CBC_CMD(msg=0))
 else:
-    # old interface
-    solver = lambda prob: prob.solve()
+    # Old interface
+    def solver(prob):
+        return prob.solve()
 
 
-def get_terminal_part_name_num(num):
+def get_variable_name(index):
+    """Generates a variable name with leading zeros to ensure consistent length."""
+    return str(index).zfill(MAX_NUM_CONSTRAINTS)
+
+
+def apply(c, Aub, bub, Aeq=None, beq=None, parameters=None):
     """
-    Gets the terminal part of the name of a variable
-
-    Parameters
-    ---------------
-    nam
-        Name
-
-    Returns
-    ---------------
-    stru
-        String
+    Solves a linear programming problem using PuLP with all inputs as Python lists or lists of lists.
     """
-    ret = str(num)
-    while len(ret) < MAX_NUM_CONSTRAINTS:
-        ret = "0" + ret
-    return ret
+    if type(Aub) is np.matrix:
+        Aub = Aub.tolist()
 
+    if type(bub) is np.matrix:
+        bub = bub.tolist()
 
-def apply(c, Aub, bub, Aeq, beq, parameters=None):
-    """
-    Gets the overall solution of the problem
+    if type(Aeq) is np.matrix:
+        Aeq = Aeq.tolist()
 
-    Parameters
-    ------------
-    c
-        c parameter of the algorithm
-    Aub
-        A_ub parameter of the algorithm
-    bub
-        b_ub parameter of the algorithm
-    Aeq
-        A_eq parameter of the algorithm
-    beq
-        b_eq parameter of the algorithm
-    parameters
-        Possible parameters of the algorithm
+    if type(beq) is np.matrix:
+        beq = beq.tolist()
 
-    Returns
-    -------------
-    sol
-        Solution of the LP problem by the given algorithm
-    """
     if parameters is None:
         parameters = {}
 
-    require_ilp = exec_utils.get_param_value(Parameters.REQUIRE_ILP, parameters, False)
+    # Get parameters
+    require_ilp = parameters.get("require_ilp", False)
+    integrality = parameters.get("integrality", None)
+    bounds = parameters.get("bounds", None)
 
-    prob = LpProblem("", LpMinimize)
+    # Initialize the problem
+    prob = LpProblem("LP_Problem", LpMinimize)
 
-    x_list = []
-    for i in range(Aub.shape[1]):
-        if require_ilp:
-            x_list.append(LpVariable("x_" + get_terminal_part_name_num(i), cat='Integer'))
+    # Define decision variables
+    num_vars = len(c)
+
+    # Validate integrality and bounds lists
+    if integrality is not None and len(integrality) != num_vars:
+        raise ValueError("Length of 'integrality' list must be equal to the number of variables.")
+    if bounds is not None and len(bounds) != num_vars:
+        raise ValueError("Length of 'bounds' list must be equal to the number of variables.")
+
+    x_vars = []
+
+    for i in range(num_vars):
+        var_name = f"x_{get_variable_name(i)}"
+
+        # Determine variable bounds
+        lb = None
+        ub = None
+        if bounds is not None:
+            lb, ub = bounds[i]
+            # Convert 'None' strings to actual None
+            lb = None if lb == 'None' else lb
+            ub = None if ub == 'None' else ub
+
+        # Determine variable category (continuous or integer)
+        if integrality is not None:
+            # Use integrality list
+            cat = 'Integer' if integrality[i] else 'Continuous'
+        elif require_ilp:
+            # All variables are integer
+            cat = 'Integer'
         else:
-            x_list.append(LpVariable("x_" + get_terminal_part_name_num(i)))
+            # All variables are continuous
+            cat = 'Continuous'
 
-    eval_str = ""
-    expr_count = 0
-    min_threshold = min(max(c[j] for j in range(len(c))), MIN_THRESHOLD)
-    for j in range(len(c)):
-        if abs(c[j]) >= min_threshold:
-            if expr_count > 0:
-                eval_str = eval_str + " + "
-            eval_str = eval_str + str(c[j]) + "*x_list[" + str(j) + "]"
-            expr_count = expr_count + 1
-    eval_str = eval_str + ", \"objective\""
-    prob += eval(eval_str)
+        x_vars.append(LpVariable(var_name, lowBound=lb, upBound=ub, cat=cat))
 
-    min_threshold = min(max(Aub[i, j] for i in range(Aub.shape[0]) for j in range(Aub.shape[1])), MIN_THRESHOLD)
-    for i in range(Aub.shape[0]):
-        expr_count = 0
-        eval_str = 0
-        eval_str = ""
-        for j in range(Aub.shape[1]):
-            if abs(Aub[i, j]) >= min_threshold:
-                if expr_count > 0:
-                    eval_str = eval_str + " + "
-                eval_str = eval_str + str(Aub[i, j]) + "*x_list[" + str(j) + "]"
-                expr_count = expr_count + 1
-        if eval_str:
-            eval_str = eval_str + "<=" + str(
-                bub[i]) + ", \"vinc_" + get_terminal_part_name_num(i) + "\""
+    # Build the objective function
+    objective_expr = lpSum(
+        c[j] * x_vars[j] for j in range(num_vars) if abs(c[j]) >= MIN_THRESHOLD
+    )
+    prob += objective_expr, "Objective"
 
-            prob += eval(eval_str)
+    # Add inequality constraints
+    for i in range(len(Aub)):
+        constraint_expr = lpSum(
+            Aub[i][j] * x_vars[j] for j in range(num_vars) if abs(Aub[i][j]) >= MIN_THRESHOLD
+        )
+        constraint_name = f"Inequality_Constraint_{get_variable_name(i)}"
+        prob += constraint_expr <= bub[i], constraint_name
 
+    # Add equality constraints, if any
     if Aeq is not None and beq is not None:
-        for i in range(Aeq.shape[0]):
-            expr_count = 0
-            eval_str = 0
-            eval_str = ""
-            for j in range(Aeq.shape[1]):
-                if abs(Aeq[i, j]) > MIN_THRESHOLD:
-                    if expr_count > 0:
-                        eval_str = eval_str + " + "
-                    eval_str = eval_str + str(Aeq[i, j]) + "*x_list[" + str(j) + "]"
-                    expr_count = expr_count + 1
-            if eval_str:
-                eval_str = eval_str + "==" + str(
-                    beq[i]) + ", \"vinceq_" + get_terminal_part_name_num(
-                    i + 1 + Aub.shape[0]) + "\""
+        for i in range(len(Aeq)):
+            constraint_expr = lpSum(
+                Aeq[i][j] * x_vars[j] for j in range(num_vars) if abs(Aeq[i][j]) >= MIN_THRESHOLD
+            )
+            constraint_name = f"Equality_Constraint_{get_variable_name(i + len(Aub))}"
+            prob += constraint_expr == beq[i], constraint_name
 
-                prob += eval(eval_str)
-
-    filename = tempfile.NamedTemporaryFile(suffix='.lp')
-    filename.close()
-    prob.writeLP(filename.name)
+    # Solve the problem
     solver(prob)
 
     return prob
@@ -160,56 +144,28 @@ def apply(c, Aub, bub, Aeq, beq, parameters=None):
 
 def get_prim_obj_from_sol(sol, parameters=None):
     """
-    Gets the primal objective from the solution of the LP problem
-
-    Parameters
-    -------------
-    sol
-        Solution of the ILP problem by the given algorithm
-    parameters
-        Possible parameters of the algorithm
-
-    Returns
-    -------------
-    prim_obj
-        Primal objective
+    Retrieves the objective value from the solved LP problem.
     """
-    if parameters is None:
-        parameters = {}
-
     return value(sol.objective)
 
 
 def get_points_from_sol(sol, parameters=None):
     """
-    Gets the points from the solution
-
-    Parameters
-    -------------
-    sol
-        Solution of the LP problem by the given algorithm
-    parameters
-        Possible parameters of the algorithm
-
-    Returns
-    -------------
-    points
-        Point of the solution
+    Retrieves the values of the decision variables from the solved LP problem.
     """
     if parameters is None:
         parameters = {}
 
-    maximize = parameters["maximize"] if "maximize" in parameters else False
-    return_when_none = parameters["return_when_none"] if "return_when_none" in parameters else False
-    var_corr = parameters["var_corr"] if "var_corr" in parameters else {}
+    maximize = parameters.get("maximize", False)
+    return_when_none = parameters.get("return_when_none", False)
+    var_corr = parameters.get("var_corr", {})
 
-    if str(LpStatus[sol.status]) == "Optimal":
-        x_i = []
-        for v in sol.variables():
-            x_i.append(v.varValue)
-        return x_i
+    if LpStatus[sol.status] == "Optimal":
+        # Extract variable values from the solution
+        return [v.varValue for v in sol.variables()]
+    elif return_when_none:
+        # Return a list of default values if no solution is found
+        default_value = sys.float_info.max if maximize else sys.float_info.min
+        return [default_value] * len(var_corr)
     else:
-        if return_when_none:
-            if maximize:
-                return [sys.float_info.max] * len(list(var_corr.keys()))
-            return [sys.float_info.min] * len(list(var_corr.keys()))
+        return None

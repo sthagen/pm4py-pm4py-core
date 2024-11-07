@@ -24,6 +24,7 @@ from pm4py.util import exec_utils
 class Parameters:
     INTEGRALITY = "integrality"
     METHOD = "method"
+    BOUNDS = "bounds"
 
 
 def apply(c: list, Aub: np.ndarray, bub: np.matrix, Aeq: np.matrix, beq: np.matrix,
@@ -32,8 +33,10 @@ def apply(c: list, Aub: np.ndarray, bub: np.matrix, Aeq: np.matrix, beq: np.matr
         parameters = {}
 
     integrality = exec_utils.get_param_value(Parameters.INTEGRALITY, parameters, None)
-    method = exec_utils.get_param_value(Parameters.METHOD, parameters, "highs" if integrality is None else "highs")
-    sol = linprog(c, A_ub=Aub, b_ub=bub, A_eq=Aeq, b_eq=beq, method=method, integrality=integrality)
+    bounds = exec_utils.get_param_value(Parameters.BOUNDS, parameters, None)
+
+    sol = linprog(c, A_ub=Aub, b_ub=bub, A_eq=Aeq, b_eq=beq, integrality=integrality, bounds=bounds)
+
     return sol
 
 
