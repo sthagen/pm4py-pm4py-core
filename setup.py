@@ -25,11 +25,11 @@ setup(
     py_modules=['pm4py'],
     include_package_data=True,
     packages=[x for x in find_packages() if x.startswith("pm4py")],
-    url='https://pm4py.fit.fraunhofer.de',
-    license='GPL 3.0',
-    install_requires=read_file("requirements.txt").split("\n"),
+    url='https://processintelligence.solutions/',
+    license='AGPL 3.0',
+    install_requires=read_file("requirements_stable.txt").split("\n"),
     project_urls={
-        'Documentation': 'https://pm4py.fit.fraunhofer.de',
+        'Documentation': 'https://processintelligence.solutions/pm4py/',
         'Source': 'https://github.com/pm4py/pm4py-source',
         'Tracker': 'https://github.com/pm4py/pm4py-source/issues',
     }

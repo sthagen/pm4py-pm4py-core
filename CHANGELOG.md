@@ -1,11 +1,22 @@
 # Changelog of pm4py
 
 
-## pm4py 2.7.12 (2024.03.XX)
+## pm4py 2.7.12 (2024.03.21)
 
 ### Added
+* 458ee9abf2fc155a7531be96992c9a0c27f8cb81
+  * maximum number of consecutive occurrences of the same activity in pm4py.get_variants
+* b4c914722605b37f787e156f407ea9333a8dd959
+  * more general between and activity split filters
 
 ### Changed
+* 100b95c22a47eace59fc631541b2c34c9179765d
+  09d4e7a07f92fddd90c1b1bbe572308380d7c8f3
+  * changed BPMN visualizer
+* f7b44a41a79760e4f092be2bf98087ea48b63de4
+  * changed BPMN conversion
+* db98b6fbf16847eceab4b53216cc1a1096936785
+  * improved BPMN support (collaboration, gateways, ...)
 
 ### Deprecated
 
@@ -14,6 +25,10 @@
   * fixing random variables support
 * bb759da149b434d0e279256c8c6d397b06079729
   * fixing sampling
+* a816fb5f000a907b603b44aba1470463109028f0
+  * bug fix OC-DFG visualization
+* 419a95362472c0807b73f4eb3d601f70b3d7c986
+  * bug fix POWL visualizer
 
 ### Removed
 

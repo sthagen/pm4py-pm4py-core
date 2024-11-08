@@ -1,14 +1,18 @@
-# pm4py
-pm4py is a python library that supports (state-of-the-art) process mining algorithms in python. 
-It is open source (licensed under GPL) and intended to be used in both academia and industry projects.
-pm4py is managed and developed by Process Intelligence Solutions (https://processintelligence.solutions/).
-pm4py was initially developed at the Fraunhofer Institute for Applied Information Technology FIT.
+# PM4Py
+PM4Py is a python library that supports state-of-the-art process mining algorithms in python. 
+It is open source and intended to be used in both academia and industry projects.
+
+PM4Py is managed and developed by Process Intelligence Solutions (https://processintelligence.solutions/),
+a spin-off from the Fraunhofer Institute for Applied Information Technology FIT where PM4Py was initially developed.
+
+Further information on the license options for using PM4Py closed source (especially in industry contexts) can be found at https://processintelligence.solutions/.
+
 
 ## Documentation / API
-The full documentation of pm4py can be found at https://processintelligence.solutions/
+The full documentation of PM4Py can be found at https://processintelligence.solutions/
 
 ## First Example
-A very simple example, to whet your appetite:
+Here is a simple example to spark your interest:
 
 ```python
 import pm4py
@@ -20,30 +24,31 @@ if __name__ == "__main__":
 ```
 
 ## Installation
-pm4py can be installed on Python 3.9.x / 3.10.x / 3.11.x / 3.12.x by invoking:
-*pip install -U pm4py*
+PM4Py can be installed on Python 3.9.x / 3.10.x / 3.11.x / 3.12.x by invoking:
 
-pm4py is also running on older Python environments with different requirements sets, including:
-- Python 3.8 (3.8.10): third_party/old_python_deps/requirements_py38.txt
+`pip install -U pm4py`
+
+PM4Py is also running on older Python environments with different requirements sets, including:
+- Python 3.8 (3.8.10): `third_party/old_python_deps/requirements_py38.txt`
 
 ## Requirements
-pm4py depends on some other Python packages, with different levels of importance:
+PM4Py depends on some other Python packages, with different levels of importance:
 * *Essential requirements*: numpy, pandas, deprecation, networkx
-* *Normal requirements* (installed by default with the pm4py package, important for mainstream usage): graphviz, intervaltree, lxml, matplotlib, pydotplus, pytz, scipy, tqdm
+* *Normal requirements* (installed by default with the PM4Py package, important for mainstream usage): graphviz, intervaltree, lxml, matplotlib, pydotplus, pytz, scipy, tqdm
 * *Optional requirements* (not installed by default): requests, pyvis, jsonschema, workalendar, pyarrow, scikit-learn, polars, openai, pyemd, pyaudio, pydub, pygame, pywin32, pygetwindow, pynput
 
 ## Release Notes
-To track the incremental updates, please refer to the *CHANGELOG* file.
+To track the incremental updates, please refer to the `CHANGELOG.md` file.
 
 ## Third Party Dependencies
 As scientific library in the Python ecosystem, we rely on external libraries to offer our features.
-In the */third_party* folder, we list all the licenses of our direct dependencies.
-Please check the */third_party/LICENSES_TRANSITIVE* file to get a full list of all transitive dependencies and the corresponding license.
+In the `/third_party` folder, we list all the licenses of our direct dependencies.
+Please check the `/third_party/LICENSES_TRANSITIVE` file to get a full list of all transitive dependencies and the corresponding license.
 
-## Citing pm4py
-If you are using pm4py in your scientific work, please cite pm4py as follows:
+## Citing PM4Py
+If you are using PM4Py in your scientific work, please cite PM4Py as follows:
 
-**Alessandro Berti, Sebastiaan van Zelst, Daniel Schuster**. (2023). *PM4Py: A process mining library for Python*. Software Impacts, 17, 100556. [DOI](https://doi.org/10.1016/j.simpa.2023.100556) | [Article Link](https://www.sciencedirect.com/science/article/pii/S2665963823000933)
+> **Alessandro Berti, Sebastiaan van Zelst, Daniel Schuster**. (2023). *PM4Py: A process mining library for Python*. Software Impacts, 17, 100556. [DOI](https://doi.org/10.1016/j.simpa.2023.100556) | [Article Link](https://www.sciencedirect.com/science/article/pii/S2665963823000933)
 
 BiBTeX:
 
@@ -61,3 +66,6 @@ author = {Alessandro Berti and Sebastiaan van Zelst and Daniel Schuster},
 }
 ```
 
+## Legal Notice
+
+This repository is managed by Process Intelligence Solutions (PIS). Further information about PIS can be found online at www.processintelligence.solutions.

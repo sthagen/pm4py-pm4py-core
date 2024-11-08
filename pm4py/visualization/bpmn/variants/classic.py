@@ -1,18 +1,23 @@
 '''
-    This file is part of PM4Py (More Info: https://pm4py.fit.fraunhofer.de).
+    PM4Py – A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
 
-    PM4Py is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or any later version.
 
-    PM4Py is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with PM4Py.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see this software project's root or
+visit <https://www.gnu.org/licenses/>.
+
+Website: https://processintelligence.solutions
+Contact: info@processintelligence.solutions
 '''
 from pm4py.util import exec_utils
 from enum import Enum
@@ -31,10 +36,14 @@ class Parameters(Enum):
     RANKDIR = "rankdir"
     FONT_SIZE = "font_size"
     BGCOLOR = "bgcolor"
+    ENABLE_SWIMLANES = "enable_swimlanes"
+    INCLUDE_NAME_IN_EVENTS = "include_name_in_events"
+    SWIMLANES_MARGIN = "swimlanes_margin"
 
 
-def add_bpmn_node(graph, n, font_size):
+def add_bpmn_node(graph, n, font_size, include_name_in_events):
     n_id = str(id(n))
+    node_label = str(n.name) if include_name_in_events else ""
 
     if isinstance(n, BPMN.Task):
         graph.node(n_id, shape="box", label=n.get_name(), fontsize=font_size)
@@ -42,14 +51,23 @@ def add_bpmn_node(graph, n, font_size):
         graph.node(n_id, label="", shape="circle", style="filled", fillcolor="green", fontsize=font_size)
     elif isinstance(n, BPMN.EndEvent):
         graph.node(n_id, label="", shape="circle", style="filled", fillcolor="orange", fontsize=font_size)
+    elif isinstance(n, BPMN.Event):
+        graph.node(n_id, label=node_label, shape="underline", fontsize=font_size)
+    elif isinstance(n, BPMN.TextAnnotation):
+        graph.node(n_id, shape="box", label=n.text, fontsize=font_size)
     elif isinstance(n, BPMN.ParallelGateway):
         graph.node(n_id, label="+", shape="diamond", fontsize=font_size)
     elif isinstance(n, BPMN.ExclusiveGateway):
         graph.node(n_id, label="X", shape="diamond", fontsize=font_size)
+    elif isinstance(n, BPMN.EventBasedGateway):
+        graph.node(n_id, label="E", shape="diamond", fontsize=font_size)
     elif isinstance(n, BPMN.InclusiveGateway):
         graph.node(n_id, label="O", shape="diamond", fontsize=font_size)
     else:
-        graph.node(n_id, label="", shape="circle", fontsize=font_size)
+        # do nothing here
+        return False
+
+    return True
 
 
 def apply(bpmn_graph: BPMN, parameters: Optional[Dict[Any, Any]] = None) -> graphviz.Digraph:
@@ -81,6 +99,10 @@ def apply(bpmn_graph: BPMN, parameters: Optional[Dict[Any, Any]] = None) -> grap
     font_size = exec_utils.get_param_value(Parameters.FONT_SIZE, parameters, 12)
     font_size = str(font_size)
     bgcolor = exec_utils.get_param_value(Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR)
+    enable_swimlanes = exec_utils.get_param_value(Parameters.ENABLE_SWIMLANES, parameters, True)
+    include_name_in_events = exec_utils.get_param_value(Parameters.INCLUDE_NAME_IN_EVENTS, parameters, True)
+    swimlanes_margin = exec_utils.get_param_value(Parameters.SWIMLANES_MARGIN, parameters, 35)
+    swimlanes_margin = str(swimlanes_margin)
 
     filename = tempfile.NamedTemporaryFile(suffix='.gv')
     filename.close()
@@ -96,28 +118,42 @@ def apply(bpmn_graph: BPMN, parameters: Optional[Dict[Any, Any]] = None) -> grap
     process_ids_members = {n.process: list() for n in nodes}
     for n in nodes:
         process_ids_members[n.process].append(n)
+    participant_nodes = [n for n in nodes if isinstance(n, BPMN.Participant)]
+    pref_pname = {x.process_ref: x.name for x in participant_nodes}
+    pref_pid = {x.process_ref: str(id(x)) for x in participant_nodes}
+    added_nodes = set()
 
-    for n in nodes:
-        add_bpmn_node(viz, n, font_size)
+    if len(participant_nodes) < 1 or not enable_swimlanes:
+        for n in nodes:
+            if add_bpmn_node(viz, n, font_size, include_name_in_events):
+                added_nodes.add(str(id(n)))
+    else:
+        # style='invis'
+        viz.node('@@anchorStart', style='invis')
+        viz.node('@@anchorEnd', style='invis')
 
-    """
-    viz.node('@@anchor', style='invis')
+        for subp in process_ids:
+            this_added_nodes = []
+            if subp in pref_pname:
+                with viz.subgraph(name="cluster"+pref_pid[subp]) as c:
+                    c.attr(label=pref_pname[subp])
+                    c.attr(margin=swimlanes_margin)
+                    for n in process_ids_members[subp]:
+                        if add_bpmn_node(c, n, font_size, include_name_in_events):
+                            added_nodes.add(str(id(n)))
+                            this_added_nodes.append(str(id(n)))
+                    #c.attr(rank='same')
 
-    for subp in process_ids:
-        with viz.subgraph(name="cluster"+subp) as c:
-            for n in process_ids_members[subp]:
-                c.attr(label=subp)
-                add_bpmn_node(c, n, font_size)
-                c.attr(rank='same')
+                    if this_added_nodes:
+                        viz.edge('@@anchorStart', this_added_nodes[0], style='invis')
+                        viz.edge(this_added_nodes[-1], '@@anchorEnd', style='invis')
 
-        viz.edge('@@anchor', str(id(process_ids_members[subp][0])), style='invis')
-    """
-    
     for e in edges:
         n_id_1 = str(id(e[0]))
         n_id_2 = str(id(e[1]))
 
-        viz.edge(n_id_1, n_id_2)
+        if n_id_1 in added_nodes and n_id_2 in added_nodes:
+            viz.edge(n_id_1, n_id_2)
 
     viz.attr(overlap='false')
 

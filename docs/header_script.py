@@ -7,7 +7,7 @@ if __name__ == '__main__':
         for filename in glob.iglob('../pm4py/' + '**/*.py', recursive=True):
             with open(filename, 'r', encoding='utf-8') as original:
                 data = original.read()
-                if (data.find(license) == -1):
+                if "Copyright (C) 2024 Process Intelligence Solutions UG" not in data:
                     with open(filename, 'w', encoding='utf-8') as modified:
                         print('adding license to: ' + filename)
                         modified.write(license + '\n' + data)
