@@ -57,6 +57,8 @@ def apply(bpmn_graph: BPMN, parameters: Optional[Dict[Any, Any]] = None) -> BPMN
     vis_parameters = copy(parameters)
     vis_parameters["format"] = "svg"
     vis_parameters["include_name_in_events"] = False
+    vis_parameters["endpoints_shape"] = "box"
+
     gviz = bpmn_visualizer.apply(bpmn_graph, parameters=vis_parameters)
     bpmn_visualizer.save(gviz, filename_svg.name)
 

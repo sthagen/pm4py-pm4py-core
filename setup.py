@@ -27,7 +27,7 @@ setup(
     packages=[x for x in find_packages() if x.startswith("pm4py")],
     url='https://processintelligence.solutions/',
     license='AGPL 3.0',
-    install_requires=read_file("requirements_stable.txt").split("\n"),
+    install_requires=read_file("requirements.txt").split("\n"),
     project_urls={
         'Documentation': 'https://processintelligence.solutions/pm4py/',
         'Source': 'https://github.com/pm4py/pm4py-source',

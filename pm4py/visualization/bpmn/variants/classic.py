@@ -39,18 +39,19 @@ class Parameters(Enum):
     ENABLE_SWIMLANES = "enable_swimlanes"
     INCLUDE_NAME_IN_EVENTS = "include_name_in_events"
     SWIMLANES_MARGIN = "swimlanes_margin"
+    ENDPOINTS_SHAPE = "endpoints_shape"
 
 
-def add_bpmn_node(graph, n, font_size, include_name_in_events):
+def add_bpmn_node(graph, n, font_size, include_name_in_events, endpoints_shape):
     n_id = str(id(n))
     node_label = str(n.name) if include_name_in_events else ""
 
     if isinstance(n, BPMN.Task):
         graph.node(n_id, shape="box", label=n.get_name(), fontsize=font_size)
     elif isinstance(n, BPMN.StartEvent):
-        graph.node(n_id, label="", shape="circle", style="filled", fillcolor="green", fontsize=font_size)
+        graph.node(n_id, label="", shape=endpoints_shape, style="filled", fillcolor="green", fontsize=font_size)
     elif isinstance(n, BPMN.EndEvent):
-        graph.node(n_id, label="", shape="circle", style="filled", fillcolor="orange", fontsize=font_size)
+        graph.node(n_id, label="", shape=endpoints_shape, style="filled", fillcolor="orange", fontsize=font_size)
     elif isinstance(n, BPMN.Event):
         graph.node(n_id, label=node_label, shape="underline", fontsize=font_size)
     elif isinstance(n, BPMN.TextAnnotation):
@@ -103,6 +104,7 @@ def apply(bpmn_graph: BPMN, parameters: Optional[Dict[Any, Any]] = None) -> grap
     include_name_in_events = exec_utils.get_param_value(Parameters.INCLUDE_NAME_IN_EVENTS, parameters, True)
     swimlanes_margin = exec_utils.get_param_value(Parameters.SWIMLANES_MARGIN, parameters, 35)
     swimlanes_margin = str(swimlanes_margin)
+    endpoints_shape = exec_utils.get_param_value(Parameters.ENDPOINTS_SHAPE, parameters, "circle")
 
     filename = tempfile.NamedTemporaryFile(suffix='.gv')
     filename.close()
@@ -125,7 +127,7 @@ def apply(bpmn_graph: BPMN, parameters: Optional[Dict[Any, Any]] = None) -> grap
 
     if len(participant_nodes) < 1 or not enable_swimlanes:
         for n in nodes:
-            if add_bpmn_node(viz, n, font_size, include_name_in_events):
+            if add_bpmn_node(viz, n, font_size, include_name_in_events, endpoints_shape):
                 added_nodes.add(str(id(n)))
     else:
         # style='invis'
@@ -139,7 +141,7 @@ def apply(bpmn_graph: BPMN, parameters: Optional[Dict[Any, Any]] = None) -> grap
                     c.attr(label=pref_pname[subp])
                     c.attr(margin=swimlanes_margin)
                     for n in process_ids_members[subp]:
-                        if add_bpmn_node(c, n, font_size, include_name_in_events):
+                        if add_bpmn_node(c, n, font_size, include_name_in_events, endpoints_shape):
                             added_nodes.add(str(id(n)))
                             this_added_nodes.append(str(id(n)))
                     #c.attr(rank='same')
