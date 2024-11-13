@@ -63,13 +63,13 @@ In order to support interoperability between different process mining tools and 
 
 In the remainder of this tutorial, we will use an oftenly used dummy example event log to explain the basic process mining operations. The process that we are considering is a simplified process related to customer complaint handling, i.e., *taken from the book of van der Aalst*. The process, and the event data we are going to use, looks as follows.
 
-.. image:: https://pm4py.fit.fraunhofer.de/static/assets/images/getting_started/bpmn_running_example.png
+.. image:: https://processintelligence.solutions/static/images/getting_started/bpmn_running_example.png
 
 *Figure 3: Running example BPMN-based process model describing the behavior of the simple process that we use in this tutorial.*
 
 Let’s get started! We have prepared a small sample event log, containing behavior similar equal to the process model in Figure 3. `You can find the sample event log here </static/assets/data/getting_started/running-example.csv>`_. Please download the file and store it somewhere on your computer, e.g., your Downloads folder (On Windows: this is 'C:/Users/user_name/Dowloads'). Consider Figure 4, in which we depict the first 25 rows of the example file.
 
-.. image:: https://pm4py.fit.fraunhofer.de/static/assets/images/getting_started/csv_snapshot.png
+.. image:: https://processintelligence.solutions/static/images/getting_started/csv_snapshot.png
 
 *Figure 4: Running example csv data set which we will use in this tutorial.*
 
@@ -146,7 +146,7 @@ Next to CSV files, event data can also be stored in an XML-based format, i.e., i
 Consider Figure 5, in which we depict a snapshot of the running example data stored in the .xes file format. The complete file can be downloaded
 `here <https://pm4py.fit.fraunhofer.de/static/assets/data/getting_started/running-example.xes>`_.
 
-.. image:: https://pm4py.fit.fraunhofer.de/static/assets/images/getting_started/csv_snapshot.png
+.. image:: https://processintelligence.solutions/static/images/getting_started/csv_snapshot.png
 
 *Figure 5: Running example xes data set.*
 
@@ -333,7 +333,7 @@ Interestingly, none of the algorithms implemented in PM4Py directly discovers a 
 
 Note that the resulting process model is the following image:
 
-.. image:: https://pm4py.fit.fraunhofer.de/static/assets/images/getting_started/bpmn_inductive_running_example.png
+.. image:: https://processintelligence.solutions/static/images/getting_started/bpmn_inductive_running_example.png
 
 *Figure 6: BPMN model discovered based on the running example event data set, using the Inductive Miner implementation of PM4Py.*
 
@@ -353,7 +353,7 @@ As indicated, the algorithm used in this example actually discovers a Process Tr
         pm4py.view_process_tree(process_tree)
 
 
-.. image:: https://pm4py.fit.fraunhofer.de/static/assets/images/getting_started/process_tree_running_example.png
+.. image:: https://processintelligence.solutions/static/images/getting_started/process_tree_running_example.png
 
 *Figure 7: Process Tree model discovered based on the running example event data set, using the Inductive Miner implementation of PM4Py.*
 
@@ -376,7 +376,7 @@ Many `commercial process mining solutions <https://www.gartner.com/reviews/marke
 
 
 
-.. image:: https://pm4py.fit.fraunhofer.de/static/assets/images/getting_started/dfg_running_example.png
+.. image:: https://processintelligence.solutions/static/images/getting_started/dfg_running_example.png
 
 *Figure 8: Process Map (DFG-based) discovered based on the running example event data set.*
 
@@ -395,7 +395,7 @@ In PM4Py, we also implemented the `Heuristics Miner <https://ieeexplore.ieee.org
         pm4py.view_heuristics_net(map)
 
 
-.. image:: https://pm4py.fit.fraunhofer.de/static/assets/images/getting_started/hnet_running_example.png
+.. image:: https://processintelligence.solutions/static/images/getting_started/hnet_running_example.png
 
 *Figure 9: Process Map (HM-based) discovered based on the running example event data set.*
 
