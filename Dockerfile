@@ -7,12 +7,12 @@ RUN apt-get -y install gcc g++ flex bison pkg-config automake autoconf cmake
 RUN apt-get -y install python3-dev python3-pydot python3-tk
 RUN apt-get -y install libopenblas-dev liblapack-dev libboost-all-dev libncurses5-dev libtool libssl-dev libjemalloc-dev libboost-dev libboost-filesystem-dev libboost-system-dev libboost-regex-dev libxml2-dev libxslt-dev libfreetype6-dev libsuitesparse-dev libclang-16-dev llvm-16-dev libthrift-dev libfftw3-dev
 RUN python3 -m pip install --upgrade pip
-RUN pip3 install deprecation==2.1.0 graphviz==0.20.3 intervaltree==3.1.0 networkx==3.4.2 packaging==24.2 python-dateutil==2.9.0.post0 pytz==2024.2 setuptools==75.3.0 six==1.16.0 sortedcontainers==2.4.0 tzdata==2024.2 wheel==0.45.0 
+RUN pip3 install deprecation==2.1.0 graphviz==0.20.3 intervaltree==3.1.0 networkx==3.4.2 packaging==24.2 python-dateutil==2.9.0.post0 pytz==2024.2 setuptools==75.5.0 six==1.16.0 sortedcontainers==2.4.0 tzdata==2024.2 wheel==0.45.0 
 RUN pip3 install colorama==0.4.6 cycler==0.12.1 pydotplus==2.0.2 pyparsing==3.2.0 tqdm==4.67.0 
 RUN pip3 install lxml==5.3.0 numpy==2.1.3 pandas==2.2.3 scipy==1.14.1 
-RUN pip3 install contourpy==1.3.0 fonttools==4.54.1 kiwisolver==1.4.7 matplotlib==3.9.2 pillow==11.0.0 
-RUN pip3 install anyio==4.6.2.post1 asttokens==2.4.1 attrs==24.2.0 certifi==2024.8.30 charset-normalizer==3.4.0 convertdate==2.4.0 decorator==5.1.1 distro==1.9.0 executing==2.1.0 h11==0.14.0 httpcore==1.0.6 httpx==0.27.2 idna==3.10 ipython==8.29.0 jedi==0.19.1 Jinja2==3.1.4 jsonpickle==3.4.2 jsonschema-specifications==2024.10.1 lunardate==0.2.2 MarkupSafe==3.0.2 matplotlib-inline==0.1.7 parso==0.8.4 prompt-toolkit==3.0.48 pure-eval==0.2.3 pydantic==2.9.2 Pygments==2.18.0 pyluach==2.2.0 PyMeeus==0.5.12 referencing==0.35.1 rpds-py==0.21.0 sniffio==1.3.1 stack-data==0.6.3 traitlets==5.14.3 typing_extensions==4.12.2 urllib3==2.2.3 wcwidth==0.2.13 
-RUN pip3 install jsonschema==4.23.0 openai==1.54.3 pyvis==0.3.2 requests==2.32.3 workalendar==17.0.0 
+RUN pip3 install contourpy==1.3.1 fonttools==4.55.0 kiwisolver==1.4.7 matplotlib==3.9.2 pillow==11.0.0 
+RUN pip3 install anyio==4.6.2.post1 asttokens==2.4.1 attrs==24.2.0 certifi==2024.8.30 charset-normalizer==3.4.0 convertdate==2.4.0 decorator==5.1.1 distro==1.9.0 executing==2.1.0 h11==0.14.0 httpcore==1.0.7 httpx==0.27.2 idna==3.10 ipython==8.29.0 jedi==0.19.2 Jinja2==3.1.4 jsonpickle==4.0.0 jsonschema-specifications==2024.10.1 lunardate==0.2.2 MarkupSafe==3.0.2 matplotlib-inline==0.1.7 parso==0.8.4 prompt-toolkit==3.0.48 pure-eval==0.2.3 pydantic==2.9.2 Pygments==2.18.0 pyluach==2.2.0 PyMeeus==0.5.12 referencing==0.35.1 rpds-py==0.21.0 sniffio==1.3.1 stack-data==0.6.3 traitlets==5.14.3 typing_extensions==4.12.2 urllib3==2.2.3 wcwidth==0.2.13 
+RUN pip3 install jsonschema==4.23.0 openai==1.54.5 pyvis==0.3.2 requests==2.32.3 workalendar==17.0.0 
 RUN pip3 install -U meson-python==0.15.0 Cython==3.0.10 ninja==1.11.1.1 spin==0.8 build==1.2.1 setuptools_scm==8.0.4
 
 #RUN cd / && git clone https://github.com/numpy/numpy.git && cd /numpy && git submodule update --init && pip3 install .

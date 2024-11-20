@@ -67,7 +67,7 @@ In the remainder of this tutorial, we will use an oftenly used dummy example eve
 
 *Figure 3: Running example BPMN-based process model describing the behavior of the simple process that we use in this tutorial.*
 
-Let’s get started! We have prepared a small sample event log, containing behavior similar equal to the process model in Figure 3. `You can find the sample event log here </static/assets/data/getting_started/running-example.csv>`_. Please download the file and store it somewhere on your computer, e.g., your Downloads folder (On Windows: this is 'C:/Users/user_name/Dowloads'). Consider Figure 4, in which we depict the first 25 rows of the example file.
+Let’s get started! We have prepared a small sample event log, containing behavior similar equal to the process model in Figure 3. `You can find the sample event log here <https://processintelligence.solutions/static/data/getting_started/running-example.csv>`_. Please download the file and store it somewhere on your computer, e.g., your Downloads folder (On Windows: this is 'C:/Users/user_name/Dowloads'). Consider Figure 4, in which we depict the first 25 rows of the example file.
 
 .. image:: https://processintelligence.solutions/static/images/getting_started/csv_snapshot.png
 
@@ -144,7 +144,7 @@ Loading XES Files
 Next to CSV files, event data can also be stored in an XML-based format, i.e., in XES files. In an XES file, we can describe a containment relation, i.e., a log contains a number of traces, which in turn contain several events. Furthermore, an object, i.e., a log, trace, or event, is allowed to have attributes. The advantage is that certain data attributes that are constant for a log or a trace, can be stored at that level. For example, assume that we only know the total costs of a case, rather than the costs of the individual events. If we want to store this information in a CSV file, we either need to replicate this information (i.e., we can only store data in rows, which directly refer to events), or, we need to explicitly define that certain columns only get a value once, i.e., referring to case-level attributes. The XES standard more naturally supports the storage of this type of information.
 
 Consider Figure 5, in which we depict a snapshot of the running example data stored in the .xes file format. The complete file can be downloaded
-`here <https://pm4py.fit.fraunhofer.de/static/assets/data/getting_started/running-example.xes>`_.
+`here <https://pm4py.fit.fraunhofer.dehttps://processintelligence.solutions/static/data/getting_started/running-example.xes>`_.
 
 .. image:: https://processintelligence.solutions/static/images/getting_started/csv_snapshot.png
 
