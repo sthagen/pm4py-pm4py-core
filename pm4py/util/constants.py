@@ -140,6 +140,8 @@ OPENAI_DEFAULT_STT_MODEL = get_param_from_env("PM4PY_OPENAI_DEFAULT_STT_MODEL", 
 OPENAI_DEFAULT_TTS_MODEL = get_param_from_env("PM4PY_OPENAI_DEFAULT_TTS_MODEL", "tts-1")
 OPENAI_DEFAULT_TTS_VOICE = get_param_from_env("PM4PY_OPENAI_DEFAULT_TTS_VOICE", "alloy")
 
+ENABLE_INTERNAL_IMPORTS = False if get_param_from_env("PM4PY_ENABLE_INTERNAL_IMPORTS", "True").lower() == "false" else True
+
 OPENAI_EXEC_RESULT = True if get_param_from_env("PM4PY_OPENAI_EXEC_RESULT", "False").lower() == "true" else False
 DEFAULT_GVIZ_VIEW = get_param_from_env("PM4PY_DEFAULT_GVIZ_VIEW", None)
 DEFAULT_ENABLE_VISUALIZATIONS_VIEW = get_param_from_env("PM4PY_DEFAULT_ENABLE_VISUALIZATIONS_VIEW", True)

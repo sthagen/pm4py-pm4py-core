@@ -26,7 +26,6 @@ from pm4py.util import exec_utils, constants
 import tempfile
 from uuid import uuid4
 from pm4py.util import vis_utils
-from statistics import mean, median
 
 
 class Parameters(Enum):
@@ -80,6 +79,8 @@ def add_performance_edge(G: Digraph, ot, act1, act2, perf, edge_prefix, nodes, a
     """
     Adds an edge (performance annotation)
     """
+    from statistics import mean, median
+
     otc = ot_to_color(ot)
     if aggregation_measure == "median":
         perf = median(perf)
@@ -177,6 +178,8 @@ def apply(ocdfg: Dict[str, Any], parameters: Optional[Dict[Any, Any]] = None) ->
     """
     if parameters is None:
         parameters = {}
+
+    from statistics import mean, median
 
     image_format = exec_utils.get_param_value(Parameters.FORMAT, parameters, "png")
     bgcolor = exec_utils.get_param_value(Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR)

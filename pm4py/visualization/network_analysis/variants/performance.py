@@ -27,7 +27,6 @@ import tempfile
 from graphviz import Digraph
 from pm4py.util import vis_utils
 from typing import Dict, Optional, Any, Tuple
-from statistics import mean, median, stdev
 
 
 class Parameters(Enum):
@@ -67,6 +66,8 @@ def apply(network_analysis_edges0: Dict[Tuple[str, str], Dict[str, Any]], parame
     activity_threshold = exec_utils.get_param_value(Parameters.ACTIVITY_THRESHOLD, parameters, 1)
     edge_threshold = exec_utils.get_param_value(Parameters.EDGE_THRESHOLD, parameters, 1)
     aggregation_measure = exec_utils.get_param_value(Parameters.AGGREGATION_MEASURE, parameters, "mean")
+
+    from statistics import mean, median, stdev
 
     aggregation_f = mean
 

@@ -26,33 +26,42 @@ from pm4py.objects.log.obj import EventLog
 from pm4py.objects.ocel.obj import OCEL
 from pm4py.objects.petri_net.obj import PetriNet, Marking
 from pm4py.objects.process_tree.obj import ProcessTree
-from pm4py.objects.conversion.log import converter as log_converter
-from pm4py.objects.log.util import dataframe_utils
 from pm4py.util import constants
 
 import os
 
 from pandas import DataFrame
-import importlib.util
 from typing import Union
 
 INDEX_COLUMN = "@@index"
 
 __doc__ = """
-The ``pm4py.read`` module contains all funcationality related to reading files/objects from disk.
+The `pm4py.read` module contains all functionality related to reading files and objects from disk.
 """
 
 
-def read_xes(file_path: str, variant: Optional[str] = None, return_legacy_log_object: bool = constants.DEFAULT_READ_XES_LEGACY_OBJECT, encoding: str = constants.DEFAULT_ENCODING, **kwargs) -> Union[DataFrame, EventLog]:
+def read_xes(
+    file_path: str,
+    variant: Optional[str] = None,
+    return_legacy_log_object: bool = constants.DEFAULT_READ_XES_LEGACY_OBJECT,
+    encoding: str = constants.DEFAULT_ENCODING,
+    **kwargs
+) -> Union[DataFrame, EventLog]:
     """
-    Reads an event log stored in XES format (see `xes-standard <https://xes-standard.org/>`_)
-    Returns a table (``pandas.DataFrame``) view of the event log.
+    Reads an event log stored in XES format (see `xes-standard <https://xes-standard.org/>`_).
+    Returns a table (`pandas.DataFrame`) view of the event log or an `EventLog` object.
 
-    :param file_path: file path of the event log (``.xes`` file) on disk
-    :param variant: the variant of the importer to use. "iterparse" => traditional XML parser; "line_by_line" => text-based line-by-line importer ; "chunk_regex" => chunk-of-bytes importer (default); "iterparse20" => XES 2.0 importer
-    :param return_legacy_log_object: boolean value enabling returning a log object (default: False)
-    :param encoding: the encoding to be used (default: utf-8)
-    :rtype: ``DataFrame``
+    :param file_path: Path to the event log (`.xes` file) on disk.
+    :param variant: Variant of the importer to use. Options include:
+        - "iterparse" – traditional XML parser,
+        - "line_by_line" – text-based line-by-line importer,
+        - "chunk_regex" – chunk-of-bytes importer (default),
+        - "iterparse20" – XES 2.0 importer,
+        - "rustxes" – Rust-based importer.
+    :param return_legacy_log_object: Boolean indicating whether to return a legacy `EventLog` object (default: `False`).
+    :param encoding: Encoding to be used (default: `utf-8`).
+    :param **kwargs: Additional parameters to pass to the importer.
+    :rtype: `pandas.DataFrame` or `pm4py.objects.log.obj.EventLog`
 
     .. code-block:: python3
 
@@ -92,23 +101,29 @@ def read_xes(file_path: str, variant: Optional[str] = None, return_legacy_log_ob
     log = xes_importer.apply(file_path, variant=v, parameters=parameters)
 
     if type(log) is EventLog and not return_legacy_log_object:
+        from pm4py.objects.conversion.log import converter as log_converter
         log = log_converter.apply(log, variant=log_converter.Variants.TO_DATA_FRAME)
 
     return log
 
 
-def read_pnml(file_path: str, auto_guess_final_marking: bool = False, encoding: str = constants.DEFAULT_ENCODING) -> Tuple[PetriNet, Marking, Marking]:
+def read_pnml(
+    file_path: str,
+    auto_guess_final_marking: bool = False,
+    encoding: str = constants.DEFAULT_ENCODING
+) -> Tuple[PetriNet, Marking, Marking]:
     """
-    Reads a Petri net object from a .pnml file.
-    The Petri net object returned is a triple containing the following objects:
+    Reads a Petri net object from a `.pnml` file.
+    The returned Petri net object is a tuple containing:
     
-    1. Petrinet Object, encoded as a ``PetriNet`` class
-    #. Initial Marking
-    #. Final Marking
+    1. PetriNet object (`PetriNet`)
+    2. Initial Marking (`Marking`)
+    3. Final Marking (`Marking`)
 
-    :rtype: ``Tuple[PetriNet, Marking, Marking]``
-    :param file_path: file path of the Petri net model (``.pnml`` file) on disk
-    :param encoding: the encoding to be used (default: utf-8)
+    :param file_path: Path to the Petri net model (`.pnml` file) on disk.
+    :param auto_guess_final_marking: Boolean indicating whether to automatically guess the final marking (default: `False`).
+    :param encoding: Encoding to be used (default: `utf-8`).
+    :rtype: `Tuple[PetriNet, Marking, Marking]`
 
     .. code-block:: python3
 
@@ -119,17 +134,23 @@ def read_pnml(file_path: str, auto_guess_final_marking: bool = False, encoding: 
     if not os.path.exists(file_path):
         raise Exception("File does not exist")
     from pm4py.objects.petri_net.importer import importer as pnml_importer
-    net, im, fm = pnml_importer.apply(file_path, parameters={"auto_guess_final_marking": auto_guess_final_marking, "encoding": encoding})
+    net, im, fm = pnml_importer.apply(
+        file_path,
+        parameters={
+            "auto_guess_final_marking": auto_guess_final_marking,
+            "encoding": encoding
+        }
+    )
     return net, im, fm
 
 
 def read_ptml(file_path: str, encoding: str = constants.DEFAULT_ENCODING) -> ProcessTree:
     """
-    Reads a process tree object from a .ptml file
+    Reads a process tree object from a `.ptml` file.
 
-    :param file_path: file path of the process tree object on disk
-    :param encoding: the encoding to be used (default: utf-8)
-    :rtype: ``ProcessTree``
+    :param file_path: Path to the process tree file on disk.
+    :param encoding: Encoding to be used (default: `utf-8`).
+    :rtype: `ProcessTree`
 
     .. code-block:: python3
 
@@ -144,46 +165,53 @@ def read_ptml(file_path: str, encoding: str = constants.DEFAULT_ENCODING) -> Pro
     return tree
 
 
-def read_dfg(file_path: str, encoding: str = constants.DEFAULT_ENCODING) -> Tuple[Dict[Tuple[str,str],int], Dict[str,int], Dict[str,int]]:
+def read_dfg(
+    file_path: str,
+    encoding: str = constants.DEFAULT_ENCODING
+) -> Tuple[Dict[Tuple[str, str], int], Dict[str, int], Dict[str, int]]:
     """
-    Reads a DFG object from a .dfg file.
-    The DFG object returned is a triple containing the following objects:
+    Reads a Directly-Follows Graph (DFG) from a `.dfg` file.
+    The returned DFG object is a tuple containing:
     
-    1. DFG Object, encoded as a ``Dict[Tuple[str,str],int]``, s.t. ``DFG[('a','b')]=k`` implies that activity ``'a'`` is directly followed by activity ``'b'`` a total of ``k`` times in the log
-    #. Start activity dictionary, encoded as a ``Dict[str,int]``, s.t., ``S['a']=k`` implies that activity ``'a'`` is starting ``k`` traces in the event log
-    #. End activity dictionary, encoded as a ``Dict[str,int]``, s.t., ``E['z']=k`` implies that activity ``'z'`` is ending ``k`` traces in the event log.
+    1. DFG (`Dict[Tuple[str, str], int]`): Maps pairs of activities to their occurrence count. 
+       For example, `DFG[('a', 'b')] = k` indicates that activity `'a'` is directly followed by activity `'b'` a total of `k` times in the log.
+    2. Start Activity Dictionary (`Dict[str, int]`): Maps activities to the number of traces they start. 
+       For example, `S['a'] = k` implies that activity `'a'` starts `k` traces in the event log.
+    3. End Activity Dictionary (`Dict[str, int]`): Maps activities to the number of traces they end. 
+       For example, `E['z'] = k` implies that activity `'z'` ends `k` traces in the event log.
 
-    :rtype: ``Tuple[Dict[Tuple[str,str],int], Dict[str,int], Dict[str,int]]``
-    :param file_path: file path of the dfg model on disk
-    :param encoding: the encoding to be used (default: utf-8)
+    :param file_path: Path to the DFG model file on disk.
+    :param encoding: Encoding to be used (default: `utf-8`).
+    :rtype: `Tuple[Dict[Tuple[str, str], int], Dict[str, int], Dict[str, int]]`
 
     .. code-block:: python3
 
-       import pm4py
+        import pm4py
 
-       dfg = pm4py.read_dfg("<path_to_dfg_file>")
+        dfg = pm4py.read_dfg("<path_to_dfg_file>")
     """
     if not os.path.exists(file_path):
         raise Exception("File does not exist")
     from pm4py.objects.dfg.importer import importer as dfg_importer
-    dfg, start_activities, end_activities = dfg_importer.apply(file_path, parameters={"encoding": encoding})
+    dfg, start_activities, end_activities = dfg_importer.apply(
+        file_path, parameters={"encoding": encoding}
+    )
     return dfg, start_activities, end_activities
 
 
 def read_bpmn(file_path: str, encoding: str = constants.DEFAULT_ENCODING) -> BPMN:
     """
-    Reads a BPMN model from a .bpmn file
+    Reads a BPMN model from a `.bpmn` file.
 
-    :param file_path: file path of the bpmn model
-    :param encoding: the encoding to be used (default: utf-8)
-    :rtype: ``BPMN``
+    :param file_path: Path to the BPMN model file on disk.
+    :param encoding: Encoding to be used (default: `utf-8`).
+    :rtype: `BPMN`
 
     .. code-block:: python3
 
         import pm4py
 
         bpmn = pm4py.read_bpmn('<path_to_bpmn_file>')
-
     """
     if not os.path.exists(file_path):
         raise Exception("File does not exist")
@@ -192,15 +220,19 @@ def read_bpmn(file_path: str, encoding: str = constants.DEFAULT_ENCODING) -> BPM
     return bpmn_graph
 
 
-def read_ocel(file_path: str, objects_path: Optional[str] = None, encoding: str = constants.DEFAULT_ENCODING) -> OCEL:
+def read_ocel(
+    file_path: str,
+    objects_path: Optional[str] = None,
+    encoding: str = constants.DEFAULT_ENCODING
+) -> OCEL:
     """
     Reads an object-centric event log from a file (see: http://www.ocel-standard.org/).
-    The ``OCEL`` object is returned by this method
+    Returns an `OCEL` object.
 
-    :param file_path: file path of the object-centric event log
-    :param objects_path: [Optional] file path from which the objects dataframe should be read
-    :param encoding: the encoding to be used (default: utf-8)
-    :rtype: ``OCEL``
+    :param file_path: Path to the object-centric event log file.
+    :param objects_path: [Optional] Path to the objects dataframe file.
+    :param encoding: Encoding to be used (default: `utf-8`).
+    :rtype: `OCEL`
 
     .. code-block:: python3
 
@@ -218,18 +250,22 @@ def read_ocel(file_path: str, objects_path: Optional[str] = None, encoding: str 
         return read_ocel_xml(file_path, encoding=encoding)
     elif file_path.lower().endswith(".sqlite"):
         return read_ocel_sqlite(file_path, encoding=encoding)
-    raise Exception("unsupported file format")
+    raise Exception("Unsupported file format")
 
 
-def read_ocel_csv(file_path: str, objects_path: Optional[str] = None, encoding: str = constants.DEFAULT_ENCODING) -> OCEL:
+def read_ocel_csv(
+    file_path: str,
+    objects_path: Optional[str] = None,
+    encoding: str = constants.DEFAULT_ENCODING
+) -> OCEL:
     """
     Reads an object-centric event log from a CSV file (see: http://www.ocel-standard.org/).
-    The ``OCEL`` object is returned by this method
+    Returns an `OCEL` object.
 
-    :param file_path: file path of the object-centric event log (.csv)
-    :param objects_path: [Optional] file path from which the objects dataframe should be read
-    :param encoding: the encoding to be used (default: utf-8)
-    :rtype: ``OCEL``
+    :param file_path: Path to the object-centric event log file (`.csv`).
+    :param objects_path: [Optional] Path to the objects dataframe file.
+    :param encoding: Encoding to be used (default: `utf-8`).
+    :rtype: `OCEL`
 
     .. code-block:: python3
 
@@ -241,17 +277,21 @@ def read_ocel_csv(file_path: str, objects_path: Optional[str] = None, encoding: 
         raise Exception("File does not exist")
 
     from pm4py.objects.ocel.importer.csv import importer as csv_importer
-    return csv_importer.apply(file_path, objects_path=objects_path, parameters={"encoding": encoding})
+    return csv_importer.apply(
+        file_path,
+        objects_path=objects_path,
+        parameters={"encoding": encoding}
+    )
 
 
 def read_ocel_json(file_path: str, encoding: str = constants.DEFAULT_ENCODING) -> OCEL:
     """
     Reads an object-centric event log from a JSON-OCEL file (see: http://www.ocel-standard.org/).
-    The ``OCEL`` object is returned by this method
+    Returns an `OCEL` object.
 
-    :param file_path: file path of the object-centric event log (.jsonocel)
-    :param encoding: the encoding to be used (default: utf-8)
-    :rtype: ``OCEL``
+    :param file_path: Path to the object-centric event log file (`.jsonocel`).
+    :param encoding: Encoding to be used (default: `utf-8`).
+    :rtype: `OCEL`
 
     .. code-block:: python3
 
@@ -263,17 +303,21 @@ def read_ocel_json(file_path: str, encoding: str = constants.DEFAULT_ENCODING) -
         raise Exception("File does not exist")
 
     from pm4py.objects.ocel.importer.jsonocel import importer as jsonocel_importer
-    return jsonocel_importer.apply(file_path, variant=jsonocel_importer.Variants.CLASSIC, parameters={"encoding": encoding})
+    return jsonocel_importer.apply(
+        file_path,
+        variant=jsonocel_importer.Variants.CLASSIC,
+        parameters={"encoding": encoding}
+    )
 
 
 def read_ocel_xml(file_path: str, encoding: str = constants.DEFAULT_ENCODING) -> OCEL:
     """
-    Reads an object-centric event log from a XML-OCEL file (see: http://www.ocel-standard.org/).
-    The ``OCEL`` object is returned by this method
+    Reads an object-centric event log from an XML-OCEL file (see: http://www.ocel-standard.org/).
+    Returns an `OCEL` object.
 
-    :param file_path: file path of the object-centric event log (.xmlocel)
-    :param encoding: the encoding to be used (default: utf-8)
-    :rtype: ``OCEL``
+    :param file_path: Path to the object-centric event log file (`.xmlocel`).
+    :param encoding: Encoding to be used (default: `utf-8`).
+    :rtype: `OCEL`
 
     .. code-block:: python3
 
@@ -285,17 +329,21 @@ def read_ocel_xml(file_path: str, encoding: str = constants.DEFAULT_ENCODING) ->
         raise Exception("File does not exist")
 
     from pm4py.objects.ocel.importer.xmlocel import importer as xmlocel_importer
-    return xmlocel_importer.apply(file_path, variant=xmlocel_importer.Variants.CLASSIC, parameters={"encoding": encoding})
+    return xmlocel_importer.apply(
+        file_path,
+        variant=xmlocel_importer.Variants.CLASSIC,
+        parameters={"encoding": encoding}
+    )
 
 
 def read_ocel_sqlite(file_path: str, encoding: str = constants.DEFAULT_ENCODING) -> OCEL:
     """
     Reads an object-centric event log from a SQLite database (see: http://www.ocel-standard.org/).
-    The ``OCEL`` object is returned by this method
+    Returns an `OCEL` object.
 
-    :param file_path: file path of the SQLite database (.sqlite)
-    :param encoding: the encoding to be used (default: utf-8)
-    :rtype: ``OCEL``
+    :param file_path: Path to the SQLite database file (`.sqlite`).
+    :param encoding: Encoding to be used (default: `utf-8`).
+    :rtype: `OCEL`
 
     .. code-block:: python3
 
@@ -307,17 +355,30 @@ def read_ocel_sqlite(file_path: str, encoding: str = constants.DEFAULT_ENCODING)
         raise Exception("File does not exist")
 
     from pm4py.objects.ocel.importer.sqlite import importer as sqlite_importer
-    return sqlite_importer.apply(file_path, variant=sqlite_importer.Variants.PANDAS_IMPORTER, parameters={"encoding": encoding})
+    return sqlite_importer.apply(
+        file_path,
+        variant=sqlite_importer.Variants.PANDAS_IMPORTER,
+        parameters={"encoding": encoding}
+    )
 
 
-def read_ocel2(file_path: str, variant_str: Optional[str] = None, encoding: str = constants.DEFAULT_ENCODING) -> OCEL:
+def read_ocel2(
+    file_path: str,
+    variant_str: Optional[str] = None,
+    encoding: str = constants.DEFAULT_ENCODING
+) -> OCEL:
     """
-    Reads an OCEL2.0 event log
+    Reads an OCEL 2.0 event log.
 
-    :param file_path: path to the OCEL2.0 event log
-    :param variant_str: (optional) specification of the importer variant to be used
-    :param encoding: the encoding to be used (default: utf-8)
-    :rtype: ``OCEL``
+    :param file_path: Path to the OCEL 2.0 event log file.
+    :param variant_str: [Optional] Specification of the importer variant to be used.
+    :param encoding: Encoding to be used (default: `utf-8`).
+    :rtype: `OCEL`
+
+    Supported file formats based on extension:
+        - `.sqlite` – SQLite database,
+        - `.xml` or `.xmlocel` – XML file,
+        - `.json` or `.jsonocel` – JSON file.
 
     .. code-block:: python3
 
@@ -336,14 +397,18 @@ def read_ocel2(file_path: str, variant_str: Optional[str] = None, encoding: str 
         return read_ocel2_json(file_path, variant_str=variant_str, encoding=encoding)
 
 
-def read_ocel2_json(file_path: str, variant_str: Optional[str] = None, encoding: str = constants.DEFAULT_ENCODING) -> OCEL:
+def read_ocel2_json(
+    file_path: str,
+    variant_str: Optional[str] = None,
+    encoding: str = constants.DEFAULT_ENCODING
+) -> OCEL:
     """
-    Reads an OCEL2.0 event log from a JSON-OCEL(2) file
+    Reads an OCEL 2.0 event log from a JSON-OCEL2 file.
 
-    :param file_path: path to the JSON file
-    :param variant_str: (optional) specification of the importer variant to be used
-    :param encoding: the encoding to be used (default: utf-8)
-    :rtype: ``OCEL``
+    :param file_path: Path to the JSON file (`.jsonocel`).
+    :param variant_str: [Optional] Specification of the importer variant to be used.
+    :param encoding: Encoding to be used (default: `utf-8`).
+    :rtype: `OCEL`
 
     .. code-block:: python3
 
@@ -359,17 +424,25 @@ def read_ocel2_json(file_path: str, variant_str: Optional[str] = None, encoding:
     if variant_str == "ocel20_rustxes":
         variant = jsonocel_importer.Variants.OCEL20_RUSTXES
 
-    return jsonocel_importer.apply(file_path, variant=variant, parameters={"encoding": encoding})
+    return jsonocel_importer.apply(
+        file_path,
+        variant=variant,
+        parameters={"encoding": encoding}
+    )
 
 
-def read_ocel2_sqlite(file_path: str, variant_str: Optional[str] = None, encoding: str = constants.DEFAULT_ENCODING) -> OCEL:
+def read_ocel2_sqlite(
+    file_path: str,
+    variant_str: Optional[str] = None,
+    encoding: str = constants.DEFAULT_ENCODING
+) -> OCEL:
     """
-    Reads an OCEL2.0 event log from a SQLite database
+    Reads an OCEL 2.0 event log from a SQLite database.
 
-    :param file_path: path to the OCEL2.0 database
-    :param variant_str: (optional) specification of the importer variant to be used
-    :param encoding: the encoding to be used (default: utf-8)
-    :rtype: ``OCEL``
+    :param file_path: Path to the OCEL 2.0 SQLite database file (`.sqlite`).
+    :param variant_str: [Optional] Specification of the importer variant to be used.
+    :param encoding: Encoding to be used (default: `utf-8`).
+    :rtype: `OCEL`
 
     .. code-block:: python3
 
@@ -381,17 +454,25 @@ def read_ocel2_sqlite(file_path: str, variant_str: Optional[str] = None, encodin
         raise Exception("File does not exist")
 
     from pm4py.objects.ocel.importer.sqlite import importer as sqlite_importer
-    return sqlite_importer.apply(file_path, variant=sqlite_importer.Variants.OCEL20, parameters={"encoding": encoding})
+    return sqlite_importer.apply(
+        file_path,
+        variant=sqlite_importer.Variants.OCEL20,
+        parameters={"encoding": encoding}
+    )
 
 
-def read_ocel2_xml(file_path: str, variant_str: Optional[str] = None, encoding: str = constants.DEFAULT_ENCODING) -> OCEL:
+def read_ocel2_xml(
+    file_path: str,
+    variant_str: Optional[str] = None,
+    encoding: str = constants.DEFAULT_ENCODING
+) -> OCEL:
     """
-    Reads an OCEL2.0 event log from an XML file
+    Reads an OCEL 2.0 event log from an XML file.
 
-    :param file_path: path to the OCEL2.0 event log
-    :param variant_str: (optional) specification of the importer variant to be used
-    :param encoding: the encoding to be used (default: utf-8)
-    :rtype: ``OCEL``
+    :param file_path: Path to the OCEL 2.0 XML file (`.xmlocel`).
+    :param variant_str: [Optional] Specification of the importer variant to be used.
+    :param encoding: Encoding to be used (default: `utf-8`).
+    :rtype: `OCEL`
 
     .. code-block:: python3
 
@@ -407,4 +488,8 @@ def read_ocel2_xml(file_path: str, variant_str: Optional[str] = None, encoding: 
     if variant_str == "ocel20_rustxes":
         variant = xml_importer.Variants.OCEL20_RUSTXES
 
-    return xml_importer.apply(file_path, variant=variant, parameters={"encoding": encoding})
+    return xml_importer.apply(
+        file_path,
+        variant=variant,
+        parameters={"encoding": encoding}
+    )

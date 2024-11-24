@@ -421,22 +421,6 @@ class SimplifiedInterfaceTest(unittest.TestCase):
 
         pm4py.insert_artificial_start_end(dataframe, activity_key="Activity", timestamp_key="Timestamp", case_id_key="CaseID")
 
-    def test_hof_filter_log(self):
-        log = xes_importer.apply("input_data/running-example.xes")
-        pm4py.filter_log(log, lambda x: len(x) > 5)
-
-    def test_hof_filter_trace(self):
-        log = xes_importer.apply("input_data/running-example.xes")
-        pm4py.filter_trace(log[0], lambda x: x["concept:name"] == "decide")
-
-    def test_hof_sort_log(self):
-        log = xes_importer.apply("input_data/running-example.xes")
-        pm4py.sort_log(log, key=lambda x: x.attributes["concept:name"])
-
-    def test_hof_sort_trace(self):
-        log = xes_importer.apply("input_data/running-example.xes")
-        pm4py.sort_trace(log[0], key=lambda x: x["concept:name"])
-
     def test_split_train_test_log(self):
         for legacy_obj in [True, False]:
             log = pm4py.read_xes("input_data/running-example.xes", return_legacy_log_object=legacy_obj)

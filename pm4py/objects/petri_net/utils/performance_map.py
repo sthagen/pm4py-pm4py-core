@@ -20,12 +20,10 @@ Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
 from copy import copy
-from statistics import stdev
 
 from pm4py.objects.petri_net import semantics
 from pm4py.objects.petri_net.obj import PetriNet
 from pm4py.util.vis_utils import human_readable_stat, get_arc_penwidth, get_trans_freq_color
-from statistics import median, mean
 from pm4py.objects.log.obj import EventLog
 from pm4py.util.business_hours import BusinessHours
 from pm4py.util import constants
@@ -337,6 +335,9 @@ def aggregate_stats(statistics, elem, aggregation_measure):
     aggr_stat
         Aggregated statistics
     """
+    from statistics import median, mean
+    from statistics import stdev
+
     aggr_stat = 0
     if aggregation_measure == "mean" or aggregation_measure is None:
         aggr_stat = mean(statistics[elem]["performance"])
@@ -453,6 +454,8 @@ def get_transition_performance_with_token_replay(log, net, im, fm):
     transition_performance
         Dictionary where each transition label is associated to performance measures
     """
+    from statistics import median, mean, stdev
+
     from pm4py.algo.conformance.tokenreplay import algorithm as token_replay
     from pm4py.statistics.variants.log import get as variants_get
 

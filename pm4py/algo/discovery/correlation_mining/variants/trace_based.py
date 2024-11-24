@@ -24,7 +24,6 @@ from enum import Enum
 from pm4py.util import constants, xes_constants, pandas_utils
 from pm4py.objects.conversion.log import converter
 from pm4py.algo.discovery.correlation_mining import util as cm_util
-from statistics import mean
 import numpy as np
 from collections import Counter
 from typing import Optional, Dict, Any, Union, Tuple
@@ -265,6 +264,8 @@ def get_duration_matrix(activities, trace_grouped_list, timestamp_key, start_tim
     mat
         The duration matrix
     """
+    from statistics import mean
+
     ret = np.zeros((len(activities), len(activities)))
     for i in range(len(activities)):
         for j in range(len(activities)):

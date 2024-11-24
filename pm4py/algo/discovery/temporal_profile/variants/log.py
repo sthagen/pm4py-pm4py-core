@@ -20,7 +20,6 @@ Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
 from enum import Enum
-from statistics import mean, stdev
 from typing import Optional, Dict, Any
 
 from pm4py.objects.conversion.log import converter as log_converter
@@ -75,6 +74,8 @@ def apply(log: EventLog, parameters: Optional[Dict[Any, Any]] = None) -> typing.
     """
     if parameters is None:
         parameters = {}
+
+    from statistics import mean, stdev
 
     log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
 

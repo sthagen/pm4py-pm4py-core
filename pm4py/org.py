@@ -20,7 +20,7 @@ Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
 __doc__ = """
-The ``pm4py.org`` module contains the organizational analysis techniques offered in ``pm4py``
+The ``pm4py.org`` module contains organizational analysis techniques offered in ``pm4py``.
 """
 
 from typing import Union
@@ -39,21 +39,28 @@ from typing import Dict, Tuple, Any, List
 def discover_handover_of_work_network(log: Union[EventLog, pd.DataFrame], beta=0, resource_key: str = "org:resource", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> SNA:
     """
     Calculates the handover of work network of the event log.
-    The handover of work network is essentially the DFG of the event log, however, using the
-    resource as a node of the graph, instead of the activity.
-    As such, to use this, resource information should be present in the event log.
 
-    :param log: event log / Pandas dataframe
-    :param beta: beta parameter for Handover metric
-    :param resource_key: attribute to be used for the resource
-    :param timestamp_key: attribute to be used for the timestamp
-    :param case_id_key: attribute to be used as case identifier
+    The handover of work network is essentially the Directly-Follows Graph (DFG) of the event log, but using the
+    resource as the nodes of the graph instead of activities.
+    As such, resource information should be present in the event log.
+
+    :param log: Event log or Pandas DataFrame.
+    :param beta: Beta parameter for the Handover metric.
+    :param resource_key: Attribute to be used for the resource.
+    :param timestamp_key: Attribute to be used for the timestamp.
+    :param case_id_key: Attribute to be used as case identifier.
 
     .. code-block:: python3
 
         import pm4py
 
-        metric = pm4py.discover_handover_of_work_network(dataframe, resource_key='org:resource', timestamp_key='time:timestamp', case_id_key='case:concept:name')
+        metric = pm4py.discover_handover_of_work_network(
+            dataframe,
+            beta=0,
+            resource_key='org:resource',
+            timestamp_key='time:timestamp',
+            case_id_key='case:concept:name'
+        )
     """
     __event_log_deprecation_warning(log)
 
@@ -70,18 +77,23 @@ def discover_handover_of_work_network(log: Union[EventLog, pd.DataFrame], beta=0
 def discover_working_together_network(log: Union[EventLog, pd.DataFrame], resource_key: str = "org:resource", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> SNA:
     """
     Calculates the working together network of the process.
-    Two nodes resources are connected in the graph if the resources collaborate on an instance of the process.
+    Two resource nodes are connected in the graph if the resources collaborate on an instance of the process.
 
-    :param log: event log / Pandas dataframe
-    :param resource_key: attribute to be used for the resource
-    :param timestamp_key: attribute to be used for the timestamp
-    :param case_id_key: attribute to be used as case identifier
+    :param log: Event log or Pandas DataFrame.
+    :param resource_key: Attribute to be used for the resource.
+    :param timestamp_key: Attribute to be used for the timestamp.
+    :param case_id_key: Attribute to be used as case identifier.
 
     .. code-block:: python3
 
         import pm4py
 
-        metric = pm4py.discover_working_together_network(dataframe, resource_key='org:resource', timestamp_key='time:timestamp', case_id_key='case:concept:name')
+        metric = pm4py.discover_working_together_network(
+            dataframe,
+            resource_key='org:resource',
+            timestamp_key='time:timestamp',
+            case_id_key='case:concept:name'
+        )
     """
     __event_log_deprecation_warning(log)
 
@@ -97,19 +109,25 @@ def discover_working_together_network(log: Union[EventLog, pd.DataFrame], resour
 
 def discover_activity_based_resource_similarity(log: Union[EventLog, pd.DataFrame], activity_key: str = "concept:name", resource_key: str = "org:resource", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> SNA:
     """
-    Calculates similarity between the resources in the event log, based on their activity profiles.
+    Calculates similarity between the resources in the event log based on their activity profiles.
 
-    :param log: event log / Pandas dataframe
-    :param activity_key: attribute to be used for the activity
-    :param resource_key: attribute to be used for the resource
-    :param timestamp_key: attribute to be used for the timestamp
-    :param case_id_key: attribute to be used as case identifier
+    :param log: Event log or Pandas DataFrame.
+    :param activity_key: Attribute to be used for the activity.
+    :param resource_key: Attribute to be used for the resource.
+    :param timestamp_key: Attribute to be used for the timestamp.
+    :param case_id_key: Attribute to be used as case identifier.
 
     .. code-block:: python3
 
         import pm4py
 
-        act_res_sim = pm4py.discover_activity_based_resource_similarity(dataframe, resource_key='org:resource', activity_key='concept:name', timestamp_key='time:timestamp', case_id_key='case:concept:name')
+        act_res_sim = pm4py.discover_activity_based_resource_similarity(
+            dataframe,
+            resource_key='org:resource',
+            activity_key='concept:name',
+            timestamp_key='time:timestamp',
+            case_id_key='case:concept:name'
+        )
     """
     __event_log_deprecation_warning(log)
 
@@ -127,17 +145,23 @@ def discover_subcontracting_network(log: Union[EventLog, pd.DataFrame], n=2, res
     """
     Calculates the subcontracting network of the process.
 
-    :param log: event log / Pandas dataframe
-    :param n: n parameter for Subcontracting metric
-    :param resource_key: attribute to be used for the resource
-    :param timestamp_key: attribute to be used for the timestamp
-    :param case_id_key: attribute to be used as case identifier
+    :param log: Event log or Pandas DataFrame.
+    :param n: N parameter for the Subcontracting metric.
+    :param resource_key: Attribute to be used for the resource.
+    :param timestamp_key: Attribute to be used for the timestamp.
+    :param case_id_key: Attribute to be used as case identifier.
 
     .. code-block:: python3
 
         import pm4py
 
-        metric = pm4py.discover_subcontracting_network(dataframe, resource_key='org:resource', timestamp_key='time:timestamp', case_id_key='case:concept:name')
+        metric = pm4py.discover_subcontracting_network(
+            dataframe,
+            n=2,
+            resource_key='org:resource',
+            timestamp_key='time:timestamp',
+            case_id_key='case:concept:name'
+        )
     """
     __event_log_deprecation_warning(log)
 
@@ -153,24 +177,30 @@ def discover_subcontracting_network(log: Union[EventLog, pd.DataFrame], n=2, res
 
 def discover_organizational_roles(log: Union[EventLog, pd.DataFrame], activity_key: str = "concept:name", resource_key: str = "org:resource", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> List[Role]:
     """
-    Mines the organizational roles
+    Mines the organizational roles.
 
-    A role is a set of activities in the log that are executed by a similar (multi)set of resources. Hence, it is a specific function into organization. Grouping the activities in roles can help:
+    A role is a set of activities in the log that are executed by a similar (multi)set of resources. Hence, it is a specific function within the organization. Grouping the activities into roles can help:
 
     Reference paper:
     Burattin, Andrea, Alessandro Sperduti, and Marco Veluscek. “Business models enhancement through discovery of roles.” 2013 IEEE Symposium on Computational Intelligence and Data Mining (CIDM). IEEE, 2013.
 
-    :param log: event log / Pandas dataframe
-    :param activity_key: attribute to be used for the activity
-    :param resource_key: attribute to be used for the resource
-    :param timestamp_key: attribute to be used for the timestamp
-    :param case_id_key: attribute to be used as case identifier
+    :param log: Event log or Pandas DataFrame.
+    :param activity_key: Attribute to be used for the activity.
+    :param resource_key: Attribute to be used for the resource.
+    :param timestamp_key: Attribute to be used for the timestamp.
+    :param case_id_key: Attribute to be used as case identifier.
 
     .. code-block:: python3
 
         import pm4py
 
-        roles = pm4py.discover_organizational_roles(dataframe, resource_key='org:resource', activity_key='concept:name', timestamp_key='time:timestamp', case_id_key='case:concept:name')
+        roles = pm4py.discover_organizational_roles(
+            dataframe,
+            resource_key='org:resource',
+            activity_key='concept:name',
+            timestamp_key='time:timestamp',
+            case_id_key='case:concept:name'
+        )
     """
     __event_log_deprecation_warning(log)
 
@@ -188,43 +218,54 @@ def discover_network_analysis(log: Union[pd.DataFrame, EventLog, EventStream], o
     """
     Performs a network analysis of the log based on the provided parameters.
 
-    The classical social network analysis methods are based on the order of the events inside a case. For example, the Handover of Work metric considers the directly-follows relationships between resources during the work of a case. An edge is added between the two resources if such relationships occurs.
+    Classical social network analysis methods are based on the order of events within a case. For example, the Handover of Work metric considers the directly-follows relationships between resources during the execution of a case. An edge is added between two resources if such a relationship occurs.
 
-    Real-life scenarios may be more complicated. At first, is difficult to collect events inside the same case without having convergence/divergence issues (see first section of the OCEL part). At second, the type of relationship may also be important. Consider for example the relationship between two resources: this may be more efficient if the activity that is executed is liked by the resources, rather than disgusted.
+    Real-life scenarios may be more complicated. Firstly, it is difficult to collect events within the same case without encountering convergence/divergence issues (see the first section of the OCEL part). Secondly, the type of relationship may also be important. For example, the relationship between two resources may be more efficient if the activity executed is liked by the resources rather than disliked.
 
-    The network analysis that we introduce here generalizes some existing social network analysis metrics, becoming independent from the choice of a case notion and permitting to build a multi-graph instead of a simple graph.
+    The network analysis introduced here generalizes some existing social network analysis metrics, making them independent of the case notion and allowing the construction of a multigraph instead of a simple graph.
 
-    With this, we assume events to be linked by signals. An event emits a signal (that is contained as one attribute of the event) that is assumed to be received by other events (also, this is an attribute of these events) that follow the first event in the log. So, we assume there is an OUT attribute (of the event) that is identical to the IN attribute (of the other events).
+    We assume events are linked by signals. An event emits a signal (contained in one attribute of the event) that is assumed to be received by other events (also containing this attribute) that follow the first event in the log. We assume there is an OUT attribute (of the event) that is identical to the IN attribute (of the other events).
 
-    When we collect this information, we can build the network analysis graph:
-    - The source node of the relation is given by an aggregation over a node_column_source attribute.
-    - The target node of the relation is given by an aggregation over a node_column_target attribute.
-    - The type of edge is given by an aggregation over an edge_column attribute.
-    - The network analysis graph can either be annotated with frequency or performance information.
+    When collecting this information, we can build the network analysis graph:
+    - The source node of the relationship is determined by aggregating the `node_column_source` attribute.
+    - The target node of the relationship is determined by aggregating the `node_column_target` attribute.
+    - The type of edge is determined by aggregating the `edge_column` attribute.
+    - The network analysis graph can be annotated with frequency or performance information.
 
     The output is a multigraph.
-    Two events EV1 and EV2 of the log are merged (indipendently from the case notion) based on having
+    Two events EV1 and EV2 in the log are connected (independently of the case notion) based on having
     EV1.OUT_COLUMN = EV2.IN_COLUMN.
-    Then, an aggregation is applied on the couple of events (NODE_COLUMN) to obtain the nodes that are connected.
-    The edges between these nodes are aggregated based on some property of the *source* event (EDGE_COLUMN).
+    Then, an aggregation is applied on the pair of events (NODE_COLUMN) to obtain the connected nodes.
+    The edges between these nodes are aggregated based on some property of the *source* event (`edge_column`).
 
-    :param log: event log / Pandas dataframe
-    :param out_column: the source column of the link (default: the case identifier; events of the same case are linked)
-    :param in_column: the target column of the link (default: the case identifier; events of the same case are linked)
-    :param node_column_source: the attribute to be used for the node definition of the source event (default: the resource of the log, org:resource)
-    :param node_column_target: the attribute to be used for the node definition of the target event (default: the resource of the log, org:resource)
-    :param edge_column: the attribute to be used for the edge definition (default: the activity of the log, concept:name)
-    :param edge_reference: decide if the edge attribute should be picked from the source event. Values: _out  =>  the source event ; _in   =>  the target event
-    :param performance: boolean value that enables the performance calculation on the edges of the network analysis
-    :param sorting_column: the column that should be used to sort the log before performing the network analysis (default: time:timestamp)
-    :param timestamp_column: the column that should be used as timestamp for the performance-related analysis (default: time:timestamp)
+    :param log: Event log, Pandas DataFrame, or EventStream.
+    :param out_column: The source column of the link (default: the case identifier; events of the same case are linked).
+    :param in_column: The target column of the link (default: the case identifier; events of the same case are linked).
+    :param node_column_source: The attribute to be used for defining the source node (default: the resource of the log, "org:resource").
+    :param node_column_target: The attribute to be used for defining the target node (default: the resource of the log, "org:resource").
+    :param edge_column: The attribute to be used for defining the edge (default: the activity of the log, "concept:name").
+    :param edge_reference: Determines if the edge attribute should be picked from the source event. Values: "_out" => the source event; "_in" => the target event.
+    :param performance: Boolean value that enables performance calculation on the edges of the network analysis.
+    :param sorting_column: The column to be used for sorting the log before performing the network analysis (default: "time:timestamp").
+    :param timestamp_column: The column to be used as timestamp for performance-related analysis (default: "time:timestamp").
     :rtype: ``Dict[Tuple[str, str], Dict[str, Any]]``
 
     .. code-block:: python3
 
         import pm4py
 
-        net_ana = pm4py.discover_network_analysis(dataframe, out_column='case:concept:name', in_column='case:concept:name', node_column_source='org:resource', node_column_target='org:resource', edge_column='concept:name')
+        net_ana = pm4py.discover_network_analysis(
+            dataframe,
+            out_column='case:concept:name',
+            in_column='case:concept:name',
+            node_column_source='org:resource',
+            node_column_target='org:resource',
+            edge_column='concept:name',
+            edge_reference='_out',
+            performance=False,
+            sorting_column='time:timestamp',
+            timestamp_column='time:timestamp'
+        )
     """
     __event_log_deprecation_warning(log)
 

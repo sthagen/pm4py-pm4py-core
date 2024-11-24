@@ -1,9 +1,9 @@
-Welcome to pm4py's Documentation!
+Welcome to PM4Py's Documentation!
 ===================================
 
-``pm4py`` is a Python library implementing a variety of `process mining <https://en.wikipedia.org/wiki/Process_mining>`_ algorithms.
+``PM4Py`` is a Python library implementing a variety of `process mining <https://en.wikipedia.org/wiki/Process_mining>`_ algorithms.
 
-A simple example of ``pm4py`` in action:
+A simple example of ``PM4Py`` in action:
 
 .. code-block:: python
 
@@ -13,11 +13,11 @@ A simple example of ``pm4py`` in action:
        log = pm4py.read_xes('<path-to-xes-log-file.xes>')
        process_model = pm4py.discover_bpmn_inductive(log)
        pm4py.view_bpmn(process_model)
-					
-In this documentation, you can find all relevant information to set up ``pm4py`` and start your process mining journey. 
-Please consult the Contents listed below to navigate the documentation.
+						
+In this documentation, you can find all relevant information to set up ``PM4Py`` and start your process mining journey. 
+Please consult the contents listed below to navigate the documentation.
 
-Happy #processmining!
+Happy #ProcessMining!
 
 
 Contents

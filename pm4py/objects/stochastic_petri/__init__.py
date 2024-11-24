@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,10 +19,12 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.objects.stochastic_petri import tangible_reachability, utils
+from pm4py.util import constants as pm4_constants
 
-from pm4py.util import constants
-import warnings
+if pm4_constants.ENABLE_INTERNAL_IMPORTS:
+    from pm4py.objects.stochastic_petri import tangible_reachability, utils
 
-if constants.SHOW_INTERNAL_WARNINGS:
-    warnings.warn("The stochastic_petri package will be removed in a future release.")
+    import warnings
+
+    if pm4_constants.SHOW_INTERNAL_WARNINGS:
+        warnings.warn("The stochastic_petri package will be removed in a future release.")

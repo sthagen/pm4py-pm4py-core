@@ -24,7 +24,6 @@ from enum import Enum
 from pm4py.objects.ocel.obj import OCEL
 from typing import Optional, Dict, Any
 from pm4py.objects.ocel import constants as ocel_constants
-from statistics import mean, median
 
 
 class Parameters(Enum):
@@ -58,6 +57,8 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, 
     """
     if parameters is None:
         parameters = {}
+
+    from statistics import mean, median
 
     event_id = exec_utils.get_param_value(Parameters.EVENT_ID, parameters, ocel.event_id_column)
     event_activity = exec_utils.get_param_value(Parameters.EVENT_ACTIVITY, parameters, ocel.event_activity)

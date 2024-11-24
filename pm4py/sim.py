@@ -20,7 +20,7 @@ Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
 __doc__ = """
-The ``pm4py.sim`` module contains the simulation algorithms offered in ``pm4py``
+The ``pm4py.sim`` module contains simulation algorithms provided by ``pm4py``.
 """
 
 from collections import Counter
@@ -33,15 +33,21 @@ from pm4py.objects.process_tree.obj import ProcessTree
 
 def play_out(*args: Union[Tuple[PetriNet, Marking, Marking], dict, Counter, ProcessTree], **kwargs) -> EventLog:
     """
-    Performs the playout of the provided model,
-    i.e., gets a set of traces from the model.
-    The function either takes a petri net, initial and final marking, or, a process tree as an input.
+    Performs the playout of the provided model, generating a set of traces.
 
-    :param args: model (Petri net with initial and final marking, or process tree)
-    :param kwargs: optional parameters of the method, including:
-        - parameters: dictionary containing the parameters of the playout, including:
-            - smap: (if provided) stochastic map to be used to stochastically choose the transition
-            - log: (if provided) EventLog to be used to compute the stochastic map, if smap not provided
+    The function accepts one of the following inputs:
+    - A Petri net with initial and final markings.
+    - A Directly-Follows Graph (DFG) represented as a dictionary.
+    - A process tree.
+
+    :param args: 
+        - For Petri net playout: a `PetriNet`, an initial `Marking`, and a final `Marking`.
+        - For DFG playout: a `dict` representing the DFG, followed by additional required arguments.
+        - For process tree playout: a single `ProcessTree`.
+    :param kwargs: Optional parameters of the method, including:
+        - `parameters`: A dictionary containing parameters of the playout, such as:
+            - `smap`: (optional) A stochastic map to be used for probabilistic transition selection.
+            - `log`: (optional) An `EventLog` used to compute the stochastic map if `smap` is not provided.
     :rtype: ``EventLog``
 
     .. code-block:: python3
@@ -85,20 +91,20 @@ def play_out(*args: Union[Tuple[PetriNet, Marking, Marking], dict, Counter, Proc
             return dfg_playout.apply(args[0], args[1], args[2], **kwargs)
     elif len(args) == 1:
         from pm4py.objects.process_tree.obj import ProcessTree
-        if type(args[0]) is ProcessTree:
+        if isinstance(args[0], ProcessTree):
             from pm4py.algo.simulation.playout.process_tree import algorithm
             return algorithm.apply(args[0], **kwargs)
-    raise Exception("unsupported model for playout")
+    raise Exception("Unsupported model for playout")
 
 
 def generate_process_tree(**kwargs) -> ProcessTree:
     """
-    Generates a process tree
+    Generates a process tree.
 
     Reference paper:
     PTandLogGenerator: A Generator for Artificial Event Data
 
-    :param kwargs: dictionary containing the parameters of the process tree generator algorithm
+    :param kwargs: Parameters for the process tree generator algorithm.
     :rtype: ``ProcessTree``
 
     .. code-block:: python3

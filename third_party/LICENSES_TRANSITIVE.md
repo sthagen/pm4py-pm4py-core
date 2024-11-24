@@ -26,9 +26,9 @@
 | python-dateutil | https://pypi.org/project/python-dateutil | Apache Software License, BSD License (Dual License) | 2.9.0.post0 |
 | pytz | https://pypi.org/project/pytz | MIT License (MIT) | 2024.2 |
 | scipy | https://pypi.org/project/scipy | BSD License | 1.14.1 |
-| setuptools | https://pypi.org/project/setuptools | MIT License | 75.5.0 |
+| setuptools | https://pypi.org/project/setuptools | MIT License | 75.6.0 |
 | six | https://pypi.org/project/six | MIT License (MIT) | 1.16.0 |
 | sortedcontainers | https://pypi.org/project/sortedcontainers | Apache Software License (Apache 2.0) | 2.4.0 |
 | tqdm | https://pypi.org/project/tqdm | MIT License, Mozilla Public License 2.0 (MPL 2.0) (MPL-2.0 AND MIT) | 4.67.0 |
 | tzdata | https://pypi.org/project/tzdata | Apache Software License (Apache-2.0) | 2024.2 |
-| wheel | https://pypi.org/project/wheel | MIT License | 0.45.0 |
+| wheel | https://pypi.org/project/wheel | MIT License | 0.45.1 |

@@ -20,18 +20,15 @@ Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
 __doc__ = """
-The ``pm4py.discovery`` module contains the process discovery algorithms implemented in ``pm4py``
+The ``pm4py.discovery`` module contains the process discovery algorithms implemented in ``pm4py``.
 """
 
 from typing import Tuple, Union, List, Dict, Any, Optional, Set
+from collections import Counter
 
 import pandas as pd
 from pandas import DataFrame
 
-from pm4py.algo.discovery.powl.inductive.utils.filtering import FILTERING_THRESHOLD
-from pm4py.algo.discovery.powl.inductive.variants.dynamic_clustering_frequency.dynamic_clustering_frequency_partial_order_cut import \
-    ORDER_FREQUENCY_RATIO
-from pm4py.algo.discovery.powl.inductive.variants.powl_discovery_varaints import POWLDiscoveryVariant
 from pm4py.objects.bpmn.obj import BPMN
 from pm4py.objects.dfg.obj import DFG
 from pm4py.objects.powl.obj import POWL
@@ -53,20 +50,28 @@ def discover_dfg(log: Union[EventLog, pd.DataFrame], activity_key: str = "concep
     """
     Discovers a Directly-Follows Graph (DFG) from a log.
 
-    This method returns a dictionary with the couples of directly-following activities (in the log)
-    as keys and the frequency of relation as value.
+    This method returns a tuple containing:
+    - A dictionary with pairs of directly-following activities as keys and the frequency of the relationship as values.
+    - A dictionary of start activities with their respective frequencies.
+    - A dictionary of end activities with their respective frequencies.
 
-    :param log: event log / Pandas dataframe
-    :param activity_key: attribute to be used for the activity
-    :param timestamp_key: attribute to be used for the timestamp
-    :param case_id_key: attribute to be used as case identifier
+    :param log: Event log or Pandas DataFrame.
+    :param activity_key: Attribute to be used for the activity (default: "concept:name").
+    :param timestamp_key: Attribute to be used for the timestamp (default: "time:timestamp").
+    :param case_id_key: Attribute to be used as case identifier (default: "case:concept:name").
+    :return: A tuple of three dictionaries: (dfg, start_activities, end_activities).
     :rtype: ``Tuple[dict, dict, dict]``
 
     .. code-block:: python3
 
         import pm4py
 
-        dfg, start_activities, end_activities = pm4py.discover_dfg(dataframe, case_id_key='case:concept:name', activity_key='concept:name', timestamp_key='time:timestamp')
+        dfg, start_activities, end_activities = pm4py.discover_dfg(
+            dataframe,
+            case_id_key='case:concept:name',
+            activity_key='concept:name',
+            timestamp_key='time:timestamp'
+        )
     """
     __event_log_deprecation_warning(log)
 
@@ -105,28 +110,33 @@ def discover_directly_follows_graph(log: Union[EventLog, pd.DataFrame], activity
 
 def discover_dfg_typed(log: pd.DataFrame, case_id_key: str = "case:concept:name", activity_key: str = "concept:name", timestamp_key: str = "time:timestamp") -> DFG:
     """
-    Discovers a Directly-Follows Graph (DFG) from a log.
+    Discovers a typed Directly-Follows Graph (DFG) from a log.
 
-    This method returns a typed DFG object, i.e., as specified in ``pm4py.objects.dfg.obj.py`` (``DirectlyFollowsGraph`` Class)
-    The DFG object describes a graph, start activities and end activities.
-    The graph is a collection of triples of the form (a,b,f) representing an arc a->b with frequency f.
-    The start activities are a collection of tuples of the form (a,f) representing that activity a starts f cases.
-    The end activities are a collection of tuples of the form (a,f) representing that ativity a ends f cases.
+    This method returns a typed DFG object, as specified in ``pm4py.objects.dfg.obj.py`` (``DirectlyFollowsGraph`` Class).
+    The DFG object includes the graph, start activities, and end activities.
+    - The graph is a collection of triples of the form (a, b, f) representing an arc a->b with frequency f.
+    - The start activities are a collection of tuples of the form (a, f) representing that activity a starts f cases.
+    - The end activities are a collection of tuples of the form (a, f) representing that activity a ends f cases.
     
-    This method replaces ``pm4py.discover_dfg`` and ``pm4py.discover_directly_follows_graph``. In a future release, these functions will adopt the same behavior as this function.
+    This method replaces ``pm4py.discover_dfg`` and ``pm4py.discover_directly_follows_graph``. In future releases, these functions will adopt the same behavior as this function.
 
     :param log: ``pandas.DataFrame``
-    :param case_id_key: attribute to be used as case identifier
-    :param activity_key: attribute to be used for the activity
-    :param timestamp_key: attribute to be used for the timestamp
-    
+    :param case_id_key: Attribute to be used as case identifier (default: "case:concept:name").
+    :param activity_key: Attribute to be used for the activity (default: "concept:name").
+    :param timestamp_key: Attribute to be used for the timestamp (default: "time:timestamp").
+    :return: A typed DFG object containing the graph, start activities, and end activities.
     :rtype: ``DFG``
 
     .. code-block:: python3
 
         import pm4py
 
-        dfg = pm4py.discover_dfg_typed(log, case_id_key='case:concept:name', activity_key='concept:name', timestamp_key='time:timestamp')
+        dfg = pm4py.discover_dfg_typed(
+            log,
+            case_id_key='case:concept:name',
+            activity_key='concept:name',
+            timestamp_key='time:timestamp'
+        )
     """
     from pm4py.algo.discovery.dfg.variants import clean
     parameters = get_properties(
@@ -134,36 +144,51 @@ def discover_dfg_typed(log: pd.DataFrame, case_id_key: str = "case:concept:name"
 
     if importlib.util.find_spec("polars"):
         import polars as pl
-        if type(log) is pl.DataFrame:
+        if isinstance(log, pl.DataFrame):
             from pm4py.algo.discovery.dfg.variants import clean_polars
             return clean_polars.apply(log, parameters)
 
     if pandas_utils.check_is_pandas_dataframe(log):
         return clean.apply(log, parameters)
     else:
-        raise TypeError('pm4py.discover_dfg_typed is only defined for dataFrames')
-        
+        raise TypeError('pm4py.discover_dfg_typed is only defined for DataFrames')
+
 
 def discover_performance_dfg(log: Union[EventLog, pd.DataFrame], business_hours: bool = False, business_hour_slots=constants.DEFAULT_BUSINESS_HOUR_SLOTS, workcalendar=constants.DEFAULT_BUSINESS_HOURS_WORKCALENDAR, activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> Tuple[dict, dict, dict]:
     """
-    Discovers a performance directly-follows graph from an event log.
+    Discovers a Performance Directly-Follows Graph from an event log.
 
-    This method returns a dictionary with the couples of directly-following activities (in the log)
-    as keys and the performance of relation as value.
+    This method returns a tuple containing:
+    - A dictionary with pairs of directly-following activities as keys and the performance metrics of the relationship as values.
+    - A dictionary of start activities with their respective frequencies.
+    - A dictionary of end activities with their respective frequencies.
 
-    :param log: event log / Pandas dataframe
-    :param business_hours: enables/disables the computation based on the business hours (default: False)
-    :param business_hour_slots: work schedule of the company, provided as a list of tuples where each tuple represents one time slot of business hours. One slot i.e. one tuple consists of one start and one end time given in seconds since week start, e.g. [(7 * 60 * 60, 17 * 60 * 60), ((24 + 7) * 60 * 60, (24 + 12) * 60 * 60), ((24 + 13) * 60 * 60, (24 + 17) * 60 * 60),] meaning that business hours are Mondays 07:00 - 17:00 and Tuesdays 07:00 - 12:00 and 13:00 - 17:00
-    :param activity_key: attribute to be used for the activity
-    :param timestamp_key: attribute to be used for the timestamp
-    :param case_id_key: attribute to be used as case identifier
+    :param log: Event log or Pandas DataFrame.
+    :param business_hours: Enables or disables computation based on business hours (default: False).
+    :param business_hour_slots: Work schedule of the company, provided as a list of tuples where each tuple represents one time slot of business hours. Each slot consists of a start and end time given in seconds since the week start. Example:
+        ```python
+        [
+            (7 * 60 * 60, 17 * 60 * 60),  # Monday 07:00 - 17:00
+            ((24 + 7) * 60 * 60, (24 + 12) * 60 * 60),  # Tuesday 07:00 - 12:00
+            ((24 + 13) * 60 * 60, (24 + 17) * 60 * 60)   # Tuesday 13:00 - 17:00
+        ]
+        ```
+    :param activity_key: Attribute to be used for the activity (default: "concept:name").
+    :param timestamp_key: Attribute to be used for the timestamp (default: "time:timestamp").
+    :param case_id_key: Attribute to be used as case identifier (default: "case:concept:name").
+    :return: A tuple of three dictionaries: (performance_dfg, start_activities, end_activities).
     :rtype: ``Tuple[dict, dict, dict]``
 
     .. code-block:: python3
 
         import pm4py
 
-        performance_dfg, start_activities, end_activities = pm4py.discover_performance_dfg(dataframe, case_id_key='case:concept:name', activity_key='concept:name', timestamp_key='time:timestamp')
+        performance_dfg, start_activities, end_activities = pm4py.discover_performance_dfg(
+            dataframe,
+            case_id_key='case:concept:name',
+            activity_key='concept:name',
+            timestamp_key='time:timestamp'
+        )
     """
     __event_log_deprecation_warning(log)
 
@@ -203,17 +228,23 @@ def discover_petri_net_alpha(log: Union[EventLog, pd.DataFrame], activity_key: s
     """
     Discovers a Petri net using the Alpha Miner.
 
-    :param log: event log / Pandas dataframe
-    :param activity_key: attribute to be used for the activity
-    :param timestamp_key: attribute to be used for the timestamp
-    :param case_id_key: attribute to be used as case identifier
+    :param log: Event log or Pandas DataFrame.
+    :param activity_key: Attribute to be used for the activity (default: "concept:name").
+    :param timestamp_key: Attribute to be used for the timestamp (default: "time:timestamp").
+    :param case_id_key: Attribute to be used as case identifier (default: "case:concept:name").
+    :return: A tuple containing the Petri net, initial marking, and final marking.
     :rtype: ``Tuple[PetriNet, Marking, Marking]``
 
     .. code-block:: python3
 
         import pm4py
 
-        net, im, fm = pm4py.discover_petri_net_alpha(dataframe, activity_key='concept:name', case_id_key='case:concept:name', timestamp_key='time:timestamp')
+        net, im, fm = pm4py.discover_petri_net_alpha(
+            dataframe,
+            activity_key='concept:name',
+            case_id_key='case:concept:name',
+            timestamp_key='time:timestamp'
+        )
     """
     __event_log_deprecation_warning(log)
 
@@ -229,18 +260,24 @@ def discover_petri_net_ilp(log: Union[EventLog, pd.DataFrame], alpha: float = 1.
     """
     Discovers a Petri net using the ILP Miner.
 
-    :param log: event log / Pandas dataframe
-    :param alpha: noise threshold for the sequence encoding graph (1.0=no filtering, 0.0=greatest filtering)
-    :param activity_key: attribute to be used for the activity
-    :param timestamp_key: attribute to be used for the timestamp
-    :param case_id_key: attribute to be used as case identifier
+    :param log: Event log or Pandas DataFrame.
+    :param alpha: Noise threshold for the sequence encoding graph (1.0=no filtering, 0.0=maximum filtering) (default: 1.0).
+    :param activity_key: Attribute to be used for the activity (default: "concept:name").
+    :param timestamp_key: Attribute to be used for the timestamp (default: "time:timestamp").
+    :param case_id_key: Attribute to be used as case identifier (default: "case:concept:name").
+    :return: A tuple containing the Petri net, initial marking, and final marking.
     :rtype: ``Tuple[PetriNet, Marking, Marking]``
 
     .. code-block:: python3
 
         import pm4py
 
-        net, im, fm = pm4py.discover_petri_net_ilp(dataframe, activity_key='concept:name', case_id_key='case:concept:name', timestamp_key='time:timestamp')
+        net, im, fm = pm4py.discover_petri_net_ilp(
+            dataframe,
+            activity_key='concept:name',
+            case_id_key='case:concept:name',
+            timestamp_key='time:timestamp'
+        )
     """
     __event_log_deprecation_warning(log)
 
@@ -255,22 +292,31 @@ def discover_petri_net_ilp(log: Union[EventLog, pd.DataFrame], alpha: float = 1.
     return ilp_miner.apply(log, variant=ilp_miner.Variants.CLASSIC, parameters=parameters)
 
 
-@deprecation.deprecated(deprecated_in="2.3.0", removed_in="3.0.0", details="this method will be removed in a future release.")
+@deprecation.deprecated(deprecated_in="2.3.0", removed_in="3.0.0", details="This method will be removed in a future release.")
 def discover_petri_net_alpha_plus(log: Union[EventLog, pd.DataFrame], activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> Tuple[PetriNet, Marking, Marking]:
     """
-    Discovers a Petri net using the Alpha+ algorithm
+    Discovers a Petri net using the Alpha+ algorithm.
 
-    :param log: event log / Pandas dataframe
-    :param activity_key: attribute to be used for the activity
-    :param timestamp_key: attribute to be used for the timestamp
-    :param case_id_key: attribute to be used as case identifier
+    .. deprecated:: 2.3.0
+        This method will be removed in version 3.0.0. Use other discovery methods instead.
+
+    :param log: Event log or Pandas DataFrame.
+    :param activity_key: Attribute to be used for the activity (default: "concept:name").
+    :param timestamp_key: Attribute to be used for the timestamp (default: "time:timestamp").
+    :param case_id_key: Attribute to be used as case identifier (default: "case:concept:name").
+    :return: A tuple containing the Petri net, initial marking, and final marking.
     :rtype: ``Tuple[PetriNet, Marking, Marking]``
 
     .. code-block:: python3
 
         import pm4py
 
-        net, im, fm = pm4py.discover_petri_net_alpha_plus(dataframe, activity_key='concept:name', case_id_key='case:concept:name', timestamp_key='time:timestamp')
+        net, im, fm = pm4py.discover_petri_net_alpha_plus(
+            dataframe,
+            activity_key='concept:name',
+            case_id_key='case:concept:name',
+            timestamp_key='time:timestamp'
+        )
     """
     __event_log_deprecation_warning(log)
 
@@ -282,29 +328,33 @@ def discover_petri_net_alpha_plus(log: Union[EventLog, pd.DataFrame], activity_k
     return alpha_miner.apply(log, variant=alpha_miner.Variants.ALPHA_VERSION_PLUS, parameters=get_properties(log, activity_key=activity_key, timestamp_key=timestamp_key, case_id_key=case_id_key))
 
 
-def discover_petri_net_inductive(log: Union[EventLog, pd.DataFrame, DFG], multi_processing: bool = constants.ENABLE_MULTIPROCESSING_DEFAULT, noise_threshold: float = 0.0, activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name", disable_fallthroughs: bool = False) -> Tuple[
-        PetriNet, Marking, Marking]:
+def discover_petri_net_inductive(log: Union[EventLog, pd.DataFrame, DFG], multi_processing: bool = constants.ENABLE_MULTIPROCESSING_DEFAULT, noise_threshold: float = 0.0, activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name", disable_fallthroughs: bool = False) -> Tuple[PetriNet, Marking, Marking]:
     """
-    Discovers a Petri net using the inductive miner algorithm.
+    Discovers a Petri net using the Inductive Miner algorithm.
 
-    The basic idea of Inductive Miner is about detecting a 'cut' in the log (e.g. sequential cut, parallel cut, concurrent cut and loop cut) and then recur on sublogs, which were found applying the cut, until a base case is found. The Directly-Follows variant avoids the recursion on the sublogs but uses the Directly Follows graph.
+    The Inductive Miner detects a 'cut' in the log (e.g., sequential, parallel, concurrent, loop) and recursively applies the algorithm to sublogs until a base case is found.
+    Inductive miner models typically use hidden transitions for skipping or looping portions of the model, and each visible transition has a unique label.
 
-    Inductive miner models usually make extensive use of hidden transitions, especially for skipping/looping on a portion on the model. Furthermore, each visible transition has a unique label (there are no transitions in the model that share the same label).
-
-    :param log: event log / Pandas dataframe / typed DFG
-    :param noise_threshold: noise threshold (default: 0.0)
-    :param multi_processing: boolean that enables/disables multiprocessing in inductive miner
-    :param activity_key: attribute to be used for the activity
-    :param timestamp_key: attribute to be used for the timestamp
-    :param case_id_key: attribute to be used as case identifier
-    :param disable_fallthroughs: disable the Inductive Miner fall-throughs
+    :param log: Event log, Pandas DataFrame, or typed DFG.
+    :param multi_processing: Enables or disables multiprocessing in the Inductive Miner (default: constants.ENABLE_MULTIPROCESSING_DEFAULT).
+    :param noise_threshold: Noise threshold (default: 0.0).
+    :param activity_key: Attribute to be used for the activity (default: "concept:name").
+    :param timestamp_key: Attribute to be used for the timestamp (default: "time:timestamp").
+    :param case_id_key: Attribute to be used as case identifier (default: "case:concept:name").
+    :param disable_fallthroughs: Disables the Inductive Miner fall-throughs (default: False).
+    :return: A tuple containing the Petri net, initial marking, and final marking.
     :rtype: ``Tuple[PetriNet, Marking, Marking]``
 
     .. code-block:: python3
 
         import pm4py
 
-        net, im, fm = pm4py.discover_petri_net_inductive(dataframe, activity_key='concept:name', case_id_key='case:concept:name', timestamp_key='time:timestamp')
+        net, im, fm = pm4py.discover_petri_net_inductive(
+            dataframe,
+            activity_key='concept:name',
+            case_id_key='case:concept:name',
+            timestamp_key='time:timestamp'
+        )
     """
     __event_log_deprecation_warning(log)
 
@@ -322,24 +372,31 @@ def discover_petri_net_heuristics(log: Union[EventLog, pd.DataFrame], dependency
                                   and_threshold: float = 0.65,
                                   loop_two_threshold: float = 0.5, activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> Tuple[PetriNet, Marking, Marking]:
     """
-    Discover a Petri net using the Heuristics Miner
+    Discovers a Petri net using the Heuristics Miner.
 
-    Heuristics Miner is an algorithm that acts on the Directly-Follows Graph, providing way to handle with noise and to find common constructs (dependency between two activities, AND). The output of the Heuristics Miner is an Heuristics Net, so an object that contains the activities and the relationships between them. The Heuristics Net can be then converted into a Petri net. The paper can be visited by clicking on the upcoming link: this link).
+    Heuristics Miner operates on the Directly-Follows Graph, handling noise and identifying common constructs such as dependencies between activities and parallelism.
+    The output is a Heuristics Net, which can then be converted into a Petri net.
 
-    :param log: event log / Pandas dataframe
-    :param dependency_threshold: dependency threshold (default: 0.5)
-    :param and_threshold: AND threshold (default: 0.65)
-    :param loop_two_threshold: loop two threshold (default: 0.5)
-    :param activity_key: attribute to be used for the activity
-    :param timestamp_key: attribute to be used for the timestamp
-    :param case_id_key: attribute to be used as case identifier
+    :param log: Event log or Pandas DataFrame.
+    :param dependency_threshold: Dependency threshold (default: 0.5).
+    :param and_threshold: AND threshold for parallelism (default: 0.65).
+    :param loop_two_threshold: Loop two threshold (default: 0.5).
+    :param activity_key: Attribute to be used for the activity (default: "concept:name").
+    :param timestamp_key: Attribute to be used for the timestamp (default: "time:timestamp").
+    :param case_id_key: Attribute to be used as case identifier (default: "case:concept:name").
+    :return: A tuple containing the Petri net, initial marking, and final marking.
     :rtype: ``Tuple[PetriNet, Marking, Marking]``
 
     .. code-block:: python3
 
         import pm4py
 
-        net, im, fm = pm4py.discover_petri_net_heuristics(dataframe, activity_key='concept:name', case_id_key='case:concept:name', timestamp_key='time:timestamp')
+        net, im, fm = pm4py.discover_petri_net_heuristics(
+            dataframe,
+            activity_key='concept:name',
+            case_id_key='case:concept:name',
+            timestamp_key='time:timestamp'
+        )
     """
     __event_log_deprecation_warning(log)
 
@@ -361,26 +418,31 @@ def discover_petri_net_heuristics(log: Union[EventLog, pd.DataFrame], dependency
 
 def discover_process_tree_inductive(log: Union[EventLog, pd.DataFrame, DFG], noise_threshold: float = 0.0, multi_processing: bool = constants.ENABLE_MULTIPROCESSING_DEFAULT, activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name", disable_fallthroughs: bool = False) -> ProcessTree:
     """
-    Discovers a process tree using the inductive miner algorithm
+    Discovers a Process Tree using the Inductive Miner algorithm.
 
-    The basic idea of Inductive Miner is about detecting a 'cut' in the log (e.g. sequential cut, parallel cut, concurrent cut and loop cut) and then recur on sublogs, which were found applying the cut, until a base case is found. The Directly-Follows variant avoids the recursion on the sublogs but uses the Directly Follows graph.
+    The Inductive Miner detects a 'cut' in the log (e.g., sequential, parallel, concurrent, loop) and recursively applies the algorithm to sublogs until a base case is found.
+    Inductive miner models typically use hidden transitions for skipping or looping portions of the model, and each visible transition has a unique label.
 
-    Inductive miner models usually make extensive use of hidden transitions, especially for skipping/looping on a portion on the model. Furthermore, each visible transition has a unique label (there are no transitions in the model that share the same label).
-
-    :param log: event log / Pandas dataframe / typed DFG
-    :param noise_threshold: noise threshold (default: 0.0)
-    :param activity_key: attribute to be used for the activity
-    :param multi_processing: boolean that enables/disables multiprocessing in inductive miner
-    :param timestamp_key: attribute to be used for the timestamp
-    :param case_id_key: attribute to be used as case identifier
-    :param disable_fallthroughs: disable the Inductive Miner fall-throughs
+    :param log: Event log, Pandas DataFrame, or typed DFG.
+    :param noise_threshold: Noise threshold (default: 0.0).
+    :param multi_processing: Enables or disables multiprocessing in the Inductive Miner (default: constants.ENABLE_MULTIPROCESSING_DEFAULT).
+    :param activity_key: Attribute to be used for the activity (default: "concept:name").
+    :param timestamp_key: Attribute to be used for the timestamp (default: "time:timestamp").
+    :param case_id_key: Attribute to be used as case identifier (default: "case:concept:name").
+    :param disable_fallthroughs: Disables the Inductive Miner fall-throughs (default: False).
+    :return: A ProcessTree object.
     :rtype: ``ProcessTree``
 
     .. code-block:: python3
 
         import pm4py
 
-        process_tree = pm4py.discover_process_tree_inductive(dataframe, activity_key='concept:name', case_id_key='case:concept:name', timestamp_key='time:timestamp')
+        process_tree = pm4py.discover_process_tree_inductive(
+            dataframe,
+            activity_key='concept:name',
+            case_id_key='case:concept:name',
+            timestamp_key='time:timestamp'
+        )
     """
     __event_log_deprecation_warning(log)
 
@@ -407,27 +469,34 @@ def discover_heuristics_net(log: Union[EventLog, pd.DataFrame], dependency_thres
                             and_threshold: float = 0.65,
                             loop_two_threshold: float = 0.5, min_act_count: int = 1, min_dfg_occurrences: int = 1, activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name", decoration: str = "frequency") -> HeuristicsNet:
     """
-    Discovers an heuristics net
+    Discovers a Heuristics Net.
 
-    Heuristics Miner is an algorithm that acts on the Directly-Follows Graph, providing way to handle with noise and to find common constructs (dependency between two activities, AND). The output of the Heuristics Miner is an Heuristics Net, so an object that contains the activities and the relationships between them. The Heuristics Net can be then converted into a Petri net. The paper can be visited by clicking on the upcoming link: this link).
+    Heuristics Miner operates on the Directly-Follows Graph, handling noise and identifying common constructs such as dependencies between activities and parallelism.
+    The output is a Heuristics Net, which can then be converted into a Petri net.
 
-    :param log: event log / Pandas dataframe
-    :param dependency_threshold: dependency threshold (default: 0.5)
-    :param and_threshold: AND threshold (default: 0.65)
-    :param loop_two_threshold: loop two threshold (default: 0.5)
-    :param min_act_count: minimum number of occurrences per activity in order to be included in the discovery
-    :param min_dfg_occurrences: minimum number of occurrences per arc in the DFG in order to be included in the discovery
-    :param activity_key: attribute to be used for the activity
-    :param timestamp_key: attribute to be used for the timestamp
-    :param case_id_key: attribute to be used as case identifier
-    :param decoration: the decoration that should be used (frequency, performance)
+    :param log: Event log or Pandas DataFrame.
+    :param dependency_threshold: Dependency threshold (default: 0.5).
+    :param and_threshold: AND threshold for parallelism (default: 0.65).
+    :param loop_two_threshold: Loop two threshold (default: 0.5).
+    :param min_act_count: Minimum number of occurrences per activity to be included in the discovery (default: 1).
+    :param min_dfg_occurrences: Minimum number of occurrences per arc in the DFG to be included in the discovery (default: 1).
+    :param activity_key: Attribute to be used for the activity (default: "concept:name").
+    :param timestamp_key: Attribute to be used for the timestamp (default: "time:timestamp").
+    :param case_id_key: Attribute to be used as case identifier (default: "case:concept:name").
+    :param decoration: The decoration to be used ("frequency" or "performance") (default: "frequency").
+    :return: A HeuristicsNet object.
     :rtype: ``HeuristicsNet``
 
     .. code-block:: python3
 
         import pm4py
 
-        heu_net = pm4py.discover_heuristics_net(dataframe, activity_key='concept:name', case_id_key='case:concept:name', timestamp_key='time:timestamp')
+        heu_net = pm4py.discover_heuristics_net(
+            dataframe,
+            activity_key='concept:name',
+            case_id_key='case:concept:name',
+            timestamp_key='time:timestamp'
+        )
     """
     __event_log_deprecation_warning(log)
 
@@ -452,21 +521,30 @@ def discover_heuristics_net(log: Union[EventLog, pd.DataFrame], dependency_thres
 
 def derive_minimum_self_distance(log: Union[DataFrame, EventLog, EventStream], activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> Dict[str, int]:
     """
-    This algorithm computes the minimum self-distance for each activity observed in an event log.
-    The self distance of a in <a> is infinity, of a in <a,a> is 0, in <a,b,a> is 1, etc.
-    The activity key 'concept:name' is used.
+    Computes the minimum self-distance for each activity observed in an event log.
 
-    :param log: event log / Pandas dataframe
-    :param activity_key: attribute to be used for the activity
-    :param timestamp_key: attribute to be used for the timestamp
-    :param case_id_key: attribute to be used as case identifier
+    The self-distance of activity `a` in `<a>` is infinity,
+    in `<a, a>` is 0,
+    in `<a, b, a>` is 1,
+    etc. The activity key 'concept:name' is used.
+
+    :param log: Event log or Pandas DataFrame.
+    :param activity_key: Attribute to be used for the activity (default: "concept:name").
+    :param timestamp_key: Attribute to be used for the timestamp (default: "time:timestamp").
+    :param case_id_key: Attribute to be used as case identifier (default: "case:concept:name").
+    :return: A dictionary mapping each activity to its minimum self-distance.
     :rtype: ``Dict[str, int]``
 
     .. code-block:: python3
 
         import pm4py
 
-        msd = pm4py.derive_minimum_self_distance(dataframe, activity_key='concept:name', case_id_key='case:concept:name', timestamp_key='time:timestamp')
+        msd = pm4py.derive_minimum_self_distance(
+            dataframe,
+            activity_key='concept:name',
+            case_id_key='case:concept:name',
+            timestamp_key='time:timestamp'
+        )
     """
     __event_log_deprecation_warning(log)
 
@@ -481,16 +559,24 @@ def derive_minimum_self_distance(log: Union[DataFrame, EventLog, EventStream], a
 def discover_footprints(*args: Union[EventLog, Tuple[PetriNet, Marking, Marking], ProcessTree]) -> Union[
         List[Dict[str, Any]], Dict[str, Any]]:
     """
-    Discovers the footprints out of the provided event log / process model
+    Discovers the footprints from the provided event log or process model.
 
-    :param args: event log / process model
+    Footprints are a high-level representation of the behavior captured in the event log or process model.
+
+    :param args: Event log, process model (Petri net and markings), or ProcessTree.
+    :return: A list of footprint dictionaries or a single footprint dictionary.
     :rtype: ``Union[List[Dict[str, Any]], Dict[str, Any]]``
 
     .. code-block:: python3
 
         import pm4py
 
-        footprints = pm4py.discover_footprints(dataframe, activity_key='concept:name', case_id_key='case:concept:name', timestamp_key='time:timestamp')
+        footprints = pm4py.discover_footprints(
+            dataframe,
+            activity_key='concept:name',
+            case_id_key='case:concept:name',
+            timestamp_key='time:timestamp'
+        )
     """
     from pm4py.algo.discovery.footprints import algorithm as fp_discovery
     return fp_discovery.apply(*args)
@@ -498,23 +584,27 @@ def discover_footprints(*args: Union[EventLog, Tuple[PetriNet, Marking, Marking]
 
 def discover_eventually_follows_graph(log: Union[EventLog, pd.DataFrame], activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> Dict[Tuple[str, str], int]:
     """
-    Gets the eventually follows graph from a log object.
+    Generates the Eventually-Follows Graph from a log.
 
-    The eventually follows graph is a dictionary associating to every
-    couple of activities which are eventually following each other the
-    number of occurrences of this relation.
+    The Eventually-Follows Graph is a dictionary that maps each pair of activities to the number of times one activity eventually follows the other in the log.
 
-    :param log: event log / Pandas dataframe
-    :param activity_key: attribute to be used for the activity
-    :param timestamp_key: attribute to be used for the timestamp
-    :param case_id_key: attribute to be used as case identifier
+    :param log: Event log or Pandas DataFrame.
+    :param activity_key: Attribute to be used for the activity (default: "concept:name").
+    :param timestamp_key: Attribute to be used for the timestamp (default: "time:timestamp").
+    :param case_id_key: Attribute to be used as case identifier (default: "case:concept:name").
+    :return: A dictionary mapping each pair of activities to the count of their eventually-follows relationship.
     :rtype: ``Dict[Tuple[str, str], int]``
 
     .. code-block:: python3
 
         import pm4py
 
-        efg = pm4py.discover_eventually_follows_graph(dataframe, activity_key='concept:name', case_id_key='case:concept:name', timestamp_key='time:timestamp')
+        efg = pm4py.discover_eventually_follows_graph(
+            dataframe,
+            activity_key='concept:name',
+            case_id_key='case:concept:name',
+            timestamp_key='time:timestamp'
+        )
     """
     __event_log_deprecation_warning(log)
 
@@ -533,26 +623,31 @@ def discover_eventually_follows_graph(log: Union[EventLog, pd.DataFrame], activi
 
 def discover_bpmn_inductive(log: Union[EventLog, pd.DataFrame, DFG], noise_threshold: float = 0.0, multi_processing: bool = constants.ENABLE_MULTIPROCESSING_DEFAULT, activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name", disable_fallthroughs: bool = False) -> BPMN:
     """
-    Discovers a BPMN using the Inductive Miner algorithm
+    Discovers a BPMN model using the Inductive Miner algorithm.
 
-    The basic idea of Inductive Miner is about detecting a 'cut' in the log (e.g. sequential cut, parallel cut, concurrent cut and loop cut) and then recur on sublogs, which were found applying the cut, until a base case is found. The Directly-Follows variant avoids the recursion on the sublogs but uses the Directly Follows graph.
+    The Inductive Miner detects a 'cut' in the log (e.g., sequential, parallel, concurrent, loop) and recursively applies the algorithm to sublogs until a base case is found.
+    Inductive miner models typically use hidden transitions for skipping or looping portions of the model, and each visible transition has a unique label.
 
-    Inductive miner models usually make extensive use of hidden transitions, especially for skipping/looping on a portion on the model. Furthermore, each visible transition has a unique label (there are no transitions in the model that share the same label).
-
-    :param log: event log / Pandas dataframe / typed DFG
-    :param noise_threshold: noise threshold (default: 0.0)
-    :param multi_processing: boolean that enables/disables multiprocessing in inductive miner
-    :param activity_key: attribute to be used for the activity
-    :param timestamp_key: attribute to be used for the timestamp
-    :param case_id_key: attribute to be used as case identifier
-    :param disable_fallthroughs: disable the Inductive Miner fall-throughs
+    :param log: Event log, Pandas DataFrame, or typed DFG.
+    :param noise_threshold: Noise threshold (default: 0.0).
+    :param multi_processing: Enables or disables multiprocessing in the Inductive Miner (default: constants.ENABLE_MULTIPROCESSING_DEFAULT).
+    :param activity_key: Attribute to be used for the activity (default: "concept:name").
+    :param timestamp_key: Attribute to be used for the timestamp (default: "time:timestamp").
+    :param case_id_key: Attribute to be used as case identifier (default: "case:concept:name").
+    :param disable_fallthroughs: Disables the Inductive Miner fall-throughs (default: False).
+    :return: A BPMN object representing the discovered BPMN model.
     :rtype: ``BPMN``
 
     .. code-block:: python3
 
         import pm4py
 
-        bpmn_graph = pm4py.discover_bpmn_inductive(dataframe, activity_key='concept:name', case_id_key='case:concept:name', timestamp_key='time:timestamp')
+        bpmn_graph = pm4py.discover_bpmn_inductive(
+            dataframe,
+            activity_key='concept:name',
+            case_id_key='case:concept:name',
+            timestamp_key='time:timestamp'
+        )
     """
     __event_log_deprecation_warning(log)
 
@@ -568,23 +663,30 @@ def discover_bpmn_inductive(log: Union[EventLog, pd.DataFrame, DFG], noise_thres
 
 def discover_transition_system(log: Union[EventLog, pd.DataFrame], direction: str = "forward", window: int = 2, view: str = "sequence", activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> TransitionSystem:
     """
-    Discovers a transition system as described in the process mining book
-    "Process Mining: Data Science in Action"
+    Discovers a Transition System from a log.
 
-    :param log: event log / Pandas dataframe
-    :param direction: direction in which the transition system is built (forward, backward)
-    :param window: window (2, 3, ...)
-    :param view: view to use in the construction of the states (sequence, set, multiset)
-    :param activity_key: attribute to be used for the activity
-    :param timestamp_key: attribute to be used for the timestamp
-    :param case_id_key: attribute to be used as case identifier
+    The Transition System is built based on the specified direction, window size, and view. It captures the transitions between states of activity sequences.
+
+    :param log: Event log or Pandas DataFrame.
+    :param direction: Direction in which the transition system is built ("forward" or "backward") (default: "forward").
+    :param window: Window size for state construction (e.g., 2, 3) (default: 2).
+    :param view: View to use in the construction of the states ("sequence", "set", "multiset") (default: "sequence").
+    :param activity_key: Attribute to be used for the activity (default: "concept:name").
+    :param timestamp_key: Attribute to be used for the timestamp (default: "time:timestamp").
+    :param case_id_key: Attribute to be used as case identifier (default: "case:concept:name").
+    :return: A TransitionSystem object representing the discovered transition system.
     :rtype: ``TransitionSystem``
 
     .. code-block:: python3
 
         import pm4py
 
-        transition_system = pm4py.discover_transition_system(dataframe, activity_key='concept:name', case_id_key='case:concept:name', timestamp_key='time:timestamp')
+        transition_system = pm4py.discover_transition_system(
+            dataframe,
+            activity_key='concept:name',
+            case_id_key='case:concept:name',
+            timestamp_key='time:timestamp'
+        )
     """
     __event_log_deprecation_warning(log)
 
@@ -604,19 +706,27 @@ def discover_transition_system(log: Union[EventLog, pd.DataFrame], direction: st
 
 def discover_prefix_tree(log: Union[EventLog, pd.DataFrame], activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> Trie:
     """
-    Discovers a prefix tree from the provided log object.
+    Discovers a Prefix Tree from the provided log.
 
-    :param log: event log / Pandas dataframe
-    :param activity_key: attribute to be used for the activity
-    :param timestamp_key: attribute to be used for the timestamp
-    :param case_id_key: attribute to be used as case identifier
+    A Prefix Tree represents all the unique prefixes of activity sequences in the log.
+
+    :param log: Event log or Pandas DataFrame.
+    :param activity_key: Attribute to be used for the activity (default: "concept:name").
+    :param timestamp_key: Attribute to be used for the timestamp (default: "time:timestamp").
+    :param case_id_key: Attribute to be used as case identifier (default: "case:concept:name").
+    :return: A Trie object representing the discovered prefix tree.
     :rtype: ``Trie``
 
     .. code-block:: python3
 
         import pm4py
 
-        prefix_tree = pm4py.discover_prefix_tree(dataframe, activity_key='concept:name', case_id_key='case:concept:name', timestamp_key='time:timestamp')
+        prefix_tree = pm4py.discover_prefix_tree(
+            dataframe,
+            activity_key='concept:name',
+            case_id_key='case:concept:name',
+            timestamp_key='time:timestamp'
+        )
     """
     __event_log_deprecation_warning(log)
 
@@ -633,33 +743,45 @@ def discover_prefix_tree(log: Union[EventLog, pd.DataFrame], activity_key: str =
 
 def discover_temporal_profile(log: Union[EventLog, pd.DataFrame], activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> Dict[Tuple[str, str], Tuple[float, float]]:
     """
-    Discovers a temporal profile from a log object.
+    Discovers a Temporal Profile from a log.
 
     Implements the approach described in:
     Stertz, Florian, Jürgen Mangler, and Stefanie Rinderle-Ma. "Temporal Conformance Checking at Runtime based on Time-infused Process Models." arXiv preprint arXiv:2008.07262 (2020).
 
-    The output is a dictionary containing, for every couple of activities eventually following in at least a case of the log,
-    the average and the standard deviation of the difference of the timestamps.
+    The output is a dictionary containing, for every pair of activities that eventually follow each other in at least one case of the log,
+    the average and the standard deviation of the time difference between their timestamps.
 
-    E.g. if the log has two cases:
-
-    A (timestamp: 1980-01)   B (timestamp: 1980-03)    C (timestamp: 1980-06)
-    A (timestamp: 1990-01)   B (timestamp: 1990-02)    D (timestamp: 1990-03)
-
+    Example:
+    If the log has two cases:
+    - Case 1: A (timestamp: 1980-01) → B (timestamp: 1980-03) → C (timestamp: 1980-06)
+    - Case 2: A (timestamp: 1990-01) → B (timestamp: 1990-02) → D (timestamp: 1990-03)
+    
     The returned dictionary will contain:
-    {('A', 'B'): (1.5 months, 0.5 months), ('A', 'C'): (5 months, 0), ('A', 'D'): (2 months, 0)}
+    ```
+    {
+        ('A', 'B'): (1.5 months, 0.5 months),
+        ('A', 'C'): (5 months, 0),
+        ('A', 'D'): (2 months, 0)
+    }
+    ```
 
-    :param log: event log / Pandas dataframe
-    :param activity_key: attribute to be used for the activity
-    :param timestamp_key: attribute to be used for the timestamp
-    :param case_id_key: attribute to be used as case identifier
+    :param log: Event log or Pandas DataFrame.
+    :param activity_key: Attribute to be used for the activity (default: "concept:name").
+    :param timestamp_key: Attribute to be used for the timestamp (default: "time:timestamp").
+    :param case_id_key: Attribute to be used as case identifier (default: "case:concept:name").
+    :return: A dictionary mapping each pair of activities to a tuple of (average time difference, standard deviation).
     :rtype: ``Dict[Tuple[str, str], Tuple[float, float]]``
 
     .. code-block:: python3
 
         import pm4py
 
-        temporal_profile = pm4py.discover_temporal_profile(dataframe, activity_key='concept:name', case_id_key='case:concept:name', timestamp_key='time:timestamp')
+        temporal_profile = pm4py.discover_temporal_profile(
+            dataframe,
+            activity_key='concept:name',
+            case_id_key='case:concept:name',
+            timestamp_key='time:timestamp'
+        )
     """
     __event_log_deprecation_warning(log)
 
@@ -676,40 +798,38 @@ def discover_temporal_profile(log: Union[EventLog, pd.DataFrame], activity_key: 
 
 def discover_log_skeleton(log: Union[EventLog, pd.DataFrame], noise_threshold: float = 0.0, activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> Dict[str, Any]:
     """
-    Discovers a log skeleton from an event log.
+    Discovers a Log Skeleton from an event log.
 
-    A log skeleton is a declarative model which consists of six different constraints:
-    - "directly_follows": specifies for some activities some strict bounds on the activities directly-following. For example,
-                        'A should be directly followed by B' and 'B should be directly followed by C'.
-    - "always_before": specifies that some activities may be executed only if some other activities are executed somewhen before
-                        in the history of the case.
-                        For example, 'C should always be preceded by A'
-    - "always_after": specifies that some activities should always trigger the execution of some other activities
-                        in the future history of the case.
-                        For example, 'A should always be followed by C'
-    - "equivalence": specifies that a given couple of activities should happen with the same number of occurrences inside
-                        a case.
-                        For example, 'B and C should always happen the same number of times'.
-    - "never_together": specifies that a given couple of activities should never happen together in the history of the case.
-                        For example, 'there should be no case containing both C and D'.
-    - "activ_occurrences": specifies the allowed number of occurrences per activity:
-                        E.g. A is allowed to be executed 1 or 2 times, B is allowed to be executed 1 or 2 or 3 or 4 times.
+    A Log Skeleton is a declarative model consisting of six different constraints:
+    - **directly_follows**: Specifies strict bounds on activities that directly follow each other. Example: 'A should be directly followed by B' and 'B should be directly followed by C'.
+    - **always_before**: Specifies that some activities may only be executed if certain other activities have been executed earlier in the case. Example: 'C should always be preceded by A'.
+    - **always_after**: Specifies that certain activities should always trigger the execution of some other activities later in the case. Example: 'A should always be followed by C'.
+    - **equivalence**: Specifies that a given pair of activities should occur the same number of times within a case. Example: 'B and C should always occur the same number of times'.
+    - **never_together**: Specifies that a given pair of activities should never occur together in a case. Example: 'There should be no case containing both C and D'.
+    - **activ_occurrences**: Specifies allowed numbers of occurrences per activity. Example: 'Activity A can occur 1 or 2 times, and Activity B can occur 1 to 4 times'.
 
     Reference paper:
     Verbeek, H. M. W., and R. Medeiros de Carvalho. "Log skeletons: A classification approach to process discovery." arXiv preprint arXiv:1806.08247 (2018).
 
-    :param log: event log / Pandas dataframe
-    :param noise_threshold: noise threshold, acting as described in the paper.
-    :param activity_key: attribute to be used for the activity
-    :param timestamp_key: attribute to be used for the timestamp
-    :param case_id_key: attribute to be used as case identifier
+    :param log: Event log or Pandas DataFrame.
+    :param noise_threshold: Noise threshold influencing the strictness of constraints (default: 0.0).
+    :param activity_key: Attribute to be used for the activity (default: "concept:name").
+    :param timestamp_key: Attribute to be used for the timestamp (default: "time:timestamp").
+    :param case_id_key: Attribute to be used as case identifier (default: "case:concept:name").
+    :return: A dictionary representing the Log Skeleton with various constraints.
     :rtype: ``Dict[str, Any]``
 
     .. code-block:: python3
 
         import pm4py
 
-        log_skeleton = pm4py.discover_log_skeleton(dataframe, noise_threshold=0.1, activity_key='concept:name', case_id_key='case:concept:name', timestamp_key='time:timestamp')
+        log_skeleton = pm4py.discover_log_skeleton(
+            dataframe,
+            noise_threshold=0.1,
+            activity_key='concept:name',
+            case_id_key='case:concept:name',
+            timestamp_key='time:timestamp'
+        )
     """
     __event_log_deprecation_warning(log)
 
@@ -732,15 +852,16 @@ def discover_declare(log: Union[EventLog, pd.DataFrame], allowed_templates: Opti
     Reference paper:
     F. M. Maggi, A. J. Mooij and W. M. P. van der Aalst, "User-guided discovery of declarative process models," 2011 IEEE Symposium on Computational Intelligence and Data Mining (CIDM), Paris, France, 2011, pp. 192-199, doi: 10.1109/CIDM.2011.5949297.
 
-    :param log: event log / Pandas dataframe
-    :param allowed_templates: (optional) collection of templates to consider for the discovery
-    :param considered_activities: (optional) collection of activities to consider for the discovery
-    :param min_support_ratio: (optional, decided automatically otherwise) minimum percentage of cases (over the entire set of cases of the log) for which the discovered rules apply
-    :param min_confidence_ratio: (optional, decided automatically otherwise) minimum percentage of cases (over the rule's support) for which the discovered rules are valid
-    :param activity_key: attribute to be used for the activity
-    :param timestamp_key: attribute to be used for the timestamp
-    :param case_id_key: attribute to be used as case identifier
-    :rtype: ``Dict[str, Any]``
+    :param log: Event log or Pandas DataFrame.
+    :param allowed_templates: (Optional) Set of DECLARE templates to consider for discovery.
+    :param considered_activities: (Optional) Set of activities to consider for discovery.
+    :param min_support_ratio: (Optional) Minimum percentage of cases for which the discovered rules apply.
+    :param min_confidence_ratio: (Optional) Minimum percentage of cases for which the discovered rules are valid, based on the rule's support.
+    :param activity_key: Attribute to be used for the activity (default: "concept:name").
+    :param timestamp_key: Attribute to be used for the timestamp (default: "time:timestamp").
+    :param case_id_key: Attribute to be used as case identifier (default: "case:concept:name").
+    :return: A dictionary representing the discovered DECLARE model with constraints and their parameters.
+    :rtype: ``Dict[str, Dict[Any, Dict[str, int]]]``
 
     .. code-block:: python3
 
@@ -765,23 +886,24 @@ def discover_declare(log: Union[EventLog, pd.DataFrame], allowed_templates: Opti
     return declare_discovery.apply(log, parameters=properties)
 
 
-def discover_powl(log: Union[EventLog, pd.DataFrame], variant=POWLDiscoveryVariant.MAXIMAL,
+def discover_powl(log: Union[EventLog, pd.DataFrame], variant=None,
                   filtering_weight_factor: float = 0.0, order_graph_filtering_threshold: float = None,
                   activity_key: str = "concept:name", timestamp_key: str = "time:timestamp",
                   case_id_key: str = "case:concept:name") -> POWL:
     """
-    Discovers a POWL model from an event log.
+    Discovers a POWL (Partially Ordered Workflow Language) model from an event log.
 
     Reference paper:
     Kourani, Humam, and Sebastiaan J. van Zelst. "POWL: partially ordered workflow language." International Conference on Business Process Management. Cham: Springer Nature Switzerland, 2023.
 
-    :param log: event log / Pandas dataframe
-    :param variant: variant of the algorithm
-    :param filtering_weight_factor: accepts values 0 <= x < 1
-    :param order_graph_filtering_threshold: accepts values 0.5 < x <= 1
-    :param activity_key: attribute to be used for the activity
-    :param timestamp_key: attribute to be used for the timestamp
-    :param case_id_key: attribute to be used as case identifier
+    :param log: Event log or Pandas DataFrame.
+    :param variant: Variant of the POWL discovery algorithm to use.
+    :param filtering_weight_factor: Factoring threshold for filtering weights, accepts values 0 <= x < 1 (default: 0.0).
+    :param order_graph_filtering_threshold: Filtering threshold for the order graph, valid for the DYNAMIC_CLUSTERING variant, accepts values 0.5 < x <= 1 (default: None).
+    :param activity_key: Attribute to be used for the activity (default: "concept:name").
+    :param timestamp_key: Attribute to be used for the timestamp (default: "time:timestamp").
+    :param case_id_key: Attribute to be used as case identifier (default: "case:concept:name").
+    :return: A POWL object representing the discovered POWL model.
     :rtype: ``POWL``
 
     .. code-block:: python3
@@ -789,9 +911,19 @@ def discover_powl(log: Union[EventLog, pd.DataFrame], variant=POWLDiscoveryVaria
         import pm4py
 
         log = pm4py.read_xes('tests/input_data/receipt.xes')
-        powl_model = pm4py.discover_powl(log, activity_key='concept:name')
+        powl_model = pm4py.discover_powl(
+            log,
+            activity_key='concept:name'
+        )
         print(powl_model)
     """
+    from pm4py.algo.discovery.powl.inductive.variants.dynamic_clustering_frequency.dynamic_clustering_frequency_partial_order_cut import \
+        ORDER_FREQUENCY_RATIO
+    from pm4py.algo.discovery.powl.inductive.variants.powl_discovery_varaints import POWLDiscoveryVariant
+
+    if variant is None:
+        variant = POWLDiscoveryVariant.MAXIMAL
+
     __event_log_deprecation_warning(log)
 
     if check_is_pandas_dataframe(log):
@@ -806,9 +938,9 @@ def discover_powl(log: Union[EventLog, pd.DataFrame], variant=POWLDiscoveryVaria
         if variant is POWLDiscoveryVariant.DYNAMIC_CLUSTERING:
             properties[ORDER_FREQUENCY_RATIO] = order_graph_filtering_threshold
         else:
-            raise Exception("the order graph filtering threshold can only be used for the variant DYNAMIC_CLUSTERING")
+            raise Exception("The order graph filtering threshold can only be used for the DYNAMIC_CLUSTERING variant.")
 
-    properties[FILTERING_THRESHOLD] = filtering_weight_factor
+    properties["filtering_threshold"] = filtering_weight_factor
 
     from pm4py.algo.discovery.powl import algorithm as powl_discovery
     return powl_discovery.apply(log, variant=variant, parameters=properties)
@@ -817,45 +949,45 @@ def discover_powl(log: Union[EventLog, pd.DataFrame], variant=POWLDiscoveryVaria
 def discover_batches(log: Union[EventLog, pd.DataFrame], merge_distance: int = 15 * 60, min_batch_size: int = 2, activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name", resource_key: str = "org:resource") -> List[
         Tuple[Tuple[str, str], int, Dict[str, Any]]]:
     """
-    Discover batches from the provided log object
+    Discovers batches from the provided log.
 
-    We say that an activity is executed in batches by a given resource when the resource executes several times the same activity in a short period of time.
+    An activity is executed in batches by a given resource when the resource performs the same activity multiple times in a short period.
+    Identifying such activities may highlight repetitive tasks that could be automated.
 
-    Identifying such activities may identify points of the process that can be automated, since the activity of the person may be repetitive.
+    The following batch categories are detected:
+    - **Simultaneous**: All events in the batch have identical start and end timestamps.
+    - **Batching at Start**: All events in the batch have identical start timestamps.
+    - **Batching at End**: All events in the batch have identical end timestamps.
+    - **Sequential Batching**: Consecutive events have the end of the first equal to the start of the second.
+    - **Concurrent Batching**: Consecutive events that do not match sequentially.
 
-    The following categories of batches are detected:
-    - Simultaneous (all the events in the batch have identical start and end timestamps)
-    - Batching at start (all the events in the batch have identical start timestamp)
-    - Batching at end (all the events in the batch have identical end timestamp)
-    - Sequential batching (for all the consecutive events, the end of the first is equal to the start of the second)
-    - Concurrent batching (for all the consecutive events that are not sequentially matched)
+    Reference paper:
+    Martin, N., Swennen, M., Depaire, B., Jans, M., Caris, A., & Vanhoof, K. (2015, December). Batch Processing: Definition and Event Log Identification. In SIMPDA (pp. 137-140).
 
-    The approach has been described in the following paper:
-    Martin, N., Swennen, M., Depaire, B., Jans, M., Caris, A., & Vanhoof, K. (2015, December). Batch Processing:
-    Definition and Event Log Identification. In SIMPDA (pp. 137-140).
-
-    The output is a (sorted) list containing tuples. Each tuple contain:
-        - Index 0: the activity-resource for which at least one batch has been detected
-        - Index 1: the number of batches for the given activity-resource
-        - Index 2: a list containing all the batches. Each batch is described by:
-            # The start timestamp of the batch
-            # The complete timestamp of the batch
-            # The list of events that are executed in the batch
-
-    :param log: event log / Pandas dataframe
-    :param merge_distance: the maximum time distance between non-overlapping intervals in order for them to be considered belonging to the same batch (default: 15*60   15 minutes)
-    :param min_batch_size: the minimum number of events for a batch to be considered (default: 2)
-    :param activity_key: attribute to be used for the activity
-    :param timestamp_key: attribute to be used for the timestamp
-    :param case_id_key: attribute to be used as case identifier
-    :param resource_key: attribute to be used as resource
+    :param log: Event log or Pandas DataFrame.
+    :param merge_distance: Maximum time distance (in seconds) between non-overlapping intervals to consider them part of the same batch (default: 900 seconds, i.e., 15 minutes).
+    :param min_batch_size: Minimum number of events required to form a batch (default: 2).
+    :param activity_key: Attribute to be used for the activity (default: "concept:name").
+    :param timestamp_key: Attribute to be used for the timestamp (default: "time:timestamp").
+    :param case_id_key: Attribute to be used as case identifier (default: "case:concept:name").
+    :param resource_key: Attribute to be used as resource (default: "org:resource").
+    :return: A sorted list of tuples, each containing:
+             - The (activity, resource) pair.
+             - The number of batches for the given activity-resource.
+             - A dictionary with batch details.
     :rtype: ``List[Tuple[Tuple[str, str], int, Dict[str, Any]]]``
 
     .. code-block:: python3
 
         import pm4py
 
-        batches = pm4py.discover_log_skeleton(dataframe, activity_key='concept:name', case_id_key='case:concept:name', timestamp_key='time:timestamp', resource_key='org:resource')
+        batches = pm4py.discover_batches(
+            dataframe,
+            activity_key='concept:name',
+            case_id_key='case:concept:name',
+            timestamp_key='time:timestamp',
+            resource_key='org:resource'
+        )
     """
     __event_log_deprecation_warning(log)
 

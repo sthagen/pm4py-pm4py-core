@@ -21,7 +21,6 @@ Contact: info@processintelligence.solutions
 '''
 from collections import Counter
 from enum import Enum
-from statistics import mean, median, stdev
 
 from pm4py.util import constants, exec_utils
 from pm4py.util import xes_constants as xes_util
@@ -77,6 +76,8 @@ def performance(log: Union[EventLog, EventStream], parameters: Optional[Dict[Uni
     if parameters is None:
         parameters = {}
 
+    from statistics import mean, median, stdev
+    
     activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_util.DEFAULT_NAME_KEY)
     start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters,
                                                      xes_util.DEFAULT_TIMESTAMP_KEY)

@@ -27,8 +27,6 @@ from pm4py.objects.conversion.log import converter
 from pm4py.objects.log.obj import EventLog, Event
 from pm4py.util import exec_utils, constants, xes_constants
 from pm4py.algo.filtering.common.timestamp.timestamp_common import get_dt_from_string
-from statistics import mean
-
 
 class Parameters(Enum):
     ACTIVITY_KEY = constants.PARAMETER_CONSTANT_ACTIVITY_KEY
@@ -479,6 +477,8 @@ def average_duration_activity(log: EventLog, t1: Union[datetime, str], t2: Union
     if parameters is None:
         parameters = {}
 
+    from statistics import mean
+
     t1 = get_dt_from_string(t1)
     t2 = get_dt_from_string(t2)
 
@@ -528,6 +528,8 @@ def average_case_duration(log: EventLog, t1: Union[datetime, str], t2: Union[dat
     """
     if parameters is None:
         parameters = {}
+
+    from statistics import mean
 
     resource_key = exec_utils.get_param_value(Parameters.RESOURCE_KEY, parameters, xes_constants.DEFAULT_RESOURCE_KEY)
 

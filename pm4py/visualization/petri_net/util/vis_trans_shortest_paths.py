@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,8 +19,6 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from statistics import mean, median, stdev
-
 from pm4py.visualization.common.utils import *
 
 
@@ -192,6 +190,8 @@ def get_decorations_from_dfg_spaths_acticount(net, dfg, spaths, activities_count
     decorations
         Decorations to use for the Petri net
     """
+    from statistics import mean, median, stdev
+
     decorations_single_contrib = {}
     decorations_single_contrib_trans = {}
     decorations_int = {}

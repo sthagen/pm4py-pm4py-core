@@ -26,7 +26,6 @@ from typing import Union, Optional, Dict, Tuple, List, Any
 from pm4py.utils import get_properties, constants, check_is_pandas_dataframe
 from pm4py.utils import __event_log_deprecation_warning
 from pm4py.objects.ocel.obj import OCEL
-from sqlite3 import Connection as SQ3_Connection
 from tempfile import NamedTemporaryFile
 from copy import copy
 from pm4py.objects.petri_net.obj import PetriNet, Marking
@@ -36,17 +35,18 @@ def openai_query(prompt: str, api_key: Optional[str] = None, openai_model: Optio
     """
     Executes the provided prompt, obtaining the answer from the OpenAI APIs.
 
-    :param prompt: prompt that should be executed
-    :param api_key: OpenAI API key
-    :param openai_model: OpenAI model to be used (default: gpt-3.5-turbo)
-    :param api_url: OpenAI API URL
-    :rtype: ``str``
+    :param prompt: The prompt to be executed.
+    :param api_key: (Optional) OpenAI API key.
+    :param openai_model: (Optional) OpenAI model to be used (default: "gpt-3.5-turbo").
+    :param api_url: (Optional) OpenAI API URL.
+    :param **kwargs: Additional parameters to pass to the OpenAI API.
+    :return: The response from the OpenAI API as a string.
 
     .. code-block:: python3
 
         import pm4py
 
-        resp = pm4py.llm.openai_query('what is the result of 3+3?', api_key="sk-382393", openai_model="gpt-3.5-turbo")
+        resp = pm4py.llm.openai_query('What is the result of 3+3?', api_key="sk-382393", openai_model="gpt-3.5-turbo")
         print(resp)
     """
     parameters = copy(kwargs) if kwargs is not None else {}
@@ -63,19 +63,19 @@ def openai_query(prompt: str, api_key: Optional[str] = None, openai_model: Optio
 
 def abstract_dfg(log_obj: Union[pd.DataFrame, EventLog, EventStream], max_len: int = constants.OPENAI_MAX_LEN, include_performance: bool = True, relative_frequency: bool = False, response_header: bool = True, primary_performance_aggregation: str = "mean", secondary_performance_aggregation: Optional[str] = None, activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> str:
     """
-    Obtains the DFG abstraction of a traditional event log
+    Obtains the DFG (Directly-Follows Graph) abstraction of a traditional event log.
 
-    :param log_obj: log object
-    :param max_len: maximum length of the (string) abstraction
-    :param include_performance: (boolean) includes the performance of the paths in the abstraction
-    :param relative_frequency: (boolean) uses the relative instead of the absolute frequency of the paths
-    :param response_header: includes a short header before the paths, pointing to the description of the abstraction
-    :param primary_performance_aggregation: primary aggregation to be used for the arc's performance (default: mean, other options: median, min, max, sum, stdev)
-    :param secondary_performance_aggregation: (optional) secondary aggregation to be used for the arc's performance (default None, other options: mean, median, min, max, sum, stdev)
-    :param activity_key: the column to be used as activity
-    :param timestamp_key: the column to be used as timestamp
-    :param case_id_key: the column to be used as case identifier
-    :rtype: ``str``
+    :param log_obj: The log object to abstract.
+    :param max_len: Maximum length of the string abstraction (default: constants.OPENAI_MAX_LEN).
+    :param include_performance: Whether to include the performance of the paths in the abstraction.
+    :param relative_frequency: Whether to use relative instead of absolute frequency of the paths.
+    :param response_header: Whether to include a short header before the paths, describing the abstraction.
+    :param primary_performance_aggregation: Primary aggregation method for the arc's performance (default: "mean"). Other options: "median", "min", "max", "sum", "stdev".
+    :param secondary_performance_aggregation: (Optional) Secondary aggregation method for the arc's performance (default: None). Other options: "mean", "median", "min", "max", "sum", "stdev".
+    :param activity_key: The column name to be used as activity.
+    :param timestamp_key: The column name to be used as timestamp.
+    :param case_id_key: The column name to be used as case identifier.
+    :return: The DFG abstraction as a string.
 
     .. code-block:: python3
 
@@ -101,19 +101,19 @@ def abstract_dfg(log_obj: Union[pd.DataFrame, EventLog, EventStream], max_len: i
 
 def abstract_variants(log_obj: Union[pd.DataFrame, EventLog, EventStream], max_len: int = constants.OPENAI_MAX_LEN, include_performance: bool = True, relative_frequency: bool = False, response_header: bool = True, primary_performance_aggregation: str = "mean", secondary_performance_aggregation: Optional[str] = None,  activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> str:
     """
-    Obtains the variants abstraction of a traditional event log
+    Obtains the variants abstraction of a traditional event log.
 
-    :param log_obj: log object
-    :param max_len: maximum length of the (string) abstraction
-    :param include_performance: (boolean) includes the performance of the variants in the abstraction
-    :param relative_frequency: (boolean) uses the relative instead of the absolute frequency of the variants
-    :param response_header: includes a short header before the variants, pointing to the description of the abstraction
-    :param primary_performance_aggregation: primary aggregation to be used for the arc's performance (default: mean, other options: median, min, max, sum, stdev)
-    :param secondary_performance_aggregation: (optional) secondary aggregation to be used for the arc's performance (default None, other options: mean, median, min, max, sum, stdev)
-    :param activity_key: the column to be used as activity
-    :param timestamp_key: the column to be used as timestamp
-    :param case_id_key: the column to be used as case identifier
-    :rtype: ``str``
+    :param log_obj: The log object to abstract.
+    :param max_len: Maximum length of the string abstraction (default: constants.OPENAI_MAX_LEN).
+    :param include_performance: Whether to include the performance of the variants in the abstraction.
+    :param relative_frequency: Whether to use relative instead of absolute frequency of the variants.
+    :param response_header: Whether to include a short header before the variants, describing the abstraction.
+    :param primary_performance_aggregation: Primary aggregation method for the variants' performance (default: "mean"). Other options: "median", "min", "max", "sum", "stdev".
+    :param secondary_performance_aggregation: (Optional) Secondary aggregation method for the variants' performance (default: None). Other options: "mean", "median", "min", "max", "sum", "stdev".
+    :param activity_key: The column name to be used as activity.
+    :param timestamp_key: The column name to be used as timestamp.
+    :param case_id_key: The column name to be used as case identifier.
+    :return: The variants abstraction as a string.
 
     .. code-block:: python3
 
@@ -139,11 +139,11 @@ def abstract_variants(log_obj: Union[pd.DataFrame, EventLog, EventStream], max_l
 
 def abstract_ocel(ocel: OCEL, include_timestamps: bool = True) -> str:
     """
-    Obtains the abstraction of an object-centric event log, including the list of events and the objects of the OCEL
+    Obtains the abstraction of an object-centric event log, including the list of events and the objects of the OCEL.
 
-    :param ocel: object-centric event log
-    :param include_timestamps: (boolean) includes the timestamp information in the abstraction
-    :rtype: ``str``
+    :param ocel: The object-centric event log to abstract.
+    :param include_timestamps: Whether to include timestamp information in the abstraction.
+    :return: The OCEL abstraction as a string.
 
     .. code-block:: python3
 
@@ -161,14 +161,13 @@ def abstract_ocel(ocel: OCEL, include_timestamps: bool = True) -> str:
 
 def abstract_ocel_ocdfg(ocel: OCEL, include_header: bool = True, include_timestamps: bool = True, max_len: int = constants.OPENAI_MAX_LEN) -> str:
     """
-    Obtains the abstraction of an object-centric event log, representing in text the object-centric directly-follows
-    graph
+    Obtains the abstraction of an object-centric event log, representing the object-centric directly-follows graph in text.
 
-    :param ocel: object-centric event log
-    :param include_header: (boolean) includes the header in the abstraction
-    :param include_timestamps: (boolean) includes the timestamp information in the abstraction
-    :param max_len: maximum length of the abstraction
-    :rtype: ``str``
+    :param ocel: The object-centric event log to abstract.
+    :param include_header: Whether to include a header in the abstraction.
+    :param include_timestamps: Whether to include timestamp information in the abstraction.
+    :param max_len: Maximum length of the abstraction (default: constants.OPENAI_MAX_LEN).
+    :return: The object-centric DFG abstraction as a string.
 
     .. code-block:: python3
 
@@ -188,22 +187,22 @@ def abstract_ocel_ocdfg(ocel: OCEL, include_header: bool = True, include_timesta
 
 def abstract_ocel_features(ocel: OCEL, obj_type: str, include_header: bool = True, max_len: int = constants.OPENAI_MAX_LEN, debug: bool = False, enable_object_lifecycle_paths: bool = True) -> str:
     """
-    Obtains the abstraction of an object-centric event log, representing in text the features and their values.
+    Obtains the abstraction of an object-centric event log, representing the features and their values in text.
 
-    :param ocel: object-centric event log
-    :param obj_type: the object type that should be considered in the feature extraction
-    :param include_header: (boolean) includes the header in the abstraction
-    :param max_len: maximum length of the abstraction
-    :param debug: enables debugging mode (telling at which point of the feature extraction you are)
-    :param enable_object_lifecycle_paths: enables the "lifecycle paths" feature
-    :rtype: ``str``
+    :param ocel: The object-centric event log to abstract.
+    :param obj_type: The object type to consider in feature extraction.
+    :param include_header: Whether to include a header in the abstraction.
+    :param max_len: Maximum length of the abstraction (default: constants.OPENAI_MAX_LEN).
+    :param debug: Enables debugging mode, providing insights into feature extraction steps.
+    :param enable_object_lifecycle_paths: Enables the "lifecycle paths" feature in the abstraction.
+    :return: The OCEL features abstraction as a string.
 
     .. code-block:: python3
 
         import pm4py
 
         ocel = pm4py.read_ocel("tests/input_data/ocel/example_log.jsonocel")
-        print(pm4py.llm.abstract_ocel_ocdfg(ocel))
+        print(pm4py.llm.abstract_ocel_features(ocel, obj_type="Resource"))
     """
     parameters = {}
     parameters["include_header"] = include_header
@@ -217,15 +216,15 @@ def abstract_ocel_features(ocel: OCEL, obj_type: str, include_header: bool = Tru
 
 def abstract_event_stream(log_obj: Union[pd.DataFrame, EventLog, EventStream], max_len: int = constants.OPENAI_MAX_LEN, response_header: bool = True, activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> str:
     """
-    Obtains the event stream abstraction of a traditional event log
+    Obtains the event stream abstraction of a traditional event log.
 
-    :param log_obj: log object
-    :param max_len: maximum length of the (string) abstraction
-    :param response_header: includes a short header before the variants, pointing to the description of the abstraction
-    :param activity_key: the column to be used as activity
-    :param timestamp_key: the column to be used as timestamp
-    :param case_id_key: the column to be used as case identifier
-    :rtype: ``str``
+    :param log_obj: The log object to abstract.
+    :param max_len: Maximum length of the string abstraction (default: constants.OPENAI_MAX_LEN).
+    :param response_header: Whether to include a short header before the event stream, describing the abstraction.
+    :param activity_key: The column name to be used as activity.
+    :param timestamp_key: The column name to be used as timestamp.
+    :param case_id_key: The column name to be used as case identifier.
+    :return: The event stream abstraction as a string.
 
     .. code-block:: python3
 
@@ -247,13 +246,13 @@ def abstract_event_stream(log_obj: Union[pd.DataFrame, EventLog, EventStream], m
 
 def abstract_petri_net(net: PetriNet, im: Marking, fm: Marking, response_header: bool = True) -> str:
     """
-    Obtain an abstraction of a Petri net
+    Obtains an abstraction of a Petri net.
 
-    :param net: Petri net
-    :param im: Initial marking
-    :param fm: Final marking
-    :param response_header: includes the header of the response
-    :rtype: ``str``
+    :param net: The Petri net to abstract.
+    :param im: The initial marking of the Petri net.
+    :param fm: The final marking of the Petri net.
+    :param response_header: Whether to include a header in the abstraction.
+    :return: The Petri net abstraction as a string.
 
     .. code-block:: python3
 
@@ -271,14 +270,14 @@ def abstract_petri_net(net: PetriNet, im: Marking, fm: Marking, response_header:
 
 def abstract_log_attributes(log_obj: Union[pd.DataFrame, EventLog, EventStream], max_len: int = constants.OPENAI_MAX_LEN, activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> str:
     """
-    Abstracts the attributes of a log (reporting their name, their type, and the top values)
+    Abstracts the attributes of a log by reporting their names, types, and top values.
 
-    :param log_obj: log object
-    :param max_len: maximum length of the (string) abstraction
-    :param activity_key: the column to be used as activity
-    :param timestamp_key: the column to be used as timestamp
-    :param case_id_key: the column to be used as case identifier
-    :rtype: ``str``
+    :param log_obj: The log object whose attributes are to be abstracted.
+    :param max_len: Maximum length of the string abstraction (default: constants.OPENAI_MAX_LEN).
+    :param activity_key: The column name to be used as activity.
+    :param timestamp_key: The column name to be used as timestamp.
+    :param case_id_key: The column name to be used as case identifier.
+    :return: The log attributes abstraction as a string.
 
     .. code-block:: python3
 
@@ -299,14 +298,15 @@ def abstract_log_attributes(log_obj: Union[pd.DataFrame, EventLog, EventStream],
 
 def abstract_log_features(log_obj: Union[pd.DataFrame, EventLog, EventStream], max_len: int = constants.OPENAI_MAX_LEN, include_header: bool = True, activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> str:
     """
-    Abstracts the machine learning features obtained from a log (reporting the top features until the desired length is obtained)
+    Abstracts the machine learning features obtained from a log by reporting the top features until the desired length is achieved.
 
-    :param log_obj: log object
-    :param max_len: maximum length of the (string) abstraction
-    :param activity_key: the column to be used as activity
-    :param timestamp_key: the column to be used as timestamp
-    :param case_id_key: the column to be used as case identifier
-    :rtype: ``str``
+    :param log_obj: The log object from which to extract features.
+    :param max_len: Maximum length of the string abstraction (default: constants.OPENAI_MAX_LEN).
+    :param include_header: Whether to include a header in the abstraction.
+    :param activity_key: The column name to be used as activity.
+    :param timestamp_key: The column name to be used as timestamp.
+    :param case_id_key: The column name to be used as case identifier.
+    :return: The log features abstraction as a string.
 
     .. code-block:: python3
 
@@ -328,11 +328,11 @@ def abstract_log_features(log_obj: Union[pd.DataFrame, EventLog, EventStream], m
 
 def abstract_temporal_profile(temporal_profile: Dict[Tuple[str, str], Tuple[float, float]], include_header: bool = True) -> str:
     """
-    Abstracts a temporal profile model to a string.
+    Abstracts a temporal profile model into a descriptive string.
 
-    :param temporal_profile: temporal profile model
-    :param include_header: includes an header in the response, describing the temporal profile
-    :rtype: ``str``
+    :param temporal_profile: The temporal profile model to abstract.
+    :param include_header: Whether to include a header in the abstraction describing the temporal profile.
+    :return: The temporal profile abstraction as a string.
 
     .. code-block:: python3
 
@@ -352,16 +352,16 @@ def abstract_temporal_profile(temporal_profile: Dict[Tuple[str, str], Tuple[floa
 
 def abstract_case(case: Trace, include_case_attributes: bool = True, include_event_attributes: bool = True, include_timestamp: bool = True, include_header: bool = True, activity_key: str = "concept:name", timestamp_key: str = "time:timestamp") -> str:
     """
-    Textually abstracts a case
+    Textually abstracts a single case from an event log.
 
-    :param case: case object
-    :param include_case_attributes: (boolean) include or not the attributes at the case level
-    :param include_event_attributes: (boolean) include or not the attributes at the event level
-    :param include_timestamp: (boolean) include or not the event timestamp in the abstraction
-    :param include_header: (boolean) includes the header of the response
-    :param activity_key: the column to be used as activity
-    :param timestamp_key: the column to be used as timestamp
-    :rtype: ``str``
+    :param case: The case object to abstract.
+    :param include_case_attributes: Whether to include attributes at the case level.
+    :param include_event_attributes: Whether to include attributes at the event level.
+    :param include_timestamp: Whether to include event timestamps in the abstraction.
+    :param include_header: Whether to include a header in the abstraction.
+    :param activity_key: The column name to be used as activity.
+    :param timestamp_key: The column name to be used as timestamp.
+    :return: The case abstraction as a string.
 
     .. code-block:: python3
 
@@ -384,11 +384,11 @@ def abstract_case(case: Trace, include_case_attributes: bool = True, include_eve
 
 def abstract_declare(declare_model, include_header: bool = True) -> str:
     """
-    Textually abstracts a DECLARE model
+    Textually abstracts a DECLARE model.
 
-    :param declare: DECLARE model
-    :param include_header: (boolean) includes the header of the response
-    :rtype: ``str``
+    :param declare_model: The DECLARE model to abstract.
+    :param include_header: Whether to include a header in the abstraction.
+    :return: The DECLARE model abstraction as a string.
 
     .. code-block:: python3
 
@@ -407,11 +407,11 @@ def abstract_declare(declare_model, include_header: bool = True) -> str:
 
 def abstract_log_skeleton(log_skeleton, include_header: bool = True) -> str:
     """
-    Textually abstracts a log skeleton process model
+    Textually abstracts a log skeleton process model.
 
-    :param log_skeleton: log skeleton
-    :param include_header: (boolean) includes the header of the response
-    :rtype: ``str``
+    :param log_skeleton: The log skeleton to abstract.
+    :param include_header: Whether to include a header in the abstraction.
+    :return: The log skeleton abstraction as a string.
 
     .. code-block:: python3
 
@@ -430,14 +430,13 @@ def abstract_log_skeleton(log_skeleton, include_header: bool = True) -> str:
 
 def explain_visualization(vis_saver, *args, connector=openai_query, **kwargs) -> str:
     """
-    Explains a process mining visualization by using LLMs (saving that first in a .png image, then providing the .png file to the
-    Large Language Model along with possibly a description of the visualization).
+    Explains a process mining visualization using LLMs by saving it as a .png image and providing the image to the Large Language Model along with a description.
 
-    :param vis_saver: the visualizer (saving to disk) to be used
-    :param args: the mandatory arguments that should be provided to the visualization
-    :param connector: the connector method to the large language model
-    :param kwargs: optional parameters of the visualization or the connector (for example, the annotation of the visualization, or the API key)
-    :rtype: ``str``
+    :param vis_saver: The visualizer function used to save the visualization to disk.
+    :param args: Positional arguments required by the visualizer function.
+    :param connector: (Optional) The connector method to communicate with the large language model (default: openai_query).
+    :param **kwargs: Additional keyword arguments for the visualizer function or the connector (e.g., annotations, API key).
+    :return: The explanation of the visualization as a string.
 
     .. code-block:: python3
 

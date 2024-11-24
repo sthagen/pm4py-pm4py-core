@@ -27,7 +27,6 @@ import pandas as pd
 from pm4py.algo.filtering.common.timestamp.timestamp_common import get_dt_from_string
 
 from pm4py.util import exec_utils, constants, xes_constants, pandas_utils
-from statistics import mean
 
 
 class Parameters(Enum):
@@ -540,6 +539,8 @@ def average_case_duration(df: pd.DataFrame, t1: Union[datetime, str], t2: Union[
     """
     if parameters is None:
         parameters = {}
+
+    from statistics import mean
 
     resource_key = exec_utils.get_param_value(Parameters.RESOURCE_KEY, parameters, xes_constants.DEFAULT_RESOURCE_KEY)
 

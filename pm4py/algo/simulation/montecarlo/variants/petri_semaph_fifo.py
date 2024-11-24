@@ -23,7 +23,6 @@ from pm4py.statistics.traces.generic.log import case_arrival
 from pm4py.algo.simulation.montecarlo.utils import replay
 from pm4py.objects.petri_net.semantics import enabled_transitions, weak_execute
 from threading import Thread, Semaphore
-from statistics import median
 from pm4py.objects.log.obj import Trace, Event
 from pm4py.util import xes_constants
 from pm4py.objects.stochastic_petri import utils as stochastic_utils
@@ -339,6 +338,7 @@ def apply(log: EventLog, net: PetriNet, im: Marking, fm: Marking, parameters: Op
         parameters = {}
 
     from intervaltree import IntervalTree
+    from statistics import median
 
     timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
                                                xes_constants.DEFAULT_TIMESTAMP_KEY)

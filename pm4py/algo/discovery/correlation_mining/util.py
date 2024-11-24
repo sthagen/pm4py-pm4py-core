@@ -21,7 +21,6 @@ Contact: info@processintelligence.solutions
 '''
 import numpy as np
 from pm4py.util.lp import solver
-from statistics import mean
 
 
 def get_c_matrix(PS_matrix, duration_matrix, activities, activities_counter):
@@ -167,6 +166,8 @@ def match_return_avg_time(ai, aj, exact=False):
     times_mean
         Mean of times
     """
+    from statistics import mean
+
     if exact:
         from pm4py.statistics.util import times_bipartite_matching
         matching = times_bipartite_matching.exact_match_minimum_average(ai, aj)
@@ -196,6 +197,8 @@ def greedy_match_return_avg_time(ai, aj):
     times_mean
         Mean of times
     """
+    from statistics import mean
+
     tm0 = calculate_time_match_fifo(ai, aj)
     td0 = mean([x[1] - x[0] for x in tm0]) if tm0 else 0
     tm1 = calculate_time_match_rlifo(ai, aj)

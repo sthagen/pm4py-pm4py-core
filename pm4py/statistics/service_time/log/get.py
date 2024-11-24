@@ -20,7 +20,6 @@ Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
 from enum import Enum
-from statistics import mean, median
 
 from pm4py.util import exec_utils, constants, xes_constants
 from pm4py.objects.conversion.log import converter as log_converter
@@ -75,6 +74,8 @@ def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]]
     """
     if parameters is None:
         parameters = {}
+
+    from statistics import mean, median
 
     business_hours = exec_utils.get_param_value(Parameters.BUSINESS_HOURS, parameters, False)
     business_hours_slots = exec_utils.get_param_value(Parameters.BUSINESS_HOUR_SLOTS, parameters, constants.DEFAULT_BUSINESS_HOUR_SLOTS)
