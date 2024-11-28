@@ -41,218 +41,219 @@ def parse_element(bpmn_graph, counts, curr_el, parents, incoming_dict, outgoing_
     layout = bpmn_graph.get_layout()
     tag = curr_el.tag.lower()
 
-    if tag.endswith("collaboration"):
-        collaboration_id = curr_el.get("id")
-        collaboration = BPMN.Collaboration(id=collaboration_id, process=collaboration_id)
-        bpmn_graph.add_node(collaboration)
-        nodes_dict[collaboration_id] = collaboration
-    elif tag.endswith("participant"):
-        participant_id = curr_el.get("id")
-        name = curr_el.get("name").replace("\r", "").replace("\n", "") if "name" in curr_el.attrib else ""
-        process_ref = curr_el.get("processRef")
-        participant = BPMN.Participant(id=participant_id, name=name, process=None, process_ref=process_ref)
-        bpmn_graph.add_node(participant)
-        nodes_dict[participant_id] = participant
-    elif tag.endswith("textannotation"):
-        annotation_id = curr_el.get("id")
-        text = ""
-        for child in curr_el:
-            text = child.text
-        annotation = BPMN.TextAnnotation(id=annotation_id, text=text, process=process)
-        bpmn_graph.add_node(annotation)
-        nodes_dict[annotation_id] = annotation
-    elif tag.endswith("subprocess"):  # subprocess invocation
-        name = curr_el.get("name").replace("\r", "").replace("\n", "") if "name" in curr_el.attrib else ""
-        subprocess = BPMN.SubProcess(id=curr_el.get("id"), name=name, process=process, depth=rec_depth)
-        bpmn_graph.add_node(subprocess)
-        node = subprocess
-        process = curr_el.get("id")
-        nodes_dict[process] = node
-    elif tag.endswith("process"):  # process of the current subtree
-        process = curr_el.get("id")
-        name = curr_el.get("name").replace("\r", "").replace("\n", "") if "name" in curr_el.attrib else ""
-        bpmn_graph.set_process_id(process)
-        bpmn_graph.set_name(name)
-    elif tag.endswith("shape"):  # shape of a node, contains x,y,width,height information
-        bpmn_element = curr_el.get("bpmnElement")
-    elif tag.endswith("task"):  # simple task object
-        id = curr_el.get("id")
-        name = curr_el.get("name").replace("\r", "").replace("\n", "") if "name" in curr_el.attrib else ""
-        # this_type = str(curr_el.tag)
-        # this_type = this_type[this_type.index("}") + 1:]
-        if tag.endswith("usertask"):
-            task = BPMN.UserTask(id=id, name=name, process=process)
-        elif tag.endswith("sendtask"):
-            task = BPMN.SendTask(id=id, name=name, process=process)
-        else:
-            task = BPMN.Task(id=id, name=name, process=process)
-        bpmn_graph.add_node(task)
-        node = task
-        nodes_dict[id] = node
-    elif tag.endswith("startevent"):  # start node starting the (sub)process
-        id = curr_el.get("id")
-        name = curr_el.get("name").replace("\r", " ").replace("\n", " ") if "name" in curr_el.attrib else ""
-        event_definitions = [child.tag.lower().replace("eventdefinition", "") for child in curr_el if
-                             child.tag.lower().endswith("eventdefinition")]
-        if len(event_definitions) > 0:
-            event_type = event_definitions[0]
-            if event_type.endswith("message"):
-                start_event = BPMN.MessageStartEvent(id=curr_el.get("id"), name=name, process=process)
-            else:  # TODO: expand functionality, support more start event types
+    if curr_el.get("id") is not None:
+        if tag.endswith("collaboration"):
+            collaboration_id = curr_el.get("id")
+            collaboration = BPMN.Collaboration(id=collaboration_id, process=collaboration_id)
+            bpmn_graph.add_node(collaboration)
+            nodes_dict[collaboration_id] = collaboration
+        elif tag.endswith("participant"):
+            participant_id = curr_el.get("id")
+            name = curr_el.get("name").replace("\r", "").replace("\n", "") if "name" in curr_el.attrib else ""
+            process_ref = curr_el.get("processRef")
+            participant = BPMN.Participant(id=participant_id, name=name, process=None, process_ref=process_ref)
+            bpmn_graph.add_node(participant)
+            nodes_dict[participant_id] = participant
+        elif tag.endswith("textannotation"):
+            annotation_id = curr_el.get("id")
+            text = ""
+            for child in curr_el:
+                text = child.text
+            annotation = BPMN.TextAnnotation(id=annotation_id, text=text, process=process)
+            bpmn_graph.add_node(annotation)
+            nodes_dict[annotation_id] = annotation
+        elif tag.endswith("subprocess"):  # subprocess invocation
+            name = curr_el.get("name").replace("\r", "").replace("\n", "") if "name" in curr_el.attrib else ""
+            subprocess = BPMN.SubProcess(id=curr_el.get("id"), name=name, process=process, depth=rec_depth)
+            bpmn_graph.add_node(subprocess)
+            node = subprocess
+            process = curr_el.get("id")
+            nodes_dict[process] = node
+        elif tag.endswith("process"):  # process of the current subtree
+            process = curr_el.get("id")
+            name = curr_el.get("name").replace("\r", "").replace("\n", "") if "name" in curr_el.attrib else ""
+            bpmn_graph.set_process_id(process)
+            bpmn_graph.set_name(name)
+        elif tag.endswith("shape"):  # shape of a node, contains x,y,width,height information
+            bpmn_element = curr_el.get("bpmnElement")
+        elif tag.endswith("task"):  # simple task object
+            id = curr_el.get("id")
+            name = curr_el.get("name").replace("\r", "").replace("\n", "") if "name" in curr_el.attrib else ""
+            # this_type = str(curr_el.tag)
+            # this_type = this_type[this_type.index("}") + 1:]
+            if tag.endswith("usertask"):
+                task = BPMN.UserTask(id=id, name=name, process=process)
+            elif tag.endswith("sendtask"):
+                task = BPMN.SendTask(id=id, name=name, process=process)
+            else:
+                task = BPMN.Task(id=id, name=name, process=process)
+            bpmn_graph.add_node(task)
+            node = task
+            nodes_dict[id] = node
+        elif tag.endswith("startevent"):  # start node starting the (sub)process
+            id = curr_el.get("id")
+            name = curr_el.get("name").replace("\r", " ").replace("\n", " ") if "name" in curr_el.attrib else ""
+            event_definitions = [child.tag.lower().replace("eventdefinition", "") for child in curr_el if
+                                 child.tag.lower().endswith("eventdefinition")]
+            if len(event_definitions) > 0:
+                event_type = event_definitions[0]
+                if event_type.endswith("message"):
+                    start_event = BPMN.MessageStartEvent(id=curr_el.get("id"), name=name, process=process)
+                else:  # TODO: expand functionality, support more start event types
+                    start_event = BPMN.NormalStartEvent(id=curr_el.get("id"), name=name, process=process)
+            else:
                 start_event = BPMN.NormalStartEvent(id=curr_el.get("id"), name=name, process=process)
-        else:
-            start_event = BPMN.NormalStartEvent(id=curr_el.get("id"), name=name, process=process)
-        bpmn_graph.add_node(start_event)
-        node = start_event
-        nodes_dict[id] = node
-    elif tag.endswith("endevent"):  # end node ending the (sub)process
-        id = curr_el.get("id")
-        name = curr_el.get("name").replace("\r", " ").replace("\n", " ") if "name" in curr_el.attrib else ""
-        event_definitions = [child.tag.lower().replace("eventdefinition", "") for child in curr_el if
-                             child.tag.lower().endswith("eventdefinition")]
-        if len(event_definitions) > 0:
-            event_type = event_definitions[0]
-            if event_type.endswith("message"):
-                end_event = BPMN.MessageEndEvent(id=curr_el.get("id"), name=name, process=process)
-            elif event_type.endswith("terminate"):
-                end_event = BPMN.TerminateEndEvent(id=curr_el.get("id"), name=name, process=process)
-            elif event_type.endswith("error"):
-                end_event = BPMN.ErrorEndEvent(id=curr_el.get("id"), name=name, process=process)
-            elif event_type.endswith("cancel"):
-                end_event = BPMN.CancelEndEvent(id=curr_el.get("id"), name=name, process=process)
-            else:  # TODO: expand functionality, support more start event types
+            bpmn_graph.add_node(start_event)
+            node = start_event
+            nodes_dict[id] = node
+        elif tag.endswith("endevent"):  # end node ending the (sub)process
+            id = curr_el.get("id")
+            name = curr_el.get("name").replace("\r", " ").replace("\n", " ") if "name" in curr_el.attrib else ""
+            event_definitions = [child.tag.lower().replace("eventdefinition", "") for child in curr_el if
+                                 child.tag.lower().endswith("eventdefinition")]
+            if len(event_definitions) > 0:
+                event_type = event_definitions[0]
+                if event_type.endswith("message"):
+                    end_event = BPMN.MessageEndEvent(id=curr_el.get("id"), name=name, process=process)
+                elif event_type.endswith("terminate"):
+                    end_event = BPMN.TerminateEndEvent(id=curr_el.get("id"), name=name, process=process)
+                elif event_type.endswith("error"):
+                    end_event = BPMN.ErrorEndEvent(id=curr_el.get("id"), name=name, process=process)
+                elif event_type.endswith("cancel"):
+                    end_event = BPMN.CancelEndEvent(id=curr_el.get("id"), name=name, process=process)
+                else:  # TODO: expand functionality, support more start event types
+                    end_event = BPMN.NormalEndEvent(id=curr_el.get("id"), name=name, process=process)
+            else:
                 end_event = BPMN.NormalEndEvent(id=curr_el.get("id"), name=name, process=process)
-        else:
-            end_event = BPMN.NormalEndEvent(id=curr_el.get("id"), name=name, process=process)
-        bpmn_graph.add_node(end_event)
-        node = end_event
-        nodes_dict[id] = node
-    elif tag.endswith("intermediatecatchevent"):  # intermediate event that happens (externally) and can be catched
-        id = curr_el.get("id")
-        name = curr_el.get("name").replace("\r", " ").replace("\n", " ") if "name" in curr_el.attrib else ""
-        event_definitions = [child.tag.lower().replace("eventdefinition", "") for child in curr_el if
-                             child.tag.lower().endswith("eventdefinition")]
-        if len(event_definitions) > 0:
-            event_type = event_definitions[0]
-            if event_type.endswith("message"):
-                intermediate_catch_event = BPMN.MessageIntermediateCatchEvent(id=curr_el.get("id"), name=name,
-                                                                              process=process)
-            elif event_type.endswith("error"):
-                intermediate_catch_event = BPMN.ErrorIntermediateCatchEvent(id=curr_el.get("id"), name=name,
-                                                                            process=process)
-            elif event_type.endswith("cancel"):
-                intermediate_catch_event = BPMN.CancelIntermediateCatchEvent(id=curr_el.get("id"), name=name,
-                                                                             process=process)
+            bpmn_graph.add_node(end_event)
+            node = end_event
+            nodes_dict[id] = node
+        elif tag.endswith("intermediatecatchevent"):  # intermediate event that happens (externally) and can be catched
+            id = curr_el.get("id")
+            name = curr_el.get("name").replace("\r", " ").replace("\n", " ") if "name" in curr_el.attrib else ""
+            event_definitions = [child.tag.lower().replace("eventdefinition", "") for child in curr_el if
+                                 child.tag.lower().endswith("eventdefinition")]
+            if len(event_definitions) > 0:
+                event_type = event_definitions[0]
+                if event_type.endswith("message"):
+                    intermediate_catch_event = BPMN.MessageIntermediateCatchEvent(id=curr_el.get("id"), name=name,
+                                                                                  process=process)
+                elif event_type.endswith("error"):
+                    intermediate_catch_event = BPMN.ErrorIntermediateCatchEvent(id=curr_el.get("id"), name=name,
+                                                                                process=process)
+                elif event_type.endswith("cancel"):
+                    intermediate_catch_event = BPMN.CancelIntermediateCatchEvent(id=curr_el.get("id"), name=name,
+                                                                                 process=process)
+                else:
+                    intermediate_catch_event = BPMN.IntermediateCatchEvent(id=curr_el.get("id"), name=name, process=process)
             else:
                 intermediate_catch_event = BPMN.IntermediateCatchEvent(id=curr_el.get("id"), name=name, process=process)
-        else:
-            intermediate_catch_event = BPMN.IntermediateCatchEvent(id=curr_el.get("id"), name=name, process=process)
-        bpmn_graph.add_node(intermediate_catch_event)
-        node = intermediate_catch_event
-        nodes_dict[id] = node
-    elif tag.endswith("intermediatethrowevent"):  # intermediate event that is activated through the (sub)process
-        id = curr_el.get("id")
-        name = curr_el.get("name").replace("\r", " ").replace("\n", " ") if "name" in curr_el.attrib else ""
-        event_definitions = [child.tag.lower().replace("eventdefinition", "") for child in curr_el if
-                             child.tag.lower().endswith("eventdefinition")]
-        if len(event_definitions) > 0:
-            event_type = event_definitions[0]
-            if event_type.endswith("message"):
-                intermediate_throw_event = BPMN.MessageIntermediateThrowEvent(id=curr_el.get("id"), name=name,
-                                                                              process=process)
+            bpmn_graph.add_node(intermediate_catch_event)
+            node = intermediate_catch_event
+            nodes_dict[id] = node
+        elif tag.endswith("intermediatethrowevent"):  # intermediate event that is activated through the (sub)process
+            id = curr_el.get("id")
+            name = curr_el.get("name").replace("\r", " ").replace("\n", " ") if "name" in curr_el.attrib else ""
+            event_definitions = [child.tag.lower().replace("eventdefinition", "") for child in curr_el if
+                                 child.tag.lower().endswith("eventdefinition")]
+            if len(event_definitions) > 0:
+                event_type = event_definitions[0]
+                if event_type.endswith("message"):
+                    intermediate_throw_event = BPMN.MessageIntermediateThrowEvent(id=curr_el.get("id"), name=name,
+                                                                                  process=process)
+                else:
+                    intermediate_throw_event = BPMN.NormalIntermediateThrowEvent(id=curr_el.get("id"), name=name,
+                                                                                 process=process)
             else:
                 intermediate_throw_event = BPMN.NormalIntermediateThrowEvent(id=curr_el.get("id"), name=name,
                                                                              process=process)
-        else:
-            intermediate_throw_event = BPMN.NormalIntermediateThrowEvent(id=curr_el.get("id"), name=name,
-                                                                         process=process)
-        bpmn_graph.add_node(intermediate_throw_event)
-        node = intermediate_throw_event
-        nodes_dict[id] = node
-    elif tag.endswith("boundaryevent"):
-        id = curr_el.get("id")
-        ref_activity = curr_el.get("attachedToRef")
-        name = curr_el.get("name").replace("\r", " ").replace("\n", " ") if "name" in curr_el.attrib else ""
-        event_definitions = [child.tag.lower().replace("eventdefinition", "") for child in curr_el if
-                             child.tag.lower().endswith("eventdefinition")]
-        if len(event_definitions) > 0:
-            event_type = event_definitions[0]
-            if event_type.endswith("message"):
-                boundary_event = BPMN.MessageBoundaryEvent(id=curr_el.get("id"), name=name, process=process,
-                                                           activity=ref_activity)
-            elif event_type.endswith("error"):
-                boundary_event = BPMN.ErrorBoundaryEvent(id=curr_el.get("id"), name=name, process=process,
-                                                         activity=ref_activity)
-            elif event_type.endswith("cancel"):
-                boundary_event = BPMN.CancelBoundaryEvent(id=curr_el.get("id"), name=name, process=process,
-                                                          activity=ref_activity)
+            bpmn_graph.add_node(intermediate_throw_event)
+            node = intermediate_throw_event
+            nodes_dict[id] = node
+        elif tag.endswith("boundaryevent"):
+            id = curr_el.get("id")
+            ref_activity = curr_el.get("attachedToRef")
+            name = curr_el.get("name").replace("\r", " ").replace("\n", " ") if "name" in curr_el.attrib else ""
+            event_definitions = [child.tag.lower().replace("eventdefinition", "") for child in curr_el if
+                                 child.tag.lower().endswith("eventdefinition")]
+            if len(event_definitions) > 0:
+                event_type = event_definitions[0]
+                if event_type.endswith("message"):
+                    boundary_event = BPMN.MessageBoundaryEvent(id=curr_el.get("id"), name=name, process=process,
+                                                               activity=ref_activity)
+                elif event_type.endswith("error"):
+                    boundary_event = BPMN.ErrorBoundaryEvent(id=curr_el.get("id"), name=name, process=process,
+                                                             activity=ref_activity)
+                elif event_type.endswith("cancel"):
+                    boundary_event = BPMN.CancelBoundaryEvent(id=curr_el.get("id"), name=name, process=process,
+                                                              activity=ref_activity)
+                else:
+                    boundary_event = BPMN.BoundaryEvent(id=curr_el.get("id"), name=name, process=process,
+                                                        activity=ref_activity)
             else:
-                boundary_event = BPMN.BoundaryEvent(id=curr_el.get("id"), name=name, process=process,
-                                                    activity=ref_activity)
-        else:
-            boundary_event = BPMN.BoundaryEvent(id=curr_el.get("id"), name=name, process=process, activity=ref_activity)
-        bpmn_graph.add_node(boundary_event)
-        node = boundary_event
-        nodes_dict[id] = node
-    elif tag.endswith("edge"):  # related to the x, y information of an arc
-        bpmnElement = curr_el.get("bpmnElement")
-        flow = bpmnElement
-    elif tag.endswith("exclusivegateway"):
-        id = curr_el.get("id")
-        name = curr_el.get("name").replace("\r", "").replace("\n", "") if "name" in curr_el.attrib else ""
-        try:
-            direction = BPMN.Gateway.Direction[curr_el.get("gatewayDirection").upper()]
-            exclusive_gateway = BPMN.ExclusiveGateway(id=curr_el.get("id"), name=name, gateway_direction=direction,
-                                                      process=process)
-        except:
-            exclusive_gateway = BPMN.ExclusiveGateway(id=curr_el.get("id"), name=name,
-                                                      gateway_direction=BPMN.Gateway.Direction.UNSPECIFIED,
-                                                      process=process)
-        bpmn_graph.add_node(exclusive_gateway)
-        node = exclusive_gateway
-        nodes_dict[id] = node
-    elif tag.endswith("parallelgateway"):
-        id = curr_el.get("id")
-        name = curr_el.get("name").replace("\r", "").replace("\n", "") if "name" in curr_el.attrib else ""
-        try:
-            direction = BPMN.Gateway.Direction[curr_el.get("gatewayDirection").upper()]
-            parallel_gateway = BPMN.ParallelGateway(id=curr_el.get("id"), name=name, gateway_direction=direction,
-                                                    process=process)
-        except:
-            parallel_gateway = BPMN.ParallelGateway(id=curr_el.get("id"), name=name,
-                                                    gateway_direction=BPMN.Gateway.Direction.UNSPECIFIED,
-                                                    process=process)
-        bpmn_graph.add_node(parallel_gateway)
-        node = parallel_gateway
-        nodes_dict[id] = node
-    elif tag.endswith("inclusivegateway"):
-        id = curr_el.get("id")
-        name = curr_el.get("name").replace("\r", "").replace("\n", "") if "name" in curr_el.attrib else ""
-        try:
-            direction = BPMN.Gateway.Direction[curr_el.get("gatewayDirection").upper()]
-            inclusive_gateway = BPMN.InclusiveGateway(id=curr_el.get("id"), name=name, gateway_direction=direction,
-                                                      process=process)
-        except:
-            inclusive_gateway = BPMN.InclusiveGateway(id=curr_el.get("id"), name=name,
-                                                      gateway_direction=BPMN.Gateway.Direction.UNSPECIFIED,
-                                                      process=process)
-        bpmn_graph.add_node(inclusive_gateway)
-        node = inclusive_gateway
-        nodes_dict[id] = node
-    elif tag.endswith("eventbasedgateway"):
-        id = curr_el.get("id")
-        name = curr_el.get("name").replace("\r", "").replace("\n", "") if "name" in curr_el.attrib else ""
-        try:
-            direction = BPMN.Gateway.Direction[curr_el.get("gatewayDirection").upper()]
-            event_based_gateway = BPMN.EventBasedGateway(id=curr_el.get("id"), name=name, gateway_direction=direction,
-                                                         process=process)
-        except:
-            event_based_gateway = BPMN.EventBasedGateway(id=curr_el.get("id"), name=name,
-                                                         gateway_direction=BPMN.Gateway.Direction.UNSPECIFIED,
-                                                         process=process)
-        bpmn_graph.add_node(event_based_gateway)
-        node = event_based_gateway
-        nodes_dict[id] = node
+                boundary_event = BPMN.BoundaryEvent(id=curr_el.get("id"), name=name, process=process, activity=ref_activity)
+            bpmn_graph.add_node(boundary_event)
+            node = boundary_event
+            nodes_dict[id] = node
+        elif tag.endswith("edge"):  # related to the x, y information of an arc
+            bpmnElement = curr_el.get("bpmnElement")
+            flow = bpmnElement
+        elif tag.endswith("exclusivegateway"):
+            id = curr_el.get("id")
+            name = curr_el.get("name").replace("\r", "").replace("\n", "") if "name" in curr_el.attrib else ""
+            try:
+                direction = BPMN.Gateway.Direction[curr_el.get("gatewayDirection").upper()]
+                exclusive_gateway = BPMN.ExclusiveGateway(id=curr_el.get("id"), name=name, gateway_direction=direction,
+                                                          process=process)
+            except:
+                exclusive_gateway = BPMN.ExclusiveGateway(id=curr_el.get("id"), name=name,
+                                                          gateway_direction=BPMN.Gateway.Direction.UNSPECIFIED,
+                                                          process=process)
+            bpmn_graph.add_node(exclusive_gateway)
+            node = exclusive_gateway
+            nodes_dict[id] = node
+        elif tag.endswith("parallelgateway"):
+            id = curr_el.get("id")
+            name = curr_el.get("name").replace("\r", "").replace("\n", "") if "name" in curr_el.attrib else ""
+            try:
+                direction = BPMN.Gateway.Direction[curr_el.get("gatewayDirection").upper()]
+                parallel_gateway = BPMN.ParallelGateway(id=curr_el.get("id"), name=name, gateway_direction=direction,
+                                                        process=process)
+            except:
+                parallel_gateway = BPMN.ParallelGateway(id=curr_el.get("id"), name=name,
+                                                        gateway_direction=BPMN.Gateway.Direction.UNSPECIFIED,
+                                                        process=process)
+            bpmn_graph.add_node(parallel_gateway)
+            node = parallel_gateway
+            nodes_dict[id] = node
+        elif tag.endswith("inclusivegateway"):
+            id = curr_el.get("id")
+            name = curr_el.get("name").replace("\r", "").replace("\n", "") if "name" in curr_el.attrib else ""
+            try:
+                direction = BPMN.Gateway.Direction[curr_el.get("gatewayDirection").upper()]
+                inclusive_gateway = BPMN.InclusiveGateway(id=curr_el.get("id"), name=name, gateway_direction=direction,
+                                                          process=process)
+            except:
+                inclusive_gateway = BPMN.InclusiveGateway(id=curr_el.get("id"), name=name,
+                                                          gateway_direction=BPMN.Gateway.Direction.UNSPECIFIED,
+                                                          process=process)
+            bpmn_graph.add_node(inclusive_gateway)
+            node = inclusive_gateway
+            nodes_dict[id] = node
+        elif tag.endswith("eventbasedgateway"):
+            id = curr_el.get("id")
+            name = curr_el.get("name").replace("\r", "").replace("\n", "") if "name" in curr_el.attrib else ""
+            try:
+                direction = BPMN.Gateway.Direction[curr_el.get("gatewayDirection").upper()]
+                event_based_gateway = BPMN.EventBasedGateway(id=curr_el.get("id"), name=name, gateway_direction=direction,
+                                                             process=process)
+            except:
+                event_based_gateway = BPMN.EventBasedGateway(id=curr_el.get("id"), name=name,
+                                                             gateway_direction=BPMN.Gateway.Direction.UNSPECIFIED,
+                                                             process=process)
+            bpmn_graph.add_node(event_based_gateway)
+            node = event_based_gateway
+            nodes_dict[id] = node
     elif tag.endswith("incoming"):  # incoming flow of a node
         name = curr_el.get("name").replace("\r", "").replace("\n", "") if "name" in curr_el.attrib else ""
         if node is not None:

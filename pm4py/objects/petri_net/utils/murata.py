@@ -21,9 +21,12 @@ Contact: info@processintelligence.solutions
 '''
 
 from pm4py.util.lp import solver
+from pm4py.util import constants
 from pm4py.objects.petri_net.utils.petri_utils import remove_place
 from copy import copy
 from typing import Tuple
+import warnings
+import importlib.util
 from pm4py.objects.petri_net.obj import PetriNet, Marking
 
 
@@ -52,13 +55,18 @@ def apply_reduction(net: PetriNet, im: Marking, fm: Marking) -> Tuple[PetriNet, 
     fm
         Final marking
     """
-    Aeq = []
-    Aub = []
-    beq = []
-    bub = []
     places = sorted(list(net.places), key=lambda x: x.name)
     redundant = set()
     for place in places:
+        # Skip places in the initial or final markings
+        if place in im or place in fm:
+            continue
+
+        Aeq = []
+        Aub = []
+        beq = []
+        bub = []
+
         # first constraint
         constraint = [0] * (len(net.places) + 1)
         for p2 in im:
@@ -122,15 +130,21 @@ def apply_reduction(net: PetriNet, im: Marking, fm: Marking) -> Tuple[PetriNet, 
         c = [1] * (len(net.places) + 1)
         integrality = [1] * (len(net.places) + 1)
 
-        xx = solver.apply(c, Aub, bub, Aeq, beq, variant=solver.SCIPY, parameters={"integrality": integrality})
-        if xx.success:
+        proposed_solver = solver.SCIPY
+        if importlib.util.find_spec("pulp"):
+            proposed_solver = solver.PULP
+        else:
+            if constants.SHOW_INTERNAL_WARNINGS:
+                warnings.warn(
+                    "solution from scipy may be unstable. Please install PuLP (pip install pulp) for fully reliable results.")
+
+        xx = solver.apply(c, Aub, bub, Aeq, beq, variant=proposed_solver, parameters={"integrality": integrality})
+
+        if (hasattr(xx, "success") and xx.success) or (hasattr(xx, "sol_status") and xx.sol_status > -1):
             redundant.add(place)
 
     for place in redundant:
-        if place not in fm:
-            net = remove_place(net, place)
-            if place in im:
-                im = copy(im)
-                del im[place]
+        # Remove the redundant place from the net
+        net = remove_place(net, place)
 
     return net, im, fm
