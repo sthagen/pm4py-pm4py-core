@@ -61,6 +61,58 @@ def openai_query(prompt: str, api_key: Optional[str] = None, openai_model: Optio
     return perform_query.apply(prompt, parameters=parameters)
 
 
+def google_query(prompt: str, api_key: Optional[str] = None, model: Optional[str] = None, **kwargs) -> str:
+    """
+    Executes the provided prompt, obtaining the answer from the Google APIs.
+
+    :param prompt: prompt that should be executed
+    :param api_key: API key
+    :param model: Model to be used (default: gemini-1.5-flash-002)
+    :rtype: ``str``
+
+    .. code-block:: python3
+
+        import pm4py
+
+        resp = pm4py.llm.google_query('what is the result of 3+3?', api_key="sk-382393", model="gemini-1.5-flash-002")
+        print(resp)
+    """
+    parameters = copy(kwargs) if kwargs is not None else {}
+    if api_key is not None:
+        parameters["api_key"] = api_key
+    if model is not None:
+        parameters["google_model"] = model
+
+    from pm4py.algo.querying.llm.connectors import google as perform_query
+    return perform_query.apply(prompt, parameters=parameters)
+
+
+def anthropic_query(prompt: str, api_key: Optional[str] = None, model: Optional[str] = None, **kwargs) -> str:
+    """
+    Executes the provided prompt, obtaining the answer from the Google APIs.
+
+    :param prompt: prompt that should be executed
+    :param api_key: API key
+    :param model: Model to be used (default: claude-3-5-sonnet-20241022)
+    :rtype: ``str``
+
+    .. code-block:: python3
+
+        import pm4py
+
+        resp = pm4py.llm.anthropic_query('what is the result of 3+3?', api_key="sk-382393", model="claude-3-5-sonnet-20241022")
+        print(resp)
+    """
+    parameters = copy(kwargs) if kwargs is not None else {}
+    if api_key is not None:
+        parameters["api_key"] = api_key
+    if model is not None:
+        parameters["anthropic_model"] = model
+
+    from pm4py.algo.querying.llm.connectors import anthropic as perform_query
+    return perform_query.apply(prompt, parameters=parameters)
+
+
 def abstract_dfg(log_obj: Union[pd.DataFrame, EventLog, EventStream], max_len: int = constants.OPENAI_MAX_LEN, include_performance: bool = True, relative_frequency: bool = False, response_header: bool = True, primary_performance_aggregation: str = "mean", secondary_performance_aggregation: Optional[str] = None, activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> str:
     """
     Obtains the DFG (Directly-Follows Graph) abstraction of a traditional event log.

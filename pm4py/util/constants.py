@@ -133,9 +133,13 @@ DEFAULT_BUSINESS_HOUR_SLOTS = [
 
 OPENAI_MAX_LEN = int(get_param_from_env("PM4PY_OPENAI_MAX_LEN", "10000"))
 OPENAI_API_KEY = get_param_from_env("PM4PY_OPENAI_API_KEY", None)
+ANTHROPIC_API_KEY = get_param_from_env("PM4PY_ANTHROPIC_API_KEY", None)
+GOOGLE_API_KEY = get_param_from_env("PM4PY_GOOGLE_API_KEY", None)
 OPENAI_API_URL = get_param_from_env("PM4PY_OPENAI_API_URL", "https://api.openai.com/v1/")
 OPENAI_DEFAULT_MODEL = get_param_from_env("PM4PY_OPENAI_DEFAULT_MODEL", "gpt-4o")
 OPENAI_DEFAULT_VISION_MODEL = get_param_from_env("PM4PY_OPENAI_DEFAULT_VISION_MODEL", "gpt-4o")
+ANTHROPIC_DEFAULT_MODEL = get_param_from_env("PM4PY_ANTHROPIC_DEFAULT_MODEL", "claude-3-5-sonnet-20241022")
+GOOGLE_DEFAULT_MODEL = get_param_from_env("PM4PY_GOOGLE_DEFAULT_MODEL", "gemini-1.5-flash-002")
 OPENAI_DEFAULT_STT_MODEL = get_param_from_env("PM4PY_OPENAI_DEFAULT_STT_MODEL", "whisper-1")
 OPENAI_DEFAULT_TTS_MODEL = get_param_from_env("PM4PY_OPENAI_DEFAULT_TTS_MODEL", "tts-1")
 OPENAI_DEFAULT_TTS_VOICE = get_param_from_env("PM4PY_OPENAI_DEFAULT_TTS_VOICE", "alloy")

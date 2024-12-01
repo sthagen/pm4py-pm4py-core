@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,6 +19,8 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
+from re import escape
+
 def translate_infix_to_regex(infix):
     regex = "^"
     for i, act in enumerate(infix):
@@ -29,6 +31,9 @@ def translate_infix_to_regex(infix):
             else:
                 regex = f"{regex}([^,]*,)*"
         else:
+            if act: 
+                act = escape(act)
+            
             if is_last_activity:
                 regex = f"{regex}{act}"
             else:

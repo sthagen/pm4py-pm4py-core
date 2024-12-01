@@ -15,7 +15,7 @@
 | intervaltree | https://pypi.org/project/intervaltree | Apache Software License (Apache License, Version 2.0) | 3.1.0 |
 | kiwisolver | https://pypi.org/project/kiwisolver | BSD License | 1.4.7 |
 | lxml | https://pypi.org/project/lxml | BSD License (BSD-3-Clause) | 5.3.0 |
-| matplotlib | https://pypi.org/project/matplotlib | Python Software Foundation License | 3.9.2 |
+| matplotlib | https://pypi.org/project/matplotlib | Python Software Foundation License | 3.9.3 |
 | networkx | https://pypi.org/project/networkx | BSD License | 3.4.2 |
 | numpy | https://pypi.org/project/numpy | BSD License | 2.1.3 |
 | packaging | https://pypi.org/project/packaging | Apache Software License, BSD License | 24.2 |
@@ -29,6 +29,6 @@
 | setuptools | https://pypi.org/project/setuptools | MIT License | 75.6.0 |
 | six | https://pypi.org/project/six | MIT License (MIT) | 1.16.0 |
 | sortedcontainers | https://pypi.org/project/sortedcontainers | Apache Software License (Apache 2.0) | 2.4.0 |
-| tqdm | https://pypi.org/project/tqdm | MIT License, Mozilla Public License 2.0 (MPL 2.0) (MPL-2.0 AND MIT) | 4.67.0 |
+| tqdm | https://pypi.org/project/tqdm | MIT License, Mozilla Public License 2.0 (MPL 2.0) (MPL-2.0 AND MIT) | 4.67.1 |
 | tzdata | https://pypi.org/project/tzdata | Apache Software License (Apache-2.0) | 2024.2 |
 | wheel | https://pypi.org/project/wheel | MIT License | 0.45.1 |
