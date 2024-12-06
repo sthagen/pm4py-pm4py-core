@@ -10,7 +10,7 @@
 | contourpy | https://pypi.org/project/contourpy | BSD License | 1.3.1 |
 | cycler | https://pypi.org/project/cycler | BSD License | 0.12.1 |
 | deprecation | https://pypi.org/project/deprecation | Apache Software License (Apache 2) | 2.1.0 |
-| fonttools | https://pypi.org/project/fonttools | MIT License (MIT) | 4.55.0 |
+| fonttools | https://pypi.org/project/fonttools | MIT License (MIT) | 4.55.2 |
 | graphviz | https://pypi.org/project/graphviz | MIT License (MIT) | 0.20.3 |
 | intervaltree | https://pypi.org/project/intervaltree | Apache Software License (Apache License, Version 2.0) | 3.1.0 |
 | kiwisolver | https://pypi.org/project/kiwisolver | BSD License | 1.4.7 |
@@ -27,7 +27,7 @@
 | pytz | https://pypi.org/project/pytz | MIT License (MIT) | 2024.2 |
 | scipy | https://pypi.org/project/scipy | BSD License | 1.14.1 |
 | setuptools | https://pypi.org/project/setuptools | MIT License | 75.6.0 |
-| six | https://pypi.org/project/six | MIT License (MIT) | 1.16.0 |
+| six | https://pypi.org/project/six | MIT License (MIT) | 1.17.0 |
 | sortedcontainers | https://pypi.org/project/sortedcontainers | Apache Software License (Apache 2.0) | 2.4.0 |
 | tqdm | https://pypi.org/project/tqdm | MIT License, Mozilla Public License 2.0 (MPL 2.0) (MPL-2.0 AND MIT) | 4.67.1 |
 | tzdata | https://pypi.org/project/tzdata | Apache Software License (Apache-2.0) | 2024.2 |
