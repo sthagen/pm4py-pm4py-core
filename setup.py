@@ -30,7 +30,7 @@ setup(
     install_requires=read_file("requirements.txt").split("\n"),
     project_urls={
         'Documentation': 'https://processintelligence.solutions/pm4py/',
-        'Source': 'https://github.com/pm4py/pm4py-source',
-        'Tracker': 'https://github.com/pm4py/pm4py-source/issues',
+        'Source': 'https://github.com/process-intelligence-solutions/pm4py',
+        'Tracker': 'https://github.com/process-intelligence-solutions/pm4py/issues',
     }
 )

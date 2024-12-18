@@ -48,7 +48,7 @@ def apply(prompt: str, parameters: Optional[Dict[Any, Any]] = None) -> str:
     image_path = exec_utils.get_param_value(Parameters.IMAGE_PATH, parameters, None)
     api_key = exec_utils.get_param_value(Parameters.API_KEY, parameters, constants.ANTHROPIC_API_KEY)
     api_url = exec_utils.get_param_value(Parameters.API_URL, parameters, None)
-    max_tokens = exec_utils.get_param_value(Parameters.MAX_TOKENS, parameters, 4096)
+    max_tokens = exec_utils.get_param_value(Parameters.MAX_TOKENS, parameters, 8192)
     simple_content_specification = image_path is None
 
     if api_url is None:

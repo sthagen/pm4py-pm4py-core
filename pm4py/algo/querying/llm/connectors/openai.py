@@ -77,7 +77,7 @@ def apply(prompt: str, parameters: Optional[Dict[Any, Any]] = None) -> str:
     }
 
     if image_path is not None:
-        max_tokens = exec_utils.get_param_value(Parameters.MAX_TOKENS, parameters, 4096)
+        max_tokens = exec_utils.get_param_value(Parameters.MAX_TOKENS, parameters, 16384)
         image_format = os.path.splitext(image_path)[1][1:].lower()
         base64_image = encode_image(image_path)
         messages[0]["content"].append({"type": "image_url", "image_url": {"url": f"data:image/{image_format};base64,{base64_image}"}})
