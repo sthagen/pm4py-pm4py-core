@@ -2,6 +2,7 @@ import os
 import networkx as nx
 import time
 import requests
+import json
 import importlib.util
 from copy import deepcopy
 
@@ -13,28 +14,17 @@ INCLUDE_BETAS = False
 
 
 def get_version(package):
-    url = "https://pypi.org/project/" + package
+    url = "https://pypi.org/pypi/" + package + "/json"
     r = requests.get(url)
     res0 = r.text
-    res = res0.split("<p class=\"release__version\">")[1:]
-    version = ""
-    i = 0
-    while i < len(res):
-        if "pre-release" not in res[i] or INCLUDE_BETAS:
-            version = res[i].split("</p>")[0].strip().split(" ")[0].strip()
-            break
-        i = i + 1
-    try:
-        license0 = res0.split("<strong>License:</strong>")[1].split("</span>")[0].strip()
-        license0 = license0.replace("(c)", "").split(" (")
-        license = license0[0]
-
-        for i in range(1, len(license0)):
-            if "..." not in license0[i]:
-                license += " (" + license0[i]
-    except:
-        license = "Unspecified"
-
+    dictio = r.json()
+    #json.dump(dictio, open("temp2.txt", "w"), indent=2)
+    license = "Unspecified"
+    for classi in dictio["info"]["classifiers"]:
+        if classi.startswith("License ::"):
+            license = classi.split(":: ")[-1]
+    version = dictio["info"]["version"]
+    #print(package, url, version, license)
     time.sleep(0.1)
     return package, url, version, license
 
@@ -55,20 +45,34 @@ def elaborate_single_python_package(package_name, deps, include_self=False):
     blocked = False
     blocked_level = -1
     while i < len(content):
-        row = content[i].split("- ")
-        level = round(len(row[0]) / 2)
-        dep = row[1].split(" ")[0]
-        if blocked and blocked_level == level:
-            blocked = False
-        if dep == "pm4pycvxopt":
-            blocked = True
-            blocked_level = level
-        if not blocked:
-            dep_level[level] = dep
-            if level > 1:
-                G.add_edge(dep_level[level - 1], dep_level[level])
-            else:
-                G.add_node(dep_level[level])
+        #row = content[i].replace("└──", "- ").replace("├──", "- ").split("- ")
+        #print(row)
+        #level = round(len(row[0]) / 2)
+        #dep = row[1].split(" ")[0]
+        row = content[i].split(" ")
+        row = [zz for zz in row if zz]
+        dep = None
+        level = None
+        j = 0
+        while j < len(row):
+            if row[j].startswith("["):
+                break
+            j = j + 1
+        j = j - 1
+        dep = row[j]
+        level = (j-1)
+        if True:
+            if blocked and blocked_level == level:
+                blocked = False
+            if dep == "pm4pycvxopt":
+                blocked = True
+                blocked_level = level
+            if not blocked:
+                dep_level[level] = dep
+                if level > 1:
+                    G.add_edge(dep_level[level - 1], dep_level[level])
+                else:
+                    G.add_node(dep_level[level])
         i = i + 1
     edges = list(G.edges)
     while len(edges) > 0:

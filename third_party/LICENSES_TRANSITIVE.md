@@ -6,29 +6,29 @@
     
     | Name | URL | License | Version |
     | --------------------------- | ------------------------------------------------------------ | --------------------------- | ------------------- |
-    | colorama | https://pypi.org/project/colorama | BSD License | 0.4.6 |
-| contourpy | https://pypi.org/project/contourpy | BSD License | 1.3.1 |
-| cycler | https://pypi.org/project/cycler | BSD License | 0.12.1 |
-| deprecation | https://pypi.org/project/deprecation | Apache Software License (Apache 2) | 2.1.0 |
-| fonttools | https://pypi.org/project/fonttools | MIT License (MIT) | 4.55.2 |
-| graphviz | https://pypi.org/project/graphviz | MIT License (MIT) | 0.20.3 |
-| intervaltree | https://pypi.org/project/intervaltree | Apache Software License (Apache License, Version 2.0) | 3.1.0 |
-| kiwisolver | https://pypi.org/project/kiwisolver | BSD License | 1.4.7 |
-| lxml | https://pypi.org/project/lxml | BSD License (BSD-3-Clause) | 5.3.0 |
-| matplotlib | https://pypi.org/project/matplotlib | Python Software Foundation License | 3.9.3 |
-| networkx | https://pypi.org/project/networkx | BSD License | 3.4.2 |
-| numpy | https://pypi.org/project/numpy | BSD License | 2.1.3 |
-| packaging | https://pypi.org/project/packaging | Apache Software License, BSD License | 24.2 |
-| pandas | https://pypi.org/project/pandas | BSD License | 2.2.3 |
-| pillow | https://pypi.org/project/pillow | CMU License (MIT-CMU) (MIT-CMU) | 11.0.0 |
-| pydotplus | https://pypi.org/project/pydotplus | MIT License (UNKNOWN) | 2.0.2 |
-| pyparsing | https://pypi.org/project/pyparsing | MIT License | 3.2.0 |
-| python-dateutil | https://pypi.org/project/python-dateutil | Apache Software License, BSD License (Dual License) | 2.9.0.post0 |
-| pytz | https://pypi.org/project/pytz | MIT License (MIT) | 2024.2 |
-| scipy | https://pypi.org/project/scipy | BSD License | 1.14.1 |
-| setuptools | https://pypi.org/project/setuptools | MIT License | 75.6.0 |
-| six | https://pypi.org/project/six | MIT License (MIT) | 1.17.0 |
-| sortedcontainers | https://pypi.org/project/sortedcontainers | Apache Software License (Apache 2.0) | 2.4.0 |
-| tqdm | https://pypi.org/project/tqdm | MIT License, Mozilla Public License 2.0 (MPL 2.0) (MPL-2.0 AND MIT) | 4.67.1 |
-| tzdata | https://pypi.org/project/tzdata | Apache Software License (Apache-2.0) | 2024.2 |
-| wheel | https://pypi.org/project/wheel | MIT License | 0.45.1 |
+    | colorama | https://pypi.org/pypi/colorama/json | BSD License | 0.4.6 |
+| contourpy | https://pypi.org/pypi/contourpy/json | BSD License | 1.3.1 |
+| cycler | https://pypi.org/pypi/cycler/json | BSD License | 0.12.1 |
+| deprecation | https://pypi.org/pypi/deprecation/json | Apache Software License | 2.1.0 |
+| fonttools | https://pypi.org/pypi/fonttools/json | MIT License | 4.55.3 |
+| graphviz | https://pypi.org/pypi/graphviz/json | MIT License | 0.20.3 |
+| intervaltree | https://pypi.org/pypi/intervaltree/json | Apache Software License | 3.1.0 |
+| kiwisolver | https://pypi.org/pypi/kiwisolver/json | BSD License | 1.4.8 |
+| lxml | https://pypi.org/pypi/lxml/json | BSD License | 5.3.0 |
+| matplotlib | https://pypi.org/pypi/matplotlib/json | Python Software Foundation License | 3.10.0 |
+| networkx | https://pypi.org/pypi/networkx/json | BSD License | 3.4.2 |
+| numpy | https://pypi.org/pypi/numpy/json | BSD License | 2.2.1 |
+| packaging | https://pypi.org/pypi/packaging/json | BSD License | 24.2 |
+| pandas | https://pypi.org/pypi/pandas/json | BSD License | 2.2.3 |
+| pillow | https://pypi.org/pypi/pillow/json | CMU License (MIT-CMU) | 11.0.0 |
+| pydotplus | https://pypi.org/pypi/pydotplus/json | MIT License | 2.0.2 |
+| pyparsing | https://pypi.org/pypi/pyparsing/json | MIT License | 3.2.0 |
+| python-dateutil | https://pypi.org/pypi/python-dateutil/json | BSD License | 2.9.0.post0 |
+| pytz | https://pypi.org/pypi/pytz/json | MIT License | 2024.2 |
+| scipy | https://pypi.org/pypi/scipy/json | BSD License | 1.14.1 |
+| setuptools | https://pypi.org/pypi/setuptools/json | MIT License | 75.6.0 |
+| six | https://pypi.org/pypi/six/json | MIT License | 1.17.0 |
+| sortedcontainers | https://pypi.org/pypi/sortedcontainers/json | Apache Software License | 2.4.0 |
+| tqdm | https://pypi.org/pypi/tqdm/json | Mozilla Public License 2.0 (MPL 2.0) | 4.67.1 |
+| tzdata | https://pypi.org/pypi/tzdata/json | Apache Software License | 2024.2 |
+| wheel | https://pypi.org/pypi/wheel/json | MIT License | 0.45.1 |

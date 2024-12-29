@@ -4,6 +4,7 @@ import sys
 import traceback
 import importlib.util
 
+import pm4py.util.lp.solver
 
 EXECUTE_EXAMPLES = True
 
@@ -894,6 +895,38 @@ def execute_script(f):
         input("\npress INPUT if you want to continue")
 
 
+def print_versions():
+    import pm4py
+    import numpy
+    import pandas
+    import networkx
+
+    print("numpy version: "+str(numpy.__version__))
+    print("pandas version: "+str(pandas.__version__))
+    print("networkx version: "+str(networkx.__version__))
+
+    if importlib.util.find_spec("scipy"):
+        import scipy
+        print("scipy version: "+str(scipy.__version__))
+
+    if importlib.util.find_spec("lxml"):
+        import lxml
+        print("lxml version: "+str(lxml.__version__))
+
+    if importlib.util.find_spec("matplotlib"):
+        import matplotlib
+        print("matplotlib version: "+str(matplotlib.__version__))
+
+    if importlib.util.find_spec("sklearn"):
+        import sklearn
+        print("sklearn version: "+str(sklearn.__version__))
+
+    print("pm4py version: "+str(pm4py.__version__))
+    print("Python version: "+str(sys.version))
+    print(pm4py.util.lp.solver.DEFAULT_LP_SOLVER_VARIANT)
+    print(pm4py.util.pandas_utils.DATAFRAME)
+
+
 def main():
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))))
 
@@ -906,6 +939,8 @@ def main():
     pm4py.util.constants.SHOW_EVENT_LOG_DEPRECATION = False
     pm4py.util.constants.SHOW_INTERNAL_WARNINGS = False
     #pm4py.util.constants.DEFAULT_TIMESTAMP_PARSE_FORMAT = None
+
+    print_versions()
 
     if EXECUTE_EXAMPLES:
         execute_script(log_projection_dfg_variant)
@@ -1038,28 +1073,7 @@ def main():
         #execute_script(monte_carlo_dfg)
         #execute_script(monte_carlo_petri_net)
 
-    print("numpy version: "+str(numpy.__version__))
-    print("pandas version: "+str(pandas.__version__))
-    print("networkx version: "+str(networkx.__version__))
-
-    if importlib.util.find_spec("scipy"):
-        import scipy
-        print("scipy version: "+str(scipy.__version__))
-
-    if importlib.util.find_spec("lxml"):
-        import lxml
-        print("lxml version: "+str(lxml.__version__))
-
-    if importlib.util.find_spec("matplotlib"):
-        import matplotlib
-        print("matplotlib version: "+str(matplotlib.__version__))
-
-    if importlib.util.find_spec("sklearn"):
-        import sklearn
-        print("sklearn version: "+str(sklearn.__version__))
-
-    print("pm4py version: "+str(pm4py.__version__))
-    print("Python version: "+str(sys.version))
+    print_versions()
 
     print("\n\nExamples executed correctly: %d\tExamples failed: %d\t" % (OutcomeMeasurement.SUCCESS, OutcomeMeasurement.FAILED))
 
