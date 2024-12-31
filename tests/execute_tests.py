@@ -20,28 +20,33 @@ pm4py.util.constants.SHOW_EVENT_LOG_DEPRECATION = False
 pm4py.util.constants.SHOW_INTERNAL_WARNINGS = False
 # pm4py.util.constants.DEFAULT_TIMESTAMP_PARSE_FORMAT = None
 
-enabled_tests = ["SimplifiedInterfaceTest", "SimplifiedInterface2Test", "DocTests", "RoleDetectionTest",
-                 "PassedTimeTest", "Pm4pyImportPackageTest", "XesImportExportTest", "CsvImportExportTest",
-                 "OtherPartsTests", "AlphaMinerTest", "InductiveMinerTest", "InductiveMinerTreeTest",
-                 "AlignmentTest", "DfgTests", "SnaTests", "PetriImportExportTest", "BPMNTests", "ETCTest",
-                 "DiagnDfConfChecking", "ProcessModelEvaluationTests", "DecisionTreeTest", "GraphsForming",
-                 "HeuMinerTest", "MainFactoriesTest", "AlgorithmTest", "LogFilteringTest",
-                 "DataframePrefilteringTest", "StatisticsLogTest", "StatisticsDfTest", "TransitionSystemTest",
-                 "ImpExpFromString", "WoflanTest", "OcelFilteringTest", "OcelDiscoveryTest", "LlmTest"]
+enabled_tests = [
+    "SimplifiedInterfaceTest", "SimplifiedInterface2Test", "DocTests", "RoleDetectionTest",
+    "PassedTimeTest", "Pm4pyImportPackageTest", "XesImportExportTest", "CsvImportExportTest",
+    "OtherPartsTests", "AlphaMinerTest", "InductiveMinerTest", "InductiveMinerTreeTest",
+    "AlignmentTest", "DfgTests", "SnaTests", "PetriImportExportTest", "BPMNTests", "ETCTest",
+    "DiagnDfConfChecking", "ProcessModelEvaluationTests", "DecisionTreeTest", "GraphsForming",
+    "HeuMinerTest", "MainFactoriesTest", "AlgorithmTest", "LogFilteringTest",
+    "DataframePrefilteringTest", "StatisticsLogTest", "StatisticsDfTest", "TransitionSystemTest",
+    "ImpExpFromString", "WoflanTest", "OcelFilteringTest", "OcelDiscoveryTest", "LlmTest"
+]
 
 loader = unittest.TestLoader()
 suite = unittest.TestSuite()
 
+# 'failed' is used to count how many tests or imports fail.
 failed = 0
 
+# Check for some required packages
 if not importlib.util.find_spec("graphviz"):
     print("important! install 'grapviz' from pip")
-    failed +=1
+    failed += 1
 
 if not importlib.util.find_spec("lxml"):
     print("important! install 'lxml' from pip")
     failed += 1
 
+# Now try to import and add each test class to the suite
 if "SimplifiedInterfaceTest" in enabled_tests:
     try:
         from tests.simplified_interface import SimplifiedInterfaceTest
@@ -323,6 +328,8 @@ if "LlmTest" in enabled_tests:
         failed += 1
 
 
+# If some imports failed, let's prompt the user
+# (The original script paused for ENTER if any import fails)
 if failed > 0:
     print("-- PRESS ENTER TO CONTINUE --")
     input()
@@ -331,30 +338,69 @@ if failed > 0:
 def main():
     if EXECUTE_TESTS:
         runner = unittest.TextTestRunner()
-        runner.run(suite)
+        result = runner.run(suite)
 
-    print("numpy version: "+str(numpy.__version__))
-    print("pandas version: "+str(pandas.__version__))
-    print("networkx version: "+str(networkx.__version__))
+        # Count test-level failures
+        test_failures = len(result.failures)
+        test_errors = len(result.errors)
+        test_runs = result.testsRun
+
+        # The number of actual test-method-level fails
+        test_level_failed = test_failures + test_errors
+        test_level_passed = test_runs - test_level_failed
+
+        # Incorporate import-level failures. Treat each import failure as one "failed test" for simplicity.
+        total_tests_including_imports = test_runs + failed
+        total_fails_including_imports = test_level_failed + failed
+        total_pass_including_imports = total_tests_including_imports - total_fails_including_imports
+
+        # Compute pass ratio (avoid division by zero)
+        if total_tests_including_imports > 0:
+            pass_ratio = total_pass_including_imports / total_tests_including_imports
+        else:
+            pass_ratio = 0.0
+
+        print("\n--- Summary ---")
+        print(f"Import failures: {failed}")
+        print(f"Test methods run: {test_runs}")
+        print(f"Test-level passed: {test_level_passed}")
+        print(f"Test-level failed: {test_level_failed}")
+        print(f"Total tests (including import fails): {total_tests_including_imports}")
+        print(f"Total passed (including import fails): {total_pass_including_imports}")
+        print(f"Total failed (including import fails): {total_fails_including_imports}")
+        print(f"Overall pass ratio: {round(pass_ratio * 100, 2)}%")
+
+    # Print library versions
+    print("numpy version: " + str(numpy.__version__))
+    print("pandas version: " + str(pandas.__version__))
+    print("networkx version: " + str(networkx.__version__))
 
     if importlib.util.find_spec("scipy"):
         import scipy
-        print("scipy version: "+str(scipy.__version__))
+        print("scipy version: " + str(scipy.__version__))
 
     if importlib.util.find_spec("lxml"):
         import lxml
-        print("lxml version: "+str(lxml.__version__))
+        print("lxml version: " + str(lxml.__version__))
 
     if importlib.util.find_spec("matplotlib"):
         import matplotlib
-        print("matplotlib version: "+str(matplotlib.__version__))
+        print("matplotlib version: " + str(matplotlib.__version__))
 
     if importlib.util.find_spec("sklearn"):
         import sklearn
-        print("sklearn version: "+str(sklearn.__version__))
+        print("sklearn version: " + str(sklearn.__version__))
 
-    print("pm4py version: "+str(pm4py.__version__))
-    print("Python version: "+str(sys.version))
+    print("pm4py version: " + str(pm4py.__version__))
+    print("Python version: " + str(sys.version))
+
+    # Exit code logic: 0 if pass ratio > 98%, else 1
+    if pass_ratio > 0.98:
+        #print("exiting with system code 0")
+        sys.exit(0)
+    else:
+        #print("exiting with system code 1")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

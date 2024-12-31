@@ -1077,6 +1077,23 @@ def main():
 
     print("\n\nExamples executed correctly: %d\tExamples failed: %d\t" % (OutcomeMeasurement.SUCCESS, OutcomeMeasurement.FAILED))
 
+    # Compute the total and pass ratio
+    total_runs = OutcomeMeasurement.SUCCESS + OutcomeMeasurement.FAILED
+    if total_runs > 0:
+        pass_ratio = OutcomeMeasurement.SUCCESS / total_runs
+    else:
+        pass_ratio = 0.0
+
+    print(f"Overall pass ratio: {round(pass_ratio * 100, 2)}%")
+
+    # If pass ratio is above 90%, exit code is 0; otherwise 1
+    if pass_ratio > 0.9:
+        #print("exiting with code 0")
+        sys.exit(0)
+    else:
+        #print("exiting with code 1")
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
