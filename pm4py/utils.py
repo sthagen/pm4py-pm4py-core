@@ -33,7 +33,10 @@ from pm4py.objects.powl.obj import POWL
 from pm4py.objects.ocel.obj import OCEL
 from pm4py.util import constants, xes_constants, pandas_utils
 import warnings
-from pm4py.util.pandas_utils import check_is_pandas_dataframe, check_pandas_dataframe_columns
+from pm4py.util.pandas_utils import (
+    check_is_pandas_dataframe,
+    check_pandas_dataframe_columns,
+)
 from pm4py.util.dt_parsing.variants import strpfromiso
 import deprecation
 
@@ -42,11 +45,18 @@ INDEX_COLUMN = "@@index"
 CASE_INDEX_COLUMN = "@@case_index"
 
 
-def format_dataframe(df: pd.DataFrame, case_id: str = constants.CASE_CONCEPT_NAME,
-                    activity_key: str = xes_constants.DEFAULT_NAME_KEY,
-                    timestamp_key: str = xes_constants.DEFAULT_TIMESTAMP_KEY,
-                    start_timestamp_key: str = xes_constants.DEFAULT_START_TIMESTAMP_KEY,
-                    timest_format: Optional[str] = None) -> pd.DataFrame:
+class Shared:
+    RUSTXES_WARNING_SHOWN = False
+
+
+def format_dataframe(
+    df: pd.DataFrame,
+    case_id: str = constants.CASE_CONCEPT_NAME,
+    activity_key: str = xes_constants.DEFAULT_NAME_KEY,
+    timestamp_key: str = xes_constants.DEFAULT_TIMESTAMP_KEY,
+    start_timestamp_key: str = xes_constants.DEFAULT_START_TIMESTAMP_KEY,
+    timest_format: Optional[str] = None,
+) -> pd.DataFrame:
     """
     Formats the dataframe appropriately for process mining purposes.
 
@@ -78,12 +88,17 @@ def format_dataframe(df: pd.DataFrame, case_id: str = constants.CASE_CONCEPT_NAM
         timest_format = constants.DEFAULT_TIMESTAMP_PARSE_FORMAT
 
     from pm4py.objects.log.util import dataframe_utils
+
     if case_id not in df.columns:
         raise Exception(case_id + " column (case ID) is not in the dataframe!")
     if activity_key not in df.columns:
-        raise Exception(activity_key + " column (activity) is not in the dataframe!")
+        raise Exception(
+            activity_key + " column (activity) is not in the dataframe!"
+        )
     if timestamp_key not in df.columns:
-        raise Exception(timestamp_key + " column (timestamp) is not in the dataframe!")
+        raise Exception(
+            timestamp_key + " column (timestamp) is not in the dataframe!"
+        )
     if case_id != constants.CASE_CONCEPT_NAME:
         if constants.CASE_CONCEPT_NAME in df.columns:
             del df[constants.CASE_CONCEPT_NAME]
@@ -97,55 +112,89 @@ def format_dataframe(df: pd.DataFrame, case_id: str = constants.CASE_CONCEPT_NAM
             del df[xes_constants.DEFAULT_TIMESTAMP_KEY]
         df[xes_constants.DEFAULT_TIMESTAMP_KEY] = df[timestamp_key]
     # Makes sure that the timestamps column are of timestamp type
-    df = dataframe_utils.convert_timestamp_columns_in_df(df, timest_format=timest_format)
-    # Drop NaN(s) in the main columns (case ID, activity, timestamp) to ensure functioning of the algorithms
+    df = dataframe_utils.convert_timestamp_columns_in_df(
+        df, timest_format=timest_format
+    )
+    # Drop NaN(s) in the main columns (case ID, activity, timestamp) to ensure
+    # functioning of the algorithms
     prev_length = len(df)
-    df = df.dropna(subset={
-        constants.CASE_CONCEPT_NAME,
-        xes_constants.DEFAULT_NAME_KEY,
-        xes_constants.DEFAULT_TIMESTAMP_KEY
-    }, how="any")
+    df = df.dropna(
+        subset={
+            constants.CASE_CONCEPT_NAME,
+            xes_constants.DEFAULT_NAME_KEY,
+            xes_constants.DEFAULT_TIMESTAMP_KEY,
+        },
+        how="any",
+    )
 
     if len(df) < prev_length:
         if constants.SHOW_INTERNAL_WARNINGS:
-            warnings.warn("Some rows of the Pandas data frame have been removed because of empty case IDs, activity labels, or timestamps to ensure the correct functioning of PM4Py's algorithms.")
+            warnings.warn(
+                "Some rows of the Pandas data frame have been removed because of empty case IDs, activity labels, or timestamps to ensure the correct functioning of PM4Py's algorithms."
+            )
 
     # Make sure the case ID column is of string type
-    df[constants.CASE_CONCEPT_NAME] = df[constants.CASE_CONCEPT_NAME].astype("string")
+    df[constants.CASE_CONCEPT_NAME] = df[constants.CASE_CONCEPT_NAME].astype(
+        "string"
+    )
     # Make sure the activity column is of string type
-    df[xes_constants.DEFAULT_NAME_KEY] = df[xes_constants.DEFAULT_NAME_KEY].astype("string")
+    df[xes_constants.DEFAULT_NAME_KEY] = df[
+        xes_constants.DEFAULT_NAME_KEY
+    ].astype("string")
     # Set an index column
     df = pandas_utils.insert_index(df, INDEX_COLUMN, copy_dataframe=False)
     # Sorts the dataframe
-    df = df.sort_values([
-        constants.CASE_CONCEPT_NAME,
-        xes_constants.DEFAULT_TIMESTAMP_KEY,
-        INDEX_COLUMN
-    ])
+    df = df.sort_values(
+        [
+            constants.CASE_CONCEPT_NAME,
+            xes_constants.DEFAULT_TIMESTAMP_KEY,
+            INDEX_COLUMN,
+        ]
+    )
     # Re-set the index column
     df = pandas_utils.insert_index(df, INDEX_COLUMN, copy_dataframe=False)
     # Sets the index column in the dataframe
-    df = pandas_utils.insert_case_index(df, CASE_INDEX_COLUMN, copy_dataframe=False)
+    df = pandas_utils.insert_case_index(
+        df, CASE_INDEX_COLUMN, copy_dataframe=False
+    )
     # Sets the properties
-    if not hasattr(df, 'attrs'):
+    if not hasattr(df, "attrs"):
         # Legacy (Python 3.6) support
         df.attrs = {}
     if start_timestamp_key in df.columns:
         df[xes_constants.DEFAULT_START_TIMESTAMP_KEY] = df[start_timestamp_key]
-        df.attrs[constants.PARAMETER_CONSTANT_START_TIMESTAMP_KEY] = xes_constants.DEFAULT_START_TIMESTAMP_KEY
-    df.attrs[constants.PARAMETER_CONSTANT_ACTIVITY_KEY] = xes_constants.DEFAULT_NAME_KEY
-    df.attrs[constants.PARAMETER_CONSTANT_TIMESTAMP_KEY] = xes_constants.DEFAULT_TIMESTAMP_KEY
-    df.attrs[constants.PARAMETER_CONSTANT_GROUP_KEY] = xes_constants.DEFAULT_GROUP_KEY
-    df.attrs[constants.PARAMETER_CONSTANT_TRANSITION_KEY] = xes_constants.DEFAULT_TRANSITION_KEY
-    df.attrs[constants.PARAMETER_CONSTANT_RESOURCE_KEY] = xes_constants.DEFAULT_RESOURCE_KEY
-    df.attrs[constants.PARAMETER_CONSTANT_CASEID_KEY] = constants.CASE_CONCEPT_NAME
+        df.attrs[constants.PARAMETER_CONSTANT_START_TIMESTAMP_KEY] = (
+            xes_constants.DEFAULT_START_TIMESTAMP_KEY
+        )
+    df.attrs[constants.PARAMETER_CONSTANT_ACTIVITY_KEY] = (
+        xes_constants.DEFAULT_NAME_KEY
+    )
+    df.attrs[constants.PARAMETER_CONSTANT_TIMESTAMP_KEY] = (
+        xes_constants.DEFAULT_TIMESTAMP_KEY
+    )
+    df.attrs[constants.PARAMETER_CONSTANT_GROUP_KEY] = (
+        xes_constants.DEFAULT_GROUP_KEY
+    )
+    df.attrs[constants.PARAMETER_CONSTANT_TRANSITION_KEY] = (
+        xes_constants.DEFAULT_TRANSITION_KEY
+    )
+    df.attrs[constants.PARAMETER_CONSTANT_RESOURCE_KEY] = (
+        xes_constants.DEFAULT_RESOURCE_KEY
+    )
+    df.attrs[constants.PARAMETER_CONSTANT_CASEID_KEY] = (
+        constants.CASE_CONCEPT_NAME
+    )
     return df
 
 
-def rebase(log_obj: Union[EventLog, EventStream, pd.DataFrame], case_id: str = constants.CASE_CONCEPT_NAME,
-           activity_key: str = xes_constants.DEFAULT_NAME_KEY,
-           timestamp_key: str = xes_constants.DEFAULT_TIMESTAMP_KEY,
-           start_timestamp_key: str = xes_constants.DEFAULT_START_TIMESTAMP_KEY, timest_format: Optional[str] = None) -> Union[EventLog, EventStream, pd.DataFrame]:
+def rebase(
+    log_obj: Union[EventLog, EventStream, pd.DataFrame],
+    case_id: str = constants.CASE_CONCEPT_NAME,
+    activity_key: str = xes_constants.DEFAULT_NAME_KEY,
+    timestamp_key: str = xes_constants.DEFAULT_TIMESTAMP_KEY,
+    start_timestamp_key: str = xes_constants.DEFAULT_START_TIMESTAMP_KEY,
+    timest_format: Optional[str] = None,
+) -> Union[EventLog, EventStream, pd.DataFrame]:
     """
     Re-bases the log object by changing the case ID, activity, and timestamp attributes.
 
@@ -185,7 +234,7 @@ def rebase(log_obj: Union[EventLog, EventStream, pd.DataFrame], case_id: str = c
             activity_key=activity_key,
             timestamp_key=timestamp_key,
             start_timestamp_key=start_timestamp_key,
-            timest_format=timest_format
+            timest_format=timest_format,
         )
     elif isinstance(log_obj, EventLog):
         log_obj = pm4py.convert_to_dataframe(log_obj)
@@ -195,10 +244,13 @@ def rebase(log_obj: Union[EventLog, EventStream, pd.DataFrame], case_id: str = c
             activity_key=activity_key,
             timestamp_key=timestamp_key,
             start_timestamp_key=start_timestamp_key,
-            timest_format=timest_format
+            timest_format=timest_format,
         )
         from pm4py.objects.conversion.log import converter
-        return converter.apply(log_obj, variant=converter.Variants.TO_EVENT_LOG)
+
+        return converter.apply(
+            log_obj, variant=converter.Variants.TO_EVENT_LOG
+        )
     elif isinstance(log_obj, EventStream):
         log_obj = pm4py.convert_to_dataframe(log_obj)
         log_obj = format_dataframe(
@@ -207,7 +259,7 @@ def rebase(log_obj: Union[EventLog, EventStream, pd.DataFrame], case_id: str = c
             activity_key=activity_key,
             timestamp_key=timestamp_key,
             start_timestamp_key=start_timestamp_key,
-            timest_format=timest_format
+            timest_format=timest_format,
         )
         return pm4py.convert_to_event_stream(log_obj)
 
@@ -227,6 +279,7 @@ def parse_process_tree(tree_string: str) -> ProcessTree:
         process_tree = pm4py.parse_process_tree("-> ( 'A', O ( 'B', 'C' ), 'D' )")
     """
     from pm4py.objects.process_tree.utils.generic import parse
+
     return parse(tree_string)
 
 
@@ -247,6 +300,7 @@ def parse_powl_model_string(powl_string: str) -> POWL:
         print(powl_model)
     """
     from pm4py.objects.powl import parser
+
     return parser.parse_powl_model_string(powl_string)
 
 
@@ -279,32 +333,57 @@ def serialize(*args) -> Tuple[str, bytes]:
 
     if type(args[0]) is EventLog:
         from pm4py.objects.log.exporter.xes import exporter as xes_exporter
-        return (constants.AvailableSerializations.EVENT_LOG.value, xes_exporter.serialize(*args))
+
+        return (
+            constants.AvailableSerializations.EVENT_LOG.value,
+            xes_exporter.serialize(*args),
+        )
     elif pandas_utils.check_is_pandas_dataframe(args[0]):
         from io import BytesIO
+
         buffer = BytesIO()
         args[0].to_parquet(buffer)
-        return (constants.AvailableSerializations.DATAFRAME.value, buffer.getvalue())
+        return (
+            constants.AvailableSerializations.DATAFRAME.value,
+            buffer.getvalue(),
+        )
     elif len(args) == 3 and type(args[0]) is PetriNet:
         from pm4py.objects.petri_net.exporter import exporter as petri_exporter
-        return (constants.AvailableSerializations.PETRI_NET.value, petri_exporter.serialize(*args))
+
+        return (
+            constants.AvailableSerializations.PETRI_NET.value,
+            petri_exporter.serialize(*args),
+        )
     elif type(args[0]) is ProcessTree:
-        from pm4py.objects.process_tree.exporter import exporter as tree_exporter
-        return (constants.AvailableSerializations.PROCESS_TREE.value, tree_exporter.serialize(*args))
+        from pm4py.objects.process_tree.exporter import (
+            exporter as tree_exporter,
+        )
+
+        return (
+            constants.AvailableSerializations.PROCESS_TREE.value,
+            tree_exporter.serialize(*args),
+        )
     elif type(args[0]) is BPMN:
         from pm4py.objects.bpmn.exporter import exporter as bpmn_exporter
-        return (constants.AvailableSerializations.BPMN.value, bpmn_exporter.serialize(*args))
-    elif len(args) == 3 and (isinstance(args[0], dict) or isinstance(args[0], Counter)):
+
+        return (
+            constants.AvailableSerializations.BPMN.value,
+            bpmn_exporter.serialize(*args),
+        )
+    elif len(args) == 3 and (
+        isinstance(args[0], dict) or isinstance(args[0], Counter)
+    ):
         from pm4py.objects.dfg.exporter import exporter as dfg_exporter
+
         return (
             constants.AvailableSerializations.DFG.value,
             dfg_exporter.serialize(
                 args[0],
                 parameters={
                     "start_activities": args[1],
-                    "end_activities": args[2]
-                }
-            )
+                    "end_activities": args[2],
+                },
+            ),
         )
 
 
@@ -326,31 +405,45 @@ def deserialize(ser_obj: Tuple[str, bytes]) -> Any:
     """
     if ser_obj[0] == constants.AvailableSerializations.EVENT_LOG.value:
         from pm4py.objects.log.importer.xes import importer as xes_importer
+
         return xes_importer.deserialize(ser_obj[1])
     elif ser_obj[0] == constants.AvailableSerializations.DATAFRAME.value:
         from io import BytesIO
+
         buffer = BytesIO()
         buffer.write(ser_obj[1])
         buffer.flush()
         return pd.read_parquet(buffer)
     elif ser_obj[0] == constants.AvailableSerializations.PETRI_NET.value:
         from pm4py.objects.petri_net.importer import importer as petri_importer
+
         return petri_importer.deserialize(ser_obj[1])
     elif ser_obj[0] == constants.AvailableSerializations.PROCESS_TREE.value:
-        from pm4py.objects.process_tree.importer import importer as tree_importer
+        from pm4py.objects.process_tree.importer import (
+            importer as tree_importer,
+        )
+
         return tree_importer.deserialize(ser_obj[1])
     elif ser_obj[0] == constants.AvailableSerializations.BPMN.value:
         from pm4py.objects.bpmn.importer import importer as bpmn_importer
+
         return bpmn_importer.deserialize(ser_obj[1])
     elif ser_obj[0] == constants.AvailableSerializations.DFG.value:
         from pm4py.objects.dfg.importer import importer as dfg_importer
+
         return dfg_importer.deserialize(ser_obj[1])
 
 
-def get_properties(log, activity_key: str = "concept:name", timestamp_key: str = "time:timestamp",
-                  case_id_key: str = "case:concept:name", resource_key: str = "org:resource",
-                  group_key: Optional[str] = None, start_timestamp_key: Optional[str] = None,
-                  **kwargs):
+def get_properties(
+    log,
+    activity_key: str = "concept:name",
+    timestamp_key: str = "time:timestamp",
+    case_id_key: str = "case:concept:name",
+    resource_key: str = "org:resource",
+    group_key: Optional[str] = None,
+    start_timestamp_key: Optional[str] = None,
+    **kwargs
+):
     """
     Retrieves the properties from a log object.
 
@@ -368,7 +461,12 @@ def get_properties(log, activity_key: str = "concept:name", timestamp_key: str =
     __event_log_deprecation_warning(log)
 
     from copy import copy
-    parameters = copy(log.properties) if hasattr(log, 'properties') else copy(log.attrs) if hasattr(log, 'attrs') else {}
+
+    parameters = (
+        copy(log.properties)
+        if hasattr(log, "properties")
+        else copy(log.attrs) if hasattr(log, "attrs") else {}
+    )
 
     if activity_key is not None:
         parameters[constants.PARAMETER_CONSTANT_ACTIVITY_KEY] = activity_key
@@ -378,7 +476,9 @@ def get_properties(log, activity_key: str = "concept:name", timestamp_key: str =
         parameters[constants.PARAMETER_CONSTANT_TIMESTAMP_KEY] = timestamp_key
 
     if start_timestamp_key is not None:
-        parameters[constants.PARAMETER_CONSTANT_START_TIMESTAMP_KEY] = start_timestamp_key
+        parameters[constants.PARAMETER_CONSTANT_START_TIMESTAMP_KEY] = (
+            start_timestamp_key
+        )
 
     if case_id_key is not None:
         parameters[constants.PARAMETER_CONSTANT_CASEID_KEY] = case_id_key
@@ -398,9 +498,13 @@ def get_properties(log, activity_key: str = "concept:name", timestamp_key: str =
 @deprecation.deprecated(
     deprecated_in="2.3.0",
     removed_in="3.0.0",
-    details="This method will be removed in a future release. Please use the method-specific arguments."
+    details="This method will be removed in a future release. Please use the method-specific arguments.",
 )
-def set_classifier(log, classifier, classifier_attribute=constants.DEFAULT_CLASSIFIER_ATTRIBUTE):
+def set_classifier(
+    log,
+    classifier,
+    classifier_attribute=constants.DEFAULT_CLASSIFIER_ATTRIBUTE,
+):
     """
     Sets the specified classifier on an existing event log.
 
@@ -426,26 +530,43 @@ def set_classifier(log, classifier, classifier_attribute=constants.DEFAULT_CLASS
     if type(log) is EventLog:
         for trace in log:
             for event in trace:
-                event[classifier_attribute] = "+".join([str(event[x]) for x in classifier])
-        log.properties[constants.PARAMETER_CONSTANT_ACTIVITY_KEY] = classifier_attribute
-        log.properties[constants.PARAMETER_CONSTANT_ATTRIBUTE_KEY] = classifier_attribute
+                event[classifier_attribute] = "+".join(
+                    [str(event[x]) for x in classifier]
+                )
+        log.properties[constants.PARAMETER_CONSTANT_ACTIVITY_KEY] = (
+            classifier_attribute
+        )
+        log.properties[constants.PARAMETER_CONSTANT_ATTRIBUTE_KEY] = (
+            classifier_attribute
+        )
     elif pandas_utils.check_is_pandas_dataframe(log):
         log[classifier_attribute] = log[classifier[0]]
         for i in range(1, len(classifier)):
-            log[classifier_attribute] = log[classifier_attribute] + "+" + log[classifier[i]]
-        log.attrs[constants.PARAMETER_CONSTANT_ACTIVITY_KEY] = classifier_attribute
-        log.attrs[constants.PARAMETER_CONSTANT_ATTRIBUTE_KEY] = classifier_attribute
+            log[classifier_attribute] = (
+                log[classifier_attribute] + "+" + log[classifier[i]]
+            )
+        log.attrs[constants.PARAMETER_CONSTANT_ACTIVITY_KEY] = (
+            classifier_attribute
+        )
+        log.attrs[constants.PARAMETER_CONSTANT_ATTRIBUTE_KEY] = (
+            classifier_attribute
+        )
     else:
-        raise Exception("Setting classifier is not defined for this class of objects")
+        raise Exception(
+            "Setting classifier is not defined for this class of objects"
+        )
 
     return log
 
 
-def parse_event_log_string(traces: Collection[str], sep: str = ",",
-                           activity_key: str = xes_constants.DEFAULT_NAME_KEY,
-                           timestamp_key: str = xes_constants.DEFAULT_TIMESTAMP_KEY,
-                           case_id_key: str = constants.CASE_CONCEPT_NAME,
-                           return_legacy_log_object: bool = constants.DEFAULT_READ_XES_LEGACY_OBJECT) -> Union[EventLog, pd.DataFrame]:
+def parse_event_log_string(
+    traces: Collection[str],
+    sep: str = ",",
+    activity_key: str = xes_constants.DEFAULT_NAME_KEY,
+    timestamp_key: str = xes_constants.DEFAULT_TIMESTAMP_KEY,
+    case_id_key: str = constants.CASE_CONCEPT_NAME,
+    return_legacy_log_object: bool = constants.DEFAULT_READ_XES_LEGACY_OBJECT,
+) -> Union[EventLog, pd.DataFrame]:
     """
     Parses a collection of traces expressed as strings (e.g., ["A,B,C,D", "A,C,B,D", "A,D"]) into a log object.
 
@@ -474,14 +595,20 @@ def parse_event_log_string(traces: Collection[str], sep: str = ",",
         for act in activities:
             cases.append(str(index))
             activitiess.append(act)
-            timestamps.append(strpfromiso.fix_naivety(datetime.datetime.fromtimestamp(this_timest)))
+            timestamps.append(
+                strpfromiso.fix_naivety(
+                    datetime.datetime.fromtimestamp(this_timest)
+                )
+            )
             this_timest += 1
 
-    dataframe = pandas_utils.instantiate_dataframe({
-        case_id_key: cases,
-        activity_key: activitiess,
-        timestamp_key: timestamps
-    })
+    dataframe = pandas_utils.instantiate_dataframe(
+        {
+            case_id_key: cases,
+            activity_key: activitiess,
+            timestamp_key: timestamps,
+        }
+    )
 
     if return_legacy_log_object:
         import pm4py
@@ -491,7 +618,11 @@ def parse_event_log_string(traces: Collection[str], sep: str = ",",
     return dataframe
 
 
-def project_on_event_attribute(log: Union[EventLog, pd.DataFrame], attribute_key=xes_constants.DEFAULT_NAME_KEY, case_id_key=None) -> List[List[str]]:
+def project_on_event_attribute(
+    log: Union[EventLog, pd.DataFrame],
+    attribute_key=xes_constants.DEFAULT_NAME_KEY,
+    case_id_key=None,
+) -> List[List[str]]:
     """
     Projects the event log onto a specified event attribute. The result is a list containing a list for each case, where each case is represented as a list of values for the specified attribute.
 
@@ -532,25 +663,38 @@ def project_on_event_attribute(log: Union[EventLog, pd.DataFrame], attribute_key
     if check_is_pandas_dataframe(log):
         check_pandas_dataframe_columns(log)
         from pm4py.streaming.conversion import from_pandas
+
         parameters = {from_pandas.Parameters.ACTIVITY_KEY: attribute_key}
         if case_id_key is not None:
             parameters[from_pandas.Parameters.CASE_ID_KEY] = case_id_key
         it = from_pandas.apply(log, parameters=parameters)
         for trace in it:
-            output.append([
-                x[xes_constants.DEFAULT_NAME_KEY] if xes_constants.DEFAULT_NAME_KEY is not None else None
-                for x in trace
-            ])
+            output.append(
+                [
+                    (
+                        x[xes_constants.DEFAULT_NAME_KEY]
+                        if xes_constants.DEFAULT_NAME_KEY is not None
+                        else None
+                    )
+                    for x in trace
+                ]
+            )
     else:
         for trace in log:
-            output.append([
-                x[attribute_key] if attribute_key is not None else None
-                for x in trace
-            ])
+            output.append(
+                [
+                    x[attribute_key] if attribute_key is not None else None
+                    for x in trace
+                ]
+            )
     return output
 
 
-def sample_cases(log: Union[EventLog, pd.DataFrame], num_cases: int, case_id_key: str = "case:concept:name") -> Union[EventLog, pd.DataFrame]:
+def sample_cases(
+    log: Union[EventLog, pd.DataFrame],
+    num_cases: int,
+    case_id_key: str = "case:concept:name",
+) -> Union[EventLog, pd.DataFrame]:
     """
     Randomly samples a given number of cases from the event log.
 
@@ -575,14 +719,18 @@ def sample_cases(log: Union[EventLog, pd.DataFrame], num_cases: int, case_id_key
 
     if isinstance(log, EventLog):
         from pm4py.objects.log.util import sampling
+
         return sampling.sample(log, num_cases)
     elif check_is_pandas_dataframe(log):
         from pm4py.objects.log.util import dataframe_utils
+
         properties["max_no_cases"] = num_cases
         return dataframe_utils.sample_dataframe(log, parameters=properties)
 
 
-def sample_events(log: Union[EventStream, OCEL], num_events: int) -> Union[EventStream, OCEL, pd.DataFrame]:
+def sample_events(
+    log: Union[EventStream, OCEL], num_events: int
+) -> Union[EventStream, OCEL, pd.DataFrame]:
     """
     Randomly samples a given number of events from the event log.
 
@@ -604,26 +752,50 @@ def sample_events(log: Union[EventStream, OCEL], num_events: int) -> Union[Event
 
     if isinstance(log, EventLog):
         from pm4py.objects.log.util import sampling
+
         return sampling.sample_log(log, num_events)
     elif isinstance(log, EventStream):
         from pm4py.objects.log.util import sampling
+
         return sampling.sample_stream(log, num_events)
     elif isinstance(log, OCEL):
         from pm4py.objects.ocel.util import sampling
-        return sampling.sample_ocel_events(log, parameters={"num_entities": num_events})
+
+        return sampling.sample_ocel_events(
+            log, parameters={"num_entities": num_events}
+        )
     elif check_is_pandas_dataframe(log):
         return log.sample(n=num_events)
 
 
 def __event_log_deprecation_warning(log):
-    if constants.SHOW_EVENT_LOG_DEPRECATION and not hasattr(log, "deprecation_warning_shown"):
+    if constants.SHOW_EVENT_LOG_DEPRECATION and not hasattr(
+        log, "deprecation_warning_shown"
+    ):
         if constants.SHOW_INTERNAL_WARNINGS:
             if isinstance(log, EventLog) or isinstance(log, Trace):
-                warnings.warn("The EventLog class has been deprecated and will be removed in a future release.")
+                warnings.warn(
+                    "The EventLog class has been deprecated and will be removed in a future release."
+                )
                 log.deprecation_warning_shown = True
             elif isinstance(log, Trace):
-                warnings.warn("The Trace class has been deprecated and will be removed in a future release.")
+                warnings.warn(
+                    "The Trace class has been deprecated and will be removed in a future release."
+                )
                 log.deprecation_warning_shown = True
             elif isinstance(log, EventStream):
-                warnings.warn("The EventStream class has been deprecated and will be removed in a future release.")
+                warnings.warn(
+                    "The EventStream class has been deprecated and will be removed in a future release."
+                )
                 log.deprecation_warning_shown = True
+
+
+def __rustxes_usage_warning():
+    if Shared.RUSTXES_WARNING_SHOWN is False:
+        warnings.warn("In the current version, the import/export operation uses `rustxes` by default for importing/exporting files faster. Please uninstall `rustxes` to revert the behavior.")
+        Shared.RUSTXES_WARNING_SHOWN = True
+
+def __rustxes_non_usage_warning():
+    if Shared.RUSTXES_WARNING_SHOWN is False:
+        warnings.warn("Install the optional requirement `rustxes` to import/export files faster.")
+        Shared.RUSTXES_WARNING_SHOWN = True

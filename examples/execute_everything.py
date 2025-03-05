@@ -1037,7 +1037,7 @@ def main():
         execute_script(bpmn_from_pt)
         execute_script(bpmn_import_and_to_petri_net)
         execute_script(tree_playout)
-        execute_script(emd_evaluation)
+        #execute_script(emd_evaluation)
         execute_script(footprints_tree_conf)
         execute_script(footprints_petri_net)
         execute_script(corr_mining)
