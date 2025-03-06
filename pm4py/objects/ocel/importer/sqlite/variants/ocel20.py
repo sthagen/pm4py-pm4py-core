@@ -137,7 +137,8 @@ def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None):
         objects = object_types_coll
         object_changes = None
 
-    del objects[event_timestamp]
+    if event_timestamp in objects:
+        del objects[event_timestamp]
     del objects[cumcount_field]
 
     E2O = pd.read_sql("SELECT * FROM event_object", conn)

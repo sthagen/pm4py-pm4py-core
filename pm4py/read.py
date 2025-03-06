@@ -444,7 +444,7 @@ def read_ocel2(
         "jsonocel"
     ):
         return read_ocel2_json(
-            local_path, variant_str=variant_str, encoding=encoding
+            local_path, encoding=encoding
         )
     raise Exception("Unsupported file format for OCEL 2.0")
 

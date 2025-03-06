@@ -448,8 +448,8 @@ def write_ocel2_json(
         pm4py.write_ocel2_json(ocel, '<path_to_export_to>')
     """
     file_path = str(file_path)
-    if not file_path.lower().endswith("jsonocel"):
-        file_path = file_path + ".jsonocel"
+    if not (file_path.lower().endswith("jsonocel") or file_path.lower().endswith("json")):
+        file_path = file_path + ".json"
 
     from pm4py.objects.ocel.exporter.jsonocel import (
         exporter as jsonocel_exporter,
@@ -510,8 +510,8 @@ def write_ocel2_xml(
         pm4py.write_ocel2_xml(ocel, '<path_to_export_to>')
     """
     file_path = str(file_path)
-    if not file_path.lower().endswith("xmlocel"):
-        file_path = file_path + ".xmlocel"
+    if not (file_path.lower().endswith("xmlocel") or file_path.lower().endswith("xml")):
+        file_path = file_path + ".xml"
 
     from pm4py.objects.ocel.exporter.xmlocel import exporter as xml_exporter
 
