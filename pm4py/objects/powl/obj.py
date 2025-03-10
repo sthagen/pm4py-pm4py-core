@@ -29,7 +29,6 @@ from typing import List as TList, Optional, Union
 from abc import ABC, abstractmethod
 
 
-
 class POWL(ProcessTree, ABC):
     def print(self) -> None:
         print(self.to_string())
@@ -43,10 +42,14 @@ class POWL(ProcessTree, ABC):
     def validate_partial_orders(self):
         if isinstance(self, StrictPartialOrder):
             if not self.order.is_irreflexive():
-                raise Exception("The irreflexivity of the partial order is violated!")
+                raise Exception(
+                    "The irreflexivity of the partial order is violated!"
+                )
             if not self.order.is_transitive():
-                raise Exception("The transitivity of the partial order is violated!")
-        if hasattr(self, 'children'):
+                raise Exception(
+                    "The transitivity of the partial order is violated!"
+                )
+        if hasattr(self, "children"):
             for child in self.children:
                 child.validate_partial_orders()
 
@@ -84,7 +87,10 @@ class Transition(POWL):
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, Transition):
-            return self._label == other._label and self._identifier == other._identifier
+            return (
+                self._label == other._label
+                and self._identifier == other._identifier
+            )
         return False
 
     def equal_content(self, other: object) -> bool:
@@ -116,7 +122,9 @@ class SilentTransition(Transition):
 
 
 class FrequentTransition(Transition):
-    def __init__(self, label, min_freq: Union[str, int], max_freq: Union[str, int]) -> None:
+    def __init__(
+        self, label, min_freq: Union[str, int], max_freq: Union[str, int]
+    ) -> None:
         self.skippable = False
         self.selfloop = False
         if min_freq == 0:
@@ -126,7 +134,15 @@ class FrequentTransition(Transition):
         min_freq = "1"
         self.activity = label
         if self.skippable or self.selfloop:
-            label = str(label) + "\n" + "[" + str(min_freq) + "," + str(max_freq) + "]"
+            label = (
+                str(label)
+                + "\n"
+                + "["
+                + str(min_freq)
+                + ","
+                + str(max_freq)
+                + "]"
+            )
 
         super().__init__(label=label)
 
@@ -140,14 +156,13 @@ class StrictPartialOrder(POWL):
         self.additional_information = None
 
     def copy(self):
-        copied_nodes = {n:n.copy() for n in self.order.nodes}
+        copied_nodes = {n: n.copy() for n in self.order.nodes}
         res = StrictPartialOrder(list(copied_nodes.values()))
         for n1 in self.order.nodes:
             for n2 in self.order.nodes:
                 if self.order.is_edge(n1, n2):
                     res.add_edge(copied_nodes[n1], copied_nodes[n2])
         return res
-
 
     def _set_order(self, nodes: TList[POWL]) -> None:
         self.order = BinaryRelation(nodes)
@@ -162,10 +177,52 @@ class StrictPartialOrder(POWL):
         return self.order.nodes
 
     def to_string(self, level=0, indent=False, max_indent=sys.maxsize) -> str:
-        model_string = STRICT_PARTIAL_ORDER_LABEL + self.order.__repr__()
-        if indent:
-            model_string = "\n".join(hie_utils.indent_representation(model_string, max_indent=max_indent))
-        return model_string
+        """
+        Represents a StrictPartialOrder as a string, avoiding infinite recursion.
+
+        Parameters
+        ----------
+        level : int
+            Current indentation level
+        indent : bool
+            Whether to indent the output
+        max_indent : int
+            Maximum indentation level
+
+        Returns
+        -------
+        str
+            String representation of the partial order
+        """
+        # Start with the partial order label
+        rep = f"{STRICT_PARTIAL_ORDER_LABEL}=(nodes={{"
+
+        # Represent the nodes (children)
+        nodes_str = []
+        for i, node in enumerate(self.order.nodes):
+            # Call to_string on each child with increased level, preventing recursive blow-up
+            node_str = node.to_string(level=level + 1, indent=False, max_indent=max_indent)
+            nodes_str.append(node_str)
+        rep += ", ".join(nodes_str)
+        rep += "}, order={"
+
+        # Represent the edges in the partial order
+        edges_str = []
+        for source in self.order.nodes:
+            for target in self.order.nodes:
+                if self.order.is_edge(source, target):
+                    # Use a simplified representation for source and target to avoid recursion
+                    source_str = source.label if source.label else f"id_{hash(source)}"
+                    target_str = target.label if target.label else f"id_{hash(target)}"
+                    edges_str.append(f"{source_str}-->{target_str}")
+        rep += ", ".join(edges_str)
+        rep += "})"
+
+        # Apply indentation if requested
+        if indent and level <= max_indent:
+            rep = "\n".join(hie_utils.indent_representation(rep, max_indent=max_indent))
+
+        return rep
 
     def __repr__(self) -> str:
         return self.to_string()
@@ -220,19 +277,28 @@ class StrictPartialOrder(POWL):
             for j in range(len(ordered_nodes_1)):
                 target_1 = ordered_nodes_1[j]
                 target_2 = ordered_nodes_2[j]
-                if self.order.is_edge(source_1, target_1) and not other.order.is_edge(source_2, target_2):
+                if self.order.is_edge(
+                    source_1, target_1
+                ) and not other.order.is_edge(source_2, target_2):
                     return False
-                if not self.order.is_edge(source_1, target_1) and other.order.is_edge(source_2, target_2):
+                if not self.order.is_edge(
+                    source_1, target_1
+                ) and other.order.is_edge(source_2, target_2):
                     return False
         return True
 
     def simplify_using_frequent_transitions(self) -> "StrictPartialOrder":
-        new_nodes = {node: node.simplify_using_frequent_transitions() for node in self.children}
+        new_nodes = {
+            node: node.simplify_using_frequent_transitions()
+            for node in self.children
+        }
         res = StrictPartialOrder(list(new_nodes.values()))
         for node_1 in self.children:
             for node_2 in self.children:
                 if self.partial_order.is_edge(node_1, node_2):
-                    res.partial_order.add_edge(new_nodes[node_1], new_nodes[node_2])
+                    res.partial_order.add_edge(
+                        new_nodes[node_1], new_nodes[node_2]
+                    )
 
         return res
 
@@ -244,7 +310,9 @@ class StrictPartialOrder(POWL):
 
         def connected(node):
             for node2 in self.children:
-                if self.partial_order.is_edge(node, node2) or self.partial_order.is_edge(node2, node):
+                if self.partial_order.is_edge(
+                    node, node2
+                ) or self.partial_order.is_edge(node2, node):
                     return True
             return False
 
@@ -273,14 +341,25 @@ class StrictPartialOrder(POWL):
         for node_1 in self.children:
             for node_2 in self.children:
                 if self.partial_order.is_edge(node_1, node_2):
-                    if node_1 in simplified_nodes.keys() and node_2 in simplified_nodes.keys():
-                        res.partial_order.add_edge(simplified_nodes[node_1], simplified_nodes[node_2])
+                    if (
+                        node_1 in simplified_nodes.keys()
+                        and node_2 in simplified_nodes.keys()
+                    ):
+                        res.partial_order.add_edge(
+                            simplified_nodes[node_1], simplified_nodes[node_2]
+                        )
                     elif node_1 in simplified_nodes.keys():
-                        res.partial_order.add_edge(simplified_nodes[node_1], start_nodes[node_2])
+                        res.partial_order.add_edge(
+                            simplified_nodes[node_1], start_nodes[node_2]
+                        )
                     elif node_2 in simplified_nodes.keys():
-                        res.partial_order.add_edge(end_nodes[node_1], simplified_nodes[node_2])
+                        res.partial_order.add_edge(
+                            end_nodes[node_1], simplified_nodes[node_2]
+                        )
                     else:
-                        res.partial_order.add_edge(end_nodes[node_1], start_nodes[node_2])
+                        res.partial_order.add_edge(
+                            end_nodes[node_1], start_nodes[node_2]
+                        )
         for po, simplified_po in sub_nodes.items():
             for node_1 in simplified_po.children:
                 for node_2 in simplified_po.children:
@@ -305,7 +384,9 @@ class OperatorPOWL(POWL):
     def __init__(self, operator: Operator, children: TList[POWL]) -> None:
         if operator is Operator.XOR:
             if len(children) < 2:
-                raise Exception("Cannot create a choice of less than 2 submodels!")
+                raise Exception(
+                    "Cannot create a choice of less than 2 submodels!"
+                )
         elif operator is Operator.LOOP:
             if len(children) != 2:
                 raise Exception("Only loops of length 2 are supported!")
@@ -350,20 +431,42 @@ class OperatorPOWL(POWL):
         if self.operator is Operator.XOR and len(self.children) == 2:
             child_0 = self.children[0]
             child_1 = self.children[1]
-            if isinstance(child_0, Transition) and isinstance(child_1, SilentTransition):
-                return FrequentTransition(label=child_0.label, min_freq=0, max_freq=1)
-            elif isinstance(child_1, Transition) and isinstance(child_0, SilentTransition):
-                return FrequentTransition(label=child_1.label, min_freq=0, max_freq=1)
+            if isinstance(child_0, Transition) and isinstance(
+                child_1, SilentTransition
+            ):
+                return FrequentTransition(
+                    label=child_0.label, min_freq=0, max_freq=1
+                )
+            elif isinstance(child_1, Transition) and isinstance(
+                child_0, SilentTransition
+            ):
+                return FrequentTransition(
+                    label=child_1.label, min_freq=0, max_freq=1
+                )
 
         if self.operator is Operator.LOOP and len(self.children) == 2:
             child_0 = self.children[0]
             child_1 = self.children[1]
-            if isinstance(child_0, Transition) and isinstance(child_1, SilentTransition):
-                return FrequentTransition(label=child_0.label, min_freq=1, max_freq="-")
-            elif isinstance(child_1, Transition) and isinstance(child_0, SilentTransition):
-                return FrequentTransition(label=child_1.label, min_freq=0, max_freq="-")
+            if isinstance(child_0, Transition) and isinstance(
+                child_1, SilentTransition
+            ):
+                return FrequentTransition(
+                    label=child_0.label, min_freq=1, max_freq="-"
+                )
+            elif isinstance(child_1, Transition) and isinstance(
+                child_0, SilentTransition
+            ):
+                return FrequentTransition(
+                    label=child_1.label, min_freq=0, max_freq="-"
+                )
 
-        return OperatorPOWL(self.operator, [child.simplify_using_frequent_transitions() for child in self.children])
+        return OperatorPOWL(
+            self.operator,
+            [
+                child.simplify_using_frequent_transitions()
+                for child in self.children
+            ],
+        )
 
     def simplify(self) -> "OperatorPOWL":
         if self.operator is Operator.XOR and len(self.children) == 2:
@@ -371,12 +474,25 @@ class OperatorPOWL(POWL):
             child_1 = self.children[1]
 
             def merge_with_children(child0, child1):
-                if isinstance(child0, SilentTransition) and isinstance(child1, OperatorPOWL) \
-                        and child1.operator is Operator.LOOP:
+                if (
+                    isinstance(child0, SilentTransition)
+                    and isinstance(child1, OperatorPOWL)
+                    and child1.operator is Operator.LOOP
+                ):
                     if isinstance(child1.children[0], SilentTransition):
-                        return OperatorPOWL(Operator.LOOP, [n.simplify() for n in child1.children])
+                        return OperatorPOWL(
+                            Operator.LOOP,
+                            [n.simplify() for n in child1.children],
+                        )
                     elif isinstance(child1.children[1], SilentTransition):
-                        return OperatorPOWL(Operator.LOOP, list(reversed([n.simplify() for n in child1.children])))
+                        return OperatorPOWL(
+                            Operator.LOOP,
+                            list(
+                                reversed(
+                                    [n.simplify() for n in child1.children]
+                                )
+                            ),
+                        )
 
                 return None
 
@@ -392,11 +508,18 @@ class OperatorPOWL(POWL):
             new_children = []
             for child in self.children:
                 s_child = child.simplify()
-                if isinstance(s_child, OperatorPOWL) and s_child.operator is Operator.XOR:
+                if (
+                    isinstance(s_child, OperatorPOWL)
+                    and s_child.operator is Operator.XOR
+                ):
                     for node in s_child.children:
                         new_children.append(node.simplify())
                 else:
                     new_children.append(s_child)
-            return OperatorPOWL(Operator.XOR, [child for child in new_children])
+            return OperatorPOWL(
+                Operator.XOR, [child for child in new_children]
+            )
         else:
-            return OperatorPOWL(self.operator, [child.simplify() for child in self.children])
+            return OperatorPOWL(
+                self.operator, [child.simplify() for child in self.children]
+            )
