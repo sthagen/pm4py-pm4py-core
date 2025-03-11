@@ -930,8 +930,8 @@ def discover_powl(log: Union[EventLog, pd.DataFrame], variant=None,
         check_pandas_dataframe_columns(
             log, activity_key=activity_key, timestamp_key=timestamp_key, case_id_key=case_id_key)
 
-    import pm4py
-    log = pm4py.convert_to_event_log(log, case_id_key=case_id_key)
+    #import pm4py
+    #log = pm4py.convert_to_event_log(log, case_id_key=case_id_key)
     properties = get_properties(log, activity_key=activity_key, timestamp_key=timestamp_key)
 
     if order_graph_filtering_threshold is not None:
