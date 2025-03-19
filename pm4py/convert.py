@@ -270,7 +270,7 @@ def convert_to_petri_net(
 
 
 def convert_to_process_tree(
-    *args: Union[Tuple[PetriNet, Marking, Marking], BPMN, ProcessTree]
+    *args: Union[Tuple[PetriNet, Marking, Marking], BPMN, ProcessTree, POWL]
 ) -> ProcessTree:
     """
     Converts an input model to a process tree.
@@ -295,7 +295,10 @@ def convert_to_process_tree(
     from pm4py.objects.process_tree.obj import ProcessTree
     from pm4py.objects.petri_net.obj import PetriNet
 
-    if isinstance(args[0], ProcessTree):
+    if isinstance(args[0], POWL):
+        from pm4py.objects.conversion.powl.variants import to_process_tree
+        return to_process_tree.apply(args[0])
+    elif isinstance(args[0], ProcessTree):
         # the object is already a process tree
         return args[0]
 

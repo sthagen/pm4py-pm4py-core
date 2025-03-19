@@ -25,7 +25,6 @@ from pm4py.util import exec_utils, pandas_utils
 from pm4py.objects.ocel import constants as ocel_constants
 from pm4py.objects.ocel.obj import OCEL
 from pm4py.statistics.ocel import act_ot_dependent, act_utils, edge_metrics
-from copy import copy
 
 
 class Parameters(Enum):
@@ -34,7 +33,9 @@ class Parameters(Enum):
     COMPUTE_EDGES_PERFORMANCE = "compute_edges_performance"
 
 
-def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, Any]:
+def apply(
+    ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None
+) -> Dict[str, Any]:
     """
     Discovers an OC-DFG model from an object-centric event log.
     Reference paper:
@@ -56,89 +57,103 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, 
         Object-centric directly-follows graph, expressed as a dictionary containing the following properties:
         - activities: complete set of activities derived from the object-centric event log
         - object_types: complete set of object types derived from the object-centric event log
-        - edges: dictionary connecting each object type to a set of directly-followed arcs between activities (expressed as tuples,
-                  e.g., (act1, act2)). Every pair of activities is linked to some sets:
-                - event_pairs: the tuples of event identifiers where the directly-follows arc occurs
-                - total_objects: set of tuples containing two event and one object identifier, uniquely identifying an
-                                  occurrence of the arc.
-        - activities_indep: dictionary linking each activity, regardless of the object type, to some sets:
-            - events: the event identifiers where the activity occurs
-            - unique_objects: the object identifiers where the activity occurs
-            - total_objects: the tuples of event and object identifiers where the activity occurs.
-        - activities_ot: dictionary linking each object type to another dictionary, where the activities are linked to some sets:
-            - events: the event identifiers where the activity occurs (with at least one object of the given object type)
-            - unique_objects: the object identifiers of the given object type where the activity occurs
-            - total_objects: the tuples of event and object identifiers where the activity occurs.
-        - start_activities: dictionary linking each object type to another dictionary, where the start activities
-                            of the given object type are linked to some sets:
-            - events: the event identifiers where the start activity occurs (with at least one object of the given object type)
-            - unique_objects: the object identifiers of the given object type where the start activity occurs
-            - total_objects: the tuples of event and object identifiers where the start activity occurs.
-        - end_activities: dictionary linking each object type to another dictionary, where the end activities
-                          of the given object type are linked to some sets:
-            - events: the event identifiers where the end activity occurs (with at least one object of the given object type)
-            - unique_objects: the object identifiers of the given object type where the end activity occurs
-            - total_objects: the tuples of event and object identifiers where the end activity occurs.
+        - edges: dictionary connecting each object type to a set of directly-followed arcs between activities
+        - activities_indep: dictionary linking each activity, regardless of the object type
+        - activities_ot: dictionary linking each object type to another dictionary
+        - start_activities: dictionary linking each object type to start activities
+        - end_activities: dictionary linking each object type to end activities
     """
     if parameters is None:
         parameters = {}
 
-    compute_edges_performance = exec_utils.get_param_value(Parameters.COMPUTE_EDGES_PERFORMANCE, parameters, True)
+    # Extract parameter values once
+    object_type = exec_utils.get_param_value(
+        Parameters.OBJECT_TYPE, parameters, ocel.object_type_column
+    )
+    event_activity = exec_utils.get_param_value(
+        Parameters.EVENT_ACTIVITY, parameters, ocel.event_activity
+    )
+    compute_edges_performance = exec_utils.get_param_value(
+        Parameters.COMPUTE_EDGES_PERFORMANCE, parameters, True
+    )
 
-    ot_independent = act_utils.find_associations_from_ocel(ocel, parameters=parameters)
-    ot_dependent = act_ot_dependent.find_associations_from_ocel(ocel, parameters=parameters)
-    start_parameters = copy(parameters)
-    start_parameters["prefiltering"] = "start"
-    ot_dependent_start = act_ot_dependent.find_associations_from_ocel(ocel, parameters=start_parameters)
-    end_parameters = copy(parameters)
-    end_parameters["prefiltering"] = "end"
-    ot_dependent_end = act_ot_dependent.find_associations_from_ocel(ocel, parameters=end_parameters)
-    edges = edge_metrics.find_associations_per_edge(ocel, parameters=end_parameters)
+    # Pre-compute activities and object types (used multiple times)
+    activities = set(pandas_utils.format_unique(ocel.events[event_activity].unique()))
+    object_types = set(pandas_utils.format_unique(ocel.objects[object_type].unique()))
 
-    object_type = exec_utils.get_param_value(Parameters.OBJECT_TYPE, parameters, ocel.object_type_column)
-    event_activity = exec_utils.get_param_value(Parameters.EVENT_ACTIVITY, parameters, ocel.event_activity)
+    # Initialize result dictionary with pre-computed values
+    ret = {
+        "activities": activities,
+        "object_types": object_types,
+        "edges": {},
+        "activities_indep": {},
+        "activities_ot": {},
+        "start_activities": {},
+        "end_activities": {},
+        "edges_performance": {"event_couples": {}, "total_objects": {}}
+    }
 
-    ret = {}
-    ret["activities"] = set(pandas_utils.format_unique(ocel.events[event_activity].unique()))
-    ret["object_types"] = set(pandas_utils.format_unique(ocel.objects[object_type].unique()))
+    # Process object-type independent associations (shared computation)
+    ot_independent = act_utils.find_associations_from_ocel(
+        ocel, parameters=parameters
+    )
+    ret["activities_indep"] = {
+        "events": act_utils.aggregate_events(ot_independent),
+        "unique_objects": act_utils.aggregate_unique_objects(ot_independent),
+        "total_objects": act_utils.aggregate_total_objects(ot_independent)
+    }
 
-    ret["edges"] = {}
-    ret["edges"]["event_couples"] = edge_metrics.aggregate_ev_couples(edges)
-    ret["edges"]["unique_objects"] = edge_metrics.aggregate_unique_objects(edges)
-    ret["edges"]["total_objects"] = edge_metrics.aggregate_total_objects(edges)
+    # Process object-type dependent associations (shared computation)
+    ot_dependent = act_ot_dependent.find_associations_from_ocel(
+        ocel, parameters=parameters
+    )
+    ret["activities_ot"] = {
+        "events": act_ot_dependent.aggregate_events(ot_dependent),
+        "unique_objects": act_ot_dependent.aggregate_unique_objects(ot_dependent),
+        "total_objects": act_ot_dependent.aggregate_total_objects(ot_dependent)
+    }
 
-    ret["activities_indep"] = {}
-    ret["activities_indep"]["events"] = act_utils.aggregate_events(ot_independent)
-    ret["activities_indep"]["unique_objects"] = act_utils.aggregate_unique_objects(ot_independent)
-    ret["activities_indep"]["total_objects"] = act_utils.aggregate_total_objects(ot_independent)
+    # Process start activities
+    start_parameters = {**parameters, "prefiltering": "start"}
+    ot_dependent_start = act_ot_dependent.find_associations_from_ocel(
+        ocel, parameters=start_parameters
+    )
+    ret["start_activities"] = {
+        "events": act_ot_dependent.aggregate_events(ot_dependent_start),
+        "unique_objects": act_ot_dependent.aggregate_unique_objects(ot_dependent_start),
+        "total_objects": act_ot_dependent.aggregate_total_objects(ot_dependent_start)
+    }
 
-    ret["activities_ot"] = {}
-    ret["activities_ot"]["events"] = act_ot_dependent.aggregate_events(ot_dependent)
-    ret["activities_ot"]["unique_objects"] = act_ot_dependent.aggregate_unique_objects(ot_dependent)
-    ret["activities_ot"]["total_objects"] = act_ot_dependent.aggregate_total_objects(ot_dependent)
+    # Process end activities
+    end_parameters = {**parameters, "prefiltering": "end"}
+    ot_dependent_end = act_ot_dependent.find_associations_from_ocel(
+        ocel, parameters=end_parameters
+    )
+    ret["end_activities"] = {
+        "events": act_ot_dependent.aggregate_events(ot_dependent_end),
+        "unique_objects": act_ot_dependent.aggregate_unique_objects(ot_dependent_end),
+        "total_objects": act_ot_dependent.aggregate_total_objects(ot_dependent_end)
+    }
 
-    ret["start_activities"] = {}
-    ret["start_activities"]["events"] = act_ot_dependent.aggregate_events(ot_dependent_start)
-    ret["start_activities"]["unique_objects"] = act_ot_dependent.aggregate_unique_objects(ot_dependent_start)
-    ret["start_activities"]["total_objects"] = act_ot_dependent.aggregate_total_objects(ot_dependent_start)
+    # Process edges
+    edges = edge_metrics.find_associations_per_edge(
+        ocel, parameters=end_parameters
+    )
+    ret["edges"] = {
+        "event_couples": edge_metrics.aggregate_ev_couples(edges),
+        "unique_objects": edge_metrics.aggregate_unique_objects(edges),
+        "total_objects": edge_metrics.aggregate_total_objects(edges)
+    }
 
-    ret["end_activities"] = {}
-    ret["end_activities"]["events"] = act_ot_dependent.aggregate_events(ot_dependent_end)
-    ret["end_activities"]["unique_objects"] = act_ot_dependent.aggregate_unique_objects(ot_dependent_end)
-    ret["end_activities"]["total_objects"] = act_ot_dependent.aggregate_total_objects(ot_dependent_end)
-
-    ret["edges_performance"] = {}
-    ret["edges_performance"]["event_couples"] = {}
-    ret["edges_performance"]["total_objects"] = {}
-
+    # Only compute performance metrics if needed
     if compute_edges_performance:
-        ret["edges_performance"]["event_couples"] = edge_metrics.performance_calculation_ocel_aggregation(ocel,
-                                                                                                          ret["edges"][
-                                                                                                              "event_couples"],
-                                                                                                          parameters=parameters)
-        ret["edges_performance"]["total_objects"] = edge_metrics.performance_calculation_ocel_aggregation(ocel,
-                                                                                                          ret["edges"][
-                                                                                                              "total_objects"],
-                                                                                                          parameters=parameters)
+        ret["edges_performance"] = {
+            "event_couples": edge_metrics.performance_calculation_ocel_aggregation(
+                ocel, ret["edges"]["event_couples"], parameters=parameters
+            ),
+            "total_objects": edge_metrics.performance_calculation_ocel_aggregation(
+                ocel, ret["edges"]["total_objects"], parameters=parameters
+            )
+        }
 
     return ret

@@ -23,6 +23,7 @@ Contact: info@processintelligence.solutions
 from pm4py.objects.ocel.obj import OCEL
 from typing import Optional, Dict, Any
 import warnings
+import pandas as pd
 
 
 def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
@@ -45,32 +46,77 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
     if parameters is None:
         parameters = {}
 
+    # Store frequently accessed column names locally to reduce attribute lookups
+    event_id_col = ocel.event_id_column
+    object_id_col = ocel.object_id_column
+    event_activity = ocel.event_activity
+    object_type_col = ocel.object_type_column
+
+    # Define fields to process for each dataframe
     fields = {
-        "events": [ocel.event_id_column, ocel.event_activity],
-        "objects": [ocel.object_id_column, ocel.object_type_column],
-        "relations": [ocel.event_id_column, ocel.object_id_column, ocel.event_activity, ocel.object_type_column],
-        "o2o": [ocel.object_id_column, ocel.object_id_column+"_2"],
-        "e2e": [ocel.event_id_column, ocel.event_id_column+"_2"],
-        "object_changes": [ocel.object_id_column]
+        "events": [event_id_col, event_activity],
+        "objects": [object_id_col, object_type_col],
+        "relations": [event_id_col, object_id_col, event_activity, object_type_col],
+        "o2o": [object_id_col, object_id_col + "_2"],
+        "e2e": [event_id_col, event_id_col + "_2"],
+        "object_changes": [object_id_col],
     }
 
-    for tab in fields:
+    # Process each dataframe
+    for tab, columns in fields.items():
+        # Skip processing if attribute doesn't exist
+        if not hasattr(ocel, tab):
+            continue
+
+        # Get dataframe
         df = getattr(ocel, tab)
-        for fie in fields[tab]:
-            df = df.dropna(subset=[fie], how="any")
-            df[fie] = df[fie].astype("string")
-            df = df.dropna(subset=[fie], how="any")
-            df = df[df[fie].str.len() > 0]
-            setattr(ocel, tab, df)
 
-    # check if the event IDs or object IDs are unique
-    num_ev_ids = ocel.events[ocel.event_id_column].nunique()
-    num_obj_ids = ocel.objects[ocel.object_id_column].nunique()
+        # Skip empty dataframes
+        if df.empty:
+            continue
 
-    if num_ev_ids < len(ocel.events):
-        warnings.warn("The event identifiers in the OCEL are not unique!")
+        # Filter to only columns that exist in this dataframe
+        valid_columns = [col for col in columns if col in df.columns]
+        if not valid_columns:
+            continue
 
-    if num_obj_ids < len(ocel.objects):
-        warnings.warn("The object identifiers in the OCEL are not unique!")
+        # Check for NA values - only create mask if needed
+        has_na = df[valid_columns].isna().any().any()
+        if has_na:
+            # Create mask for rows without NA values
+            valid_rows = ~df[valid_columns].isna().any(axis=1)
+            df = df.loc[valid_rows]
+
+        # Convert columns to string type
+        for col in valid_columns:
+            df[col] = df[col].astype(str)
+
+        # Efficiently filter out empty strings
+        # Create a single mask for all columns and apply once
+        valid_rows = pd.Series(True, index=df.index)
+        for col in valid_columns:
+            valid_rows &= (df[col].str.len() > 0)
+
+        # Only filter if we found empty strings
+        if not valid_rows.all():
+            df = df.loc[valid_rows]
+
+        # Update OCEL attribute
+        setattr(ocel, tab, df)
+
+    # Check uniqueness efficiently
+    events_df = ocel.events
+    objects_df = ocel.objects
+
+    # Only check if there are rows to check
+    if len(events_df) > 0:
+        num_ev_ids = events_df[event_id_col].nunique()
+        if num_ev_ids < len(events_df):
+            warnings.warn("The event identifiers in the OCEL are not unique!")
+
+    if len(objects_df) > 0:
+        num_obj_ids = objects_df[object_id_col].nunique()
+        if num_obj_ids < len(objects_df):
+            warnings.warn("The object identifiers in the OCEL are not unique!")
 
     return ocel
