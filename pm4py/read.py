@@ -22,8 +22,6 @@ Contact: info@processintelligence.solutions
 from typing import Tuple, Dict, Optional, Union
 import os
 
-# NEW IMPORTS FOR URI SUPPORT
-import requests
 import tempfile
 import importlib.util
 from urllib.parse import urlparse
@@ -56,6 +54,7 @@ def _resolve_path(file_path: str) -> str:
     """
     parsed = urlparse(file_path)
     if parsed.scheme in ("http", "https"):
+        import requests
         response = requests.get(file_path)
         response.raise_for_status()
         # Infer the file extension from the URL (if available)

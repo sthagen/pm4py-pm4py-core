@@ -28,6 +28,7 @@ from typing import Union, Tuple, Optional, Collection, List, Any, Dict
 import pandas as pd
 from copy import deepcopy
 
+import pm4py
 from pm4py.objects.bpmn.obj import BPMN
 from pm4py.objects.ocel.obj import OCEL
 from pm4py.objects.powl.obj import POWL
@@ -39,11 +40,18 @@ from pm4py.objects.petri_net.obj import PetriNet
 from pm4py.util import constants, nx_utils
 from pm4py.utils import get_properties, __event_log_deprecation_warning
 from pm4py.objects.transition_system.obj import TransitionSystem
-from pm4py.util.pandas_utils import check_is_pandas_dataframe, check_pandas_dataframe_columns
+from pm4py.util.pandas_utils import (
+    check_is_pandas_dataframe,
+    check_pandas_dataframe_columns,
+)
 import networkx as nx
 
 
-def convert_to_event_log(obj: Union[pd.DataFrame, EventStream], case_id_key: str = "case:concept:name", **kwargs) -> EventLog:
+def convert_to_event_log(
+    obj: Union[pd.DataFrame, EventStream],
+    case_id_key: str = "case:concept:name",
+    **kwargs,
+) -> EventLog:
     """
     Converts a DataFrame or EventStream object to an event log object.
 
@@ -70,14 +78,21 @@ def convert_to_event_log(obj: Union[pd.DataFrame, EventStream], case_id_key: str
         parameters[k] = v
 
     from pm4py.objects.conversion.log import converter
-    log = converter.apply(obj, variant=converter.Variants.TO_EVENT_LOG, parameters=parameters)
+
+    log = converter.apply(
+        obj, variant=converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
     __event_log_deprecation_warning(log)
 
     return log
 
 
-def convert_to_event_stream(obj: Union[EventLog, pd.DataFrame], case_id_key: str = "case:concept:name", **kwargs) -> EventStream:
+def convert_to_event_stream(
+    obj: Union[EventLog, pd.DataFrame],
+    case_id_key: str = "case:concept:name",
+    **kwargs,
+) -> EventStream:
     """
     Converts a log object or DataFrame to an event stream.
 
@@ -101,14 +116,19 @@ def convert_to_event_stream(obj: Union[EventLog, pd.DataFrame], case_id_key: str
         parameters[k] = v
 
     from pm4py.objects.conversion.log import converter
-    stream = converter.apply(obj, variant=converter.Variants.TO_EVENT_STREAM, parameters=parameters)
+
+    stream = converter.apply(
+        obj, variant=converter.Variants.TO_EVENT_STREAM, parameters=parameters
+    )
 
     __event_log_deprecation_warning(stream)
 
     return stream
 
 
-def convert_to_dataframe(obj: Union[EventStream, EventLog], **kwargs) -> pd.DataFrame:
+def convert_to_dataframe(
+    obj: Union[EventStream, EventLog], **kwargs
+) -> pd.DataFrame:
     """
     Converts a log object (``EventStream`` or ``EventLog``) to a Pandas DataFrame.
 
@@ -131,11 +151,16 @@ def convert_to_dataframe(obj: Union[EventStream, EventLog], **kwargs) -> pd.Data
         parameters[k] = v
 
     from pm4py.objects.conversion.log import converter
-    df = converter.apply(obj, variant=converter.Variants.TO_DATA_FRAME, parameters=parameters)
+
+    df = converter.apply(
+        obj, variant=converter.Variants.TO_DATA_FRAME, parameters=parameters
+    )
     return df
 
 
-def convert_to_bpmn(*args: Union[Tuple[PetriNet, Marking, Marking], ProcessTree]) -> BPMN:
+def convert_to_bpmn(
+    *args: Union[Tuple[PetriNet, Marking, Marking], ProcessTree]
+) -> BPMN:
     """
     Converts an object to a BPMN diagram.
 
@@ -143,7 +168,7 @@ def convert_to_bpmn(*args: Union[Tuple[PetriNet, Marking, Marking], ProcessTree]
     A process tree can always be converted into a BPMN model, ensuring the quality of the resulting object.
     For Petri nets, the quality of the conversion largely depends on the net provided (e.g., sound WF-nets are likely to produce reasonable BPMN models).
 
-    :param args: 
+    :param args:
         - If converting a Petri net: a tuple of (``PetriNet``, ``Marking``, ``Marking``).
         - If converting a process tree: a single ``ProcessTree`` object.
     :return: A ``BPMN`` object.
@@ -164,6 +189,7 @@ def convert_to_bpmn(*args: Union[Tuple[PetriNet, Marking, Marking], ProcessTree]
         return args[0]
     elif isinstance(args[0], ProcessTree):
         from pm4py.objects.conversion.process_tree.variants import to_bpmn
+
         return to_bpmn.apply(args[0])
     else:
         # try to convert the object to a Petri net. Then, use the PM4Py PN-to-BPMN converter
@@ -171,15 +197,18 @@ def convert_to_bpmn(*args: Union[Tuple[PetriNet, Marking, Marking], ProcessTree]
         try:
             net, im, fm = convert_to_petri_net(*args)
             from pm4py.objects.conversion.wf_net.variants import to_bpmn
+
             return to_bpmn.apply(net, im, fm)
-        except:
+        except BaseException:
             # don't do nothing and throw the following exception
             pass
     # if no conversion is done, then the format of the arguments is unsupported
     raise Exception("Unsupported conversion of the provided object to BPMN")
 
 
-def convert_to_petri_net(*args: Union[BPMN, ProcessTree, HeuristicsNet, POWL, dict]) -> Tuple[PetriNet, Marking, Marking]:
+def convert_to_petri_net(
+    *args: Union[BPMN, ProcessTree, HeuristicsNet, POWL, dict]
+) -> Tuple[PetriNet, Marking, Marking]:
     """
     Converts an input model to an (accepting) Petri net.
 
@@ -187,7 +216,7 @@ def convert_to_petri_net(*args: Union[BPMN, ProcessTree, HeuristicsNet, POWL, di
     The output is a tuple containing the Petri net and the initial and final markings.
     The markings are only returned if they can be reasonably derived from the input model.
 
-    :param args: 
+    :param args:
         - If converting from a BPMN, ProcessTree, HeuristicsNet, or POWL: a single object of the respective type.
         - If converting from a DFG: a dictionary representing the DFG, followed by lists of start and end activities.
     :return: A tuple of (``PetriNet``, ``Marking``, ``Marking``).
@@ -206,37 +235,50 @@ def convert_to_petri_net(*args: Union[BPMN, ProcessTree, HeuristicsNet, POWL, di
     elif isinstance(args[0], ProcessTree):
         if isinstance(args[0], POWL):
             from pm4py.objects.conversion.powl import converter
+
             return converter.apply(args[0])
         from pm4py.objects.conversion.process_tree.variants import to_petri_net
+
         return to_petri_net.apply(args[0])
     elif isinstance(args[0], BPMN):
         from pm4py.objects.conversion.bpmn.variants import to_petri_net
+
         return to_petri_net.apply(args[0])
     elif isinstance(args[0], HeuristicsNet):
-        from pm4py.objects.conversion.heuristics_net.variants import to_petri_net
+        from pm4py.objects.conversion.heuristics_net.variants import (
+            to_petri_net,
+        )
+
         return to_petri_net.apply(args[0])
     elif isinstance(args[0], dict):
         # DFG
-        from pm4py.objects.conversion.dfg.variants import to_petri_net_activity_defines_place
+        from pm4py.objects.conversion.dfg.variants import (
+            to_petri_net_activity_defines_place,
+        )
+
         return to_petri_net_activity_defines_place.apply(
-            args[0], 
+            args[0],
             parameters={
                 to_petri_net_activity_defines_place.Parameters.START_ACTIVITIES: args[1],
-                to_petri_net_activity_defines_place.Parameters.END_ACTIVITIES: args[2]
-            }
+                to_petri_net_activity_defines_place.Parameters.END_ACTIVITIES: args[2],
+            },
         )
     # if no conversion is done, then the format of the arguments is unsupported
-    raise Exception("Unsupported conversion of the provided object to Petri net")
+    raise Exception(
+        "Unsupported conversion of the provided object to Petri net"
+    )
 
 
-def convert_to_process_tree(*args: Union[Tuple[PetriNet, Marking, Marking], BPMN, ProcessTree]) -> ProcessTree:
+def convert_to_process_tree(
+    *args: Union[Tuple[PetriNet, Marking, Marking], BPMN, ProcessTree]
+) -> ProcessTree:
     """
     Converts an input model to a process tree.
 
     The input models can be Petri nets (with markings) or BPMN models.
     For both input types, the conversion is not guaranteed to work and may raise an exception.
 
-    :param args: 
+    :param args:
         - If converting from a Petri net: a tuple of (``PetriNet``, ``Marking``, ``Marking``).
         - If converting from a BPMN or ProcessTree: a single object of the respective type.
     :return: A ``ProcessTree`` object.
@@ -252,6 +294,7 @@ def convert_to_process_tree(*args: Union[Tuple[PetriNet, Marking, Marking], BPMN
     """
     from pm4py.objects.process_tree.obj import ProcessTree
     from pm4py.objects.petri_net.obj import PetriNet
+
     if isinstance(args[0], ProcessTree):
         # the object is already a process tree
         return args[0]
@@ -262,21 +305,67 @@ def convert_to_process_tree(*args: Union[Tuple[PetriNet, Marking, Marking], BPMN
         net, im, fm = convert_to_petri_net(*args)
 
     from pm4py.objects.conversion.wf_net.variants import to_process_tree
+
     tree = to_process_tree.apply(net, im, fm)
     if tree is not None:
         return tree
 
-    raise Exception("The object represents a model that cannot be represented as a process tree!")
+    raise Exception(
+        "The object represents a model that cannot be represented as a process tree!"
+    )
 
 
-def convert_to_reachability_graph(*args: Union[Tuple[PetriNet, Marking, Marking], BPMN, ProcessTree]) -> TransitionSystem:
+def convert_to_powl(*args: Union[Tuple[PetriNet, Marking, Marking], BPMN, ProcessTree]) -> POWL:
+    """
+    Converts an input model to a POWL model.
+
+    The input models can be Petri nets (with markings) or BPMN models or process trees.
+    For both input types, the conversion is not guaranteed to work and may raise an exception.
+
+    :param args:
+        - If converting from a Petri net: a tuple of (``PetriNet``, ``Marking``, ``Marking``).
+        - If converting from a BPMN or ProcessTree: a single object of the respective type.
+    :return: A ``ProcessTree`` object.
+
+    .. code-block:: python3
+
+       import pm4py
+
+       # Imports a BPMN file
+       bpmn_graph = pm4py.read_bpmn("tests/input_data/running-example.bpmn")
+       # Converts the BPMN to a POWL (through intermediate conversion to a Petri net)
+       powl = pm4py.convert_to_powl(bpmn_graph)
+       print(powl)
+    """
+    from pm4py.objects.process_tree.obj import ProcessTree
+    from pm4py.objects.petri_net.obj import PetriNet
+
+    if isinstance(args[0], ProcessTree):
+        from pm4py.objects.conversion.process_tree.variants import to_powl
+        return to_powl.apply(args[0])
+    elif isinstance(args[0], PetriNet):
+        from pm4py.objects.conversion.wf_net.variants import to_powl
+        return to_powl.apply(args[0])
+    elif isinstance(args[0], BPMN):
+        from pm4py.objects.conversion.wf_net.variants import to_powl
+        net, im, fm = pm4py.convert_to_petri_net(args[0])
+        return to_powl.apply(net)
+
+    raise Exception(
+        "The object represents a model that cannot be directly represented as a POWL!"
+    )
+
+
+def convert_to_reachability_graph(
+    *args: Union[Tuple[PetriNet, Marking, Marking], BPMN, ProcessTree]
+) -> TransitionSystem:
     """
     Converts an input model to a reachability graph (transition system).
 
     The input models can be Petri nets (with markings), BPMN models, or process trees.
     The output is the state-space of the model, encoded as a ``TransitionSystem`` object.
 
-    :param args: 
+    :param args:
         - If converting from a Petri net: a tuple of (``PetriNet``, ``Marking``, ``Marking``).
         - If converting from a BPMN or ProcessTree: a single object of the respective type.
     :return: A ``TransitionSystem`` object.
@@ -296,17 +385,18 @@ def convert_to_reachability_graph(*args: Union[Tuple[PetriNet, Marking, Marking]
         net, im, fm = convert_to_petri_net(*args)
 
     from pm4py.objects.petri_net.utils import reachability_graph
+
     return reachability_graph.construct_reachability_graph(net, im)
 
 
 def convert_log_to_ocel(
-    log: Union[EventLog, EventStream, pd.DataFrame], 
-    activity_column: str = "concept:name", 
-    timestamp_column: str = "time:timestamp", 
-    object_types: Optional[Collection[str]] = None, 
-    obj_separator: str = " AND ", 
-    additional_event_attributes: Optional[Collection[str]] = None, 
-    additional_object_attributes: Optional[Dict[str, Collection[str]]] = None
+    log: Union[EventLog, EventStream, pd.DataFrame],
+    activity_column: str = "concept:name",
+    timestamp_column: str = "time:timestamp",
+    object_types: Optional[Collection[str]] = None,
+    obj_separator: str = " AND ",
+    additional_event_attributes: Optional[Collection[str]] = None,
+    additional_object_attributes: Optional[Dict[str, Collection[str]]] = None,
 ) -> OCEL:
     """
     Converts an event log to an object-centric event log (OCEL) with one or more object types.
@@ -324,8 +414,8 @@ def convert_log_to_ocel(
         import pm4py
 
         ocel = pm4py.convert_log_to_ocel(
-            log, 
-            activity_column='concept:name', 
+            log,
+            activity_column='concept:name',
             timestamp_column='time:timestamp',
             object_types=['case:concept:name']
         )
@@ -336,26 +426,35 @@ def convert_log_to_ocel(
         log = convert_to_dataframe(log)
 
     if object_types is None:
-        object_types = list(set(x for x in log.columns if x == "case:concept:name" or x.startswith("ocel:type")))
+        object_types = list(
+            set(
+                x
+                for x in log.columns
+                if x == "case:concept:name" or x.startswith("ocel:type")
+            )
+        )
 
     from pm4py.objects.ocel.util import log_ocel
+
     return log_ocel.log_to_ocel_multiple_obj_types(
-        log, 
-        activity_column, 
-        timestamp_column, 
-        object_types, 
-        obj_separator, 
-        additional_event_attributes=additional_event_attributes, 
-        additional_object_attributes=additional_object_attributes
+        log,
+        activity_column,
+        timestamp_column,
+        object_types,
+        obj_separator,
+        additional_event_attributes=additional_event_attributes,
+        additional_object_attributes=additional_object_attributes,
     )
 
 
-def convert_ocel_to_networkx(ocel: OCEL, variant: str = "ocel_to_nx") -> nx.DiGraph:
+def convert_ocel_to_networkx(
+    ocel: OCEL, variant: str = "ocel_to_nx"
+) -> nx.DiGraph:
     """
     Converts an OCEL to a NetworkX DiGraph object.
 
     :param ocel: The object-centric event log to convert.
-    :param variant: The variant of the conversion to use. 
+    :param variant: The variant of the conversion to use.
                     Options:
                     - "ocel_to_nx": Graph containing event and object IDs and two types of relations (REL=related objects, DF=directly-follows).
                     - "ocel_features_to_nx": Graph containing different types of interconnections at the object level.
@@ -374,17 +473,18 @@ def convert_ocel_to_networkx(ocel: OCEL, variant: str = "ocel_to_nx") -> nx.DiGr
     elif variant == "ocel_features_to_nx":
         variant1 = converter.Variants.OCEL_FEATURES_TO_NX
     else:
-        raise ValueError(f"Unsupported variant '{variant}'. Supported variants are 'ocel_to_nx' and 'ocel_features_to_nx'.")
+        raise ValueError(
+            f"Unsupported variant '{variant}'. Supported variants are 'ocel_to_nx' and 'ocel_features_to_nx'.")
 
     return converter.apply(ocel, variant=variant1)
 
 
 def convert_log_to_networkx(
-    log: Union[EventLog, EventStream, pd.DataFrame], 
-    include_df: bool = True, 
-    case_id_key: str = "concept:name", 
-    other_case_attributes_as_nodes: Optional[Collection[str]] = None, 
-    event_attributes_as_nodes: Optional[Collection[str]] = None
+    log: Union[EventLog, EventStream, pd.DataFrame],
+    include_df: bool = True,
+    case_id_key: str = "concept:name",
+    other_case_attributes_as_nodes: Optional[Collection[str]] = None,
+    event_attributes_as_nodes: Optional[Collection[str]] = None,
 ) -> nx.DiGraph:
     """
     Converts an event log to a NetworkX DiGraph object.
@@ -406,32 +506,32 @@ def convert_log_to_networkx(
         import pm4py
 
         nx_digraph = pm4py.convert_log_to_networkx(
-            log, 
-            other_case_attributes_as_nodes=['responsible', 'department'], 
+            log,
+            other_case_attributes_as_nodes=['responsible', 'department'],
             event_attributes_as_nodes=['concept:name', 'org:resource']
         )
     """
     from pm4py.objects.conversion.log import converter
 
     return converter.apply(
-        log, 
-        variant=converter.Variants.TO_NX, 
+        log,
+        variant=converter.Variants.TO_NX,
         parameters={
-            "include_df": include_df, 
-            "case_id_attribute": case_id_key, 
-            "other_case_attributes_as_nodes": other_case_attributes_as_nodes, 
-            "event_attributes_as_nodes": event_attributes_as_nodes
-        }
+            "include_df": include_df,
+            "case_id_attribute": case_id_key,
+            "other_case_attributes_as_nodes": other_case_attributes_as_nodes,
+            "event_attributes_as_nodes": event_attributes_as_nodes,
+        },
     )
 
 
 def convert_log_to_time_intervals(
-    log: Union[EventLog, pd.DataFrame], 
+    log: Union[EventLog, pd.DataFrame],
     filter_activity_couple: Optional[Tuple[str, str]] = None,
     activity_key: str = "concept:name",
-    timestamp_key: str = "time:timestamp", 
+    timestamp_key: str = "time:timestamp",
     case_id_key: str = "case:concept:name",
-    start_timestamp_key: str = "time:timestamp"
+    start_timestamp_key: str = "time:timestamp",
 ) -> List[List[Any]]:
     """
     Extracts a list of time intervals from an event log.
@@ -455,7 +555,7 @@ def convert_log_to_time_intervals(
         time_intervals = pm4py.convert_log_to_time_intervals(log)
         print(len(time_intervals))
         time_intervals = pm4py.convert_log_to_time_intervals(
-            log, 
+            log,
             filter_activity_couple=('Confirmation of receipt', 'T02 Check confirmation of receipt')
         )
         print(len(time_intervals))
@@ -463,19 +563,26 @@ def convert_log_to_time_intervals(
     __event_log_deprecation_warning(log)
 
     properties = get_properties(
-        log, 
-        activity_key=activity_key, 
-        case_id_key=case_id_key, 
-        timestamp_key=timestamp_key
+        log,
+        activity_key=activity_key,
+        case_id_key=case_id_key,
+        timestamp_key=timestamp_key,
     )
     properties["filter_activity_couple"] = filter_activity_couple
-    properties[constants.PARAMETER_CONSTANT_START_TIMESTAMP_KEY] = start_timestamp_key
+    properties[constants.PARAMETER_CONSTANT_START_TIMESTAMP_KEY] = (
+        start_timestamp_key
+    )
 
-    from pm4py.algo.transformation.log_to_interval_tree.variants import open_paths
+    from pm4py.algo.transformation.log_to_interval_tree.variants import (
+        open_paths,
+    )
+
     return open_paths.log_to_intervals(log, parameters=properties)
 
 
-def convert_petri_net_to_networkx(net: PetriNet, im: Marking, fm: Marking) -> nx.DiGraph:
+def convert_petri_net_to_networkx(
+    net: PetriNet, im: Marking, fm: Marking
+) -> nx.DiGraph:
     """
     Converts a Petri net to a NetworkX DiGraph.
 
@@ -495,40 +602,34 @@ def convert_petri_net_to_networkx(net: PetriNet, im: Marking, fm: Marking) -> nx
     G = nx_utils.DiGraph()
     for place in net.places:
         G.add_node(
-            place.name, 
+            place.name,
             attr={
-                "name": place.name, 
-                "is_in_im": place in im, 
-                "is_in_fm": place in fm, 
-                "type": "place"
-            }
+                "name": place.name,
+                "is_in_im": place in im,
+                "is_in_fm": place in fm,
+                "type": "place",
+            },
         )
     for trans in net.transitions:
         G.add_node(
-            trans.name, 
+            trans.name,
             attr={
-                "name": trans.name, 
-                "label": trans.label, 
-                "type": "transition"
-            }
+                "name": trans.name,
+                "label": trans.label,
+                "type": "transition",
+            },
         )
     for arc in net.arcs:
         G.add_edge(
-            arc.source.name, 
-            arc.target.name, 
-            attr={
-                "weight": arc.weight, 
-                "properties": arc.properties
-            }
+            arc.source.name,
+            arc.target.name,
+            attr={"weight": arc.weight, "properties": arc.properties},
         )
     return G
 
 
 def convert_petri_net_type(
-    net: PetriNet, 
-    im: Marking, 
-    fm: Marking, 
-    type: str = "classic"
+    net: PetriNet, im: Marking, fm: Marking, type: str = "classic"
 ) -> Tuple[PetriNet, Marking, Marking]:
     """
     Changes the internal type of a Petri net.
@@ -553,18 +654,23 @@ def convert_petri_net_type(
     new_net = None
     if type == "classic":
         from pm4py.objects.petri_net.obj import PetriNet
+
         new_net = PetriNet(net.name)
     elif type == "reset":
         from pm4py.objects.petri_net.obj import ResetNet
+
         new_net = ResetNet(net.name)
     elif type == "inhibitor":
         from pm4py.objects.petri_net.obj import InhibitorNet
+
         new_net = InhibitorNet(net.name)
     elif type == "reset_inhibitor":
         from pm4py.objects.petri_net.obj import ResetInhibitorNet
+
         new_net = ResetInhibitorNet(net.name)
     else:
-        raise ValueError(f"Unsupported Petri net type '{type}'. Supported types are 'classic', 'reset', 'inhibitor', 'reset_inhibitor'.")
+        raise ValueError(
+            f"Unsupported Petri net type '{type}'. Supported types are 'classic', 'reset', 'inhibitor', 'reset_inhibitor'.")
 
     for place in net.places:
         new_net.places.add(place)
@@ -583,12 +689,10 @@ def convert_petri_net_type(
         for arc in out_arcs:
             trans.out_arcs.remove(arc)
     for arc in net.arcs:
-        arc_type = arc.properties["arctype"] if "arctype" in arc.properties else None
+        arc_type = (
+            arc.properties["arctype"] if "arctype" in arc.properties else None
+        )
         new_arc = petri_utils.add_arc_from_to(
-            arc.source, 
-            arc.target, 
-            new_net, 
-            weight=arc.weight, 
-            type=arc_type
+            arc.source, arc.target, new_net, weight=arc.weight, type=arc_type
         )
     return new_net, im, fm

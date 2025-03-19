@@ -17,7 +17,7 @@
 | lxml | https://pypi.org/pypi/lxml/json | BSD License | 5.3.1 |
 | matplotlib | https://pypi.org/pypi/matplotlib/json | Python Software Foundation License | 3.10.1 |
 | networkx | https://pypi.org/pypi/networkx/json | BSD License | 3.4.2 |
-| numpy | https://pypi.org/pypi/numpy/json | BSD License | 2.2.3 |
+| numpy | https://pypi.org/pypi/numpy/json | BSD License | 2.2.4 |
 | packaging | https://pypi.org/pypi/packaging/json | BSD License | 24.2 |
 | pandas | https://pypi.org/pypi/pandas/json | BSD License | 2.2.3 |
 | pillow | https://pypi.org/pypi/pillow/json | CMU License (MIT-CMU) | 11.1.0 |
@@ -26,7 +26,7 @@
 | python-dateutil | https://pypi.org/pypi/python-dateutil/json | BSD License | 2.9.0.post0 |
 | pytz | https://pypi.org/pypi/pytz/json | MIT License | 2025.1 |
 | scipy | https://pypi.org/pypi/scipy/json | BSD License | 1.15.2 |
-| setuptools | https://pypi.org/pypi/setuptools/json | MIT License | 76.0.0 |
+| setuptools | https://pypi.org/pypi/setuptools/json | MIT License | 76.1.0 |
 | six | https://pypi.org/pypi/six/json | MIT License | 1.17.0 |
 | sortedcontainers | https://pypi.org/pypi/sortedcontainers/json | Apache Software License | 2.4.0 |
 | tqdm | https://pypi.org/pypi/tqdm/json | Mozilla Public License 2.0 (MPL 2.0) | 4.67.1 |

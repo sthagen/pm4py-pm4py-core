@@ -9,7 +9,7 @@ kiwisolver==1.4.8
 lxml==5.3.1
 matplotlib==3.10.1
 networkx==3.4.2
-numpy==2.2.3
+numpy==2.2.4
 packaging==24.2
 pandas==2.2.3
 pillow==11.1.0
@@ -18,7 +18,7 @@ pyparsing==3.2.1
 python-dateutil==2.9.0.post0
 pytz==2025.1
 scipy==1.15.2
-setuptools==76.0.0
+setuptools==76.1.0
 six==1.17.0
 sortedcontainers==2.4.0
 tqdm==4.67.1
