@@ -82,6 +82,22 @@ class AlignmentTest(unittest.TestCase):
         from pm4py.algo.conformance.alignments.process_tree.variants import search_graph_pt
         al = search_graph_pt.apply(log, tree, parameters={search_graph_pt.Parameters.ACTIVITY_KEY: "@@classifier"})
 
+    def test_tree_align3(self):
+        import pm4py
+        log = xes_importer.apply("compressed_input_data/01_running-example.xes.gz")
+        from pm4py.algo.discovery.inductive import algorithm as inductive_miner
+        tree = inductive_miner.apply(log)
+        from pm4py.algo.conformance.alignments.process_tree.variants import dynamic_programming
+        al = dynamic_programming.apply(log, tree)
+
+    def test_tree_align3(self):
+        import pm4py
+        log = xes_importer.apply("compressed_input_data/01_running-example.xes.gz")
+        from pm4py.algo.discovery.inductive import algorithm as inductive_miner
+        tree = inductive_miner.apply(log)
+        from pm4py.algo.conformance.alignments.process_tree.variants import milp
+        al = milp.apply(log, tree)
+
     def test_variant_state_eq_a_star(self):
         import pm4py
         log = pm4py.read_xes("input_data/running-example.xes")

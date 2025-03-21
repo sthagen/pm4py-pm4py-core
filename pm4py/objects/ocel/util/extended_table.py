@@ -28,8 +28,7 @@ import importlib.util
 
 from pm4py.objects.ocel import constants
 from pm4py.objects.ocel.obj import OCEL
-from pm4py.util import exec_utils, constants as pm4_constants
-from pm4py.objects.log.util import dataframe_utils
+from pm4py.util import exec_utils, pandas_utils, constants as pm4_constants
 
 
 class Parameters(Enum):
@@ -127,7 +126,7 @@ def get_ocel_from_extended_table(
     )
 
     # Parse timestamp column upfront in the original DataFrame
-    df[event_timestamp] = pd.to_datetime(df[event_timestamp], format=pm4_constants.DEFAULT_TIMESTAMP_PARSE_FORMAT)
+    df[event_timestamp] = pandas_utils.dataframe_column_string_to_datetime(df[event_timestamp], format=pm4_constants.DEFAULT_TIMESTAMP_PARSE_FORMAT)
 
     # Identify columns efficiently
     object_type_columns = [col for col in df.columns if col.startswith(object_type_prefix)]
@@ -143,7 +142,10 @@ def get_ocel_from_extended_table(
     events_df[internal_index] = events_df.index
 
     # Sort by timestamp and index
-    events_df.sort_values([event_timestamp, internal_index], inplace=True)
+    if type(events_df) is pd.DataFrame:
+        events_df.sort_values([event_timestamp, internal_index], inplace=True)
+    else:
+        events_df = events_df.sort_values([event_timestamp, internal_index])
 
     # Track unique objects if needed
     unique_objects = {ot: set() for ot in object_type_columns} if objects_df is None else None
@@ -254,7 +256,7 @@ def get_ocel_from_extended_table(
     del filtered_df
 
     # Create the relations DataFrame only once at the end
-    relations = pd.DataFrame()
+    relations = pandas_utils.DATAFRAME.DataFrame()
     if len(global_ev_ids) > 0:
         # Create dataframe directly from PyArrow arrays
         global_ev_ids = global_ev_ids.to_pandas()
@@ -263,7 +265,7 @@ def get_ocel_from_extended_table(
         global_obj_ids = global_obj_ids.to_pandas()
         global_obj_types = global_obj_types.to_pandas()
 
-        relations = pd.DataFrame({
+        relations = pandas_utils.DATAFRAME.DataFrame({
             event_id: global_ev_ids,
             event_activity: global_ev_activities,
             event_timestamp: global_ev_timestamps,
@@ -278,7 +280,10 @@ def get_ocel_from_extended_table(
         relations[internal_index] = relations.index
 
         # Sort by timestamp and index
-        relations.sort_values([event_timestamp, internal_index], inplace=True)
+        if type(relations) is pd.DataFrame:
+            relations.sort_values([event_timestamp, internal_index], inplace=True)
+        else:
+            relations = relations.sort_values([event_timestamp, internal_index])
 
         # Remove temporary index column
         del relations[internal_index]
@@ -299,7 +304,7 @@ def get_ocel_from_extended_table(
                 obj_types_list.extend([ot_striped] * len(obj_ids))
                 obj_ids_list.extend(obj_ids)
 
-        objects_df = pd.DataFrame({
+        objects_df = pandas_utils.DATAFRAME.DataFrame({
             object_type_column: obj_types_list,
             object_id_column: obj_ids_list
         })

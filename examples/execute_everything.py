@@ -4,7 +4,7 @@ import sys
 import traceback
 import importlib.util
 
-import pm4py.util.lp.solver
+
 
 EXECUTE_EXAMPLES = True
 

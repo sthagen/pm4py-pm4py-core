@@ -23,7 +23,7 @@ Contact: info@processintelligence.solutions
 from pm4py.objects.ocel.obj import OCEL
 from typing import Optional, Dict, Any
 import warnings
-import pandas as pd
+from pm4py.util import pandas_utils
 
 
 def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
@@ -93,7 +93,7 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
 
         # Efficiently filter out empty strings
         # Create a single mask for all columns and apply once
-        valid_rows = pd.Series(True, index=df.index)
+        valid_rows = pandas_utils.DATAFRAME.Series(True, index=df.index)
         for col in valid_columns:
             valid_rows &= (df[col].str.len() > 0)
 
