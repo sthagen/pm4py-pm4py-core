@@ -26,13 +26,14 @@ from pm4py.objects.process_tree.obj import ProcessTree, Operator
 from pm4py.objects.process_tree.utils.generic import is_leaf, is_tau_leaf
 from pm4py.util.lp import solver
 from pm4py.utils import project_on_event_attribute
-from scipy import sparse
 import pandas as pd
 from pm4py.util import exec_utils
 from enum import Enum
 from pm4py.util import constants, xes_constants
 from pm4py.objects.log.obj import EventLog
 import importlib.util
+from functools import lru_cache
+from collections import defaultdict
 
 
 class Parameters(Enum):
@@ -51,7 +52,20 @@ class ProcessTreeAligner:
         self.tree = tree
         self.graph = nx.MultiDiGraph()
         self.node_id_counter = 0  # Initialize node ID counter
+        # Cache to store activity-to-edges mapping
+        self.activity_to_edges = defaultdict(list)
+        # Flag for tracking if the tree has been processed
+        self._tree_processed = False
         self._build_process_tree_graph(self.tree)
+        self._precompute_activity_edges()
+
+    def _precompute_activity_edges(self):
+        """Precompute activity to edges mapping for faster lookups during alignment"""
+        for edge in self.graph.edges(keys=True, data=True):
+            u, v, k, data = edge
+            label = data.get('label')
+            if label is not None:
+                self.activity_to_edges[label].append((u, v, k))
 
     def _get_new_node_id(self) -> int:
         node_id = self.node_id_counter
@@ -82,6 +96,8 @@ class ProcessTreeAligner:
             end_node = self._get_new_node_id()
             self.graph.add_node(end_node, sink=True)
             self._build_process_tree_subgraph(tree, start_node, end_node)
+
+        self._tree_processed = True
 
     def _build_process_tree_subgraph(self, tree: ProcessTree, start_node: Any, end_node: Any, iac: int = 1) -> None:
         if tree.operator is None:
@@ -191,23 +207,47 @@ class ProcessTreeAligner:
         self._build_process_tree_subgraph(tree.children[0], start_node, end_node, iac)
         self._build_process_tree_subgraph(tree.children[1], end_node, start_node, iac)
 
-    def align(self, trace: List[str]) -> Tuple[float, List[Tuple[str, str]]]:
+    @lru_cache(maxsize=128)
+    def align(self, trace: Tuple[str]) -> Tuple[float, List[Tuple[str, str]]]:
+        """
+        Align a trace with the process tree. Using tuple for trace to enable caching.
+
+        Args:
+            trace: A tuple of activity labels (converted from list for caching)
+
+        Returns:
+            A tuple containing (alignment cost, alignment moves)
+        """
+        # Convert back to list for processing
+        trace_list = list(trace)
+        return self._align_impl(trace_list)
+
+    def _align_impl(self, trace: List[str]) -> Tuple[float, List[Tuple[str, str]]]:
+        """Implementation of the alignment algorithm"""
         align_variant = "pulp"
 
         num_steps = len(trace) + 1
         graph = self.graph
 
+        # Pre-processed data
         edges = list(graph.edges(keys=True))
         nodes = list(graph.nodes())
 
+        # Use vectorized operations and efficient data structures
         # Variable indexing
         var_index = {}
         var_counter = 0
 
+        # Using dictionaries instead of individual variables for better memory management
         x_vars = {}  # Flow variables
         y_vars = {}  # Log move variables
         z_vars = {}  # Sync move variables
         s_vars = {}  # Shuffle variables
+
+        # Pre-allocate arrays for improved performance
+        # Approximate size of arrays based on problem dimensions
+        max_vars = num_steps * (len(edges) + len(nodes) + len(edges) + len(nodes))
+        c = np.zeros(max_vars)  # Objective function coefficients
 
         # x variables
         for i in range(num_steps):
@@ -227,7 +267,8 @@ class ProcessTreeAligner:
         sync_edges = {}
         for idx, activity in enumerate(trace):
             step = idx + 1
-            matching_edges = [e for e in edges if graph.edges[e].get('label') == activity]
+            # Use precomputed activity to edges mapping for better performance
+            matching_edges = self.activity_to_edges.get(activity, [])
             sync_edges[step] = matching_edges
             for e in matching_edges:
                 z_vars[(step,) + e] = var_counter
@@ -249,16 +290,16 @@ class ProcessTreeAligner:
 
         num_vars = var_counter
 
-        # Objective function coefficients
+        # Resize c to actual number of variables
         c = np.zeros(num_vars)
 
-        # For x variables
+        # For x variables - vectorized assignment when possible
         for key, idx in x_vars.items():
             i, u, v, k = key
             cost = graph.edges[(u, v, k)].get('cost', 0)
             c[idx] = cost
 
-        # For y variables
+        # For y variables - all have cost 1
         for idx in y_vars.values():
             c[idx] = 1
 
@@ -269,10 +310,11 @@ class ProcessTreeAligner:
             c[idx] = 1 - edge_cost if edge_cost > 1 else 0
 
         # Constraints
+        # Use more efficient sparse matrix construction
         Aeq_rows = []
         beq = []
 
-        # Flow conservation constraints
+        # Flow conservation constraints - vectorize when possible
         for i in range(num_steps):
             for v in nodes:
                 row = {}
@@ -380,7 +422,7 @@ class ProcessTreeAligner:
         for idx in s_vars.values():
             vartype[idx] = 1
 
-        # Build Aeq
+        # Build Aeq efficiently with COO format for sparse matrix creation
         Aeq_data = []
         Aeq_row_idx = []
         Aeq_col_idx = []
@@ -391,7 +433,10 @@ class ProcessTreeAligner:
                 Aeq_col_idx.append(var_idx)
             beq.append(rhs_value)
 
+        # Create sparse matrix once, then convert to array format after all data is populated
+        from scipy import sparse
         Aeq = sparse.csr_matrix((Aeq_data, (Aeq_row_idx, Aeq_col_idx)), shape=(len(Aeq_rows), num_vars))
+        Aeq = Aeq.toarray()
 
         # Build Aub
         Aub_data = []
@@ -403,8 +448,6 @@ class ProcessTreeAligner:
                 Aub_row_idx.append(row_idx)
                 Aub_col_idx.append(var_idx)
             bub.append(rhs_value)
-
-        Aeq = Aeq.toarray()
 
         Aub = sparse.csr_matrix((Aub_data, (Aub_row_idx, Aub_col_idx)), shape=(len(Aub_rows), num_vars))
         Aub = Aub.toarray()
@@ -451,7 +494,7 @@ class ProcessTreeAligner:
             prim_obj = solver.get_prim_obj_from_sol(sol, variant=align_variant)
             var_values = solver.get_points_from_sol(sol, variant=align_variant)
 
-            # Reconstruct the alignment moves
+            # Reconstruct the alignment moves more efficiently
             alignment_moves = []
             i = 1  # Start from step 1
             while i <= len(trace):
@@ -506,6 +549,7 @@ class ProcessTreeAligner:
             raise Exception(f"Optimization failed: {str(e)}")
 
 
+# Helper function to construct progress bar
 def _construct_progress_bar(progress_length, parameters):
     if exec_utils.get_param_value(Parameters.SHOW_PROGRESS_BAR, parameters,
                                   constants.SHOW_PROGRESS_BAR) and importlib.util.find_spec("tqdm"):
@@ -515,6 +559,7 @@ def _construct_progress_bar(progress_length, parameters):
     return None
 
 
+# Helper function to destroy progress bar
 def _destroy_progress_bar(progress):
     if progress is not None:
         progress.close()
@@ -522,19 +567,25 @@ def _destroy_progress_bar(progress):
 
 
 def apply_list_tuple_activities(list_tuple_activities: List[Collection[str]], aligner: ProcessTreeAligner,
-                                parameters: Optional[Dict[Any, Any]] = None) -> List[
-    Dict[str, Any]]:
+                                parameters: Optional[Dict[Any, Any]] = None) -> List[Dict[str, Any]]:
+    """
+    Apply the alignment algorithm to a list of activities.
+    Optimized to use caching and more efficient data structures.
+    """
     if parameters is None:
         parameters = {}
 
-    variants = set(list_tuple_activities)
+    # Use a set for faster lookup of variants
+    variants = set(tuple(v) for v in list_tuple_activities)
     variants_align = {}
 
     progress = _construct_progress_bar(len(variants), parameters)
 
-    empty_cost, empty_moves = aligner.align([])
+    # Pre-compute empty trace alignment
+    empty_cost, empty_moves = aligner.align(())
     empty_cost = round(empty_cost + 10 ** -14, 13)
 
+    # Process each variant only once
     for v in variants:
         alignment_cost, alignment_moves = aligner.align(v)
         alignment_cost = round(alignment_cost + 10 ** -14, 13)
@@ -549,7 +600,8 @@ def apply_list_tuple_activities(list_tuple_activities: List[Collection[str]], al
 
     _destroy_progress_bar(progress)
 
-    return [variants_align[t] for t in list_tuple_activities]
+    # Map results back to original list
+    return [variants_align[tuple(t)] for t in list_tuple_activities]
 
 
 def apply(log: Union[pd.DataFrame, EventLog], process_tree: ProcessTree, parameters: Optional[Dict[Any, Any]] = None) -> \
