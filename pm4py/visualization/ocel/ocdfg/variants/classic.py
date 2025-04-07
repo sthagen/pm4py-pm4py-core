@@ -26,6 +26,8 @@ from pm4py.util import exec_utils, constants
 import tempfile
 from uuid import uuid4
 from pm4py.util import vis_utils
+from pm4py.visualization.common import gview
+from pm4py.visualization.common import save as gsave
 
 
 class Parameters(Enum):
@@ -52,7 +54,9 @@ def ot_to_color(ot: str) -> str:
     return ret
 
 
-def add_activity(G: Digraph, act, freq, act_prefix, nodes, annotation, min_freq, max_freq):
+def add_activity(
+    G: Digraph, act, freq, act_prefix, nodes, annotation, min_freq, max_freq
+):
     """
     Adds an activity node to the graph
     """
@@ -60,12 +64,20 @@ def add_activity(G: Digraph, act, freq, act_prefix, nodes, annotation, min_freq,
     nodes[act] = act_uuid
     fillcolor = vis_utils.get_trans_freq_color(freq, min_freq, max_freq)
     if annotation == "frequency":
-        G.node(act_uuid, label=act + "\n" + act_prefix + str(freq), shape="box", style="filled", fillcolor=fillcolor)
+        G.node(
+            act_uuid,
+            label=act + "\n" + act_prefix + str(freq),
+            shape="box",
+            style="filled",
+            fillcolor=fillcolor,
+        )
     else:
         G.node(act_uuid, label=act, shape="box")
 
 
-def add_frequency_edge(G: Digraph, ot, act1, act2, freq, edge_prefix, nodes, min_freq, max_freq):
+def add_frequency_edge(
+    G: Digraph, ot, act1, act2, freq, edge_prefix, nodes, min_freq, max_freq
+):
     """
     Adds a edge (frequency annotation)
     """
@@ -73,11 +85,20 @@ def add_frequency_edge(G: Digraph, ot, act1, act2, freq, edge_prefix, nodes, min
     act_uuid1 = nodes[act1]
     act_uuid2 = nodes[act2]
     penwidth = vis_utils.get_arc_penwidth(freq, min_freq, max_freq)
-    G.edge(act_uuid1, act_uuid2, label=ot + " " + edge_prefix + str(freq), fontsize="8", penwidth=str(penwidth),
-           color=otc, fontcolor=otc)
+    G.edge(
+        act_uuid1,
+        act_uuid2,
+        label=ot + " " + edge_prefix + str(freq),
+        fontsize="8",
+        penwidth=str(penwidth),
+        color=otc,
+        fontcolor=otc,
+    )
 
 
-def add_performance_edge(G: Digraph, ot, act1, act2, perf, edge_prefix, nodes, aggregation_measure):
+def add_performance_edge(
+    G: Digraph, ot, act1, act2, perf, edge_prefix, nodes, aggregation_measure
+):
     """
     Adds an edge (performance annotation)
     """
@@ -96,11 +117,27 @@ def add_performance_edge(G: Digraph, ot, act1, act2, perf, edge_prefix, nodes, a
         perf = mean(perf)
     act_uuid1 = nodes[act1]
     act_uuid2 = nodes[act2]
-    G.edge(act_uuid1, act_uuid2, label=ot + " " + edge_prefix + vis_utils.human_readable_stat(perf), fontsize="8",
-           color=otc, fontcolor=otc)
+    G.edge(
+        act_uuid1,
+        act_uuid2,
+        label=ot + " " + edge_prefix + vis_utils.human_readable_stat(perf),
+        fontsize="8",
+        color=otc,
+        fontcolor=otc,
+    )
 
 
-def add_start_node(G: Digraph, ot, act, freq, edge_prefix, nodes, annotation, min_freq, max_freq):
+def add_start_node(
+    G: Digraph,
+    ot,
+    act,
+    freq,
+    edge_prefix,
+    nodes,
+    annotation,
+    min_freq,
+    max_freq,
+):
     """
     Adds a start node to the graph
     """
@@ -110,16 +147,40 @@ def add_start_node(G: Digraph, ot, act, freq, edge_prefix, nodes, annotation, mi
     if start_ot not in nodes:
         endpoint_uuid = str(uuid4())
         nodes[start_ot] = endpoint_uuid
-        G.node(endpoint_uuid, label=ot, shape="ellipse", style="filled", fillcolor=otc)
+        G.node(
+            endpoint_uuid,
+            label=ot,
+            shape="ellipse",
+            style="filled",
+            fillcolor=otc,
+        )
     start_ot_uuid = nodes[start_ot]
     edge_label = ""
     if annotation == "frequency":
         edge_label = ot + " " + edge_prefix + str(freq)
     penwidth = vis_utils.get_arc_penwidth(freq, min_freq, max_freq)
-    G.edge(start_ot_uuid, act_uuid, label=edge_label, fontsize="8", penwidth=str(penwidth), fontcolor=otc, color=otc)
+    G.edge(
+        start_ot_uuid,
+        act_uuid,
+        label=edge_label,
+        fontsize="8",
+        penwidth=str(penwidth),
+        fontcolor=otc,
+        color=otc,
+    )
 
 
-def add_end_node(G: Digraph, ot, act, freq, edge_prefix, nodes, annotation, min_freq, max_freq):
+def add_end_node(
+    G: Digraph,
+    ot,
+    act,
+    freq,
+    edge_prefix,
+    nodes,
+    annotation,
+    min_freq,
+    max_freq,
+):
     """
     Adds an end node to the graph
     """
@@ -135,10 +196,20 @@ def add_end_node(G: Digraph, ot, act, freq, edge_prefix, nodes, annotation, min_
     if annotation == "frequency":
         edge_label = ot + " " + edge_prefix + str(freq)
     penwidth = vis_utils.get_arc_penwidth(freq, min_freq, max_freq)
-    G.edge(act_uuid, end_ot_uuid, label=edge_label, fontsize="8", penwidth=str(penwidth), fontcolor=otc, color=otc)
+    G.edge(
+        act_uuid,
+        end_ot_uuid,
+        label=edge_label,
+        fontsize="8",
+        penwidth=str(penwidth),
+        fontcolor=otc,
+        color=otc,
+    )
 
 
-def apply(ocdfg: Dict[str, Any], parameters: Optional[Dict[Any, Any]] = None) -> Digraph:
+def apply(
+    ocdfg: Dict[str, Any], parameters: Optional[Dict[Any, Any]] = None
+) -> Digraph:
     """
     Visualizes an OC-DFG as a Graphviz di-graph
 
@@ -183,18 +254,41 @@ def apply(ocdfg: Dict[str, Any], parameters: Optional[Dict[Any, Any]] = None) ->
 
     from statistics import mean, median
 
-    image_format = exec_utils.get_param_value(Parameters.FORMAT, parameters, "png")
-    bgcolor = exec_utils.get_param_value(Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR)
-    rankdir = exec_utils.get_param_value(Parameters.RANKDIR, parameters, constants.DEFAULT_RANKDIR_GVIZ)
-    act_metric = exec_utils.get_param_value(Parameters.ACT_METRIC, parameters, "events")
-    edge_metric = exec_utils.get_param_value(Parameters.EDGE_METRIC, parameters, "event_couples")
-    act_threshold = exec_utils.get_param_value(Parameters.ACT_THRESHOLD, parameters, 0)
-    edge_threshold = exec_utils.get_param_value(Parameters.EDGE_THRESHOLD, parameters, 0)
-    annotation = exec_utils.get_param_value(Parameters.ANNOTATION, parameters, "frequency")
-    performance_aggregation_measure = exec_utils.get_param_value(Parameters.PERFORMANCE_AGGREGATION_MEASURE, parameters,
-                                                                 "mean")
-    enable_graph_title = exec_utils.get_param_value(Parameters.ENABLE_GRAPH_TITLE, parameters, constants.DEFAULT_ENABLE_GRAPH_TITLES)
-    graph_title = exec_utils.get_param_value(Parameters.GRAPH_TITLE, parameters, "Object-Centric DFG")
+    image_format = exec_utils.get_param_value(
+        Parameters.FORMAT, parameters, "png"
+    )
+    bgcolor = exec_utils.get_param_value(
+        Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR
+    )
+    rankdir = exec_utils.get_param_value(
+        Parameters.RANKDIR, parameters, constants.DEFAULT_RANKDIR_GVIZ
+    )
+    act_metric = exec_utils.get_param_value(
+        Parameters.ACT_METRIC, parameters, "events"
+    )
+    edge_metric = exec_utils.get_param_value(
+        Parameters.EDGE_METRIC, parameters, "event_couples"
+    )
+    act_threshold = exec_utils.get_param_value(
+        Parameters.ACT_THRESHOLD, parameters, 0
+    )
+    edge_threshold = exec_utils.get_param_value(
+        Parameters.EDGE_THRESHOLD, parameters, 0
+    )
+    annotation = exec_utils.get_param_value(
+        Parameters.ANNOTATION, parameters, "frequency"
+    )
+    performance_aggregation_measure = exec_utils.get_param_value(
+        Parameters.PERFORMANCE_AGGREGATION_MEASURE, parameters, "mean"
+    )
+    enable_graph_title = exec_utils.get_param_value(
+        Parameters.ENABLE_GRAPH_TITLE,
+        parameters,
+        constants.DEFAULT_ENABLE_GRAPH_TITLES,
+    )
+    graph_title = exec_utils.get_param_value(
+        Parameters.GRAPH_TITLE, parameters, "Object-Centric DFG"
+    )
 
     act_count = {}
     act_ot_count = {}
@@ -237,16 +331,26 @@ def apply(ocdfg: Dict[str, Any], parameters: Optional[Dict[Any, Any]] = None) ->
         edge_prefix = "TO="
 
     if annotation == "performance" and edge_metric == "unique_objects":
-        raise Exception("unsupported performance visualization for unique objects!")
+        raise Exception(
+            "unsupported performance visualization for unique objects!"
+        )
 
-    filename = tempfile.NamedTemporaryFile(suffix='.gv')
+    filename = tempfile.NamedTemporaryFile(suffix=".gv")
     filename.close()
 
-    viz = Digraph("ocdfg", filename=filename.name, engine='dot', graph_attr={'bgcolor': bgcolor})
-    viz.attr('node', shape='ellipse', fixedsize='false')
+    viz = Digraph(
+        "ocdfg",
+        filename=filename.name,
+        engine="dot",
+        graph_attr={"bgcolor": bgcolor},
+    )
+    viz.attr("node", shape="ellipse", fixedsize="false")
 
     if enable_graph_title:
-        viz.attr(label='<<FONT POINT-SIZE="20">'+graph_title+'</FONT>>', labelloc="top")
+        viz.attr(
+            label='<<FONT POINT-SIZE="20">' + graph_title + "</FONT>>",
+            labelloc="top",
+        )
 
     min_edges_count = {}
     max_edges_count = {}
@@ -269,38 +373,138 @@ def apply(ocdfg: Dict[str, Any], parameters: Optional[Dict[Any, Any]] = None) ->
     nodes = {}
     for act in act_count:
         if len(act_count[act]) >= act_threshold:
-            add_activity(viz, act, len(act_count[act]), act_prefix, nodes, annotation, min_act_count, max_act_count)
+            add_activity(
+                viz,
+                act,
+                len(act_count[act]),
+                act_prefix,
+                nodes,
+                annotation,
+                min_act_count,
+                max_act_count,
+            )
 
     for ot in edges_count:
         for act_cou in edges_count[ot]:
             if act_cou[0] in nodes and act_cou[1] in nodes:
                 if len(edges_count[ot][act_cou]) >= edge_threshold:
                     if annotation == "frequency":
-                        add_frequency_edge(viz, ot, act_cou[0], act_cou[1], len(edges_count[ot][act_cou]), edge_prefix,
-                                           nodes, min_edges_count[ot], max_edges_count[ot])
+                        add_frequency_edge(
+                            viz,
+                            ot,
+                            act_cou[0],
+                            act_cou[1],
+                            len(edges_count[ot][act_cou]),
+                            edge_prefix,
+                            nodes,
+                            min_edges_count[ot],
+                            max_edges_count[ot],
+                        )
                     elif annotation == "performance":
-                        add_performance_edge(viz, ot, act_cou[0], act_cou[1], edges_performance[ot][act_cou],
-                                             edge_prefix, nodes, performance_aggregation_measure)
+                        add_performance_edge(
+                            viz,
+                            ot,
+                            act_cou[0],
+                            act_cou[1],
+                            edges_performance[ot][act_cou],
+                            edge_prefix,
+                            nodes,
+                            performance_aggregation_measure,
+                        )
 
     for ot in sa_count:
         for act in sa_count[ot]:
             if act in nodes:
                 if len(sa_count[ot][act]) >= edge_threshold:
-                    miec = min_edges_count[ot] if ot in min_edges_count else len(sa_count[ot][act])
-                    maec = max_edges_count[ot] if ot in max_edges_count else len(sa_count[ot][act])
-                    add_start_node(viz, ot, act, len(sa_count[ot][act]), edge_prefix, nodes, annotation,
-                                   miec, maec)
+                    miec = (
+                        min_edges_count[ot]
+                        if ot in min_edges_count
+                        else len(sa_count[ot][act])
+                    )
+                    maec = (
+                        max_edges_count[ot]
+                        if ot in max_edges_count
+                        else len(sa_count[ot][act])
+                    )
+                    add_start_node(
+                        viz,
+                        ot,
+                        act,
+                        len(sa_count[ot][act]),
+                        edge_prefix,
+                        nodes,
+                        annotation,
+                        miec,
+                        maec,
+                    )
 
     for ot in ea_count:
         for act in ea_count[ot]:
             if act in nodes:
                 if len(ea_count[ot][act]) >= edge_threshold:
-                    miec = min_edges_count[ot] if ot in min_edges_count else len(ea_count[ot][act])
-                    maec = max_edges_count[ot] if ot in max_edges_count else len(ea_count[ot][act])
-                    add_end_node(viz, ot, act, len(ea_count[ot][act]), edge_prefix, nodes, annotation,
-                                 miec, maec)
+                    miec = (
+                        min_edges_count[ot]
+                        if ot in min_edges_count
+                        else len(ea_count[ot][act])
+                    )
+                    maec = (
+                        max_edges_count[ot]
+                        if ot in max_edges_count
+                        else len(ea_count[ot][act])
+                    )
+                    add_end_node(
+                        viz,
+                        ot,
+                        act,
+                        len(ea_count[ot][act]),
+                        edge_prefix,
+                        nodes,
+                        annotation,
+                        miec,
+                        maec,
+                    )
 
     viz.attr(rankdir=rankdir)
     viz.format = image_format.replace("html", "plain-ext")
 
     return viz
+
+
+def save(gviz: Digraph, output_file_path: str, parameters=None):
+    """
+    Save the diagram
+
+    Parameters
+    -----------
+    gviz
+        GraphViz diagram
+    output_file_path
+        Path where the GraphViz output should be saved
+    """
+    gsave.save(gviz, output_file_path, parameters=parameters)
+    return ""
+
+
+def view(gviz: Digraph, parameters=None):
+    """
+    View the diagram
+
+    Parameters
+    -----------
+    gviz
+        GraphViz diagram
+    """
+    return gview.view(gviz, parameters=parameters)
+
+
+def matplotlib_view(gviz: Digraph, parameters=None):
+    """
+    Views the diagram using Matplotlib
+
+    Parameters
+    ---------------
+    gviz
+        Graphviz
+    """
+
+    return gview.matplotlib_view(gviz, parameters=parameters)

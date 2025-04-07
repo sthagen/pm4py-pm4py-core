@@ -45,6 +45,32 @@ from pm4py.objects.org.sna.obj import SNA
 from pm4py.util import constants
 
 
+def _extract_format(format_or_path: str) -> str:
+    if "." in format_or_path:
+        return os.path.splitext(format_or_path)[1][1:].lower()
+    return str(format_or_path).lower()
+
+
+def _setup_parameters(
+    fmt: str,
+    bgcolor: str = "white",
+    rankdir: str = None,
+    graph_title: Optional[str] = None,
+) -> Dict[str, Any]:
+    parameters = {
+        "format": fmt,
+        "bgcolor": bgcolor,
+        "enable_graph_title": constants.DEFAULT_ENABLE_GRAPH_TITLES,
+    }
+    if rankdir is not None:
+        parameters["rankdir"] = rankdir
+        parameters["set_rankdir"] = rankdir
+    if graph_title:
+        parameters["enable_graph_title"] = True
+        parameters["graph_title"] = graph_title
+    return parameters
+
+
 def view_petri_net(petri_net: PetriNet, initial_marking: Optional[Marking] = None,
                    final_marking: Optional[Marking] = None, format: str = constants.DEFAULT_FORMAT_GVIZ_VIEW, bgcolor: str = "white",
                    decorations: Dict[Any, Any] = None, debug: bool = False, rankdir: str = constants.DEFAULT_RANKDIR_GVIZ,
@@ -1025,23 +1051,35 @@ def save_vis_events_distribution_graph(log: Union[EventLog, pd.DataFrame], file_
     return graphs_visualizer.save(gviz, file_path)
 
 
-def view_ocdfg(ocdfg: Dict[str, Any], annotation: str = "frequency", act_metric: str = "events", edge_metric="event_couples", act_threshold: int = 0, edge_threshold: int = 0, performance_aggregation: str = "mean", format: str = constants.DEFAULT_FORMAT_GVIZ_VIEW, bgcolor: str = "white", rankdir: str = constants.DEFAULT_RANKDIR_GVIZ, graph_title: Optional[str] = None):
+def view_ocdfg(
+    ocdfg: Dict[str, Any],
+    annotation: str = "frequency",
+    act_metric: str = "events",
+    edge_metric="event_couples",
+    act_threshold: int = 0,
+    edge_threshold: int = 0,
+    performance_aggregation: str = "mean",
+    format: str = constants.DEFAULT_FORMAT_GVIZ_VIEW,
+    bgcolor: str = "white",
+    rankdir: str = constants.DEFAULT_RANKDIR_GVIZ,
+    graph_title: Optional[str] = None,
+    variant_str: str = "classic",
+):
     """
-    Views an OC-DFG (object-centric directly-follows graph) with the provided configuration.
-
-    Object-centric directly-follows multigraphs are a composition of directly-follows graphs for the single object type, which can be annotated with different metrics considering the entities of an object-centric event log (i.e., events, unique objects, total objects).
+    Views an OC-DFG (object-centric directly-follows graph).
 
     :param ocdfg: Object-centric directly-follows graph
-    :param annotation: The annotation to use for the visualization. Values: - "frequency": frequency annotation - "performance": performance annotation
-    :param act_metric: The metric to use for the activities. Available values: - "events" => number of events (default) - "unique_objects" => number of unique objects - "total_objects" => number of total objects
-    :param edge_metric: The metric to use for the edges. Available values: - "event_couples" => number of event couples (default) - "unique_objects" => number of unique objects - "total_objects" => number of total objects
-    :param act_threshold: The threshold to apply on the activities frequency (default: 0). Only activities having a frequency >= than this are kept in the graph.
-    :param edge_threshold: The threshold to apply on the edges frequency (default 0). Only edges having a frequency >= than this are kept in the graph.
-    :param performance_aggregation: The aggregation measure to use for the performance: mean, median, min, max, sum
-    :param format: The format of the output visualization (if html is provided, GraphvizJS is used to render the visualization in an HTML page)
-    :param bgcolor: Background color of the visualization (default: white)
-    :param rankdir: sets the direction of the graph ("LR" for left-to-right; "TB" for top-to-bottom)
-    :param graph_title: Sets the title of the visualization (if provided)
+    :param annotation: The annotation to use ("frequency" or "performance")
+    :param act_metric: The metric for activities ("events", "unique_objects", "total_objects")
+    :param edge_metric: The metric for edges ("event_couples", "unique_objects", "total_objects")
+    :param act_threshold: Threshold on activities frequency (default: 0)
+    :param edge_threshold: Threshold on edges frequency (default: 0)
+    :param performance_aggregation: Aggregation measure for performance: mean, median, min, max, sum
+    :param format: Format of the output (if 'html' is provided, GraphvizJS is used)
+    :param bgcolor: Background color (default: white)
+    :param rankdir: Graph direction ("LR" or "TB")
+    :param graph_title: Title of the visualization (if provided)
+    :param variant_str: Variant of the visualization ("classic" or "elkjs")
 
     .. code-block:: python3
 
@@ -1050,46 +1088,57 @@ def view_ocdfg(ocdfg: Dict[str, Any], annotation: str = "frequency", act_metric:
         ocdfg = pm4py.discover_ocdfg(ocel)
         pm4py.view_ocdfg(ocdfg, annotation='frequency', format='svg')
     """
-    format = str(format).lower()
-
+    fmt = _extract_format(format)
     from pm4py.visualization.ocel.ocdfg import visualizer
-    from pm4py.visualization.ocel.ocdfg.variants import classic
-    parameters = {}
-    parameters[classic.Parameters.FORMAT] = format
-    parameters[classic.Parameters.ANNOTATION] = annotation
-    parameters[classic.Parameters.ACT_METRIC] = act_metric
-    parameters[classic.Parameters.EDGE_METRIC] = edge_metric
-    parameters[classic.Parameters.ACT_THRESHOLD] = act_threshold
-    parameters[classic.Parameters.EDGE_THRESHOLD] = edge_threshold
-    parameters[classic.Parameters.PERFORMANCE_AGGREGATION_MEASURE] = performance_aggregation
-    parameters["bgcolor"] = bgcolor
-    parameters["rankdir"] = rankdir
-    parameters["enable_graph_title"] = constants.DEFAULT_ENABLE_GRAPH_TITLES
-    if graph_title:
-        parameters["enable_graph_title"] = True
-        parameters["graph_title"] = graph_title
 
-    gviz = classic.apply(ocdfg, parameters=parameters)
-    visualizer.view(gviz)
+    parameters = _setup_parameters(fmt, bgcolor, rankdir, graph_title)
+    parameters["annotation"] = annotation
+    parameters["act_metric"] = act_metric
+    parameters["edge_metric"] = edge_metric
+    parameters["act_threshold"] = act_threshold
+    parameters["edge_threshold"] = edge_threshold
+    parameters["aggregation_measure"] = performance_aggregation
+
+    variant = (
+        visualizer.Variants.CLASSIC
+        if variant_str == "classic"
+        else visualizer.Variants.ELKJS
+    )
+
+    gviz = visualizer.apply(ocdfg, variant=variant, parameters=parameters)
+    visualizer.view(gviz, variant=variant)
 
 
-def save_vis_ocdfg(ocdfg: Dict[str, Any], file_path: str, annotation: str = "frequency", act_metric: str = "events", edge_metric="event_couples", act_threshold: int = 0, edge_threshold: int = 0, performance_aggregation: str = "mean", bgcolor: str = "white", rankdir: str = constants.DEFAULT_RANKDIR_GVIZ, graph_title: Optional[str] = None, **kwargs):
+def save_vis_ocdfg(
+    ocdfg: Dict[str, Any],
+    file_path: str,
+    annotation: str = "frequency",
+    act_metric: str = "events",
+    edge_metric="event_couples",
+    act_threshold: int = 0,
+    edge_threshold: int = 0,
+    performance_aggregation: str = "mean",
+    bgcolor: str = "white",
+    rankdir: str = constants.DEFAULT_RANKDIR_GVIZ,
+    graph_title: Optional[str] = None,
+    variant_str: str = "classic",
+    **kwargs
+):
     """
-    Saves the visualization of an OC-DFG (object-centric directly-follows graph) with the provided configuration.
-
-    Object-centric directly-follows multigraphs are a composition of directly-follows graphs for the single object type, which can be annotated with different metrics considering the entities of an object-centric event log (i.e., events, unique objects, total objects).
+    Saves the visualization of an OC-DFG.
 
     :param ocdfg: Object-centric directly-follows graph
-    :param file_path: Destination path (including the extension)
-    :param annotation: The annotation to use for the visualization. Values: - "frequency": frequency annotation - "performance": performance annotation
-    :param act_metric: The metric to use for the activities. Available values: - "events" => number of events (default) - "unique_objects" => number of unique objects - "total_objects" => number of total objects
-    :param edge_metric: The metric to use for the edges. Available values: - "event_couples" => number of event couples (default) - "unique_objects" => number of unique objects - "total_objects" => number of total objects
-    :param act_threshold: The threshold to apply on the activities frequency (default: 0). Only activities having a frequency >= than this are kept in the graph.
-    :param edge_threshold: The threshold to apply on the edges frequency (default 0). Only edges having a frequency >= than this are kept in the graph.
-    :param performance_aggregation: The aggregation measure to use for the performance: mean, median, min, max, sum
-    :param bgcolor: Background color of the visualization (default: white)
-    :param rankdir: sets the direction of the graph ("LR" for left-to-right; "TB" for top-to-bottom)
-    :param graph_title: Sets the title of the visualization (if provided)
+    :param file_path: Destination path
+    :param annotation: "frequency" or "performance"
+    :param act_metric: Metric for activities ("events", "unique_objects", "total_objects")
+    :param edge_metric: Metric for edges ("event_couples", "unique_objects", "total_objects")
+    :param act_threshold: Threshold on activities frequency
+    :param edge_threshold: Threshold on edges frequency
+    :param performance_aggregation: Aggregation measure for performance: mean, median, min, max, sum
+    :param bgcolor: Background color (default: white)
+    :param rankdir: Graph direction ("LR" or "TB")
+    :param graph_title: Title of the visualization (if provided)
+    :param variant_str: Variant ("classic" or "elkjs")
 
     .. code-block:: python3
 
@@ -1098,38 +1147,43 @@ def save_vis_ocdfg(ocdfg: Dict[str, Any], file_path: str, annotation: str = "fre
         ocdfg = pm4py.discover_ocdfg(ocel)
         pm4py.save_vis_ocdfg(ocdfg, 'ocdfg.png', annotation='frequency')
     """
-    file_path = str(file_path)
-    format = os.path.splitext(file_path)[1][1:].lower()
+    fmt = _extract_format(file_path)
     from pm4py.visualization.ocel.ocdfg import visualizer
-    from pm4py.visualization.ocel.ocdfg.variants import classic
-    parameters = {}
-    parameters[classic.Parameters.FORMAT] = format
-    parameters[classic.Parameters.ANNOTATION] = annotation
-    parameters[classic.Parameters.ACT_METRIC] = act_metric
-    parameters[classic.Parameters.EDGE_METRIC] = edge_metric
-    parameters[classic.Parameters.ACT_THRESHOLD] = act_threshold
-    parameters[classic.Parameters.EDGE_THRESHOLD] = edge_threshold
-    parameters[classic.Parameters.PERFORMANCE_AGGREGATION_MEASURE] = performance_aggregation
-    parameters["bgcolor"] = bgcolor
-    parameters["rankdir"] = rankdir
-    parameters["enable_graph_title"] = constants.DEFAULT_ENABLE_GRAPH_TITLES
-    if graph_title:
-        parameters["enable_graph_title"] = True
-        parameters["graph_title"] = graph_title
 
-    gviz = classic.apply(ocdfg, parameters=parameters)
-    return visualizer.save(gviz, file_path)
+    parameters = _setup_parameters(fmt, bgcolor, rankdir, graph_title)
+    parameters["annotation"] = annotation
+    parameters["act_metric"] = act_metric
+    parameters["edge_metric"] = edge_metric
+    parameters["act_threshold"] = act_threshold
+    parameters["edge_threshold"] = edge_threshold
+    parameters["aggregation_measure"] = performance_aggregation
+
+    variant = (
+        visualizer.Variants.CLASSIC
+        if variant_str == "classic"
+        else visualizer.Variants.ELKJS
+    )
+    gviz = visualizer.apply(ocdfg, variant=variant, parameters=parameters)
+    return visualizer.save(gviz, file_path, variant=variant)
 
 
-def view_ocpn(ocpn: Dict[str, Any], format: str = constants.DEFAULT_FORMAT_GVIZ_VIEW, bgcolor: str = "white", rankdir: str = constants.DEFAULT_RANKDIR_GVIZ, graph_title: Optional[str] = None):
+def view_ocpn(
+    ocpn: Dict[str, Any],
+    format: str = constants.DEFAULT_FORMAT_GVIZ_VIEW,
+    bgcolor: str = "white",
+    rankdir: str = constants.DEFAULT_RANKDIR_GVIZ,
+    graph_title: Optional[str] = None,
+    variant_str: str = "wo_decoration"
+):
     """
-    Visualizes on the screen the object-centric Petri net
+    Visualizes the object-centric Petri net.
 
     :param ocpn: Object-centric Petri net
-    :param format: Format of the visualization (if html is provided, GraphvizJS is used to render the visualization in an HTML page)
-    :param bgcolor: Background color of the visualization (default: white)
-    :param rankdir: sets the direction of the graph ("LR" for left-to-right; "TB" for top-to-bottom)
-    :param graph_title: Sets the title of the visualization (if provided)
+    :param format: Format of the visualization (if 'html' is provided, GraphvizJS is used)
+    :param bgcolor: Background color (default: white)
+    :param rankdir: Graph direction ("LR" or "TB")
+    :param graph_title: Title of the visualization (if provided)
+    :param variant_str: Variant to be used ("wo_decoration" or "brachmann")
 
     .. code-block:: python3
 
@@ -1138,28 +1192,39 @@ def view_ocpn(ocpn: Dict[str, Any], format: str = constants.DEFAULT_FORMAT_GVIZ_
         ocpn = pm4py.discover_oc_petri_net(ocel)
         pm4py.view_ocpn(ocpn, format='svg')
     """
-    format = str(format).lower()
-
+    fmt = _extract_format(format)
     from pm4py.visualization.ocel.ocpn import visualizer as ocpn_visualizer
-    properties = {"format": format, "bgcolor": bgcolor, "rankdir": rankdir}
-    properties["enable_graph_title"] = constants.DEFAULT_ENABLE_GRAPH_TITLES
-    if graph_title:
-        properties["enable_graph_title"] = True
-        properties["graph_title"] = graph_title
 
-    gviz = ocpn_visualizer.apply(ocpn, parameters=properties)
+    props = _setup_parameters(fmt, bgcolor, rankdir, graph_title)
+
+    variant = (
+        ocpn_visualizer.Variants.WO_DECORATION
+        if variant_str == "wo_decoration"
+        else ocpn_visualizer.Variants.BRACHMANN
+    )
+
+    gviz = ocpn_visualizer.apply(ocpn, variant=variant, parameters=props)
     ocpn_visualizer.view(gviz)
 
 
-def save_vis_ocpn(ocpn: Dict[str, Any], file_path: str, bgcolor: str = "white", rankdir: str = constants.DEFAULT_RANKDIR_GVIZ, graph_title: Optional[str] = None, **kwargs):
+def save_vis_ocpn(
+    ocpn: Dict[str, Any],
+    file_path: str,
+    bgcolor: str = "white",
+    rankdir: str = constants.DEFAULT_RANKDIR_GVIZ,
+    graph_title: Optional[str] = None,
+    variant_str: str = "wo_decoration",
+    **kwargs
+):
     """
-    Saves the visualization of the object-centric Petri net into a file
+    Saves the visualization of the object-centric Petri net into a file.
 
     :param ocpn: Object-centric Petri net
-    :param file_path: Target path of the visualization
-    :param bgcolor: Background color of the visualization (default: white)
-    :param rankdir: sets the direction of the graph ("LR" for left-to-right; "TB" for top-to-bottom)
-    :param graph_title: Sets the title of the visualization (if provided)
+    :param file_path: Target path
+    :param bgcolor: Background color (default: white)
+    :param rankdir: Graph direction ("LR" or "TB")
+    :param graph_title: Title of the visualization (if provided)
+    :param variant_str: Variant to be used ("wo_decoration" or "brachmann")
 
     .. code-block:: python3
 
@@ -1168,16 +1233,18 @@ def save_vis_ocpn(ocpn: Dict[str, Any], file_path: str, bgcolor: str = "white", 
         ocpn = pm4py.discover_oc_petri_net(ocel)
         pm4py.save_vis_ocpn(ocpn, 'ocpn.png')
     """
-    file_path = str(file_path)
-    format = os.path.splitext(file_path)[1][1:].lower()
+    fmt = _extract_format(file_path)
     from pm4py.visualization.ocel.ocpn import visualizer as ocpn_visualizer
-    properties = {"format": format, "bgcolor": bgcolor, "rankdir": rankdir}
-    properties["enable_graph_title"] = constants.DEFAULT_ENABLE_GRAPH_TITLES
-    if graph_title:
-        properties["enable_graph_title"] = True
-        properties["graph_title"] = graph_title
 
-    gviz = ocpn_visualizer.apply(ocpn, parameters=properties)
+    props = _setup_parameters(fmt, bgcolor, rankdir, graph_title)
+
+    variant = (
+        ocpn_visualizer.Variants.WO_DECORATION
+        if variant_str == "wo_decoration"
+        else ocpn_visualizer.Variants.BRACHMANN
+    )
+
+    gviz = ocpn_visualizer.apply(ocpn, variant=variant, parameters=props)
     return ocpn_visualizer.save(gviz, file_path)
 
 

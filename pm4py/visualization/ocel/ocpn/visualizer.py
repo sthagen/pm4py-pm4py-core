@@ -22,7 +22,7 @@ Contact: info@processintelligence.solutions
 from graphviz import Digraph
 from enum import Enum
 from pm4py.util import exec_utils
-from pm4py.visualization.ocel.ocpn.variants import wo_decoration
+from pm4py.visualization.ocel.ocpn.variants import wo_decoration, brachmann
 from typing import Optional, Dict, Any
 from pm4py.visualization.common import gview
 from pm4py.visualization.common import save as gsave
@@ -30,9 +30,14 @@ from pm4py.visualization.common import save as gsave
 
 class Variants(Enum):
     WO_DECORATION = wo_decoration
+    BRACHMANN = brachmann
 
 
-def apply(ocpn: Dict[str, Any], variant=Variants.WO_DECORATION, parameters: Optional[Dict[Any, Any]] = None) -> Digraph:
+def apply(
+    ocpn: Dict[str, Any],
+    variant=Variants.WO_DECORATION,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Digraph:
     """
     Obtains a visualization of the provided object-centric Petri net
 

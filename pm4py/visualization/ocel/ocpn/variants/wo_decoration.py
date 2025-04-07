@@ -47,7 +47,9 @@ def ot_to_color(ot: str) -> str:
     return ret
 
 
-def apply(ocpn: Dict[str, Any], parameters: Optional[Dict[Any, Any]] = None) -> Digraph:
+def apply(
+    ocpn: Dict[str, Any], parameters: Optional[Dict[Any, Any]] = None
+) -> Digraph:
     """
     Obtains a visualization of the provided object-centric Petri net (without decoration).
 
@@ -73,21 +75,41 @@ def apply(ocpn: Dict[str, Any], parameters: Optional[Dict[Any, Any]] = None) -> 
     if parameters is None:
         parameters = {}
 
-    image_format = exec_utils.get_param_value(Parameters.FORMAT, parameters, "png")
-    bgcolor = exec_utils.get_param_value(Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR)
-    rankdir = exec_utils.get_param_value(Parameters.RANKDIR, parameters, constants.DEFAULT_RANKDIR_GVIZ)
+    image_format = exec_utils.get_param_value(
+        Parameters.FORMAT, parameters, "png"
+    )
+    bgcolor = exec_utils.get_param_value(
+        Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR
+    )
+    rankdir = exec_utils.get_param_value(
+        Parameters.RANKDIR, parameters, constants.DEFAULT_RANKDIR_GVIZ
+    )
 
-    enable_graph_title = exec_utils.get_param_value(Parameters.ENABLE_GRAPH_TITLE, parameters, constants.DEFAULT_ENABLE_GRAPH_TITLES)
-    graph_title = exec_utils.get_param_value(Parameters.GRAPH_TITLE, parameters, "Object-Centric Petri net")
+    enable_graph_title = exec_utils.get_param_value(
+        Parameters.ENABLE_GRAPH_TITLE,
+        parameters,
+        constants.DEFAULT_ENABLE_GRAPH_TITLES,
+    )
+    graph_title = exec_utils.get_param_value(
+        Parameters.GRAPH_TITLE, parameters, "Object-Centric Petri net"
+    )
 
-    filename = tempfile.NamedTemporaryFile(suffix='.gv')
+    filename = tempfile.NamedTemporaryFile(suffix=".gv")
     filename.close()
 
-    viz = Digraph("ocpn", filename=filename.name, engine='dot', graph_attr={'bgcolor': bgcolor})
-    viz.attr('node', shape='ellipse', fixedsize='false')
+    viz = Digraph(
+        "ocpn",
+        filename=filename.name,
+        engine="dot",
+        graph_attr={"bgcolor": bgcolor},
+    )
+    viz.attr("node", shape="ellipse", fixedsize="false")
 
     if enable_graph_title:
-        viz.attr(label='<<FONT POINT-SIZE="20">'+graph_title+'</FONT>>', labelloc="top")
+        viz.attr(
+            label='<<FONT POINT-SIZE="20">' + graph_title + "</FONT>>",
+            labelloc="top",
+        )
 
     activities_map = {}
     transition_map = {}
@@ -123,37 +145,71 @@ def apply(ocpn: Dict[str, Any], parameters: Optional[Dict[Any, Any]] = None) -> 
                 place_fontcolor = otc
                 place_fillcolor = None
 
-            # if the place has some TBR diagnostics, override the label in any case
+            # if the place has some TBR diagnostics, override the label in any
+            # case
             if place in all_places_diagn:
                 this_diagn = all_places_diagn[place]
                 place_label = "p=%d m=%d\nc=%d r=%d" % (
-                    this_diagn['p'], this_diagn['m'], this_diagn['c'], this_diagn['r'])
+                    this_diagn["p"],
+                    this_diagn["m"],
+                    this_diagn["c"],
+                    this_diagn["r"],
+                )
 
-            viz.node(places[place], label=place_label, shape=place_shape, style="filled" if place_fillcolor is not None else None, fillcolor=place_fillcolor, fontcolor=place_fontcolor)
+            viz.node(
+                places[place],
+                label=place_label,
+                shape=place_shape,
+                style="filled" if place_fillcolor is not None else None,
+                fillcolor=place_fillcolor,
+                fontcolor=place_fontcolor,
+            )
 
         for trans in net.transitions:
             if trans.label is not None:
                 transition_map[trans] = activities_map[trans.label]
             else:
                 transition_map[trans] = str(uuid.uuid4())
-                viz.node(transition_map[trans], label=" ", shape="box", style="filled", fillcolor=otc)
+                viz.node(
+                    transition_map[trans],
+                    label=" ",
+                    shape="box",
+                    style="filled",
+                    fillcolor=otc,
+                )
 
         for arc in net.arcs:
             arc_label = " "
             if type(arc.source) is PetriNet.Place:
-                is_double = arc.target.label in ocpn["double_arcs_on_activity"][ot] and \
-                            ocpn["double_arcs_on_activity"][ot][arc.target.label]
+                is_double = (
+                    arc.target.label in ocpn["double_arcs_on_activity"][ot]
+                    and ocpn["double_arcs_on_activity"][ot][arc.target.label]
+                )
                 penwidth = "4.0" if is_double else "1.0"
                 if arc.target in all_trans_diagn:
                     arc_label = str(all_trans_diagn[arc.target])
-                viz.edge(places[arc.source], transition_map[arc.target], color=otc, penwidth=penwidth, label=arc_label)
+                viz.edge(
+                    places[arc.source],
+                    transition_map[arc.target],
+                    color=otc,
+                    penwidth=penwidth,
+                    label=arc_label,
+                )
             elif type(arc.source) is PetriNet.Transition:
-                is_double = arc.source.label in ocpn["double_arcs_on_activity"][ot] and \
-                            ocpn["double_arcs_on_activity"][ot][arc.source.label]
+                is_double = (
+                    arc.source.label in ocpn["double_arcs_on_activity"][ot]
+                    and ocpn["double_arcs_on_activity"][ot][arc.source.label]
+                )
                 penwidth = "4.0" if is_double else "1.0"
                 if arc.source in all_trans_diagn:
                     arc_label = str(all_trans_diagn[arc.source])
-                viz.edge(transition_map[arc.source], places[arc.target], color=otc, penwidth=penwidth, label=arc_label)
+                viz.edge(
+                    transition_map[arc.source],
+                    places[arc.target],
+                    color=otc,
+                    penwidth=penwidth,
+                    label=arc_label,
+                )
 
     viz.attr(rankdir=rankdir)
     viz.format = image_format.replace("html", "plain-ext")

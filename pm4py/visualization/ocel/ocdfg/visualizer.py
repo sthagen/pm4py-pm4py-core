@@ -22,17 +22,20 @@ Contact: info@processintelligence.solutions
 from graphviz import Digraph
 from enum import Enum
 from pm4py.util import exec_utils
-from pm4py.visualization.ocel.ocdfg.variants import classic
+from pm4py.visualization.ocel.ocdfg.variants import classic, elkjs
 from typing import Optional, Dict, Any
-from pm4py.visualization.common import gview
-from pm4py.visualization.common import save as gsave
 
 
 class Variants(Enum):
     CLASSIC = classic
+    ELKJS = elkjs
 
 
-def apply(ocdfg: Dict[str, Any], variant=Variants.CLASSIC, parameters: Optional[Dict[Any, Any]] = None) -> Digraph:
+def apply(
+    ocdfg: Dict[str, Any],
+    variant=Variants.CLASSIC,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Digraph:
     """
     Visualizes an OC-DFG using one of the provided visualizations.
 
@@ -54,41 +57,26 @@ def apply(ocdfg: Dict[str, Any], variant=Variants.CLASSIC, parameters: Optional[
     return exec_utils.get_variant(variant).apply(ocdfg, parameters)
 
 
-def save(gviz: Digraph, output_file_path: str, parameters=None):
+def save(
+    gviz, output_file_path: str, variant=Variants.CLASSIC, parameters=None
+):
     """
-    Save the diagram
-
-    Parameters
-    -----------
-    gviz
-        GraphViz diagram
-    output_file_path
-        Path where the GraphViz output should be saved
+    Saves the diagram
     """
-    gsave.save(gviz, output_file_path, parameters=parameters)
-    return ""
+    return exec_utils.get_variant(variant).save(
+        gviz, output_file_path, parameters
+    )
 
 
-def view(gviz: Digraph, parameters=None):
+def view(gviz, variant=Variants.CLASSIC, parameters=None):
     """
-    View the diagram
-
-    Parameters
-    -----------
-    gviz
-        GraphViz diagram
+    Views the diagram
     """
-    return gview.view(gviz, parameters=parameters)
+    return exec_utils.get_variant(variant).view(gviz, parameters)
 
 
-def matplotlib_view(gviz: Digraph, parameters=None):
+def matplotlib_view(gviz, variant=Variants.CLASSIC, parameters=None):
     """
     Views the diagram using Matplotlib
-
-    Parameters
-    ---------------
-    gviz
-        Graphviz
     """
-
-    return gview.matplotlib_view(gviz, parameters=parameters)
+    return exec_utils.get_variant(variant).matplotlib_view(gviz, parameters)
