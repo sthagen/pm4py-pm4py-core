@@ -480,6 +480,169 @@ def abstract_log_skeleton(log_skeleton, include_header: bool = True) -> str:
     return logske_to_descr.apply(log_skeleton, parameters=parameters)
 
 
+def __execute_prompt_to_db_query(log: pd.DataFrame, prompt: str, executor=openai_query,
+                                 execute_query: bool = True, **kwargs) -> Union[str, pd.DataFrame]:
+    """
+    Internal method to retrieve (and execute) a SQL query corresponding to a prompt
+    """
+    import duckdb
+
+    if check_is_pandas_dataframe(log):
+        kwargs["table_name"] = "dataframe"
+        dataframe = log
+
+    response = executor(prompt, **kwargs)
+
+    sql_query = ""
+    if "```sql" in response:
+        sql_query = response.split("```sql")[1].split("```")[0]
+    sql_query = sql_query.strip()
+
+    if not sql_query:
+        raise Exception("The response does not contain a valid SQL query: " + response)
+
+    if execute_query:
+        result = duckdb.query(sql_query).to_df()
+
+        if check_is_pandas_dataframe(log):
+            return result
+
+    return sql_query
+
+
+def nlp_to_log_query(log: pd.DataFrame, query: str, executor=openai_query,
+                     obtain_query: bool = True, execute_query: bool = True, **kwargs) -> Union[
+    str, pd.DataFrame]:
+    """
+    Translates a natural language statement into a database (SQL) query executable against the event log.
+
+    :param log: event log object
+    :param query: query expressed in natural language
+    :param executor: the connector to the LLM (e.g., pm4py.llm.openai_query)
+    :param obtain_query: executes the prompt, to transform the natural statements into a database (SQL) query
+    :param execute_query: executes the database (SQL) query against the event data
+    :param kwargs: additional keyword arguments to the method
+    :rtype: ``Union[str, pd.DataFrame]``
+
+    .. code-block:: python3
+
+        import pm4py
+
+        log = pm4py.read_xes("tests/input_data/running-example.xes")
+        resp = pm4py.llm.nlp_to_log_query(log, "How many cases are contained in the event log?", api_key="sk-5HNn")
+        print(resp)
+    """
+    from pm4py.algo.querying.llm.injection import algorithm as domain_knowledge_injector
+    prompt = "Could you provide a database query for the following question?\n\n" + query
+    prompt += domain_knowledge_injector.apply(log, parameters=kwargs)
+    prompt += "\n\nPlease include the SQL query between the ```sql and the ``` tags.\n\n"
+
+    if obtain_query:
+        return __execute_prompt_to_db_query(log, prompt, executor=executor, execute_query=execute_query, **kwargs)
+
+    return prompt
+
+
+def nlp_to_log_filter(log: pd.DataFrame, filter_query: str, executor=openai_query,
+                      obtain_query: bool = True, execute_query: bool = True, **kwargs) -> Union[
+    str, pd.DataFrame]:
+    """
+    Translates a filtering query expressed in natural language into a database (SQL) query that is used to filter the
+    event log.
+
+    :param log: event log object
+    :param filter_query: filtering query expressed in natural language
+    :param executor: the connector to the LLM (e.g., pm4py.llm.openai_query)
+    :param obtain_query: executes the prompt, to transform the natural statements into a database (SQL) query
+    :param execute_query: executes the database (SQL) query against the event data
+    :param kwargs: additional keyword arguments to the method
+    :rtype: ``Union[str, pd.DataFrame]``
+
+    .. code-block:: python3
+
+        import pm4py
+
+        log = pm4py.read_xes("tests/input_data/running-example.xes")
+        resp = pm4py.llm.nlp_to_log_filter(log, "There is an event with activity: pay compensation", api_key="sk-5HNn")
+        print(resp)
+    """
+    from pm4py.algo.querying.llm.injection import algorithm as domain_knowledge_injector
+    prompt = "Could you provide a database query to filter all the events of the cases for which at least an event (row) is satisfying the following filtering query?\n\n" + filter_query
+    prompt += domain_knowledge_injector.apply(log, parameters=kwargs)
+    prompt += "\n\nPlease include the SQL query between the ```sql and the ``` tags.\n\n"
+
+    if obtain_query:
+        return __execute_prompt_to_db_query(log, prompt, executor=executor, execute_query=execute_query, **kwargs)
+
+    return prompt
+
+
+def automated_hypotheses_formulation(dataframe: pd.DataFrame, executor=openai_query, obtain_query: bool = True, execute_query: bool = True,
+                                     max_len=10000, **kwargs) -> Union[str, List[Tuple[str, str, Union[str, None]]]]:
+    """
+    Automatically formulate some hypotheses on the event data.
+    The result of this method is either:
+    - The prompt (to be executed manually against the LLM) when obtain_query=False
+    - A list of different hypotheses. Each hypothesis comes with a description (position 0), the SQL query (position 1),
+    and (if execute_query=True) the result of the execution of the query in position 2.
+
+    :param dataframe: event log object
+    :param executor: the connector to the LLM (e.g., pm4py.llm.openai_query)
+    :param obtain_query: executes the prompt and get the hypotheses along with the corresponding SQL queries
+    :param execute_query: executes the obtained SQL queries and stores the results
+    :param kwargs: additional keyword arguments to the method
+    :param max_len: maximum length of the obtained prompt
+    :rtype: ``Union[str, List[Tuple[str, str, Union[str, None]]]]``
+
+    .. code-block:: python3
+
+        import pm4py
+
+        log = pm4py.read_xes("tests/input_data/running-example.xes")
+        result = pm4py.llm.automated_hypotheses_formulation(log, api_key="sk-5HN")
+        print(result)
+    """
+    import duckdb
+    from pm4py.algo.querying.llm.abstractions import log_to_cols_descr
+
+    from pm4py.algo.querying.llm.injection import algorithm as domain_knowledge_injector
+    prompt = "Could you formulate some hypotheses over the event data? The directly-follows graph, the list of attributes, and additional process mining/database knowledge follow.\n\n"
+    prompt += abstract_dfg(dataframe, max_len=int(max_len / 3))
+    prompt += "\n\n"
+    prompt += log_to_cols_descr.apply(dataframe, parameters={"max_len": int(max_len / 3)})
+    prompt += "\n\n"
+    prompt += domain_knowledge_injector.apply(dataframe, parameters=kwargs)
+    prompt += "Please provide each hypothesis along with a SQL query. Please include the SQL queries between the ```sql and the ``` tags.\n"
+    prompt += "Can you please include also a description of each hypothesis between some <description> and </description> tags?\n\n"
+
+    if obtain_query:
+        response = executor(prompt, **kwargs)
+
+        obtained_queries = response.split("```sql")
+        obtained_descriptions = response.split("<description>")
+
+        if len(obtained_queries) > 1 and len(obtained_descriptions) > 1 and len(obtained_queries) == len(
+                obtained_descriptions):
+            del obtained_queries[0]
+            del obtained_descriptions[0]
+
+            obtained_queries = [x.split("```")[0] for x in obtained_queries]
+            obtained_descriptions = [x.split("</description>")[0].strip() for x in obtained_descriptions]
+            obtained_results = [None] * len(obtained_descriptions)
+
+            if execute_query:
+                for i in range(len(obtained_queries)):
+                    try:
+                        obtained_results[i] = duckdb.sql(obtained_queries[i]).to_df()
+                    except:
+                        print("Exception executing query nr. %d" % i)
+
+            return [(obtained_descriptions[i], obtained_queries[i], obtained_results[i]) for i in
+                    range(len(obtained_queries))]
+
+    return prompt
+
+
 def explain_visualization(vis_saver, *args, connector=openai_query, **kwargs) -> str:
     """
     Explains a process mining visualization using LLMs by saving it as a .png image and providing the image to the Large Language Model along with a description.

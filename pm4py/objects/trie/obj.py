@@ -82,3 +82,22 @@ class Trie(object):
 
     def __str__(self):
         return self.repr_trie()
+
+    def __eq__(self, other):
+        if not isinstance(other, Trie):
+            return False
+        if self._label != other._label:
+            return False
+        if self._final != other._final:
+            return False
+        this_children = sorted(self._children, key=lambda x: x._label)
+        other_children = sorted(other._children, key=lambda x: x._label)
+        if len(this_children) != len(other_children):
+            return False
+        for i in range(len(this_children)):
+            if this_children[i] != other_children[i]:
+                return False
+        return True
+
+    def __hash__(self):
+        return hash((self._label, self._final, tuple(sorted(self._children, key=lambda x: x._label))))

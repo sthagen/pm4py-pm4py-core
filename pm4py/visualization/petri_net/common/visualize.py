@@ -46,6 +46,109 @@ class Parameters(Enum):
     GRAPH_TITLE = "graph_title"
 
 
+def sort_petri_net(transitions: List[PetriNet.Transition], places: List[PetriNet.Place], arcs: List[PetriNet.Arc],
+                   initial_marking: Dict[PetriNet.Place, int], final_marking: Dict[PetriNet.Place, int]) -> Tuple[
+    List[PetriNet.Transition], List[PetriNet.Place], List[PetriNet.Arc]]:
+    """
+    Sorts the Petri net elements based on reachability from/to the initial/final marking
+
+    Parameters
+    ----------------
+    transitions
+        List of Petri net transitions
+    places
+        List of Petri net places
+    arcs
+        List of Petri net arcs
+    initial_marking
+        Initial marking
+    final_marking
+        Final marking
+
+    Returns
+    -----------------
+    sorted_transitions
+        Sorted list of Petri net transitions
+    sorted_places
+        Sorted list of Petri net places
+    sorted_arcs
+        Sorted list of Petri net arcs
+    """
+    # create adjacency lists for places and transitions
+    place_to_transition = defaultdict(list)
+    transition_to_place = defaultdict(list)
+
+    for arc in arcs:
+        if arc.source in places and arc.target in transitions:
+            place_to_transition[arc.source].append(arc.target)
+        else:
+            transition_to_place[arc.source].append(arc.target)
+
+    # initialize distance dictionaries
+    place_distance = {place: float('inf') for place in places}
+    transition_distance = {transition: float('inf') for transition in transitions}
+
+    # initialize the queue with initial marking places
+    queue = deque([place for place in initial_marking])
+
+    # set the initial distances
+    for place in initial_marking:
+        place_distance[place] = 0
+
+    # perform BFS to calculate distances from the initial marking
+    while queue:
+        current = queue.popleft()
+        current_distance = place_distance[current]
+
+        for transition in place_to_transition[current]:
+            if transition_distance[transition] > current_distance + 1:
+                transition_distance[transition] = current_distance + 1
+                for place in transition_to_place[transition]:
+                    if place_distance[place] > transition_distance[transition] + 1:
+                        place_distance[place] = transition_distance[transition] + 1
+                        queue.append(place)
+
+    # calculate distance from the final marking for sorting purposes
+    # initialize distance dictionaries
+    place_distance_final = {place: float('inf') for place in places}
+    transition_distance_final = {transition: float('inf') for transition in transitions}
+
+    # initialize the queue with final marking places
+    queue = deque([place for place in final_marking])
+
+    # set the initial distances
+    for place in final_marking:
+        place_distance_final[place] = 0
+
+    # perform BFS to calculate distances from the final marking
+    while queue:
+        current = queue.popleft()
+        current_distance = place_distance_final[current]
+
+        for transition in transition_to_place[current]:
+            if transition_distance_final[transition] > current_distance + 1:
+                transition_distance_final[transition] = current_distance + 1
+                for place in place_to_transition[transition]:
+                    if place_distance_final[place] > transition_distance_final[transition] + 1:
+                        place_distance_final[place] = transition_distance_final[transition] + 1
+                        queue.append(place)
+
+    # sort places, transitions, and arcs based on distances
+    def get_place_priority(place):
+        return (place_distance[place], -place_distance_final[place])
+
+    def get_transition_priority(transition):
+        return (transition_distance[transition], -transition_distance_final[transition])
+
+    sorted_places = sorted(places, key=get_place_priority)
+    sorted_transitions = sorted(transitions, key=get_transition_priority)
+    sorted_arcs = sorted(arcs, key=lambda x: (
+        get_place_priority(x.source) if x.source in places else get_transition_priority(x.source),
+        get_place_priority(x.target) if x.target in places else get_transition_priority(x.target)))
+
+    return sorted_transitions, sorted_places, sorted_arcs
+
+
 def apply(net, initial_marking, final_marking, decorations=None, parameters=None):
     """
     Apply method for Petri net visualization (it calls the
@@ -142,9 +245,14 @@ def graphviz_visualization(net, image_format="png", initial_marking=None, final_
     if enable_graph_title:
         viz.attr(label='<<FONT POINT-SIZE="'+str(2*int(font_size))+'">'+graph_title+'</FONT>>', labelloc="top")
 
-    # transitions
+    transitions = list(net.transitions)
+    places = list(net.places)
+    arcs = list(net.arcs)
+
+    transitions, places, arcs = sort_petri_net(transitions, places, arcs, initial_marking, final_marking)
+
     viz.attr('node', shape='box')
-    for t in net.transitions:
+    for t in transitions:
         label = decorations[t]["label"] if t in decorations and "label" in decorations[t] else ""
         fillcolor = decorations[t]["color"] if t in decorations and "color" in decorations[t] else None
         textcolor = "black"
@@ -163,44 +271,35 @@ def graphviz_visualization(net, image_format="png", initial_marking=None, final_
             else:
                 fillcolor = bgcolor
 
-        viz.node(str(id(t)), label, style='filled', fillcolor=fillcolor, border='1', fontsize=font_size, fontcolor=textcolor)
+        viz.node(str(id(t)), label, style='filled', fillcolor=fillcolor, border='1', fontsize=font_size,
+                 fontcolor=textcolor)
 
         if petri_properties.TRANS_GUARD in t.properties:
             guard = t.properties[petri_properties.TRANS_GUARD]
-            viz.node(str(id(t))+"guard", style="dotted", label=guard)
-            viz.edge(str(id(t))+"guard", str(id(t)), arrowhead="none", style="dotted")
+            viz.node(str(id(t)) + "guard", style="dotted", label=guard)
+            viz.edge(str(id(t)) + "guard", str(id(t)), arrowhead="none", style="dotted")
 
-    # places
-    # add places, in order by their (unique) name, to avoid undeterminism in the visualization
-    places_sort_list_im = sorted([x for x in list(net.places) if x in initial_marking], key=lambda x: x.name)
-    places_sort_list_fm = sorted([x for x in list(net.places) if x in final_marking and not x in initial_marking],
-                                 key=lambda x: x.name)
-    places_sort_list_not_im_fm = sorted(
-        [x for x in list(net.places) if x not in initial_marking and x not in final_marking], key=lambda x: x.name)
-    # making the addition happen in this order:
-    # - first, the places belonging to the initial marking
-    # - after, the places not belonging neither to the initial marking and the final marking
-    # - at last, the places belonging to the final marking (but not to the initial marking)
-    # in this way, is more probable that the initial marking is on the left and the final on the right
-    places_sort_list = places_sort_list_im + places_sort_list_not_im_fm + places_sort_list_fm
-
-    for p in places_sort_list:
+    for p in places:
         label = decorations[p]["label"] if p in decorations and "label" in decorations[p] else ""
         fillcolor = decorations[p]["color"] if p in decorations and "color" in decorations[p] else bgcolor
 
         label = str(label)
         if p in initial_marking:
             if initial_marking[p] == 1:
-                viz.node(str(id(p)), "<&#9679;>", fontsize="34", fixedsize='true', shape="circle", width='0.75', style="filled", fillcolor=fillcolor)
+                viz.node(str(id(p)), "<&#9679;>", fontsize="34", fixedsize='true', shape="circle", width='0.75',
+                         style="filled", fillcolor=fillcolor)
             else:
                 marking_label = str(initial_marking[p])
                 if len(marking_label) >= 3:
-                    viz.node(str(id(p)), marking_label, fontsize="34",  shape="ellipse", style="filled", fillcolor=fillcolor)
+                    viz.node(str(id(p)), marking_label, fontsize="34", shape="ellipse", style="filled",
+                             fillcolor=fillcolor)
                 else:
-                    viz.node(str(id(p)), marking_label, fontsize="34", fixedsize='true', shape="circle", width='0.75', style="filled", fillcolor=fillcolor)
+                    viz.node(str(id(p)), marking_label, fontsize="34", fixedsize='true', shape="circle", width='0.75',
+                             style="filled", fillcolor=fillcolor)
         elif p in final_marking:
             # <&#9632;>
-            viz.node(str(id(p)), "<&#9632;>", fontsize="32", shape='doublecircle', fixedsize='true', width='0.75', style="filled", fillcolor=fillcolor)
+            viz.node(str(id(p)), "<&#9632;>", fontsize="32", shape='doublecircle', fixedsize='true', width='0.75',
+                     style="filled", fillcolor=fillcolor)
         else:
             if debug:
                 viz.node(str(id(p)), str(p.name), fontsize=font_size, shape="ellipse")
@@ -209,20 +308,18 @@ def graphviz_visualization(net, image_format="png", initial_marking=None, final_
                     viz.node(str(id(p)), label, style='filled', fillcolor=fillcolor,
                              fontsize=font_size, shape="ellipse")
                 else:
-                    viz.node(str(id(p)), label, shape='circle', fixedsize='true', width='0.75', style="filled", fillcolor=fillcolor)
-
-    # add arcs, in order by their source and target objects names, to avoid undeterminism in the visualization
-    arcs_sort_list = sorted(list(net.arcs), key=lambda x: (x.source.name, x.target.name))
+                    viz.node(str(id(p)), label, shape='circle', fixedsize='true', width='0.75', style="filled",
+                             fillcolor=fillcolor)
 
     # check if there is an arc with weight different than 1.
     # in that case, all the arcs in the visualization should have the arc weight visible
     arc_weight_visible = False
-    for arc in arcs_sort_list:
+    for arc in arcs:
         if arc.weight != 1:
             arc_weight_visible = True
             break
 
-    for a in arcs_sort_list:
+    for a in arcs:
         penwidth = decorations[a]["penwidth"] if a in decorations and "penwidth" in decorations[a] else None
         label = decorations[a]["label"] if a in decorations and "label" in decorations[a] else ""
         color = decorations[a]["color"] if a in decorations and "color" in decorations[a] else None

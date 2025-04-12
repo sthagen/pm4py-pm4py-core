@@ -110,12 +110,6 @@ class AlignmentTest(unittest.TestCase):
         net, im, fm = pm4py.discover_petri_net_inductive(log)
         align_alg.apply(log, net, im, fm, variant=align_alg.Variants.VERSION_DIJKSTRA_LESS_MEMORY)
 
-    def test_variant_tweaked_state_eq_a_star(self):
-        import pm4py
-        log = pm4py.read_xes("input_data/running-example.xes")
-        net, im, fm = pm4py.discover_petri_net_inductive(log)
-        align_alg.apply(log, net, im, fm, variant=align_alg.Variants.VERSION_TWEAKED_STATE_EQUATION_A_STAR)
-
 
 
 if __name__ == "__main__":

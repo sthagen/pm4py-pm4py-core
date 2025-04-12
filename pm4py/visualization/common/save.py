@@ -40,6 +40,10 @@ def save(gviz, output_file_path, parameters=None):
 
     if format.startswith("html"):
         html.save(gviz, output_file_path, parameters=parameters)
+    elif format == "gv":
+        F = open(output_file_path, "w")
+        F.write(str(gviz))
+        F.close()
     else:
         render = gviz.render(cleanup=True)
         shutil.copyfile(render, output_file_path)

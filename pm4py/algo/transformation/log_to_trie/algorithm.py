@@ -20,23 +20,26 @@ Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
 from enum import Enum
-
 from pm4py import util
 from pm4py.objects.log.obj import EventLog
 from pm4py.objects.trie.obj import Trie
 from pm4py.statistics.variants.log import get as get_variants_log
 from pm4py.statistics.variants.pandas import get as get_variants_pandas
-from pm4py.util import pandas_utils
+from pm4py.util import pandas_utils, exec_utils
 from typing import Optional, Dict, Any, Union
 import pandas as pd
 
 
 class Parameters(Enum):
     ACTIVITY_KEY = util.constants.PARAMETER_CONSTANT_ACTIVITY_KEY
+    MAX_PATH_LENGTH = "max_path_length"  # New parameter for maximum path length
 
 
 def apply(log: Union[EventLog, pd.DataFrame], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Trie:
     parameters = parameters if parameters is not None else dict()
+
+    # Extract the maximum path length if provided
+    max_path_length = exec_utils.get_param_value(Parameters.MAX_PATH_LENGTH, parameters, None)
 
     if pandas_utils.check_is_pandas_dataframe(log):
         variants = get_variants_pandas.get_variants_set(log, parameters=parameters)
@@ -48,6 +51,10 @@ def apply(log: Union[EventLog, pd.DataFrame], parameters: Optional[Dict[Union[st
     root = Trie()
 
     for variant in variants:
+        # If maximum path length is defined, truncate the variant
+        if max_path_length is not None and len(variant) > max_path_length:
+            variant = variant[:max_path_length]
+
         trie = root
         for i, activity in enumerate(variant):
             match = False
@@ -60,6 +67,8 @@ def apply(log: Union[EventLog, pd.DataFrame], parameters: Optional[Dict[Union[st
                 node = Trie(label=activity, parent=trie, depth=trie.depth + 1)
                 trie.children.append(node)
                 trie = node
+            # If at the end of this (possibly truncated) variant, mark as final
             if i == len(variant) - 1:
                 trie.final = True
+
     return root

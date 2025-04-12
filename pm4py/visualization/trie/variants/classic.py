@@ -54,7 +54,8 @@ def draw_recursive(trie_node: Trie, parent: Union[str, None], gviz: Graph):
         gviz.node(node_id, label=trie_node.label, shape="box")
     if parent is not None:
         gviz.edge(parent, node_id)
-    for child in trie_node.children:
+    children = sorted(list(trie_node.children), key=lambda x: x._label)
+    for child in children:
         draw_recursive(child, node_id if trie_node.label is not None else None, gviz)
 
 

@@ -1,6 +1,92 @@
 # Changelog of pm4py
 
 
+## pm4py 2.7.15 (2025.01.10)
+
+### Added
+* 861cb56c478ed7fd485f88a2304506af33c180e4
+  * DFG filtering in simplified interface
+* 5085c6f1506a4f0f588706bc0287702e5e78c7ea
+  * added the plain .gv as output format for Graphviz visualizations
+* 113b5dd51a3ca2d526e9689dadcb817e4e730e29
+  * hash function OCEL object
+* 6130257779b6a5afeb8cf02610bdaba6e3034ada
+  * hash function prefix tree object
+* 51f469ca087e82d2bdc4290d1453de2fb53c9647
+  * hash function for the transition system object
+* 2c216554fc13f9741eb4a3d36f29f97b9c148f0a
+  * correlation miner in the simplified interface
+* fce422fe29585f5b94c401c80438a10dc36d3e82
+  * visualization variant for OC-DFG
+* 581d65a7ff46432a98a3e987a18e4cd47b9b6feb
+  * color arcs performance DFG visualization
+* 8434b2fcf3669030e71f9d4f718b921363dd810d
+  * simplified interface Petri net visualization
+* 8b2415e5e02b25b51a4f70785aec2ad2cf599260
+  * possibility to specify the title in some visualizations
+* 47fefe1fb53414f54c2e62d973aecb2fa293f238
+  * prefix tree to Petri net converter
+* 05a67b30c313d90570911a52662d346ac3814e59
+  * improved LLM integration
+* b81acabb754af91fb4369eab66f9514571379164
+  * performance aggregation key in discover_performance_dfg
+* 1ae6e6513c5597f13135986f09cf45cb2bb21c70
+  * streaming conformance checking on DECLARE models
+* d008b267bea269e7723baa0642929542c29284b8
+  * max length parameter to prefix tree generation
+* aec4de4220434a6c87d956d07bda4c7c093069b8
+  * possible visualization formats specified in the simplified interface vis.py
+* 7045e33774946387eb2c180e088262437234bfd1
+  * Git pipeline for tests execution
+
+### Changed
+* 102c5fa10a5755b45b6ed5c8e6e3587c609defbe
+  * updated connectors in pm4py.llm package
+* 589fc151b78b41a18fc4d7767b9ee9f84d8ef10c
+  * fix problem with BPMN importing
+* f4e87f752074e32cf117daf3fd4d683b47a12398
+  * module pre-importing on-request
+* a832282e7b95a3010a7c5a41f08d447a6d5fc004
+  * simplified simplified interface imports
+* bf0087b9cb7898e93d9a9c58ec0176f559675692
+  * updated RSTs
+* 9771d21db743250b02ba0202d8f65735a24f67ee
+  * revised documentation of pm4py
+* f64288071c31f986c61ce68990b4656867f7aec2
+  * replaced pyEMD
+* 4e0c4426d1f8010d409859210ab1f58552da6b7f
+  * max_tokens specification in pm4py.llm connectors.
+* df6c9708966ea254f3263adb9ed637f7df773e73
+  * deterministic order of children in prefix tree visualization.
+* 128166de99303f86d72fc2bd3e2d3a850411e0c1
+  * improved inductive miner fallthrough
+* 7057b867b394d311eff3f09e03aac659c67e90c5
+  * performance improvement search_graph_pt
+* 85e029f12dd66434e2032537ddaffab121c3586f
+  * removed unused variant tweaked_state_equation_a_star
+* 8f70c60d11e1a3afec94f3f36445c40cc5a46f0a
+  * extended examples for DFG interaction
+
+### Deprecated
+
+### Fixed
+* 57a4cbecf1fb1f58368bdc0ea6862c6aa42ef147
+  * escaping activities names before adding them to regex
+* ab2aa78a46b08edb10665f72dab82fec2d4fd89d
+  * refactored simplified interface docstrings
+* e750451515444877e7e85ae25adbfbac77bf0048
+  * updated URLs in getting started
+* ddbd25a0e10e13ec861ff5da89bcabbb6e468827
+  * hotfix BPMN layouting
+
+### Removed
+
+### Other
+
+
+---
+
+
 ## pm4py 2.7.14 (2024.07.16)
 
 ### Added

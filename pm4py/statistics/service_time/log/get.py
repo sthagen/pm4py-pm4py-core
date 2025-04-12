@@ -109,6 +109,8 @@ def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]]
                 complete_time = event[timestamp_key].timestamp()
                 durations_dict[activity].append(complete_time - start_time)
 
+    from statistics import mean, median
+
     for act in durations_dict:
         if aggregation_measure == "median":
             durations_dict[act] = median(durations_dict[act])

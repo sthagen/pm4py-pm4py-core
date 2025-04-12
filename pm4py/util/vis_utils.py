@@ -233,3 +233,27 @@ def get_corr_hex(num):
         return "E"
     elif num < 16:
         return "F"
+
+
+def value_to_color(val, min_value, max_value):
+    # Normalize values to the range [0, 1]
+    val = (val - min_value) / (max_value - min_value + 0.000001)
+
+    # Function to interpolate between two colors
+    def interpolate_color(val, color1, color2):
+        return tuple(int(color1[i] + (color2[i] - color1[i]) * val) for i in range(3))
+
+    # Blue to red color gradient
+    blue = (0, 0, 255)  # RGB for blue
+    red = (255, 0, 0)   # RGB for red
+
+    # Map normalized values to colors
+    color = interpolate_color(val, blue, red)
+
+    # Convert RGB colors to hexadecimal format
+    def rgb_to_hex(rgb):
+        return '#{:02x}{:02x}{:02x}'.format(rgb[0], rgb[1], rgb[2])
+
+    hex_color = rgb_to_hex(color)
+
+    return hex_color

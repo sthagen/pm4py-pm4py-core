@@ -25,7 +25,7 @@ def execute_script():
     dfg, performance_dfg = correlation_miner.apply(df, variant=correlation_miner.Variants.CLASSIC,
                                                    parameters=parameters)
 
-    if importlib.util.find_spec("grapviz"):
+    if importlib.util.find_spec("graphviz"):
         from pm4py.visualization.dfg import visualizer as dfg_vis
         gviz_freq = dfg_vis.apply(dfg, activities_count=act_count, serv_time=soj_time, variant=dfg_vis.Variants.FREQUENCY,
                                   parameters=parameters)

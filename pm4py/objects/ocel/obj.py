@@ -161,3 +161,38 @@ class OCEL(object):
     def __deepcopy__(self, memo):
         return OCEL(self.events.copy(), self.objects.copy(), self.relations.copy(), deepcopy(self.globals),
                     deepcopy(self.parameters), deepcopy(self.o2o), deepcopy(self.e2e), deepcopy(self.object_changes))
+
+    def __eq__(self, other):
+        if not isinstance(other, OCEL):
+            return False
+
+        return (self.event_id_column == other.event_id_column and
+                self.object_id_column == other.object_id_column and
+                self.object_type_column == other.object_type_column and
+                self.event_activity == other.event_activity and
+                self.event_timestamp == other.event_timestamp and
+                self.qualifier == other.qualifier and
+                self.changed_field == other.changed_field and
+                self.events.equals(other.events) and
+                self.objects.equals(other.objects) and
+                self.relations.equals(other.relations) and
+                self.globals == other.globals and
+                self.o2o.equals(other.o2o) and
+                self.e2e.equals(other.e2e) and
+                self.object_changes.equals(other.object_changes) and
+                self.parameters == other.parameters)
+
+    def __hash__(self):
+        return hash((self.event_id_column,
+                     self.object_id_column,
+                     self.object_type_column,
+                     self.event_activity,
+                     self.event_timestamp,
+                     self.qualifier,
+                     self.changed_field,
+                     self.events.to_string(),
+                     self.objects.to_string(),
+                     self.relations.to_string(),
+                     self.o2o.to_string(),
+                     self.e2e.to_string(),
+                     self.object_changes.to_string()))

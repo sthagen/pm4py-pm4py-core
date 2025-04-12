@@ -881,6 +881,18 @@ def process_tree_reduction():
     process_tree_reduction.execute_script()
 
 
+def log_to_fit_precise_pn():
+    from examples import log_to_fit_precise_pn
+    print("\n\nlog_to_fit_precise_pn")
+    log_to_fit_precise_pn.execute_script()
+
+
+def streaming_declare():
+    from examples import streaming_declare
+    print("\n\nstreaming_declare")
+    streaming_declare.execute_script()
+
+
 def execute_script(f):
     try:
         f()
@@ -949,6 +961,7 @@ def main():
     print_versions()
 
     if EXECUTE_EXAMPLES:
+        execute_script(log_to_fit_precise_pn)
         execute_script(inductive_miner_dfg_lc)
         execute_script(log_projection_dfg_variant)
         execute_script(streaming_live_to_static_stream)
@@ -1071,6 +1084,7 @@ def main():
         execute_script(feature_extraction_case_loc)
         execute_script(log_skeleton_manual_constraints)
         execute_script(trace_attrib_hierarch_cluster)
+        execute_script(streaming_declare)
         execute_script(streaming_conformance_footprints)
         execute_script(streaming_conformance_tbr)
         execute_script(streaming_csv_reader_event_stream)

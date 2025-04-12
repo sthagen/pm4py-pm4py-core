@@ -28,7 +28,7 @@ from graphviz import Digraph
 from pm4py.util import constants
 from typing import Dict, List, Tuple
 from collections import defaultdict, deque
-from pm4py.visualization.common.utils import *
+from pm4py.util.vis_utils import human_readable_stat, get_arc_penwidth, get_trans_freq_color, value_to_color
 
 
 def get_activities_color(activities_count):
@@ -311,6 +311,9 @@ def graphviz_visualization(activities_count, dfg, image_format="png", measure="f
     if end_activities_to_include is not None and end_activities_to_include:
         for eact in end_activities_to_include:
             ext_dfg[(eact, constants.DEFAULT_ARTIFICIAL_END_ACTIVITY)] = end_activities[eact]
+    dfg_values = dfg.values()
+    min_dfg_value = min(dfg_values)
+    max_dfg_value = max(dfg_values)
 
     penwidth = assign_penwidth_edges(ext_dfg)
 
@@ -339,7 +342,12 @@ def graphviz_visualization(activities_count, dfg, image_format="png", measure="f
             label = str(dfg[edge])
         else:
             label = human_readable_stat(dfg[edge])
-        viz.edge(str(hash(edge[0])), str(hash(edge[1])), label=label, penwidth=str(penwidth[edge]), fontsize=font_size)
+
+        color = None
+        if "performance" in measure:
+            color = value_to_color(dfg[edge], min_dfg_value, max_dfg_value)
+
+        viz.edge(str(hash(edge[0])), str(hash(edge[1])), label=label, penwidth=str(penwidth[edge]), fontsize=font_size, color=color)
 
     if start_activities_to_include:
         viz.node("@@startnode", "<&#9679;>", shape='circle', fontsize="34")

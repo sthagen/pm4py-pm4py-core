@@ -48,6 +48,8 @@ def view(gviz, parameters=None):
             html.view(gviz, parameters=parameters)
         elif vis_utils.check_visualization_inside_jupyter():
             vis_utils.view_image_in_jupyter(gviz.render())
+        elif format == "gv":
+            print(str(gviz))
         else:
             return gviz.view(cleanup=True)
 

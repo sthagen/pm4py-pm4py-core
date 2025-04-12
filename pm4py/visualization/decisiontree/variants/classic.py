@@ -20,7 +20,7 @@ Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
 import tempfile
-from pm4py.util import exec_utils
+from pm4py.util import exec_utils, constants
 from enum import Enum
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.tree import export_graphviz
@@ -30,6 +30,8 @@ import graphviz
 
 class Parameters(Enum):
     FORMAT = "format"
+    ENABLE_GRAPH_TITLE = "enable_graph_title"
+    GRAPH_TITLE = "graph_title"
 
 
 def apply(clf: DecisionTreeClassifier, feature_names: List[str], classes: List[str], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> graphviz.Source:
@@ -56,6 +58,9 @@ def apply(clf: DecisionTreeClassifier, feature_names: List[str], classes: List[s
     if parameters is None:
         parameters = {}
 
+    enable_graph_title = exec_utils.get_param_value(Parameters.ENABLE_GRAPH_TITLE, parameters, constants.DEFAULT_ENABLE_GRAPH_TITLES)
+    graph_title = exec_utils.get_param_value(Parameters.GRAPH_TITLE, parameters, "Decision Tree")
+
     format = exec_utils.get_param_value(Parameters.FORMAT, parameters, "png")
     filename = tempfile.NamedTemporaryFile(suffix='.gv')
     filename.close()
@@ -65,6 +70,11 @@ def apply(clf: DecisionTreeClassifier, feature_names: List[str], classes: List[s
                                     class_names=classes,
                                     filled=True, rounded=True,
                                     special_characters=True)
+
+    if enable_graph_title:
+        dot_data = dot_data.replace('digraph Tree {',
+                                               f'digraph Tree {{\ngraph [label="{graph_title}", labelloc=t, fontsize=20];')
+
     gviz = graphviz.Source(dot_data)
     gviz.format = format
     gviz.filename = filename.name

@@ -57,6 +57,14 @@ class TransitionSystem(object):
         def __repr__(self):
             return str(self.name)
 
+        def __eq__(self, other):
+            if isinstance(other, TransitionSystem.State):
+                return self.__name == other.__name
+            return False
+
+        def __hash__(self):
+            return hash(str(self.__name))
+
         name = property(__get_name, __set_name)
         incoming = property(__get_incoming, __set_incoming)
         outgoing = property(__get_outgoing, __set_outgoing)
@@ -94,6 +102,16 @@ class TransitionSystem(object):
         def __repr__(self):
             return str(self.name)
 
+        def __eq__(self, other):
+            if isinstance(other, TransitionSystem.Transition):
+                return (self.__name == other.__name and
+                        self.__from_state == other.__from_state and
+                        self.__to_state == other.__to_state)
+            return False
+
+        def __hash__(self):
+            return hash((str(self.__name), self.__from_state, self.__to_state))
+
         name = property(__get_name)
         from_state = property(__get_from_state, __set_from_state)
         to_state = property(__get_to_state, __set_to_state)
@@ -118,6 +136,16 @@ class TransitionSystem(object):
 
     def __set_transitions(self, transitions):
         self.__transitions = transitions
+
+    def __eq__(self, other):
+        if isinstance(other, TransitionSystem):
+            return (self.__name == other.__name and
+                    self.__states == other.__states and
+                    self.__transitions == other.__transitions)
+        return False
+
+    def __hash__(self):
+        return hash((str(self.__name), frozenset(self.__states), frozenset(self.__transitions)))
 
     name = property(__get_name, __set_name)
     states = property(__get_states)

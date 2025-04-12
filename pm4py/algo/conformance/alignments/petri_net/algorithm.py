@@ -42,7 +42,6 @@ import pandas as pd
 
 class Variants(Enum):
     VERSION_STATE_EQUATION_A_STAR = variants.state_equation_a_star
-    VERSION_TWEAKED_STATE_EQUATION_A_STAR = variants.tweaked_state_equation_a_star
     VERSION_DIJKSTRA_NO_HEURISTICS = variants.dijkstra_no_heuristics
     VERSION_DIJKSTRA_LESS_MEMORY = variants.dijkstra_less_memory
     VERSION_DISCOUNTED_A_STAR = variants.discounted_a_star
@@ -74,8 +73,6 @@ def __variant_mapper(variant):
     if type(variant) is str:
         if variant == "Variants.VERSION_STATE_EQUATION_A_STAR":
             variant = Variants.VERSION_STATE_EQUATION_A_STAR
-        elif variant == "Variants.VERSION_TWEAKED_STATE_EQUATION_A_STAR":
-            variant = Variants.VERSION_TWEAKED_STATE_EQUATION_A_STAR
         elif variant == "Variants.VERSION_DIJKSTRA_NO_HEURISTICS":
             variant = Variants.VERSION_DIJKSTRA_NO_HEURISTICS
         elif variant == "Variants.VERSION_DIJKSTRA_LESS_MEMORY":

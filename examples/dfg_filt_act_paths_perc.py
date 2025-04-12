@@ -1,25 +1,19 @@
 import pm4py
-from pm4py.algo.filtering.dfg import dfg_filtering
 from examples import examples_conf
 import importlib.util
 
 
 def execute_script():
     log = pm4py.read_xes("../tests/input_data/receipt.xes")
-    dfg, sa, ea = pm4py.discover_dfg(log)
-    act_count = pm4py.get_event_attribute_values(log, "concept:name")
+    dfg, start_act, end_act = pm4py.discover_dfg(log)
     # keep the specified amount of activities
-    dfg, sa, ea, act_count = dfg_filtering.filter_dfg_on_activities_percentage(dfg, sa, ea, act_count, 0.3)
+    dfg, start_act, end_act = pm4py.filter_dfg_activities_percentage(dfg, start_act, end_act, percentage=0.3)
     # keep the specified amount of paths
-    dfg, sa, ea, act_count = dfg_filtering.filter_dfg_on_paths_percentage(dfg, sa, ea, act_count, 0.3)
+    dfg, start_act, end_act = pm4py.filter_dfg_paths_percentage(dfg, start_act, end_act, percentage=0.3)
 
     if importlib.util.find_spec("graphviz"):
         # view the DFG
-        from pm4py.visualization.dfg import visualizer as dfg_visualizer
-        gviz = dfg_visualizer.apply(dfg, activities_count=act_count, parameters={dfg_visualizer.Variants.FREQUENCY.value.Parameters.START_ACTIVITIES: sa,
-                                                                                 dfg_visualizer.Variants.FREQUENCY.value.Parameters.END_ACTIVITIES: ea,
-                                                                                 dfg_visualizer.Variants.FREQUENCY.value.Parameters.FORMAT: examples_conf.TARGET_IMG_FORMAT})
-        dfg_visualizer.view(gviz)
+        pm4py.view_dfg(dfg, start_act, end_act, format="svg")
 
 
 if __name__ == "__main__":

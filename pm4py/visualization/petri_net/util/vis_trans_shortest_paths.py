@@ -19,7 +19,7 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.visualization.common.utils import *
+from pm4py.util.vis_utils import human_readable_stat, get_arc_penwidth, get_trans_freq_color
 
 
 def get_shortest_paths_from_trans(original_trans, trans, spaths, visited_arcs, visited_transitions, added_elements,

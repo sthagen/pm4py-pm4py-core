@@ -65,6 +65,8 @@ class Parameters(Enum):
     PATHS_PERCENTAGE = "paths_percentage"
     DEPENDENCY_THRESHOLD = "dependency_threshold"
     MIN_FACT_EDGES_INTERLEAVINGS = "min_fact_edges_interleavings"
+    ENABLE_GRAPH_TITLE = "enable_graph_title"
+    GRAPH_TITLE = "graph_title"
 
 
 def apply(dataframe1: pd.DataFrame, dataframe2: pd.DataFrame, interleavings: pd.DataFrame,
@@ -117,12 +119,18 @@ def apply(dataframe1: pd.DataFrame, dataframe2: pd.DataFrame, interleavings: pd.
     dependency_threshold = exec_utils.get_param_value(Parameters.DEPENDENCY_THRESHOLD, parameters, 0.3)
     min_fact_edges_interleavings = exec_utils.get_param_value(Parameters.MIN_FACT_EDGES_INTERLEAVINGS, parameters, 0.3)
 
+    enable_graph_title = exec_utils.get_param_value(Parameters.ENABLE_GRAPH_TITLE, parameters, constants.DEFAULT_ENABLE_GRAPH_TITLES)
+    graph_title = exec_utils.get_param_value(Parameters.GRAPH_TITLE, parameters, "Interleavings")
+
     filename = tempfile.NamedTemporaryFile(suffix='.gv')
     filename.close()
 
     viz = Digraph("interleavings", filename=filename.name, engine='dot', graph_attr={'bgcolor': bgcolor})
-    viz.attr('node', shape='ellipse', fixedsize='false')
 
+    if enable_graph_title:
+        viz.attr(label='<<FONT POINT-SIZE="20">'+graph_title+'</FONT>>', labelloc="top")
+
+    viz.attr('node', shape='ellipse', fixedsize='false')
     viz.attr(rankdir=rankdir)
     viz.format = image_format.replace("html", "plain-ext")
 

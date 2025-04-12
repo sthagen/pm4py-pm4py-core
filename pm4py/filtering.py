@@ -1683,3 +1683,71 @@ def filter_ocel_cc_activity(
     objs = [y for x in conn_comp for y in x]
 
     return filter_ocel_objects(ocel, objs)
+
+
+def filter_dfg_activities_percentage(dfg: Dict[Tuple[str, str], int], start_activities: Dict[str, int], end_activities: Dict[str, int], percentage: float = 0.2) -> Tuple[Dict[Tuple[str, str], int], Dict[str, int], Dict[str, int]]:
+    """
+    Filters the DFG on the provided percentage of activities.
+
+    :param dfg: frequency directly-follows graph
+    :param start_activities: dictionary of the start activities
+    :param end_activities: dictionary of the end activities
+    :param percentage: percentage of activities to keep
+
+    .. code-block:: python3
+
+        import pm4py
+
+        log = pm4py.read_xes('tests/input_data/receipt.xes')
+        dfg, sa, ea = pm4py.discover_dfg(log)
+        dfg, sa, ea = pm4py.filter_dfg_activities_percentage(dfg, sa, ea, percentage=0.2)
+        pm4py.view_dfg(dfg, sa, ea, format='svg')
+    """
+    activities_entering_arcs = Counter()
+    activities_exiting_arcs = Counter()
+    all_activities = set()
+    for arc, count in dfg.items():
+        activities_entering_arcs[arc[0]] += count
+        activities_exiting_arcs[arc[1]] += count
+        all_activities.add(arc[0])
+        all_activities.add(arc[1])
+    activities_frequency = {a: max(activities_entering_arcs[a], activities_exiting_arcs[a]) for a in all_activities}
+
+    from pm4py.algo.filtering.dfg.dfg_filtering import filter_dfg_on_activities_percentage
+    dfg, start_activities, end_activities, activities_frequency = filter_dfg_on_activities_percentage(dfg, start_activities, end_activities, activities_frequency, percentage=percentage)
+
+    return dfg, start_activities, end_activities
+
+
+def filter_dfg_paths_percentage(dfg: Dict[Tuple[str, str], int], start_activities: Dict[str, int], end_activities: Dict[str, int], percentage: float = 0.2) -> Tuple[Dict[Tuple[str, str], int], Dict[str, int], Dict[str, int]]:
+    """
+    Filters the DFG on the provided percentage of paths.
+
+    :param dfg: frequency directly-follows graph
+    :param start_activities: dictionary of the start activities
+    :param end_activities: dictionary of the end activities
+    :param percentage: percentage of paths to keep
+
+    .. code-block:: python3
+
+        import pm4py
+
+        log = pm4py.read_xes('tests/input_data/receipt.xes')
+        dfg, sa, ea = pm4py.discover_dfg(log)
+        dfg, sa, ea = pm4py.filter_dfg_paths_percentage(dfg, sa, ea, percentage=0.2)
+        pm4py.view_dfg(dfg, sa, ea, format='svg')
+    """
+    activities_entering_arcs = Counter()
+    activities_exiting_arcs = Counter()
+    all_activities = set()
+    for arc, count in dfg.items():
+        activities_entering_arcs[arc[0]] += count
+        activities_exiting_arcs[arc[1]] += count
+        all_activities.add(arc[0])
+        all_activities.add(arc[1])
+    activities_frequency = {a: max(activities_entering_arcs[a], activities_exiting_arcs[a]) for a in all_activities}
+
+    from pm4py.algo.filtering.dfg.dfg_filtering import filter_dfg_on_paths_percentage
+    dfg, start_activities, end_activities, activities_frequency = filter_dfg_on_paths_percentage(dfg, start_activities, end_activities, activities_frequency, percentage=percentage)
+
+    return dfg, start_activities, end_activities

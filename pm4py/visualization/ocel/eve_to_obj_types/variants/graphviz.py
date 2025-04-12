@@ -33,6 +33,8 @@ class Parameters(Enum):
     BGCOLOR = "bgcolor"
     RANKDIR = "rankdir"
     ANNOTATE_FREQUENCY = "annotate_frequency"
+    ENABLE_GRAPH_TITLE = "enable_graph_title"
+    GRAPH_TITLE = "graph_title"
 
 
 def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Digraph:
@@ -63,9 +65,14 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Digraph:
     bgcolor = exec_utils.get_param_value(Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR)
     rankdir = exec_utils.get_param_value(Parameters.RANKDIR, parameters, "LR")
     annotate_frequency = exec_utils.get_param_value(Parameters.ANNOTATE_FREQUENCY, parameters, False)
+    enable_graph_title = exec_utils.get_param_value(Parameters.ENABLE_GRAPH_TITLE, parameters, constants.DEFAULT_ENABLE_GRAPH_TITLES)
+    graph_title = exec_utils.get_param_value(Parameters.GRAPH_TITLE, parameters, "Ev. Types to Obj. Types")
 
     filename = tempfile.NamedTemporaryFile(suffix='.gv')
     viz = Digraph("eve_to_obj_types", filename=filename.name, engine='dot', graph_attr={'bgcolor': bgcolor})
+
+    if enable_graph_title:
+        viz.attr(label='<<FONT POINT-SIZE="20">'+graph_title+'</FONT>>', labelloc="top")
 
     event_types = sorted(list(ocel.events[ocel.event_activity].unique()))
     object_types = sorted(list(ocel.objects[ocel.object_type_column].unique()))
