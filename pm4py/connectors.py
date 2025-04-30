@@ -48,10 +48,13 @@ def extract_log_outlook_mails() -> pd.DataFrame:
         dataframe = pm4py.connectors.extract_log_outlook_mails()
     """
     from pm4py.algo.connectors.variants import outlook_mail_extractor
+
     return outlook_mail_extractor.apply()
 
 
-def extract_log_outlook_calendar(email_user: Optional[str] = None, calendar_id: int = 9) -> pd.DataFrame:
+def extract_log_outlook_calendar(
+    email_user: Optional[str] = None, calendar_id: int = 9
+) -> pd.DataFrame:
     """
     Extracts the history of calendar events (creation, update, start, end)
     into a Pandas DataFrame from the local Outlook instance running on the current computer.
@@ -77,6 +80,7 @@ def extract_log_outlook_calendar(email_user: Optional[str] = None, calendar_id: 
         dataframe = pm4py.connectors.extract_log_outlook_calendar("vacation-calendar@workplace.eu")
     """
     from pm4py.algo.connectors.variants import outlook_calendar
+
     parameters = {}
     parameters[outlook_calendar.Parameters.EMAIL_USER] = email_user
     parameters[outlook_calendar.Parameters.CALENDAR_ID] = calendar_id
@@ -102,10 +106,13 @@ def extract_log_windows_events() -> pd.DataFrame:
         dataframe = pm4py.connectors.extract_log_windows_events()
     """
     from pm4py.algo.connectors.variants import windows_events
+
     return windows_events.apply()
 
 
-def extract_log_chrome_history(history_db_path: Optional[str] = None) -> pd.DataFrame:
+def extract_log_chrome_history(
+    history_db_path: Optional[str] = None,
+) -> pd.DataFrame:
     """
     Extracts a DataFrame containing the navigation history of Google Chrome.
     Please ensure that Google Chrome history is closed when extracting.
@@ -124,13 +131,16 @@ def extract_log_chrome_history(history_db_path: Optional[str] = None) -> pd.Data
         dataframe = pm4py.connectors.extract_log_chrome_history()
     """
     from pm4py.algo.connectors.variants import chrome_history
+
     parameters = {}
     if history_db_path is not None:
         parameters[chrome_history.Parameters.HISTORY_DB_PATH] = history_db_path
     return chrome_history.apply(parameters=parameters)
 
 
-def extract_log_firefox_history(history_db_path: Optional[str] = None) -> pd.DataFrame:
+def extract_log_firefox_history(
+    history_db_path: Optional[str] = None,
+) -> pd.DataFrame:
     """
     Extracts a DataFrame containing the navigation history of Mozilla Firefox.
     Please ensure that Mozilla Firefox history is closed when extracting.
@@ -149,13 +159,20 @@ def extract_log_firefox_history(history_db_path: Optional[str] = None) -> pd.Dat
         dataframe = pm4py.connectors.extract_log_firefox_history()
     """
     from pm4py.algo.connectors.variants import firefox_history
+
     parameters = {}
     if history_db_path is not None:
-        parameters[firefox_history.Parameters.HISTORY_DB_PATH] = history_db_path
+        parameters[firefox_history.Parameters.HISTORY_DB_PATH] = (
+            history_db_path
+        )
     return firefox_history.apply(parameters=parameters)
 
 
-def extract_log_github(owner: str = "pm4py", repo: str = "pm4py-core", auth_token: Optional[str] = None) -> pd.DataFrame:
+def extract_log_github(
+    owner: str = "pm4py",
+    repo: str = "pm4py-core",
+    auth_token: Optional[str] = None,
+) -> pd.DataFrame:
     """
     Extracts a DataFrame containing the history of issues from a GitHub repository.
     Due to API rate limits for public and registered users, only a subset of events may be returned.
@@ -171,6 +188,7 @@ def extract_log_github(owner: str = "pm4py", repo: str = "pm4py-core", auth_toke
         dataframe = pm4py.connectors.extract_log_github(owner='pm4py', repo='pm4py-core')
     """
     from pm4py.algo.connectors.variants import github_repo
+
     parameters = {}
     parameters[github_repo.Parameters.OWNER] = owner
     parameters[github_repo.Parameters.REPOSITORY] = repo
@@ -194,12 +212,17 @@ def extract_log_camunda_workflow(connection_string: str) -> pd.DataFrame:
         )
     """
     from pm4py.algo.connectors.variants import camunda_workflow
+
     parameters = {}
-    parameters[camunda_workflow.Parameters.CONNECTION_STRING] = connection_string
+    parameters[camunda_workflow.Parameters.CONNECTION_STRING] = (
+        connection_string
+    )
     return camunda_workflow.apply(None, parameters=parameters)
 
 
-def extract_log_sap_o2c(connection_string: str, prefix: str = "") -> pd.DataFrame:
+def extract_log_sap_o2c(
+    connection_string: str, prefix: str = ""
+) -> pd.DataFrame:
     """
     Extracts a DataFrame for the SAP Order-to-Cash (O2C) process.
 
@@ -215,13 +238,16 @@ def extract_log_sap_o2c(connection_string: str, prefix: str = "") -> pd.DataFram
         )
     """
     from pm4py.algo.connectors.variants import sap_o2c
+
     parameters = {}
     parameters[sap_o2c.Parameters.CONNECTION_STRING] = connection_string
     parameters[sap_o2c.Parameters.PREFIX] = prefix
     return sap_o2c.apply(None, parameters=parameters)
 
 
-def extract_log_sap_accounting(connection_string: str, prefix: str = "") -> pd.DataFrame:
+def extract_log_sap_accounting(
+    connection_string: str, prefix: str = ""
+) -> pd.DataFrame:
     """
     Extracts a DataFrame for the SAP Accounting process.
 
@@ -237,6 +263,7 @@ def extract_log_sap_accounting(connection_string: str, prefix: str = "") -> pd.D
         )
     """
     from pm4py.algo.connectors.variants import sap_accounting
+
     parameters = {}
     parameters[sap_accounting.Parameters.CONNECTION_STRING] = connection_string
     parameters[sap_accounting.Parameters.PREFIX] = prefix
@@ -269,16 +296,19 @@ def extract_ocel_outlook_mails() -> OCEL:
         ocel = pm4py.connectors.extract_ocel_outlook_mails()
     """
     import pm4py
+
     dataframe = pm4py.connectors.extract_log_outlook_mails()
     return pm4py.convert_log_to_ocel(
         dataframe,
-        case_id_col="concept:name",
-        timestamp_col="time:timestamp",
-        object_attributes=["org:resource", "recipients", "topic"]
+        object_types=["case:concept:name"],
+        timestamp_column="time:timestamp",
+        additional_object_attributes={"case:concept:name": ["org:resource", "recipients", "topic"]},
     )
 
 
-def extract_ocel_outlook_calendar(email_user: Optional[str] = None, calendar_id: int = 9) -> OCEL:
+def extract_ocel_outlook_calendar(
+    email_user: Optional[str] = None, calendar_id: int = 9
+) -> OCEL:
     """
     Extracts the history of calendar events (creation, update, start, end)
     as an object-centric event log from the local Outlook instance running on the current computer.
@@ -305,12 +335,15 @@ def extract_ocel_outlook_calendar(email_user: Optional[str] = None, calendar_id:
         ocel = pm4py.connectors.extract_ocel_outlook_calendar("vacation-calendar@workplace.eu")
     """
     import pm4py
-    dataframe = pm4py.connectors.extract_log_outlook_calendar(email_user, calendar_id)
+
+    dataframe = pm4py.connectors.extract_log_outlook_calendar(
+        email_user, calendar_id
+    )
     return pm4py.convert_log_to_ocel(
         dataframe,
-        case_id_col="concept:name",
-        timestamp_col="time:timestamp",
-        object_attributes=["case:concept:name", "case:subject"]
+        object_types=["case:concept:name"],
+        timestamp_column="time:timestamp",
+        additional_object_attributes={"case:concept:name": ["case:concept:name", "case:subject"]},
     )
 
 
@@ -339,12 +372,20 @@ def extract_ocel_windows_events() -> OCEL:
         ocel = pm4py.connectors.extract_ocel_windows_events()
     """
     import pm4py
+
     dataframe = pm4py.connectors.extract_log_windows_events()
     return pm4py.convert_log_to_ocel(
         dataframe,
-        case_id_col="concept:name",
-        timestamp_col="time:timestamp",
-        object_attributes=["categoryString", "computerName", "eventIdentifier", "eventType", "sourceName", "user"]
+        object_types="case:concept:name",
+        timestamp_column="time:timestamp",
+        additional_object_attributes={"case:concept:name": [
+            "categoryString",
+            "computerName",
+            "eventIdentifier",
+            "eventType",
+            "sourceName",
+            "user",
+        ]},
     )
 
 
@@ -372,16 +413,24 @@ def extract_ocel_chrome_history(history_db_path: Optional[str] = None) -> OCEL:
         ocel = pm4py.connectors.extract_ocel_chrome_history()
     """
     import pm4py
+
     dataframe = pm4py.connectors.extract_log_chrome_history(history_db_path)
     return pm4py.convert_log_to_ocel(
         dataframe,
-        case_id_col="concept:name",
-        timestamp_col="time:timestamp",
-        object_attributes=["case:concept:name", "complete_url", "url_wo_parameters", "domain"]
+        object_types=["case:concept:name"],
+        timestamp_column="time:timestamp",
+        additional_object_attributes={"case:concept:name": [
+            "case:concept:name",
+            "complete_url",
+            "url_wo_parameters",
+            "domain",
+        ]},
     )
 
 
-def extract_ocel_firefox_history(history_db_path: Optional[str] = None) -> OCEL:
+def extract_ocel_firefox_history(
+    history_db_path: Optional[str] = None,
+) -> OCEL:
     """
     Extracts an object-centric event log containing the navigation history of Mozilla Firefox.
     Please ensure that Mozilla Firefox history is closed when extracting.
@@ -405,16 +454,26 @@ def extract_ocel_firefox_history(history_db_path: Optional[str] = None) -> OCEL:
         ocel = pm4py.connectors.extract_ocel_firefox_history()
     """
     import pm4py
+
     dataframe = pm4py.connectors.extract_log_firefox_history(history_db_path)
     return pm4py.convert_log_to_ocel(
         dataframe,
-        case_id_col="concept:name",
-        timestamp_col="time:timestamp",
-        object_attributes=["case:concept:name", "complete_url", "url_wo_parameters", "domain"]
+        object_types=["case:concept:name"],
+        timestamp_column="time:timestamp",
+        additional_object_attributes={"case:concept:name": [
+            "case:concept:name",
+            "complete_url",
+            "url_wo_parameters",
+            "domain",
+        ]},
     )
 
 
-def extract_ocel_github(owner: str = "pm4py", repo: str = "pm4py-core", auth_token: Optional[str] = None) -> OCEL:
+def extract_ocel_github(
+    owner: str = "pm4py",
+    repo: str = "pm4py-core",
+    auth_token: Optional[str] = None,
+) -> OCEL:
     """
     Extracts an object-centric event log containing the history of issues from a GitHub repository.
     Due to API rate limits for public and registered users, only a subset of events may be returned.
@@ -439,12 +498,13 @@ def extract_ocel_github(owner: str = "pm4py", repo: str = "pm4py-core", auth_tok
         ocel = pm4py.connectors.extract_ocel_github(owner='pm4py', repo='pm4py-core')
     """
     import pm4py
+
     dataframe = pm4py.connectors.extract_log_github(owner, repo, auth_token)
     return pm4py.convert_log_to_ocel(
         dataframe,
-        case_id_col="concept:name",
-        timestamp_col="time:timestamp",
-        object_attributes=["case:concept:name", "org:resource", "case:repo"]
+        object_types=["case:concept:name"],
+        timestamp_column="time:timestamp",
+        additional_object_attributes={"case:concept:name": ["case:concept:name", "org:resource", "case:repo"]},
     )
 
 
@@ -472,16 +532,19 @@ def extract_ocel_camunda_workflow(connection_string: str) -> OCEL:
         )
     """
     import pm4py
-    dataframe = pm4py.connectors.extract_log_camunda_workflow(connection_string)
+
+    dataframe = pm4py.connectors.extract_log_camunda_workflow(
+        connection_string
+    )
     return pm4py.convert_log_to_ocel(
         dataframe,
-        case_id_col="concept:name",
-        timestamp_col="time:timestamp",
-        object_attributes=["case:concept:name", "processID", "org:resource"]
+        object_types=["case:concept:name"],
+        timestamp_column="time:timestamp",
+        additional_object_attributes={"case:concept:name": ["case:concept:name", "processID", "org:resource"]},
     )
 
 
-def extract_ocel_sap_o2c(connection_string: str, prefix: str = '') -> OCEL:
+def extract_ocel_sap_o2c(connection_string: str, prefix: str = "") -> OCEL:
     """
     Extracts an object-centric event log for the SAP Order-to-Cash (O2C) process.
 
@@ -505,16 +568,21 @@ def extract_ocel_sap_o2c(connection_string: str, prefix: str = '') -> OCEL:
         )
     """
     import pm4py
-    dataframe = pm4py.connectors.extract_log_sap_o2c(connection_string, prefix=prefix)
+
+    dataframe = pm4py.connectors.extract_log_sap_o2c(
+        connection_string, prefix=prefix
+    )
     return pm4py.convert_log_to_ocel(
         dataframe,
-        case_id_col="concept:name",
-        timestamp_col="time:timestamp",
-        object_attributes=["case:concept:name", "org:resource"]
+        object_types=["case:concept:name"],
+        timestamp_column="time:timestamp",
+        additional_object_attributes={"case:concept:name": ["case:concept:name", "org:resource"]},
     )
 
 
-def extract_ocel_sap_accounting(connection_string: str, prefix: str = '') -> OCEL:
+def extract_ocel_sap_accounting(
+    connection_string: str, prefix: str = ""
+) -> OCEL:
     """
     Extracts an object-centric event log for the SAP Accounting process.
 
@@ -538,10 +606,13 @@ def extract_ocel_sap_accounting(connection_string: str, prefix: str = '') -> OCE
         )
     """
     import pm4py
-    dataframe = pm4py.connectors.extract_log_sap_accounting(connection_string, prefix=prefix)
+
+    dataframe = pm4py.connectors.extract_log_sap_accounting(
+        connection_string, prefix=prefix
+    )
     return pm4py.convert_log_to_ocel(
         dataframe,
-        case_id_col="concept:name",
-        timestamp_col="time:timestamp",
-        object_attributes=["case:concept:name", "org:resource"]
+        object_types=["case:concept:name"],
+        timestamp_column="time:timestamp",
+        additional_object_attributes={"case:concept:name": ["case:concept:name", "org:resource"]},
     )
