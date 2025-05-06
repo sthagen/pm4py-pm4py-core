@@ -75,15 +75,25 @@ class Marking(Counter):
 
     def __repr__(self):
         # return str([str(p.name) + ":" + str(self.get(p)) for p in self.keys()])
-        # The previous representation had a bug, it took into account the order of the places with tokens
-        return str([str(p.id) + ":" + str(self.get(p)) for p in sorted(list(self.keys()), key=lambda x: x.id)])
+        # The previous representation had a bug, it took into account the order
+        # of the places with tokens
+        return str(
+            [
+                str(p.id) + ":" + str(self.get(p))
+                for p in sorted(list(self.keys()), key=lambda x: x.id)
+            ]
+        )
 
     def __deepcopy__(self, memodict={}):
         marking = Marking()
         memodict[id(self)] = marking
         for node in self:
             node_occ = self[node]
-            new_node = memodict[id(node)] if id(node) in memodict else BPMN.BPMNNode(node.id, node.name)
+            new_node = (
+                memodict[id(node)]
+                if id(node) in memodict
+                else BPMN.BPMNNode(node.id, node.name)
+            )
             marking[new_node] = node_occ
         return marking
 
@@ -149,12 +159,14 @@ class BPMNLayout(object):
 
 class BPMN(object):
     class BPMNNode(object):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None):
+        def __init__(
+            self, id="", name="", in_arcs=None, out_arcs=None, process=None
+        ):
             self.__id = ("id" + str(uuid.uuid4())) if id == "" else id
             self.__name = name
             self.__in_arcs = list() if in_arcs is None else in_arcs
             self.__out_arcs = list() if out_arcs is None else out_arcs
-            self.__process = DEFAULT_PROCESS if process == None else process
+            self.__process = DEFAULT_PROCESS if process is None else process
             self.__layout = BPMNLayout()
 
         def get_id(self):
@@ -162,6 +174,9 @@ class BPMN(object):
 
         def get_name(self):
             return self.__name
+
+        def set_name(self, name):
+            self.__name = name
 
         def get_in_arcs(self):
             return self.__in_arcs
@@ -239,27 +254,65 @@ class BPMN(object):
         process = property(get_process, set_process)
 
     class Collaboration(BPMNNode):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None):
-            BPMN.BPMNNode.__init__(self, id, name, in_arcs, out_arcs, process=process)
+        def __init__(
+            self, id="", name="", in_arcs=None, out_arcs=None, process=None
+        ):
+            BPMN.BPMNNode.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
 
     class Participant(BPMNNode):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None, process_ref=None):
+        def __init__(
+            self,
+            id="",
+            name="",
+            in_arcs=None,
+            out_arcs=None,
+            process=None,
+            process_ref=None,
+        ):
             self.process_ref = process_ref
-            BPMN.BPMNNode.__init__(self, id, name, in_arcs, out_arcs, process=process)
+            BPMN.BPMNNode.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
 
     class TextAnnotation(BPMNNode):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None, text=None):
+        def __init__(
+            self,
+            id="",
+            name="",
+            in_arcs=None,
+            out_arcs=None,
+            process=None,
+            text=None,
+        ):
             self.text = text
-            BPMN.BPMNNode.__init__(self, id, name, in_arcs, out_arcs, process=process)
+            BPMN.BPMNNode.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
 
     class Event(BPMNNode):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None):
-            BPMN.BPMNNode.__init__(self, id, name, in_arcs, out_arcs, process=process)
+        def __init__(
+            self, id="", name="", in_arcs=None, out_arcs=None, process=None
+        ):
+            BPMN.BPMNNode.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
 
     class StartEvent(Event):
-        def __init__(self, id="", isInterrupting=False, name="", parallelMultiple=False, in_arcs=None, out_arcs=None,
-                     process=None):
-            BPMN.Event.__init__(self, id, name, in_arcs, out_arcs, process=process)
+        def __init__(
+            self,
+            id="",
+            isInterrupting=False,
+            name="",
+            parallelMultiple=False,
+            in_arcs=None,
+            out_arcs=None,
+            process=None,
+        ):
+            BPMN.Event.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
             self.__isInterrupting = isInterrupting
             self.__parallelMultiple = parallelMultiple
 
@@ -270,109 +323,277 @@ class BPMN(object):
             return self.__parallelMultiple
 
     class NormalStartEvent(StartEvent):
-        def __init__(self, id="", isInterrupting=False, name="", parallelMultiple=False, in_arcs=None, out_arcs=None,
-                     process=None):
-            BPMN.StartEvent.__init__(self, id, isInterrupting, name, parallelMultiple, in_arcs, out_arcs,
-                                     process=process)
+        def __init__(
+            self,
+            id="",
+            isInterrupting=False,
+            name="",
+            parallelMultiple=False,
+            in_arcs=None,
+            out_arcs=None,
+            process=None,
+        ):
+            BPMN.StartEvent.__init__(
+                self,
+                id,
+                isInterrupting,
+                name,
+                parallelMultiple,
+                in_arcs,
+                out_arcs,
+                process=process,
+            )
 
     class MessageStartEvent(StartEvent):
-        def __init__(self, id="", isInterrupting=False, name="", parallelMultiple=False, in_arcs=None, out_arcs=None,
-                     process=None):
-            BPMN.StartEvent.__init__(self, id, isInterrupting, name, parallelMultiple, in_arcs, out_arcs,
-                                     process=process)
+        def __init__(
+            self,
+            id="",
+            isInterrupting=False,
+            name="",
+            parallelMultiple=False,
+            in_arcs=None,
+            out_arcs=None,
+            process=None,
+        ):
+            BPMN.StartEvent.__init__(
+                self,
+                id,
+                isInterrupting,
+                name,
+                parallelMultiple,
+                in_arcs,
+                out_arcs,
+                process=process,
+            )
 
     class IntermediateCatchEvent(Event):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None):
-            BPMN.Event.__init__(self, id, name, in_arcs, out_arcs, process=process)
+        def __init__(
+            self, id="", name="", in_arcs=None, out_arcs=None, process=None
+        ):
+            BPMN.Event.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
 
     class MessageIntermediateCatchEvent(IntermediateCatchEvent):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None):
-            BPMN.IntermediateCatchEvent.__init__(self, id, name, in_arcs, out_arcs, process=process)
+        def __init__(
+            self, id="", name="", in_arcs=None, out_arcs=None, process=None
+        ):
+            BPMN.IntermediateCatchEvent.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
 
     class ErrorIntermediateCatchEvent(IntermediateCatchEvent):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None):
-            BPMN.IntermediateCatchEvent.__init__(self, id, name, in_arcs, out_arcs, process=process)
+        def __init__(
+            self, id="", name="", in_arcs=None, out_arcs=None, process=None
+        ):
+            BPMN.IntermediateCatchEvent.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
 
     class CancelIntermediateCatchEvent(IntermediateCatchEvent):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None):
-            BPMN.IntermediateCatchEvent.__init__(self, id, name, in_arcs, out_arcs, process=process)
+        def __init__(
+            self, id="", name="", in_arcs=None, out_arcs=None, process=None
+        ):
+            BPMN.IntermediateCatchEvent.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
 
     class BoundaryEvent(Event):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None, activity=None):
+        def __init__(
+            self,
+            id="",
+            name="",
+            in_arcs=None,
+            out_arcs=None,
+            process=None,
+            activity=None,
+        ):
             self.__activity = activity
-            BPMN.Event.__init__(self, id, name, in_arcs, out_arcs, process=process)
+            BPMN.Event.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
 
         def get_activity(self):
             return self.__activity
 
     class MessageBoundaryEvent(BoundaryEvent):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None, activity=None):
-            BPMN.BoundaryEvent.__init__(self, id, name, in_arcs, out_arcs, process=process, activity=activity)
+        def __init__(
+            self,
+            id="",
+            name="",
+            in_arcs=None,
+            out_arcs=None,
+            process=None,
+            activity=None,
+        ):
+            BPMN.BoundaryEvent.__init__(
+                self,
+                id,
+                name,
+                in_arcs,
+                out_arcs,
+                process=process,
+                activity=activity,
+            )
 
     class ErrorBoundaryEvent(BoundaryEvent):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None, activity=None):
-            BPMN.BoundaryEvent.__init__(self, id, name, in_arcs, out_arcs, process=process, activity=activity)
+        def __init__(
+            self,
+            id="",
+            name="",
+            in_arcs=None,
+            out_arcs=None,
+            process=None,
+            activity=None,
+        ):
+            BPMN.BoundaryEvent.__init__(
+                self,
+                id,
+                name,
+                in_arcs,
+                out_arcs,
+                process=process,
+                activity=activity,
+            )
 
     class CancelBoundaryEvent(BoundaryEvent):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None, activity=None):
-            BPMN.BoundaryEvent.__init__(self, id, name, in_arcs, out_arcs, process=process, activity=activity)
+        def __init__(
+            self,
+            id="",
+            name="",
+            in_arcs=None,
+            out_arcs=None,
+            process=None,
+            activity=None,
+        ):
+            BPMN.BoundaryEvent.__init__(
+                self,
+                id,
+                name,
+                in_arcs,
+                out_arcs,
+                process=process,
+                activity=activity,
+            )
 
     class IntermediateThrowEvent(Event):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None):
-            BPMN.Event.__init__(self, id, name, in_arcs, out_arcs, process=process)
+        def __init__(
+            self, id="", name="", in_arcs=None, out_arcs=None, process=None
+        ):
+            BPMN.Event.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
 
     class MessageIntermediateThrowEvent(IntermediateThrowEvent):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None):
-            BPMN.IntermediateThrowEvent.__init__(self, id, name, in_arcs, out_arcs, process=process)
+        def __init__(
+            self, id="", name="", in_arcs=None, out_arcs=None, process=None
+        ):
+            BPMN.IntermediateThrowEvent.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
 
     class NormalIntermediateThrowEvent(IntermediateThrowEvent):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None):
-            BPMN.IntermediateThrowEvent.__init__(self, id, name, in_arcs, out_arcs, process=process)
+        def __init__(
+            self, id="", name="", in_arcs=None, out_arcs=None, process=None
+        ):
+            BPMN.IntermediateThrowEvent.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
 
     class EndEvent(Event):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None):
-            BPMN.Event.__init__(self, id, name, in_arcs, out_arcs, process=process)
+        def __init__(
+            self, id="", name="", in_arcs=None, out_arcs=None, process=None
+        ):
+            BPMN.Event.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
 
     class NormalEndEvent(EndEvent):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None):
-            BPMN.EndEvent.__init__(self, id, name, in_arcs, out_arcs, process=process)
+        def __init__(
+            self, id="", name="", in_arcs=None, out_arcs=None, process=None
+        ):
+            BPMN.EndEvent.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
 
     class MessageEndEvent(EndEvent):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None):
-            BPMN.EndEvent.__init__(self, id, name, in_arcs, out_arcs, process=process)
+        def __init__(
+            self, id="", name="", in_arcs=None, out_arcs=None, process=None
+        ):
+            BPMN.EndEvent.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
 
     class TerminateEndEvent(EndEvent):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None):
-            BPMN.EndEvent.__init__(self, id, name, in_arcs, out_arcs, process=process)
+        def __init__(
+            self, id="", name="", in_arcs=None, out_arcs=None, process=None
+        ):
+            BPMN.EndEvent.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
 
     class ErrorEndEvent(EndEvent):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None):
-            BPMN.EndEvent.__init__(self, id, name, in_arcs, out_arcs, process=process)
+        def __init__(
+            self, id="", name="", in_arcs=None, out_arcs=None, process=None
+        ):
+            BPMN.EndEvent.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
 
     class CancelEndEvent(EndEvent):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None):
-            BPMN.EndEvent.__init__(self, id, name, in_arcs, out_arcs, process=process)
+        def __init__(
+            self, id="", name="", in_arcs=None, out_arcs=None, process=None
+        ):
+            BPMN.EndEvent.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
 
     class Activity(BPMNNode):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None):
-            BPMN.BPMNNode.__init__(self, id, name, in_arcs, out_arcs, process=process)
+        def __init__(
+            self, id="", name="", in_arcs=None, out_arcs=None, process=None
+        ):
+            BPMN.BPMNNode.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
 
     class Task(Activity):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None):
-            BPMN.Activity.__init__(self, id, name, in_arcs, out_arcs, process=process)
+        def __init__(
+            self, id="", name="", in_arcs=None, out_arcs=None, process=None
+        ):
+            BPMN.Activity.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
 
     class UserTask(Task):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None):
-            BPMN.Task.__init__(self, id, name, in_arcs, out_arcs, process=process)
+        def __init__(
+            self, id="", name="", in_arcs=None, out_arcs=None, process=None
+        ):
+            BPMN.Task.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
 
     class SendTask(Task):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None):
-            BPMN.Task.__init__(self, id, name, in_arcs, out_arcs, process=process)
+        def __init__(
+            self, id="", name="", in_arcs=None, out_arcs=None, process=None
+        ):
+            BPMN.Task.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
 
     class SubProcess(Activity):
-        def __init__(self, id="", name="", in_arcs=None, out_arcs=None, process=None, depth=None):
+        def __init__(
+            self,
+            id="",
+            name="",
+            in_arcs=None,
+            out_arcs=None,
+            process=None,
+            depth=None,
+        ):
             self.__depth = depth
-            BPMN.Activity.__init__(self, id, name, in_arcs, out_arcs, process=process)
+            BPMN.Activity.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
 
         def get_depth(self):
             return self.__depth
@@ -383,9 +604,18 @@ class BPMN(object):
             DIVERGING = "Diverging"
             CONVERGING = "Converging"
 
-        def __init__(self, id="", name="", gateway_direction=Direction.UNSPECIFIED, in_arcs=None, out_arcs=None,
-                     process=None):
-            BPMN.BPMNNode.__init__(self, id, name, in_arcs, out_arcs, process=process)
+        def __init__(
+            self,
+            id="",
+            name="",
+            gateway_direction=Direction.UNSPECIFIED,
+            in_arcs=None,
+            out_arcs=None,
+            process=None,
+        ):
+            BPMN.BPMNNode.__init__(
+                self, id, name, in_arcs, out_arcs, process=process
+            )
             self.__gateway_direction = gateway_direction
 
         def get_gateway_direction(self):
@@ -395,24 +625,104 @@ class BPMN(object):
             self.__gateway_direction = direction
 
     class ParallelGateway(Gateway):
-        def __init__(self, id="", name="", gateway_direction=None, in_arcs=None, out_arcs=None, process=None):
-            gateway_direction = gateway_direction if gateway_direction is not None else BPMN.Gateway.Direction.UNSPECIFIED
-            BPMN.Gateway.__init__(self, id, name, gateway_direction, in_arcs, out_arcs, process=process)
+        def __init__(
+            self,
+            id="",
+            name="",
+            gateway_direction=None,
+            in_arcs=None,
+            out_arcs=None,
+            process=None,
+        ):
+            gateway_direction = (
+                gateway_direction
+                if gateway_direction is not None
+                else BPMN.Gateway.Direction.UNSPECIFIED
+            )
+            BPMN.Gateway.__init__(
+                self,
+                id,
+                name,
+                gateway_direction,
+                in_arcs,
+                out_arcs,
+                process=process,
+            )
 
     class ExclusiveGateway(Gateway):
-        def __init__(self, id="", name="", gateway_direction=None, in_arcs=None, out_arcs=None, process=None):
-            gateway_direction = gateway_direction if gateway_direction is not None else BPMN.Gateway.Direction.UNSPECIFIED
-            BPMN.Gateway.__init__(self, id, name, gateway_direction, in_arcs, out_arcs, process=process)
+        def __init__(
+            self,
+            id="",
+            name="",
+            gateway_direction=None,
+            in_arcs=None,
+            out_arcs=None,
+            process=None,
+        ):
+            gateway_direction = (
+                gateway_direction
+                if gateway_direction is not None
+                else BPMN.Gateway.Direction.UNSPECIFIED
+            )
+            BPMN.Gateway.__init__(
+                self,
+                id,
+                name,
+                gateway_direction,
+                in_arcs,
+                out_arcs,
+                process=process,
+            )
 
     class InclusiveGateway(Gateway):
-        def __init__(self, id="", name="", gateway_direction=None, in_arcs=None, out_arcs=None, process=None):
-            gateway_direction = gateway_direction if gateway_direction is not None else BPMN.Gateway.Direction.UNSPECIFIED
-            BPMN.Gateway.__init__(self, id, name, gateway_direction, in_arcs, out_arcs, process=process)
+        def __init__(
+            self,
+            id="",
+            name="",
+            gateway_direction=None,
+            in_arcs=None,
+            out_arcs=None,
+            process=None,
+        ):
+            gateway_direction = (
+                gateway_direction
+                if gateway_direction is not None
+                else BPMN.Gateway.Direction.UNSPECIFIED
+            )
+            BPMN.Gateway.__init__(
+                self,
+                id,
+                name,
+                gateway_direction,
+                in_arcs,
+                out_arcs,
+                process=process,
+            )
 
     class EventBasedGateway(Gateway):
-        def __init__(self, id="", name="", gateway_direction=None, in_arcs=None, out_arcs=None, process=None):
-            gateway_direction = gateway_direction if gateway_direction is not None else BPMN.Gateway.Direction.UNSPECIFIED
-            BPMN.Gateway.__init__(self, id, name, gateway_direction, in_arcs, out_arcs, process=process)
+        def __init__(
+            self,
+            id="",
+            name="",
+            gateway_direction=None,
+            in_arcs=None,
+            out_arcs=None,
+            process=None,
+        ):
+            gateway_direction = (
+                gateway_direction
+                if gateway_direction is not None
+                else BPMN.Gateway.Direction.UNSPECIFIED
+            )
+            BPMN.Gateway.__init__(
+                self,
+                id,
+                name,
+                gateway_direction,
+                in_arcs,
+                out_arcs,
+                process=process,
+            )
 
     class Flow(object):
         def __init__(self, source, target, id="", name="", process=None):
@@ -422,7 +732,7 @@ class BPMN(object):
             source.add_out_arc(self)
             self.__target = target
             target.add_in_arc(self)
-            self.__process = DEFAULT_PROCESS if process == None else process
+            self.__process = DEFAULT_PROCESS if process is None else process
             self.__layout = BPMNLayout()
 
         def get_id(self):
@@ -459,8 +769,16 @@ class BPMN(object):
             self.__layout = layout
 
         def __repr__(self):
-            u_id = str(self.__source.get_id()) + "@" + str(self.__source.get_name())
-            v_id = str(self.__target.get_id()) + "@" + str(self.__target.get_name())
+            u_id = (
+                str(self.__source.get_id())
+                + "@"
+                + str(self.__source.get_name())
+            )
+            v_id = (
+                str(self.__target.get_id())
+                + "@"
+                + str(self.__target.get_name())
+            )
             return u_id + " -> " + v_id
 
         def __str__(self):
@@ -471,18 +789,26 @@ class BPMN(object):
 
     class SequenceFlow(Flow):
         def __init__(self, source, target, id="", name="", process=None):
-            BPMN.Flow.__init__(self, source, target, id=id, name=name, process=process)
+            BPMN.Flow.__init__(
+                self, source, target, id=id, name=name, process=process
+            )
 
     class MessageFlow(Flow):
         def __init__(self, source, target, id="", name="", process=None):
-            BPMN.Flow.__init__(self, source, target, id=id, name=name, process=process)
+            BPMN.Flow.__init__(
+                self, source, target, id=id, name=name, process=process
+            )
 
     class Association(Flow):
         def __init__(self, source, target, id="", name="", process=None):
-            BPMN.Flow.__init__(self, source, target, id=id, name=name, process=process)
+            BPMN.Flow.__init__(
+                self, source, target, id=id, name=name, process=process
+            )
 
     def __init__(self, process_id=None, name="", nodes=None, flows=None):
-        self.__process_id = str(uuid.uuid4()) if process_id == None else process_id
+        self.__process_id = (
+            str(uuid.uuid4()) if process_id is None else process_id
+        )
 
         self.__name = name
         self.__graph = nx_utils.MultiDiGraph()
@@ -551,7 +877,9 @@ class BPMN(object):
         if target not in self.__nodes:
             self.add_node(target)
         self.__flows.add(flow)
-        self.__graph.add_edge(source, target, id=flow.get_id(), name=flow.get_name())
+        self.__graph.add_edge(
+            source, target, id=flow.get_id(), name=flow.get_name()
+        )
         source.add_out_arc(flow)
         target.add_in_arc(flow)
 

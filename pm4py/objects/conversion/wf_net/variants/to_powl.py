@@ -640,7 +640,10 @@ def __translate_petri_to_powl(net: PetriNet, start_place: PetriNet.Place, end_pl
 # ========= Main Function =========
 def apply(net: PetriNet) -> POWL:
     """
-    Convert a Petri net to a POWL model.
+    Convert a Petri net to a POWL model, implementing the approach proposed in:
+
+    Kourani, Humam, Gyunam Park, and Wil van der Aalst. "Translating Workflow Nets into the
+    Partially Ordered Workflow Language." arXiv preprint arXiv:2503.20363 (2025).
 
     Parameters:
       - net: PetriNet

@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,12 +19,21 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
+from pm4py.objects.bpmn.obj import BPMN
+from typing import Optional, Dict, Any
+from copy import deepcopy
 
-__name__ = 'pm4py'
-VERSION = '2.7.15.2'
-__version__ = VERSION
-__doc__ = 'Process mining for Python'
-__author__ = 'Process Intelligence Solutions (PIS)'
-__author_email__ = 'info@processintelligence.solutions'
-__maintainer__ = 'Process Intelligence Solutions (PIS)'
-__maintainer_email__ = "info@processintelligence.solutions"
+
+def apply(bpmn_graph: BPMN, string_dictio: Dict[str, str], parameters: Optional[Dict[Any, Any]] = None) -> BPMN:
+    if parameters is None:
+        parameters = {}
+
+    bpmn_graph = deepcopy(bpmn_graph)
+
+    for node in bpmn_graph.get_nodes():
+        if isinstance(node, BPMN.Task):
+            name = node.get_name()
+            if name in string_dictio:
+                node.set_name(string_dictio[name])
+
+    return bpmn_graph
