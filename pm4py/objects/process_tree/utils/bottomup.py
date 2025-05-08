@@ -34,7 +34,8 @@ def get_max_trace_length(tree, parameters=None):
     tree
         Process tree
     parameters
-        Possible parameters of the algorithm
+        Possible parameters of the algorithm:
+        - "avoid_loops" => if True, avoid to visit loops
 
     Returns
     --------------
@@ -44,10 +45,12 @@ def get_max_trace_length(tree, parameters=None):
     if parameters is None:
         parameters = {}
 
+    avoid_loops = parameters.get("avoid_loops", False)
+
     bottomup = get_bottomup_nodes(tree, parameters=parameters)
     max_length_dict = {}
     for i in range(len(bottomup)):
-        get_max_length_dict(bottomup[i], max_length_dict, len(bottomup))
+        get_max_length_dict(bottomup[i], max_length_dict, len(bottomup), avoid_loops)
 
     return max_length_dict[tree]
 
@@ -143,7 +146,7 @@ def get_min_rem_dict(tree, parameters=None):
     return min_rem_dict
 
 
-def get_max_length_dict(node, max_length_dict, num_nodes):
+def get_max_length_dict(node, max_length_dict, num_nodes, avoid_loops=False):
     """
     Populates, given the nodes of a tree in a bottom-up order, the maximum length dictionary
     (every trace generated from that point of the tree has at most length N)
@@ -156,6 +159,8 @@ def get_max_length_dict(node, max_length_dict, num_nodes):
         Dictionary that is populated in-place
     num_nodes
         Number of nodes in the process tree
+    avoid_loops
+        Avoid to visit loops
     """
     if len(node.children) == 0:
         if node.label is None:
@@ -167,8 +172,12 @@ def get_max_length_dict(node, max_length_dict, num_nodes):
     elif node.operator == Operator.PARALLEL or node.operator == Operator.SEQUENCE or node.operator == Operator.OR:
         max_length_dict[node] = sum(max_length_dict[x] for x in node.children)
     elif node.operator == Operator.LOOP:
-        max_length_dict[node] = sum(max_length_dict[x] for x in node.children) + 2 ** (
-                    48 - math.ceil(math.log(num_nodes) / math.log(2)))
+        if avoid_loops:
+            children = list(node.children)
+            max_length_dict[node] = max_length_dict[children[0]]
+        else:
+            max_length_dict[node] = sum(max_length_dict[x] for x in node.children) + 2 ** (
+                        48 - math.ceil(math.log(num_nodes) / math.log(2)))
 
 
 def get_min_length_dict(node, min_length_dict):

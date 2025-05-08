@@ -668,7 +668,7 @@ def get_enabled_transitions(
 
 def get_activity_labels(*args) -> List[str]:
     """
-    Gets the activity labels from the specified process model.
+    Gets the activity labels from the specified event log / process model.
 
     Returns
     ---------------
@@ -676,8 +676,14 @@ def get_activity_labels(*args) -> List[str]:
         Activity labels
     """
     import pm4py
-    net, im, fm = pm4py.convert_to_petri_net(*args)
-    labels = {x.label for x in net.transitions if x.label is not None}
+
+    if isinstance(args[0], EventLog):
+        labels = set(y["concept:name"] for x in args[0] for y in x)
+    elif isinstance(args[0], pd.DataFrame):
+        labels = set(args[0]["concept:name"].unique())
+    else:
+        net, im, fm = pm4py.convert_to_petri_net(*args)
+        labels = {x.label for x in net.transitions if x.label is not None}
     return sorted(list(labels))
 
 

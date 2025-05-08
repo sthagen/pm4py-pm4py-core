@@ -65,6 +65,7 @@ The following conversions are currently available:
   * :meth:`pm4py.convert.convert_to_bpmn` converts a process model to BPMN
   * :meth:`pm4py.convert.convert_to_petri_net` converts a process model to a Petri net
   * :meth:`pm4py.convert.convert_to_process_tree` converts a process model to a process tree
+  * :meth:`pm4py.convert.convert_to_powl` converts a process model to a POWL model
   * :meth:`pm4py.convert.convert_to_reachability_graph` converts a process model to a reachability graph
   * :meth:`pm4py.convert.convert_log_to_ocel` converts an event log to an object-centric event log
   * :meth:`pm4py.convert.convert_log_to_networkx` converts a traditional event log (dataframe) to a directed graph (NetworkX)
@@ -402,8 +403,14 @@ Other algorithms, which do not belong to the aforementioned categories, are coll
   * :meth:`pm4py.analysis.reduce_petri_net_invisibles`; reduces the invisible transitions of a Petri net when possible.
   * :meth:`pm4py.analysis.reduce_petri_net_implicit_places`; reduces the implicit places in the Petri net (using MURATA).
   * :meth:`pm4py.analysis.get_enabled_transitions`; gets the transitions enabled in a given marking.
-
-
+  * :meth:`pm4py.analysis.simplicity_petri_net`; computes the simplicity metric on the given Petri net.
+  * :meth:`pm4py.analysis.behavioral_similarity`; computes the behavioral similarity between two process models.
+  * :meth:`pm4py.analysis.structural_similarity`; computes the structural similarity between two process models.
+  * :meth:`pm4py.analysis.embeddings_similarity`; computes the embeddings similarity between two process models.
+  * :meth:`pm4py.analysis.label_sets_similarity`; computes the label-sets-similarity between two process models.
+  * :meth:`pm4py.analysis.get_activity_labels`; gets the activity labels from the given event log or process model.
+  * :meth:`pm4py.analysis.replace_activity_labels`; uses a substitution dictionary to replace the names of the activities in the process model.
+  * :meth:`pm4py.analysis.map_labels_from_second_model`; maps the activity labels of the second process model on top of the first.
 
 
 List of Methods
@@ -451,6 +458,7 @@ List of Methods
    pm4py.convert.convert_ocel_to_networkx
    pm4py.convert.convert_petri_net_to_networkx
    pm4py.convert.convert_petri_net_type
+   pm4py.convert.convert_to_powl
    pm4py.discovery
    pm4py.discovery.discover_dfg
    pm4py.discovery.discover_performance_dfg
@@ -670,6 +678,14 @@ List of Methods
    pm4py.analysis.reduce_petri_net_invisibles
    pm4py.analysis.reduce_petri_net_implicit_places
    pm4py.analysis.get_enabled_transitions
+   pm4py.analysis.simplicity_petri_net
+   pm4py.analysis.behavioral_similarity
+   pm4py.analysis.structural_similarity
+   pm4py.analysis.embeddings_similarity
+   pm4py.analysis.get_activity_labels
+   pm4py.analysis.replace_activity_labels
+   pm4py.analysis.label_sets_similarity
+   pm4py.analysis.map_labels_from_second_model
    pm4py.utils
    pm4py.utils.rebase
    pm4py.utils.parse_process_tree

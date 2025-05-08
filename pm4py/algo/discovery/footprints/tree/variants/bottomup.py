@@ -38,6 +38,7 @@ class Outputs(Enum):
     SKIPPABLE = "skippable"
     ACTIVITIES_ALWAYS_HAPPENING = "activities_always_happening"
     MIN_TRACE_LENGTH = "min_trace_length"
+    MAX_TRACE_LENGTH = "max_trace_length_wo_loops"
     TRACE = "trace"
 
 
@@ -428,7 +429,12 @@ def apply(tree: ProcessTree, parameters: Optional[Dict[Any, Any]] = None) -> Dic
     all_footprints = get_all_footprints(tree, parameters=parameters)
     root_node_footprints = all_footprints[tree]
 
-    min_trace_length = bottomup_disc.get_min_trace_length(tree, parameters=parameters)
+    this_parameters = copy(parameters)
+    this_parameters["avoid_loops"] = True
+    min_trace_length = bottomup_disc.get_min_trace_length(tree, parameters=this_parameters)
+    max_trace_length = bottomup_disc.get_max_trace_length(tree, parameters=this_parameters)
+
     root_node_footprints[Outputs.MIN_TRACE_LENGTH.value] = min_trace_length
+    root_node_footprints[Outputs.MAX_TRACE_LENGTH.value] = max_trace_length
 
     return root_node_footprints

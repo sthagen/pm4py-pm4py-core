@@ -19,7 +19,7 @@ def execute_script():
     # print the performance of the interleavings
     print(interleavings_dataframe.groupby(["@@source_activity", "@@target_activity", "@@direction"])["@@timestamp_diff"].agg("mean"))
 
-    if importlib.util.find_spec("graphviz"):
+    if importlib.util.find_spec("graphviz") and constants.DEFAULT_ENABLE_VISUALIZATIONS_VIEW:
         from pm4py.visualization.ocel.interleavings import visualizer as interleavings_visualizer
         # visualizes the frequency of the interleavings
         gviz_freq = interleavings_visualizer.apply(receipt_even, receipt_odd, interleavings_dataframe, parameters={"annotation": "frequency", "format": examples_conf.TARGET_IMG_FORMAT})

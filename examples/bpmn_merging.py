@@ -202,8 +202,7 @@ def print_bpmn_summary(bpmn, name):
             print(f"  - {flow.get_source().get_name()} -> {flow.get_target().get_name()}")
 
 
-# Main execution
-if __name__ == "__main__":
+def execute_script():
     # Create the main BPMN with swimlanes
     main_bpmn = create_manual_bpmn_with_swimlanes()
 
@@ -231,3 +230,8 @@ if __name__ == "__main__":
     print_bpmn_summary(merged_bpmn, "Merged BPMN with Swimlanes")
 
     pm4py.view_bpmn(merged_bpmn, format="svg")
+
+
+# Main execution
+if __name__ == "__main__":
+    execute_script()

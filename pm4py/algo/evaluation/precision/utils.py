@@ -23,7 +23,10 @@ from collections import Counter
 from pm4py.objects.log.obj import EventLog, Event, Trace
 from pm4py.util import xes_constants as xes_util
 import heapq
-from pm4py.objects.petri_net.utils.petri_utils import decorate_places_preset_trans, decorate_transitions_prepostset
+from pm4py.objects.petri_net.utils.petri_utils import (
+    decorate_places_preset_trans,
+    decorate_transitions_prepostset,
+)
 from pm4py.objects.petri_net.utils import align_utils as utils
 from pm4py.objects.petri_net.utils.incidence_matrix import construct
 from pm4py.util import constants, pandas_utils
@@ -35,7 +38,9 @@ def __search(sync_net, ini, fin, stop, cost_function, skip):
     decorate_places_preset_trans(sync_net)
 
     incidence_matrix = construct(sync_net)
-    ini_vec, fin_vec, cost_vec = utils.__vectorize_initial_final_cost(incidence_matrix, ini, fin, cost_function)
+    ini_vec, fin_vec, cost_vec = utils.__vectorize_initial_final_cost(
+        incidence_matrix, ini, fin, cost_function
+    )
 
     closed = set()
 
@@ -48,7 +53,8 @@ def __search(sync_net, ini, fin, stop, cost_function, skip):
 
     # return all the prefix markings of the optimal alignments as set
     ret_markings = None
-    # keep track of the optimal cost of an alignment (to trim search when needed)
+    # keep track of the optimal cost of an alignment (to trim search when
+    # needed)
     optimal_cost = None
 
     while not len(open_set) == 0:
@@ -87,9 +93,15 @@ def __search(sync_net, ini, fin, stop, cost_function, skip):
                 if t.sub_marking <= current_marking:
                     enabled_trans.add(t)
 
-        trans_to_visit_with_cost = [(t, cost_function[t]) for t in enabled_trans if
-                                    not (t is None or utils.__is_log_move(t, skip) or (
-                                            utils.__is_model_move(t, skip) and not t.label[1] is None))]
+        trans_to_visit_with_cost = [
+            (t, cost_function[t])
+            for t in enabled_trans
+            if not (
+                t is None
+                or utils.__is_log_move(t, skip)
+                or (utils.__is_model_move(t, skip) and not t.label[1] is None)
+            )
+        ]
 
         for t, cost in trans_to_visit_with_cost:
             traversed += 1
@@ -102,13 +114,19 @@ def __search(sync_net, ini, fin, stop, cost_function, skip):
             queued += 1
             new_f = g
 
-            tp = utils.SearchTuple(new_f, g, 0, new_marking, curr, t, None, True)
+            tp = utils.SearchTuple(
+                new_f, g, 0, new_marking, curr, t, None, True
+            )
             heapq.heappush(open_set, tp)
 
     return ret_markings
 
 
-def get_log_prefixes(log, activity_key=xes_util.DEFAULT_NAME_KEY, case_id_key=constants.CASE_CONCEPT_NAME):
+def get_log_prefixes(
+    log,
+    activity_key=xes_util.DEFAULT_NAME_KEY,
+    case_id_key=constants.CASE_CONCEPT_NAME,
+):
     """
     Get log prefixes
 
@@ -123,7 +141,13 @@ def get_log_prefixes(log, activity_key=xes_util.DEFAULT_NAME_KEY, case_id_key=co
     prefix_count = Counter()
 
     if pandas_utils.check_is_pandas_dataframe(log):
-        traces = [tuple(x) for x in log.groupby(case_id_key)[activity_key].agg(list).to_dict().values()]
+        traces = [
+            tuple(x)
+            for x in log.groupby(case_id_key)[activity_key]
+            .agg(list)
+            .to_dict()
+            .values()
+        ]
     else:
         traces = [tuple(x[activity_key] for x in trace) for trace in log]
 

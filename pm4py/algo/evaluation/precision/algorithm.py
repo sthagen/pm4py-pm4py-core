@@ -21,7 +21,9 @@ Contact: info@processintelligence.solutions
 '''
 from pm4py.algo.evaluation.precision.variants import etconformance_token
 from pm4py.algo.evaluation.precision.variants import align_etconformance
-from pm4py.objects.petri_net.utils.check_soundness import check_easy_soundness_net_in_fin_marking
+from pm4py.objects.petri_net.utils.check_soundness import (
+    check_easy_soundness_net_in_fin_marking,
+)
 from enum import Enum
 from pm4py.util import exec_utils
 from typing import Optional, Dict, Any, Union
@@ -41,7 +43,14 @@ ALIGN_ETCONFORMANCE = Variants.ALIGN_ETCONFORMANCE
 VERSIONS = {ETCONFORMANCE_TOKEN, ALIGN_ETCONFORMANCE}
 
 
-def apply(log: Union[EventLog, EventStream, pd.DataFrame], net: PetriNet, marking: Marking, final_marking: Marking, parameters: Optional[Dict[Any, Any]] = None, variant=None) -> float:
+def apply(
+    log: Union[EventLog, EventStream, pd.DataFrame],
+    net: PetriNet,
+    marking: Marking,
+    final_marking: Marking,
+    parameters: Optional[Dict[Any, Any]] = None,
+    variant=None,
+) -> float:
     """
     Method to apply ET Conformance
 
@@ -66,17 +75,22 @@ def apply(log: Union[EventLog, EventStream, pd.DataFrame], net: PetriNet, markin
     if parameters is None:
         parameters = {}
 
-    # execute the following part of code when the variant is not specified by the user
+    # execute the following part of code when the variant is not specified by
+    # the user
     if variant is None:
-        if not (check_easy_soundness_net_in_fin_marking(
-                net,
-                marking,
-                final_marking)):
-            # in the case the net is not a easy sound workflow net, we must apply token-based replay
+        if not (
+            check_easy_soundness_net_in_fin_marking(
+                net, marking, final_marking
+            )
+        ):
+            # in the case the net is not a easy sound workflow net, we must
+            # apply token-based replay
             variant = ETCONFORMANCE_TOKEN
         else:
-            # otherwise, use the align-etconformance approach (safer, in the case the model contains duplicates)
+            # otherwise, use the align-etconformance approach (safer, in the
+            # case the model contains duplicates)
             variant = ALIGN_ETCONFORMANCE
 
-    return exec_utils.get_variant(variant).apply(log, net, marking,
-                             final_marking, parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        log, net, marking, final_marking, parameters=parameters
+    )

@@ -179,6 +179,30 @@ def cost_based_dfg():
     cost_based_dfg.execute_script()
 
 
+def bpmn_merging():
+    from examples import bpmn_merging
+    print("\n\nbpmn_merging")
+    bpmn_merging.execute_script()
+
+
+def label_replacement():
+    from examples import label_replacement
+    print("\n\nlabel_replacement")
+    label_replacement.execute_script()
+
+
+def model_to_model_sim():
+    from examples import model_to_model_sim
+    print("\n\nmodel_to_model_sim")
+    model_to_model_sim.execute_script()
+
+
+def monte_carlo_example():
+    from examples import monte_carlo_example
+    print("\n\nmonte_carlo_example")
+    monte_carlo_example.execute_script()
+
+
 def df_to_log_postpro():
     from examples import df_to_log_postpro
     print("\n\ndf_to_log_postpro")
@@ -1032,7 +1056,7 @@ def main():
         execute_script(link_analysis_vbfa)
         execute_script(ocel_streaming)
         execute_script(petri_manual_generation)
-        #execute_script(timestamp_interleavings)
+        execute_script(timestamp_interleavings)
         execute_script(object_centric_petri_net_discovery)
         execute_script(trans_system_stochastic_view)
         execute_script(network_analysis)
@@ -1091,8 +1115,8 @@ def main():
         execute_script(streaming_discovery_dfg)
         execute_script(streaming_xes_reader_event_stream)
         execute_script(streaming_xes_reader_trace_stream)
-        #execute_script(monte_carlo_dfg)
-        #execute_script(monte_carlo_petri_net)
+        execute_script(monte_carlo_dfg)
+        execute_script(monte_carlo_petri_net)
 
     print_versions()
 

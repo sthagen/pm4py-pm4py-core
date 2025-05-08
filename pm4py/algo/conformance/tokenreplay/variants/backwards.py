@@ -21,7 +21,9 @@ Contact: info@processintelligence.solutions
 '''
 from pm4py.statistics.variants.log import get as variants_filter
 from pm4py.objects.petri_net.semantics import is_enabled, weak_execute
-from pm4py.objects.petri_net.utils.align_utils import get_visible_transitions_eventually_enabled_by_marking
+from pm4py.objects.petri_net.utils.align_utils import (
+    get_visible_transitions_eventually_enabled_by_marking,
+)
 from copy import copy
 from collections import Counter
 from pm4py.util import exec_utils, constants, xes_constants, pandas_utils
@@ -48,7 +50,9 @@ class Parameters(Enum):
     WALK_THROUGH_HIDDEN_TRANS = "walk_through_hidden_trans"
     RETURN_NAMES = "return_names"
     STOP_IMMEDIATELY_UNFIT = "stop_immediately_unfit"
-    TRY_TO_REACH_FINAL_MARKING_THROUGH_HIDDEN = "try_to_reach_final_marking_through_hidden"
+    TRY_TO_REACH_FINAL_MARKING_THROUGH_HIDDEN = (
+        "try_to_reach_final_marking_through_hidden"
+    )
     CONSIDER_REMAINING_IN_FITNESS = "consider_remaining_in_fitness"
     ENABLE_PLTR_FITNESS = "enable_pltr_fitness"
 
@@ -106,7 +110,7 @@ def diff_mark(m, t):
     for a in t.in_arcs:
         p = a.source
         w = a.weight
-        if not p in m:
+        if p not in m:
             m[p] = 0
         m[p] = m[p] + w
     return m
@@ -144,7 +148,9 @@ def explore_backwards(re_list, all_vis, net, m, bmap):
         while j < len(curr[0]):
             if not curr[0][j] in all_vis:
                 new_m = diff_mark(copy(curr[1]), curr[0][j])
-                re_list.append((get_bmap(net, new_m, bmap), new_m, curr[2] + [curr[0][j]]))
+                re_list.append(
+                    (get_bmap(net, new_m, bmap), new_m, curr[2] + [curr[0][j]])
+                )
                 all_vis.add(curr[0][j])
             j = j + 1
         i = i + 1
@@ -196,7 +202,9 @@ def tr_vlist(vlist, net, im, fm, tmap, bmap, parameters=None):
     if parameters is None:
         parameters = {}
 
-    stop_immediately_unfit = exec_utils.get_param_value(Parameters.STOP_IMMEDIATELY_UNFIT, parameters, False)
+    stop_immediately_unfit = exec_utils.get_param_value(
+        Parameters.STOP_IMMEDIATELY_UNFIT, parameters, False
+    )
 
     m = copy(im)
     tokens_counter = Counter()
@@ -223,12 +231,25 @@ def tr_vlist(vlist, net, im, fm, tmap, bmap, parameters=None):
                     rep_ok = True
                     continue
                 elif len(tmap[act]) == 1:
-                    back_res = explore_backwards([(get_bmap(net, t.in_marking, bmap), copy(t.in_marking), list())],
-                                                 set(), net, m, bmap)
+                    back_res = explore_backwards(
+                        [
+                            (
+                                get_bmap(net, t.in_marking, bmap),
+                                copy(t.in_marking),
+                                list(),
+                            )
+                        ],
+                        set(),
+                        net,
+                        m,
+                        bmap,
+                    )
                     if back_res is not None:
                         rep_ok = True
                         for t2 in back_res:
-                            m, tokens_counter = execute_tr(m, t2, tokens_counter)
+                            m, tokens_counter = execute_tr(
+                                m, t2, tokens_counter
+                            )
                         visited_transitions = visited_transitions + back_res
                         m, tokens_counter = execute_tr(m, t, tokens_counter)
                         visited_transitions.append(t)
@@ -261,22 +282,41 @@ def tr_vlist(vlist, net, im, fm, tmap, bmap, parameters=None):
     for p in fm:
         tokens_counter["consumed"] += m[p]
 
-    trace_fitness = 0.5 * (1.0 - float(tokens_counter["missing"]) / float(tokens_counter["consumed"])) + 0.5 * (
-            1.0 - float(tokens_counter["remaining"]) / float(tokens_counter["produced"]))
+    trace_fitness = 0.5 * (
+        1.0
+        - float(tokens_counter["missing"]) / float(tokens_counter["consumed"])
+    ) + 0.5 * (
+        1.0
+        - float(tokens_counter["remaining"])
+        / float(tokens_counter["produced"])
+    )
 
-    enabled_transitions_in_marking = get_visible_transitions_eventually_enabled_by_marking(net, m)
+    enabled_transitions_in_marking = (
+        get_visible_transitions_eventually_enabled_by_marking(net, m)
+    )
 
-    return {"activated_transitions": visited_transitions, "trace_is_fit": is_fit,
-            "replay_interrupted": replay_interrupted, "transitions_with_problems": transitions_with_problems,
-            "activated_transitions_labels": [x.label for x in visited_transitions],
-            "missing_tokens": tokens_counter["missing"],
-            "consumed_tokens": tokens_counter["consumed"],
-            "produced_tokens": tokens_counter["produced"],
-            "remaining_tokens": tokens_counter["remaining"], "trace_fitness": trace_fitness,
-            "enabled_transitions_in_marking": enabled_transitions_in_marking}
+    return {
+        "activated_transitions": visited_transitions,
+        "trace_is_fit": is_fit,
+        "replay_interrupted": replay_interrupted,
+        "transitions_with_problems": transitions_with_problems,
+        "activated_transitions_labels": [x.label for x in visited_transitions],
+        "missing_tokens": tokens_counter["missing"],
+        "consumed_tokens": tokens_counter["consumed"],
+        "produced_tokens": tokens_counter["produced"],
+        "remaining_tokens": tokens_counter["remaining"],
+        "trace_fitness": trace_fitness,
+        "enabled_transitions_in_marking": enabled_transitions_in_marking,
+    }
 
 
-def apply(log: EventLog, net: PetriNet, initial_marking: Marking, final_marking: Marking, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> typing.ListAlignments:
+def apply(
+    log: EventLog,
+    net: PetriNet,
+    initial_marking: Marking,
+    final_marking: Marking,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> typing.ListAlignments:
     """
     Method to apply token-based replay
 
@@ -297,7 +337,9 @@ def apply(log: EventLog, net: PetriNet, initial_marking: Marking, final_marking:
         parameters = {}
 
     if constants.SHOW_INTERNAL_WARNINGS:
-        warnings.warn("the backwards variant of TBR will be removed in a future version.")
+        warnings.warn(
+            "the backwards variant of TBR will be removed in a future version."
+        )
 
     for t in net.transitions:
         ma = Marking()
@@ -313,7 +355,9 @@ def apply(log: EventLog, net: PetriNet, initial_marking: Marking, final_marking:
             ma[p] = a.weight
         t.in_marking = ma
 
-    variants_idxs = variants_filter.get_variants_from_log_trace_idx(log, parameters=parameters)
+    variants_idxs = variants_filter.get_variants_from_log_trace_idx(
+        log, parameters=parameters
+    )
     results = []
 
     tmap = {}
@@ -326,7 +370,15 @@ def apply(log: EventLog, net: PetriNet, initial_marking: Marking, final_marking:
 
     for variant in variants_idxs:
         vlist = variants_util.get_activities_from_variant(variant)
-        result = tr_vlist(vlist, net, initial_marking, final_marking, tmap, bmap, parameters=parameters)
+        result = tr_vlist(
+            vlist,
+            net,
+            initial_marking,
+            final_marking,
+            tmap,
+            bmap,
+            parameters=parameters,
+        )
         results.append(result)
 
     al_idx = {}
@@ -341,7 +393,11 @@ def apply(log: EventLog, net: PetriNet, initial_marking: Marking, final_marking:
     return ret
 
 
-def get_diagnostics_dataframe(log: EventLog, tbr_output: typing.ListAlignments, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> pd.DataFrame:
+def get_diagnostics_dataframe(
+    log: EventLog,
+    tbr_output: typing.ListAlignments,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> pd.DataFrame:
     """
     Gets the results of token-based replay in a dataframe
 
@@ -360,7 +416,9 @@ def get_diagnostics_dataframe(log: EventLog, tbr_output: typing.ListAlignments, 
     if parameters is None:
         parameters = {}
 
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, xes_constants.DEFAULT_TRACEID_KEY)
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, xes_constants.DEFAULT_TRACEID_KEY
+    )
 
     import pandas as pd
 
@@ -375,6 +433,16 @@ def get_diagnostics_dataframe(log: EventLog, tbr_output: typing.ListAlignments, 
         produced = tbr_output[index]["produced_tokens"]
         consumed = tbr_output[index]["consumed_tokens"]
 
-        diagn_stream.append({"case_id": case_id, "is_fit": is_fit, "trace_fitness": trace_fitness, "missing": missing, "remaining": remaining, "produced": produced, "consumed": consumed})
+        diagn_stream.append(
+            {
+                "case_id": case_id,
+                "is_fit": is_fit,
+                "trace_fitness": trace_fitness,
+                "missing": missing,
+                "remaining": remaining,
+                "produced": produced,
+                "consumed": consumed,
+            }
+        )
 
     return pandas_utils.instantiate_dataframe(diagn_stream)
