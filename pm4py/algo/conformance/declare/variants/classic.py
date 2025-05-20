@@ -24,6 +24,7 @@ from enum import Enum
 from pm4py.objects.log.obj import EventLog
 import pandas as pd
 from typing import Union, Dict, Optional, Any, List
+from pm4py.objects.conversion.log import converter as log_converter
 from pm4py.algo.discovery.declare.templates import *
 from pm4py.util import exec_utils, constants, xes_constants, pandas_utils
 from collections import Counter
@@ -34,24 +35,36 @@ class Parameters(Enum):
     ACTIVITY_KEY = constants.PARAMETER_CONSTANT_ACTIVITY_KEY
 
 
-def __check_existence(trace: List[str], model: Dict[str, Dict[Any, Dict[str, int]]], trace_dict: Dict[str, List[Any]],
-                      parameters: Optional[Dict[Any, Any]] = None):
+def __check_existence(
+    trace: List[str],
+    model: Dict[str, Dict[Any, Dict[str, int]]],
+    trace_dict: Dict[str, List[Any]],
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     if EXISTENCE in model:
         for act in model[EXISTENCE]:
             if act not in trace:
                 trace_dict["deviations"].append([EXISTENCE, act])
 
 
-def __check_absence(trace: List[str], model: Dict[str, Dict[Any, Dict[str, int]]], trace_dict: Dict[str, List[Any]],
-                    parameters: Optional[Dict[Any, Any]] = None):
+def __check_absence(
+    trace: List[str],
+    model: Dict[str, Dict[Any, Dict[str, int]]],
+    trace_dict: Dict[str, List[Any]],
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     if ABSENCE in model:
         for act in model[ABSENCE]:
             if act in trace:
                 trace_dict["deviations"].append([ABSENCE, act])
 
 
-def __check_exactly_one(trace: List[str], model: Dict[str, Dict[Any, Dict[str, int]]], trace_dict: Dict[str, List[Any]],
-                        parameters: Optional[Dict[Any, Any]] = None):
+def __check_exactly_one(
+    trace: List[str],
+    model: Dict[str, Dict[Any, Dict[str, int]]],
+    trace_dict: Dict[str, List[Any]],
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     if EXACTLY_ONE in model:
         trace_counter = Counter(trace)
         for act in model[EXACTLY_ONE]:
@@ -59,76 +72,125 @@ def __check_exactly_one(trace: List[str], model: Dict[str, Dict[Any, Dict[str, i
                 trace_dict["deviations"].append([EXACTLY_ONE, act])
 
 
-def __check_init(trace: List[str], model: Dict[str, Dict[Any, Dict[str, int]]], trace_dict: Dict[str, List[Any]],
-                 parameters: Optional[Dict[Any, Any]] = None):
+def __check_init(
+    trace: List[str],
+    model: Dict[str, Dict[Any, Dict[str, int]]],
+    trace_dict: Dict[str, List[Any]],
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     if INIT in model:
         for act in model[INIT]:
             if len(trace) == 0 or trace[0] != act:
                 trace_dict["deviations"].append([INIT, act])
 
 
-def __check_responded_existence(trace: List[str], model: Dict[str, Dict[Any, Dict[str, int]]],
-                                trace_dict: Dict[str, List[Any]], parameters: Optional[Dict[Any, Any]] = None):
+def __check_responded_existence(
+    trace: List[str],
+    model: Dict[str, Dict[Any, Dict[str, int]]],
+    trace_dict: Dict[str, List[Any]],
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     if RESPONDED_EXISTENCE in model:
         for act_couple in model[RESPONDED_EXISTENCE]:
             if act_couple[0] in trace and act_couple[1] not in trace:
-                trace_dict["deviations"].append([RESPONDED_EXISTENCE, act_couple])
+                trace_dict["deviations"].append(
+                    [RESPONDED_EXISTENCE, act_couple]
+                )
 
 
-def __check_coexistence(trace: List[str], model: Dict[str, Dict[Any, Dict[str, int]]], trace_dict: Dict[str, List[Any]],
-                        parameters: Optional[Dict[Any, Any]] = None):
+def __check_coexistence(
+    trace: List[str],
+    model: Dict[str, Dict[Any, Dict[str, int]]],
+    trace_dict: Dict[str, List[Any]],
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     if COEXISTENCE in model:
         for act_couple in model[COEXISTENCE]:
             if (act_couple[0] in trace and act_couple[1] not in trace) or (
-                    act_couple[1] in trace and act_couple[0] not in trace):
+                act_couple[1] in trace and act_couple[0] not in trace
+            ):
                 trace_dict["deviations"].append([COEXISTENCE, act_couple])
 
 
-def __check_non_coexistence(trace: List[str], model: Dict[str, Dict[Any, Dict[str, int]]],
-                            trace_dict: Dict[str, List[Any]], parameters: Optional[Dict[Any, Any]] = None):
+def __check_non_coexistence(
+    trace: List[str],
+    model: Dict[str, Dict[Any, Dict[str, int]]],
+    trace_dict: Dict[str, List[Any]],
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     if NONCOEXISTENCE in model:
         for act_couple in model[NONCOEXISTENCE]:
             if act_couple[0] in trace and act_couple[1] in trace:
                 trace_dict["deviations"].append([NONCOEXISTENCE, act_couple])
 
 
-def __check_response(trace: List[str], model: Dict[str, Dict[Any, Dict[str, int]]], trace_dict: Dict[str, List[Any]],
-                     act_idxs: Dict[str, List[int]], parameters: Optional[Dict[Any, Any]] = None):
+def __check_response(
+    trace: List[str],
+    model: Dict[str, Dict[Any, Dict[str, int]]],
+    trace_dict: Dict[str, List[Any]],
+    act_idxs: Dict[str, List[int]],
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     if RESPONSE in model:
         for act_couple in model[RESPONSE]:
             if act_couple[0] in trace:
-                if (not act_couple[1] in trace) or max(act_idxs[act_couple[0]]) > max(act_idxs[act_couple[1]]):
+                if (not act_couple[1] in trace) or max(
+                    act_idxs[act_couple[0]]
+                ) > max(act_idxs[act_couple[1]]):
                     trace_dict["deviations"].append([RESPONSE, act_couple])
 
 
-def __check_precedence(trace: List[str], model: Dict[str, Dict[Any, Dict[str, int]]], trace_dict: Dict[str, List[Any]],
-                       act_idxs: Dict[str, List[int]], parameters: Optional[Dict[Any, Any]] = None):
+def __check_precedence(
+    trace: List[str],
+    model: Dict[str, Dict[Any, Dict[str, int]]],
+    trace_dict: Dict[str, List[Any]],
+    act_idxs: Dict[str, List[int]],
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     if PRECEDENCE in model:
         for act_couple in model[PRECEDENCE]:
             if act_couple[1] in trace:
-                if (not act_couple[0] in trace) or min(act_idxs[act_couple[0]]) > min(act_idxs[act_couple[1]]):
+                if (not act_couple[0] in trace) or min(
+                    act_idxs[act_couple[0]]
+                ) > min(act_idxs[act_couple[1]]):
                     trace_dict["deviations"].append([PRECEDENCE, act_couple])
 
 
-def __check_succession(trace: List[str], model: Dict[str, Dict[Any, Dict[str, int]]], trace_dict: Dict[str, List[Any]],
-                       act_idxs: Dict[str, List[int]], parameters: Optional[Dict[Any, Any]] = None):
+def __check_succession(
+    trace: List[str],
+    model: Dict[str, Dict[Any, Dict[str, int]]],
+    trace_dict: Dict[str, List[Any]],
+    act_idxs: Dict[str, List[int]],
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     if SUCCESSION in model:
         for act_couple in model[SUCCESSION]:
-            if (not act_couple[0] in trace or not act_couple[1] in trace) or min(act_idxs[act_couple[0]]) > min(
-                    act_idxs[act_couple[1]]) or max(act_idxs[act_couple[0]]) > max(act_idxs[act_couple[1]]):
+            if (
+                (not act_couple[0] in trace or not act_couple[1] in trace)
+                or min(act_idxs[act_couple[0]]) > min(act_idxs[act_couple[1]])
+                or max(act_idxs[act_couple[0]]) > max(act_idxs[act_couple[1]])
+            ):
                 trace_dict["deviations"].append([SUCCESSION, act_couple])
 
 
-def __check_alt_response(trace: List[str], model: Dict[str, Dict[Any, Dict[str, int]]],
-                         trace_dict: Dict[str, List[Any]], act_idxs: Dict[str, List[int]],
-                         parameters: Optional[Dict[Any, Any]] = None):
+def __check_alt_response(
+    trace: List[str],
+    model: Dict[str, Dict[Any, Dict[str, int]]],
+    trace_dict: Dict[str, List[Any]],
+    act_idxs: Dict[str, List[int]],
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     if ALTRESPONSE in model:
         for act_couple in model[RESPONSE]:
             spec_idxs = []
             if act_couple[0] in trace:
-                spec_idxs = spec_idxs + [(act_couple[0], i) for i in act_idxs[act_couple[0]]]
+                spec_idxs = spec_idxs + [
+                    (act_couple[0], i) for i in act_idxs[act_couple[0]]
+                ]
             if act_couple[1] in trace:
-                spec_idxs = spec_idxs + [(act_couple[1], i) for i in act_idxs[act_couple[1]]]
+                spec_idxs = spec_idxs + [
+                    (act_couple[1], i) for i in act_idxs[act_couple[1]]
+                ]
             spec_idxs = sorted(spec_idxs, key=lambda x: (x[1], x[0]))
             while spec_idxs:
                 if spec_idxs[0][0] != act_couple[0]:
@@ -137,24 +199,35 @@ def __check_alt_response(trace: List[str], model: Dict[str, Dict[Any, Dict[str, 
                     break
             is_ok = True
             for i in range(len(spec_idxs)):
-                if i % 2 == 0 and (spec_idxs[i][0] != act_couple[0] or i == len(spec_idxs) - 1 or spec_idxs[i + 1][0] !=
-                                   act_couple[1]):
+                if i % 2 == 0 and (
+                    spec_idxs[i][0] != act_couple[0]
+                    or i == len(spec_idxs) - 1
+                    or spec_idxs[i + 1][0] != act_couple[1]
+                ):
                     is_ok = False
                     break
             if not is_ok:
                 trace_dict["deviations"].append([ALTRESPONSE, act_couple])
 
 
-def __check_chain_response(trace: List[str], model: Dict[str, Dict[Any, Dict[str, int]]],
-                           trace_dict: Dict[str, List[Any]], act_idxs: Dict[str, List[int]],
-                           parameters: Optional[Dict[Any, Any]] = None):
+def __check_chain_response(
+    trace: List[str],
+    model: Dict[str, Dict[Any, Dict[str, int]]],
+    trace_dict: Dict[str, List[Any]],
+    act_idxs: Dict[str, List[int]],
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     if CHAINRESPONSE in model:
         for act_couple in model[CHAINRESPONSE]:
             spec_idxs = []
             if act_couple[0] in trace:
-                spec_idxs = spec_idxs + [(act_couple[0], i) for i in act_idxs[act_couple[0]]]
+                spec_idxs = spec_idxs + [
+                    (act_couple[0], i) for i in act_idxs[act_couple[0]]
+                ]
             if act_couple[1] in trace:
-                spec_idxs = spec_idxs + [(act_couple[1], i) for i in act_idxs[act_couple[1]]]
+                spec_idxs = spec_idxs + [
+                    (act_couple[1], i) for i in act_idxs[act_couple[1]]
+                ]
             spec_idxs = sorted(spec_idxs, key=lambda x: (x[1], x[0]))
             while spec_idxs:
                 if spec_idxs[0][0] != act_couple[0]:
@@ -163,24 +236,36 @@ def __check_chain_response(trace: List[str], model: Dict[str, Dict[Any, Dict[str
                     break
             is_ok = True
             for i in range(len(spec_idxs)):
-                if i % 2 == 0 and (spec_idxs[i][0] != act_couple[0] or i == len(spec_idxs) - 1 or spec_idxs[i + 1][0] !=
-                                   act_couple[1] or spec_idxs[i + 1][1] != spec_idxs[i][1] + 1):
+                if i % 2 == 0 and (
+                    spec_idxs[i][0] != act_couple[0]
+                    or i == len(spec_idxs) - 1
+                    or spec_idxs[i + 1][0] != act_couple[1]
+                    or spec_idxs[i + 1][1] != spec_idxs[i][1] + 1
+                ):
                     is_ok = False
                     break
             if not is_ok:
                 trace_dict["deviations"].append([CHAINRESPONSE, act_couple])
 
 
-def __check_alt_precedence(trace: List[str], model: Dict[str, Dict[Any, Dict[str, int]]],
-                           trace_dict: Dict[str, List[Any]], act_idxs: Dict[str, List[int]],
-                           parameters: Optional[Dict[Any, Any]] = None):
+def __check_alt_precedence(
+    trace: List[str],
+    model: Dict[str, Dict[Any, Dict[str, int]]],
+    trace_dict: Dict[str, List[Any]],
+    act_idxs: Dict[str, List[int]],
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     if ALTPRECEDENCE in model:
         for act_couple in model[ALTPRECEDENCE]:
             spec_idxs = []
             if act_couple[0] in trace:
-                spec_idxs = spec_idxs + [(act_couple[0], i) for i in act_idxs[act_couple[0]]]
+                spec_idxs = spec_idxs + [
+                    (act_couple[0], i) for i in act_idxs[act_couple[0]]
+                ]
             if act_couple[1] in trace:
-                spec_idxs = spec_idxs + [(act_couple[1], i) for i in act_idxs[act_couple[1]]]
+                spec_idxs = spec_idxs + [
+                    (act_couple[1], i) for i in act_idxs[act_couple[1]]
+                ]
             spec_idxs = sorted(spec_idxs, key=lambda x: (x[1], x[0]))
             while len(spec_idxs) > 1:
                 if spec_idxs[1][0] != act_couple[1]:
@@ -189,24 +274,35 @@ def __check_alt_precedence(trace: List[str], model: Dict[str, Dict[Any, Dict[str
                     break
             is_ok = True
             for i in range(len(spec_idxs)):
-                if i % 2 == 0 and (spec_idxs[i][0] != act_couple[0] or i == len(spec_idxs) - 1 or spec_idxs[i + 1][0] !=
-                                   act_couple[1]):
+                if i % 2 == 0 and (
+                    spec_idxs[i][0] != act_couple[0]
+                    or i == len(spec_idxs) - 1
+                    or spec_idxs[i + 1][0] != act_couple[1]
+                ):
                     is_ok = False
                     break
             if not is_ok:
                 trace_dict["deviations"].append([ALTPRECEDENCE, act_couple])
 
 
-def __check_chain_precedence(trace: List[str], model: Dict[str, Dict[Any, Dict[str, int]]],
-                             trace_dict: Dict[str, List[Any]], act_idxs: Dict[str, List[int]],
-                             parameters: Optional[Dict[Any, Any]] = None):
+def __check_chain_precedence(
+    trace: List[str],
+    model: Dict[str, Dict[Any, Dict[str, int]]],
+    trace_dict: Dict[str, List[Any]],
+    act_idxs: Dict[str, List[int]],
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     if CHAINPRECEDENCE in model:
         for act_couple in model[CHAINPRECEDENCE]:
             spec_idxs = []
             if act_couple[0] in trace:
-                spec_idxs = spec_idxs + [(act_couple[0], i) for i in act_idxs[act_couple[0]]]
+                spec_idxs = spec_idxs + [
+                    (act_couple[0], i) for i in act_idxs[act_couple[0]]
+                ]
             if act_couple[1] in trace:
-                spec_idxs = spec_idxs + [(act_couple[1], i) for i in act_idxs[act_couple[1]]]
+                spec_idxs = spec_idxs + [
+                    (act_couple[1], i) for i in act_idxs[act_couple[1]]
+                ]
             spec_idxs = sorted(spec_idxs, key=lambda x: (x[1], x[0]))
             while len(spec_idxs) > 1:
                 if spec_idxs[1][0] != act_couple[1]:
@@ -215,58 +311,88 @@ def __check_chain_precedence(trace: List[str], model: Dict[str, Dict[Any, Dict[s
                     break
             is_ok = True
             for i in range(len(spec_idxs)):
-                if i % 2 == 0 and (spec_idxs[i][0] != act_couple[0] or i == len(spec_idxs) - 1 or spec_idxs[i + 1][0] !=
-                                   act_couple[1] or spec_idxs[i + 1][1] != spec_idxs[i][1] + 1):
+                if i % 2 == 0 and (
+                    spec_idxs[i][0] != act_couple[0]
+                    or i == len(spec_idxs) - 1
+                    or spec_idxs[i + 1][0] != act_couple[1]
+                    or spec_idxs[i + 1][1] != spec_idxs[i][1] + 1
+                ):
                     is_ok = False
                     break
             if not is_ok:
                 trace_dict["deviations"].append([CHAINPRECEDENCE, act_couple])
 
 
-def __check_alt_succession(trace: List[str], model: Dict[str, Dict[Any, Dict[str, int]]],
-                           trace_dict: Dict[str, List[Any]], act_idxs: Dict[str, List[int]],
-                           parameters: Optional[Dict[Any, Any]] = None):
+def __check_alt_succession(
+    trace: List[str],
+    model: Dict[str, Dict[Any, Dict[str, int]]],
+    trace_dict: Dict[str, List[Any]],
+    act_idxs: Dict[str, List[int]],
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     if ALTSUCCESSION in model:
         for act_couple in model[ALTSUCCESSION]:
             spec_idxs = []
             if act_couple[0] in trace:
-                spec_idxs = spec_idxs + [(act_couple[0], i) for i in act_idxs[act_couple[0]]]
+                spec_idxs = spec_idxs + [
+                    (act_couple[0], i) for i in act_idxs[act_couple[0]]
+                ]
             if act_couple[1] in trace:
-                spec_idxs = spec_idxs + [(act_couple[1], i) for i in act_idxs[act_couple[1]]]
+                spec_idxs = spec_idxs + [
+                    (act_couple[1], i) for i in act_idxs[act_couple[1]]
+                ]
             spec_idxs = sorted(spec_idxs, key=lambda x: (x[1], x[0]))
             is_ok = True
             for i in range(len(spec_idxs)):
-                if i % 2 == 0 and (spec_idxs[i][0] != act_couple[0] or i == len(spec_idxs) - 1 or spec_idxs[i + 1][0] !=
-                                   act_couple[1]):
+                if i % 2 == 0 and (
+                    spec_idxs[i][0] != act_couple[0]
+                    or i == len(spec_idxs) - 1
+                    or spec_idxs[i + 1][0] != act_couple[1]
+                ):
                     is_ok = False
                     break
             if not is_ok:
                 trace_dict["deviations"].append([ALTSUCCESSION, act_couple])
 
 
-def __check_chain_succession(trace: List[str], model: Dict[str, Dict[Any, Dict[str, int]]],
-                             trace_dict: Dict[str, List[Any]], act_idxs: Dict[str, List[int]],
-                             parameters: Optional[Dict[Any, Any]] = None):
+def __check_chain_succession(
+    trace: List[str],
+    model: Dict[str, Dict[Any, Dict[str, int]]],
+    trace_dict: Dict[str, List[Any]],
+    act_idxs: Dict[str, List[int]],
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     if CHAINSUCCESSION in model:
         for act_couple in model[CHAINSUCCESSION]:
             spec_idxs = []
             if act_couple[0] in trace:
-                spec_idxs = spec_idxs + [(act_couple[0], i) for i in act_idxs[act_couple[0]]]
+                spec_idxs = spec_idxs + [
+                    (act_couple[0], i) for i in act_idxs[act_couple[0]]
+                ]
             if act_couple[1] in trace:
-                spec_idxs = spec_idxs + [(act_couple[1], i) for i in act_idxs[act_couple[1]]]
+                spec_idxs = spec_idxs + [
+                    (act_couple[1], i) for i in act_idxs[act_couple[1]]
+                ]
             spec_idxs = sorted(spec_idxs, key=lambda x: (x[1], x[0]))
             is_ok = True
             for i in range(len(spec_idxs)):
-                if i % 2 == 0 and (spec_idxs[i][0] != act_couple[0] or i == len(spec_idxs) - 1 or spec_idxs[i + 1][0] !=
-                                   act_couple[1] or spec_idxs[i + 1][1] != spec_idxs[i][1] + 1):
+                if i % 2 == 0 and (
+                    spec_idxs[i][0] != act_couple[0]
+                    or i == len(spec_idxs) - 1
+                    or spec_idxs[i + 1][0] != act_couple[1]
+                    or spec_idxs[i + 1][1] != spec_idxs[i][1] + 1
+                ):
                     is_ok = False
                     break
             if not is_ok:
                 trace_dict["deviations"].append([CHAINSUCCESSION, act_couple])
 
 
-def apply_list(projected_log: List[List[str]], model: Dict[str, Dict[Any, Dict[str, int]]],
-               parameters: Optional[Dict[Any, Any]] = None) -> List[Dict[str, Any]]:
+def apply_list(
+    projected_log: List[List[str]],
+    model: Dict[str, Dict[Any, Dict[str, int]]],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> List[Dict[str, Any]]:
     if parameters is None:
         parameters = {}
 
@@ -306,7 +432,11 @@ def apply_list(projected_log: List[List[str]], model: Dict[str, Dict[Any, Dict[s
         __check_non_coexistence(trace, model, ret, parameters)
 
         ret["no_dev_total"] = len(ret["deviations"])
-        ret["dev_fitness"] = 1.0 - ret["no_dev_total"] / ret["no_constr_total"] if ret["no_constr_total"] > 0 else 1.0
+        ret["dev_fitness"] = (
+            1.0 - ret["no_dev_total"] / ret["no_constr_total"]
+            if ret["no_constr_total"] > 0
+            else 1.0
+        )
         ret["is_fit"] = ret["no_dev_total"] == 0
 
         conf_cases.append(ret)
@@ -314,8 +444,11 @@ def apply_list(projected_log: List[List[str]], model: Dict[str, Dict[Any, Dict[s
     return conf_cases
 
 
-def apply(log: Union[EventLog, pd.DataFrame], model: Dict[str, Dict[Any, Dict[str, int]]],
-          parameters: Optional[Dict[Any, Any]] = None) -> List[Dict[str, Any]]:
+def apply(
+    log: Union[EventLog, pd.DataFrame],
+    model: Dict[str, Dict[Any, Dict[str, int]]],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> List[Dict[str, Any]]:
     """
     Applies conformance checking against a DECLARE model.
 
@@ -346,19 +479,27 @@ def apply(log: Union[EventLog, pd.DataFrame], model: Dict[str, Dict[Any, Dict[st
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
 
     import pm4py
 
-    projected_log = pm4py.project_on_event_attribute(log, activity_key, case_id_key=case_id_key)
+    projected_log = pm4py.project_on_event_attribute(
+        log, activity_key, case_id_key=case_id_key
+    )
 
     ret = apply_list(projected_log, model, parameters=parameters)
 
     return ret
 
 
-def get_diagnostics_dataframe(log, conf_result, parameters=None) -> pd.DataFrame:
+def get_diagnostics_dataframe(
+    log, conf_result, parameters=None
+) -> pd.DataFrame:
     """
     Gets the diagnostics dataframe from a log and the results
     of DECLARE-based conformance checking
@@ -378,9 +519,11 @@ def get_diagnostics_dataframe(log, conf_result, parameters=None) -> pd.DataFrame
     if parameters is None:
         parameters = {}
 
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, xes_constants.DEFAULT_TRACEID_KEY)
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, xes_constants.DEFAULT_TRACEID_KEY
+    )
 
-    import pandas as pd
+    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
 
     diagn_stream = []
 
@@ -391,7 +534,13 @@ def get_diagnostics_dataframe(log, conf_result, parameters=None) -> pd.DataFrame
         no_constr_total = conf_result[index]["no_constr_total"]
         dev_fitness = conf_result[index]["dev_fitness"]
 
-        diagn_stream.append({"case_id": case_id, "no_dev_total": no_dev_total, "no_constr_total": no_constr_total,
-                             "dev_fitness": dev_fitness})
+        diagn_stream.append(
+            {
+                "case_id": case_id,
+                "no_dev_total": no_dev_total,
+                "no_constr_total": no_constr_total,
+                "dev_fitness": dev_fitness,
+            }
+        )
 
     return pandas_utils.instantiate_dataframe(diagn_stream)

@@ -53,7 +53,9 @@ def __rule_init_column(act: str) -> Tuple[str, str]:
     return (INIT, act)
 
 
-def __rule_responded_existence_column(act: str, act2: str) -> Tuple[str, str, str]:
+def __rule_responded_existence_column(
+    act: str, act2: str
+) -> Tuple[str, str, str]:
     return (RESPONDED_EXISTENCE, act, act2)
 
 
@@ -113,7 +115,9 @@ def __rule_non_chain_succession(act: str, act2: str) -> Tuple[str, str, str]:
     return (NONCHAINSUCCESSION, act, act2)
 
 
-def __col_to_dict_rule(col_name: Union[Tuple[str, str], Tuple[str, str, str]]) -> Tuple[str, Any]:
+def __col_to_dict_rule(
+    col_name: Union[Tuple[str, str], Tuple[str, str, str]]
+) -> Tuple[str, Any]:
     if len(col_name) == 2:
         return col_name[0], col_name[1]
     else:
@@ -123,9 +127,14 @@ def __col_to_dict_rule(col_name: Union[Tuple[str, str], Tuple[str, str, str]]) -
         return col_name[0], (col_name[1], col_name[2])
 
 
-def existence_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int], trace: Collection[str],
-                             activities: Set[str], act_counter: TCounter[str], act_idxs: Dict[str, List[int]],
-                             allowed_templates: Collection[str]):
+def existence_template_step1(
+    rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int],
+    trace: Collection[str],
+    activities: Set[str],
+    act_counter: TCounter[str],
+    act_idxs: Dict[str, List[int]],
+    allowed_templates: Collection[str],
+):
     if EXISTENCE in allowed_templates:
         for act in activities:
             if act in act_counter:
@@ -134,9 +143,14 @@ def existence_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, str, 
                 rules[__rule_existence_column(act)] = -1
 
 
-def exactly_one_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int], trace: Collection[str],
-                               activities: Set[str], act_counter: TCounter[str], act_idxs: Dict[str, List[int]],
-                               allowed_templates: Collection[str]):
+def exactly_one_template_step1(
+    rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int],
+    trace: Collection[str],
+    activities: Set[str],
+    act_counter: TCounter[str],
+    act_idxs: Dict[str, List[int]],
+    allowed_templates: Collection[str],
+):
     if EXACTLY_ONE in allowed_templates:
         for act in activities:
             if act in act_counter:
@@ -146,9 +160,14 @@ def exactly_one_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, str
                     rules[__rule_exactly_one_column(act)] = -1
 
 
-def init_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int], trace: Collection[str],
-                        activities: Set[str], act_counter: TCounter[str], act_idxs: Dict[str, List[int]],
-                        allowed_templates: Collection[str]):
+def init_template_step1(
+    rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int],
+    trace: Collection[str],
+    activities: Set[str],
+    act_counter: TCounter[str],
+    act_idxs: Dict[str, List[int]],
+    allowed_templates: Collection[str],
+):
     if INIT in allowed_templates:
         for act in activities:
             if act == trace[0]:
@@ -157,22 +176,34 @@ def init_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]]
                 rules[__rule_init_column(act)] = -1
 
 
-def responded_existence_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int],
-                                       trace: Collection[str], activities: Set[str], act_counter: TCounter[str],
-                                       act_idxs: Dict[str, List[int]], allowed_templates: Collection[str]):
+def responded_existence_template_step1(
+    rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int],
+    trace: Collection[str],
+    activities: Set[str],
+    act_counter: TCounter[str],
+    act_idxs: Dict[str, List[int]],
+    allowed_templates: Collection[str],
+):
     if RESPONDED_EXISTENCE in allowed_templates:
         for act in act_counter:
             for act2 in activities:
                 if act2 != act:
                     if act2 not in act_counter:
-                        rules[__rule_responded_existence_column(act, act2)] = -1
+                        rules[__rule_responded_existence_column(act, act2)] = (
+                            -1
+                        )
                     else:
                         rules[__rule_responded_existence_column(act, act2)] = 1
 
 
-def response_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int], trace: Collection[str],
-                            activities: Set[str], act_counter: TCounter[str], act_idxs: Dict[str, List[int]],
-                            allowed_templates: Collection[str]):
+def response_template_step1(
+    rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int],
+    trace: Collection[str],
+    activities: Set[str],
+    act_counter: TCounter[str],
+    act_idxs: Dict[str, List[int]],
+    allowed_templates: Collection[str],
+):
     if RESPONSE in allowed_templates:
         for act in act_counter:
             for act2 in activities:
@@ -186,9 +217,14 @@ def response_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, str, s
                             rules[__rule_response(act, act2)] = -1
 
 
-def precedence_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int], trace: Collection[str],
-                              activities: Set[str], act_counter: TCounter[str], act_idxs: Dict[str, List[int]],
-                              allowed_templates: Collection[str]):
+def precedence_template_step1(
+    rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int],
+    trace: Collection[str],
+    activities: Set[str],
+    act_counter: TCounter[str],
+    act_idxs: Dict[str, List[int]],
+    allowed_templates: Collection[str],
+):
     if PRECEDENCE in allowed_templates:
         for act in act_counter:
             for act2 in activities:
@@ -202,9 +238,14 @@ def precedence_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, str,
                             rules[__rule_precedence(act2, act)] = -1
 
 
-def altresponse_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int], trace: Collection[str],
-                               activities: Set[str], act_counter: TCounter[str], act_idxs: Dict[str, List[int]],
-                               allowed_templates: Collection[str]):
+def altresponse_template_step1(
+    rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int],
+    trace: Collection[str],
+    activities: Set[str],
+    act_counter: TCounter[str],
+    act_idxs: Dict[str, List[int]],
+    allowed_templates: Collection[str],
+):
     if ALTRESPONSE in allowed_templates:
         for act in act_counter:
             for act2 in activities:
@@ -219,17 +260,27 @@ def altresponse_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, str
 
                             for i in range(lenn):
                                 if act_idxs[act][i] > act_idxs[act2][i] or (
-                                        i < lenn - 1 and act_idxs[act][i + 1] < act_idxs[act2][i]):
+                                    i < lenn - 1
+                                    and act_idxs[act][i + 1]
+                                    < act_idxs[act2][i]
+                                ):
                                     is_ok_alt_resp = False
                                     break
                                 elif act_idxs[act][i] + 1 != act_idxs[act2][i]:
                                     pass
-                        rules[__rule_alternate_response(act, act2)] = 1 if is_ok_alt_resp else -1
+                        rules[__rule_alternate_response(act, act2)] = (
+                            1 if is_ok_alt_resp else -1
+                        )
 
 
-def chainresponse_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int], trace: Collection[str],
-                                 activities: Set[str], act_counter: TCounter[str], act_idxs: Dict[str, List[int]],
-                                 allowed_templates: Collection[str]):
+def chainresponse_template_step1(
+    rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int],
+    trace: Collection[str],
+    activities: Set[str],
+    act_counter: TCounter[str],
+    act_idxs: Dict[str, List[int]],
+    allowed_templates: Collection[str],
+):
     if CHAINRESPONSE in allowed_templates:
         for act in act_counter:
             for act2 in activities:
@@ -244,18 +295,28 @@ def chainresponse_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, s
 
                             for i in range(lenn):
                                 if act_idxs[act][i] > act_idxs[act2][i] or (
-                                        i < lenn - 1 and act_idxs[act][i + 1] < act_idxs[act2][i]):
+                                    i < lenn - 1
+                                    and act_idxs[act][i + 1]
+                                    < act_idxs[act2][i]
+                                ):
                                     is_ok_chain_resp = False
                                     break
                                 elif act_idxs[act][i] + 1 != act_idxs[act2][i]:
                                     is_ok_chain_resp = False
                                     break
-                        rules[__rule_chain_response(act, act2)] = 1 if is_ok_chain_resp else -1
+                        rules[__rule_chain_response(act, act2)] = (
+                            1 if is_ok_chain_resp else -1
+                        )
 
 
-def altprecedence_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int], trace: Collection[str],
-                                 activities: Set[str], act_counter: TCounter[str], act_idxs: Dict[str, List[int]],
-                                 allowed_templates: Collection[str]):
+def altprecedence_template_step1(
+    rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int],
+    trace: Collection[str],
+    activities: Set[str],
+    act_counter: TCounter[str],
+    act_idxs: Dict[str, List[int]],
+    allowed_templates: Collection[str],
+):
     if ALTPRECEDENCE in allowed_templates:
         for act in act_counter:
             for act2 in activities:
@@ -269,17 +330,27 @@ def altprecedence_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, s
                             is_ok_alt_prec = True
                             for i in range(lenn):
                                 if act_idxs[act2][i] > act_idxs[act][i] or (
-                                        i < lenn - 1 and act_idxs[act2][i + 1] < act_idxs[act][i]):
+                                    i < lenn - 1
+                                    and act_idxs[act2][i + 1]
+                                    < act_idxs[act][i]
+                                ):
                                     is_ok_alt_prec = False
                                     break
                                 elif act_idxs[act2][i] + 1 != act_idxs[act][i]:
                                     pass
-                        rules[__rule_alternate_precedence(act2, act)] = 1 if is_ok_alt_prec else -1
+                        rules[__rule_alternate_precedence(act2, act)] = (
+                            1 if is_ok_alt_prec else -1
+                        )
 
 
-def chainprecedence_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int],
-                                   trace: Collection[str], activities: Set[str], act_counter: TCounter[str],
-                                   act_idxs: Dict[str, List[int]], allowed_templates: Collection[str]):
+def chainprecedence_template_step1(
+    rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int],
+    trace: Collection[str],
+    activities: Set[str],
+    act_counter: TCounter[str],
+    act_idxs: Dict[str, List[int]],
+    allowed_templates: Collection[str],
+):
     if CHAINPRECEDENCE in allowed_templates:
         for act in act_counter:
             for act2 in activities:
@@ -294,199 +365,361 @@ def chainprecedence_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str,
                             # check alternate and chain response
                             for i in range(lenn):
                                 if act_idxs[act2][i] > act_idxs[act][i] or (
-                                        i < lenn - 1 and act_idxs[act2][i + 1] < act_idxs[act][i]):
+                                    i < lenn - 1
+                                    and act_idxs[act2][i + 1]
+                                    < act_idxs[act][i]
+                                ):
                                     is_ok_chain_prec = False
                                     break
                                 elif act_idxs[act2][i] + 1 != act_idxs[act][i]:
                                     is_ok_chain_prec = False
                                     break
-                        rules[__rule_chain_precedence(act2, act)] = 1 if is_ok_chain_prec else -1
+                        rules[__rule_chain_precedence(act2, act)] = (
+                            1 if is_ok_chain_prec else -1
+                        )
 
 
-def absence_template(table, columns: Collection[str], activities: Set[str],
-                     allowed_templates: Collection[str]) -> pd.DataFrame:
+def absence_template(
+    table,
+    columns: Collection[str],
+    activities: Set[str],
+    allowed_templates: Collection[str],
+) -> pd.DataFrame:
     if ABSENCE in allowed_templates and EXISTENCE in allowed_templates:
         for act in activities:
-            table[__rule_absence_act(act)] = -1 * table[__rule_existence_column(act)]
+            table[__rule_absence_act(act)] = (
+                -1 * table[__rule_existence_column(act)]
+            )
     return table
 
 
-def exactly_one_template_step2(table, columns: Collection[str], activities: Set[str],
-                               allowed_templates: Collection[str]) -> pd.DataFrame:
+def exactly_one_template_step2(
+    table,
+    columns: Collection[str],
+    activities: Set[str],
+    allowed_templates: Collection[str],
+) -> pd.DataFrame:
     if EXACTLY_ONE in allowed_templates:
         for act in activities:
             if __rule_exactly_one_column(act) not in columns:
-                table[__rule_exactly_one_column(act)] = [0] * len(table[list(table.keys())[0]])
+                table[__rule_exactly_one_column(act)] = [0] * len(
+                    table[list(table.keys())[0]]
+                )
     return table
 
 
-def responded_existence_template_step2(table, columns: Collection[str], activities: Set[str],
-                                       allowed_templates: Collection[str]) -> pd.DataFrame:
+def responded_existence_template_step2(
+    table,
+    columns: Collection[str],
+    activities: Set[str],
+    allowed_templates: Collection[str],
+) -> pd.DataFrame:
     if RESPONDED_EXISTENCE in allowed_templates:
         for act in activities:
             for act2 in activities:
                 if act2 != act:
-                    if __rule_responded_existence_column(act, act2) not in columns:
-                        table[__rule_responded_existence_column(act, act2)] = [0] * len(table[list(table.keys())[0]])
+                    if (
+                        __rule_responded_existence_column(act, act2)
+                        not in columns
+                    ):
+                        table[__rule_responded_existence_column(act, act2)] = [
+                            0
+                        ] * len(table[list(table.keys())[0]])
     return table
 
 
-def response_template_step2(table, columns: Collection[str], activities: Set[str],
-                            allowed_templates: Collection[str]) -> pd.DataFrame:
+def response_template_step2(
+    table,
+    columns: Collection[str],
+    activities: Set[str],
+    allowed_templates: Collection[str],
+) -> pd.DataFrame:
     if RESPONSE in allowed_templates:
         for act in activities:
             for act2 in activities:
                 if act2 != act:
                     if __rule_response(act, act2) not in columns:
-                        table[__rule_response(act, act2)] = [0] * len(table[list(table.keys())[0]])
+                        table[__rule_response(act, act2)] = [0] * len(
+                            table[list(table.keys())[0]]
+                        )
     return table
 
 
-def precedence_template_step2(table, columns: Collection[str], activities: Set[str],
-                              allowed_templates: Collection[str]) -> pd.DataFrame:
+def precedence_template_step2(
+    table,
+    columns: Collection[str],
+    activities: Set[str],
+    allowed_templates: Collection[str],
+) -> pd.DataFrame:
     if PRECEDENCE in allowed_templates:
         for act in activities:
             for act2 in activities:
                 if act2 != act:
                     if __rule_precedence(act, act2) not in columns:
-                        table[__rule_precedence(act, act2)] = [0] * len(table[list(table.keys())[0]])
+                        table[__rule_precedence(act, act2)] = [0] * len(
+                            table[list(table.keys())[0]]
+                        )
     return table
 
 
-def altresponse_template_step2(table, columns: Collection[str], activities: Set[str],
-                               allowed_templates: Collection[str]) -> pd.DataFrame:
+def altresponse_template_step2(
+    table,
+    columns: Collection[str],
+    activities: Set[str],
+    allowed_templates: Collection[str],
+) -> pd.DataFrame:
     if ALTRESPONSE in allowed_templates:
         for act in activities:
             for act2 in activities:
                 if act2 != act:
                     if __rule_alternate_response(act, act2) not in columns:
-                        table[__rule_alternate_response(act, act2)] = [0] * len(table[list(table.keys())[0]])
+                        table[__rule_alternate_response(act, act2)] = [
+                            0
+                        ] * len(table[list(table.keys())[0]])
     return table
 
 
-def chainresponse_template_step2(table, columns: Collection[str], activities: Set[str],
-                                 allowed_templates: Collection[str]) -> pd.DataFrame:
+def chainresponse_template_step2(
+    table,
+    columns: Collection[str],
+    activities: Set[str],
+    allowed_templates: Collection[str],
+) -> pd.DataFrame:
     if CHAINRESPONSE in allowed_templates:
         for act in activities:
             for act2 in activities:
                 if act2 != act:
                     if __rule_chain_response(act, act2) not in columns:
-                        table[__rule_chain_response(act, act2)] = [0] * len(table[list(table.keys())[0]])
+                        table[__rule_chain_response(act, act2)] = [0] * len(
+                            table[list(table.keys())[0]]
+                        )
     return table
 
 
-def altprecedence_template_step2(table, columns: Collection[str], activities: Set[str],
-                                 allowed_templates: Collection[str]) -> pd.DataFrame:
+def altprecedence_template_step2(
+    table,
+    columns: Collection[str],
+    activities: Set[str],
+    allowed_templates: Collection[str],
+) -> pd.DataFrame:
     if ALTPRECEDENCE in allowed_templates:
         for act in activities:
             for act2 in activities:
                 if act2 != act:
                     if __rule_alternate_precedence(act, act2) not in columns:
-                        table[__rule_alternate_precedence(act, act2)] = [0] * len(table[list(table.keys())[0]])
+                        table[__rule_alternate_precedence(act, act2)] = [
+                            0
+                        ] * len(table[list(table.keys())[0]])
     return table
 
 
-def chainprecedence_template_step2(table, columns: Collection[str], activities: Set[str],
-                                   allowed_templates: Collection[str]) -> pd.DataFrame:
+def chainprecedence_template_step2(
+    table,
+    columns: Collection[str],
+    activities: Set[str],
+    allowed_templates: Collection[str],
+) -> pd.DataFrame:
     if CHAINPRECEDENCE in allowed_templates:
         for act in activities:
             for act2 in activities:
                 if act2 != act:
                     if __rule_chain_precedence(act, act2) not in columns:
-                        table[__rule_chain_precedence(act, act2)] = [0] * len(table[list(table.keys())[0]])
+                        table[__rule_chain_precedence(act, act2)] = [0] * len(
+                            table[list(table.keys())[0]]
+                        )
     return table
 
 
-def succession_template(table, columns: Collection[str], activities: Set[str],
-                        allowed_templates: Collection[str]) -> pd.DataFrame:
-    if SUCCESSION in allowed_templates and RESPONSE in allowed_templates and PRECEDENCE in allowed_templates:
+def succession_template(
+    table,
+    columns: Collection[str],
+    activities: Set[str],
+    allowed_templates: Collection[str],
+) -> pd.DataFrame:
+    if (
+        SUCCESSION in allowed_templates
+        and RESPONSE in allowed_templates
+        and PRECEDENCE in allowed_templates
+    ):
         for act in activities:
             for act2 in activities:
                 if act2 != act:
-                    table[__rule_succession(act, act2)] = np.minimum(table[__rule_response(act, act2)], table[__rule_precedence(act, act2)])
+                    table[__rule_succession(act, act2)] = np.minimum(
+                        table[__rule_response(act, act2)],
+                        table[__rule_precedence(act, act2)],
+                    )
     return table
 
 
-def altsuccession_template(table, columns: Collection[str], activities: Set[str],
-                           allowed_templates: Collection[str]) -> pd.DataFrame:
-    if ALTSUCCESSION in allowed_templates and ALTRESPONSE in allowed_templates and ALTPRECEDENCE in allowed_templates:
+def altsuccession_template(
+    table,
+    columns: Collection[str],
+    activities: Set[str],
+    allowed_templates: Collection[str],
+) -> pd.DataFrame:
+    if (
+        ALTSUCCESSION in allowed_templates
+        and ALTRESPONSE in allowed_templates
+        and ALTPRECEDENCE in allowed_templates
+    ):
         for act in activities:
             for act2 in activities:
                 if act2 != act:
-                    table[__rule_alternate_succession(act, act2)] = np.minimum(table[__rule_alternate_response(act, act2)], table[__rule_alternate_precedence(act, act2)])
+                    table[__rule_alternate_succession(act, act2)] = np.minimum(
+                        table[__rule_alternate_response(act, act2)],
+                        table[__rule_alternate_precedence(act, act2)],
+                    )
     return table
 
 
-def chainsuccession_template(table, columns: Collection[str], activities: Set[str],
-                             allowed_templates: Collection[str]) -> pd.DataFrame:
-    if CHAINSUCCESSION in allowed_templates and CHAINRESPONSE in allowed_templates and CHAINPRECEDENCE in allowed_templates:
+def chainsuccession_template(
+    table,
+    columns: Collection[str],
+    activities: Set[str],
+    allowed_templates: Collection[str],
+) -> pd.DataFrame:
+    if (
+        CHAINSUCCESSION in allowed_templates
+        and CHAINRESPONSE in allowed_templates
+        and CHAINPRECEDENCE in allowed_templates
+    ):
         for act in activities:
             for act2 in activities:
                 if act2 != act:
-                    table[__rule_chain_succession(act, act2)] = np.minimum(table[__rule_chain_response(act, act2)], table[__rule_chain_precedence(act, act2)])
+                    table[__rule_chain_succession(act, act2)] = np.minimum(
+                        table[__rule_chain_response(act, act2)],
+                        table[__rule_chain_precedence(act, act2)],
+                    )
     return table
 
 
-def coexistence_template(table, columns: Collection[str], activities: Set[str],
-                         allowed_templates: Collection[str]) -> pd.DataFrame:
-    if COEXISTENCE in allowed_templates and RESPONDED_EXISTENCE in allowed_templates:
+def coexistence_template(
+    table,
+    columns: Collection[str],
+    activities: Set[str],
+    allowed_templates: Collection[str],
+) -> pd.DataFrame:
+    if (
+        COEXISTENCE in allowed_templates
+        and RESPONDED_EXISTENCE in allowed_templates
+    ):
         for act in activities:
             for act2 in activities:
                 if act2 != act:
-                    table[__rule_coexistence(act, act2)] = np.minimum(table[__rule_responded_existence_column(act, act2)], table[__rule_responded_existence_column(act2, act)])
+                    table[__rule_coexistence(act, act2)] = np.minimum(
+                        table[__rule_responded_existence_column(act, act2)],
+                        table[__rule_responded_existence_column(act2, act)],
+                    )
     return table
 
 
-def noncoexistence_template(table, columns: Collection[str], activities: Set[str],
-                            allowed_templates: Collection[str]) -> pd.DataFrame:
-    if NONCOEXISTENCE in allowed_templates and COEXISTENCE in allowed_templates and RESPONDED_EXISTENCE in allowed_templates:
+def noncoexistence_template(
+    table,
+    columns: Collection[str],
+    activities: Set[str],
+    allowed_templates: Collection[str],
+) -> pd.DataFrame:
+    if (
+        NONCOEXISTENCE in allowed_templates
+        and COEXISTENCE in allowed_templates
+        and RESPONDED_EXISTENCE in allowed_templates
+    ):
         for act in activities:
             for act2 in activities:
                 if act2 != act:
-                    table[__rule_non_coexistence(act, act2)] = -1 * table[__rule_coexistence(act, act2)]
+                    table[__rule_non_coexistence(act, act2)] = (
+                        -1 * table[__rule_coexistence(act, act2)]
+                    )
     return table
 
 
-def nonsuccession_template(table, columns: Collection[str], activities: Set[str],
-                           allowed_templates: Collection[str]) -> pd.DataFrame:
-    if NONSUCCESSION in allowed_templates and SUCCESSION in allowed_templates and RESPONSE in allowed_templates and PRECEDENCE in allowed_templates:
+def nonsuccession_template(
+    table,
+    columns: Collection[str],
+    activities: Set[str],
+    allowed_templates: Collection[str],
+) -> pd.DataFrame:
+    if (
+        NONSUCCESSION in allowed_templates
+        and SUCCESSION in allowed_templates
+        and RESPONSE in allowed_templates
+        and PRECEDENCE in allowed_templates
+    ):
         for act in activities:
             for act2 in activities:
                 if act2 != act:
-                    table[__rule_non_succession(act, act2)] = -1 * table[__rule_succession(act, act2)]
+                    table[__rule_non_succession(act, act2)] = (
+                        -1 * table[__rule_succession(act, act2)]
+                    )
     return table
 
 
-def nonchainsuccession_template(table, columns: Collection[str], activities: Set[str],
-                                allowed_templates: Collection[str]) -> pd.DataFrame:
-    if NONCHAINSUCCESSION in allowed_templates and CHAINSUCCESSION in allowed_templates and CHAINRESPONSE in allowed_templates and CHAINPRECEDENCE in allowed_templates:
+def nonchainsuccession_template(
+    table,
+    columns: Collection[str],
+    activities: Set[str],
+    allowed_templates: Collection[str],
+) -> pd.DataFrame:
+    if (
+        NONCHAINSUCCESSION in allowed_templates
+        and CHAINSUCCESSION in allowed_templates
+        and CHAINRESPONSE in allowed_templates
+        and CHAINPRECEDENCE in allowed_templates
+    ):
         for act in activities:
             for act2 in activities:
                 if act2 != act:
-                    table[__rule_non_chain_succession(act, act2)] = -1 * table[
-                        __rule_chain_succession(act, act2)]
+                    table[__rule_non_chain_succession(act, act2)] = (
+                        -1 * table[__rule_chain_succession(act, act2)]
+                    )
     return table
 
 
-def form_rules_table(log: Union[EventLog, pd.DataFrame],
-                         parameters: Optional[Dict[Any, Any]] = None) -> pd.DataFrame:
+def form_rules_table(
+    log: Union[EventLog, pd.DataFrame],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> pd.DataFrame:
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
 
-    allowed_templates = exec_utils.get_param_value(Parameters.ALLOWED_TEMPLATES, parameters, None)
+    allowed_templates = exec_utils.get_param_value(
+        Parameters.ALLOWED_TEMPLATES, parameters, None
+    )
 
     if allowed_templates is None:
-        allowed_templates = {EXISTENCE, EXACTLY_ONE, INIT, RESPONDED_EXISTENCE, RESPONSE, PRECEDENCE, SUCCESSION,
-                             ALTRESPONSE, ALTPRECEDENCE, ALTSUCCESSION, CHAINRESPONSE, CHAINPRECEDENCE, CHAINSUCCESSION,
-                             ABSENCE, COEXISTENCE}
+        allowed_templates = {
+            EXISTENCE,
+            EXACTLY_ONE,
+            INIT,
+            RESPONDED_EXISTENCE,
+            RESPONSE,
+            PRECEDENCE,
+            SUCCESSION,
+            ALTRESPONSE,
+            ALTPRECEDENCE,
+            ALTSUCCESSION,
+            CHAINRESPONSE,
+            CHAINPRECEDENCE,
+            CHAINSUCCESSION,
+            ABSENCE,
+            COEXISTENCE,
+        }
 
     import pm4py
 
-    projected_log = pm4py.project_on_event_attribute(log, activity_key, case_id_key=case_id_key)
-    activities = exec_utils.get_param_value(Parameters.CONSIDERED_ACTIVITIES, parameters, None)
+    projected_log = pm4py.project_on_event_attribute(
+        log, activity_key, case_id_key=case_id_key
+    )
+    activities = exec_utils.get_param_value(
+        Parameters.CONSIDERED_ACTIVITIES, parameters, None
+    )
 
     if activities is None:
         activities = set(y for x in projected_log for y in x)
@@ -494,7 +727,9 @@ def form_rules_table(log: Union[EventLog, pd.DataFrame],
     allowed_templates = set(allowed_templates)
     activities = set(activities)
 
-    vars = Counter([tuple([y for y in x if y in activities]) for x in projected_log])
+    vars = Counter(
+        [tuple([y for y in x if y in activities]) for x in projected_log]
+    )
     table = []
 
     for trace, occs in vars.items():
@@ -506,16 +741,36 @@ def form_rules_table(log: Union[EventLog, pd.DataFrame],
 
         rules = {}
 
-        existence_template_step1(rules, trace, activities, act_counter, act_idxs, allowed_templates)
-        exactly_one_template_step1(rules, trace, activities, act_counter, act_idxs, allowed_templates)
-        init_template_step1(rules, trace, activities, act_counter, act_idxs, allowed_templates)
-        responded_existence_template_step1(rules, trace, activities, act_counter, act_idxs, allowed_templates)
-        response_template_step1(rules, trace, activities, act_counter, act_idxs, allowed_templates)
-        precedence_template_step1(rules, trace, activities, act_counter, act_idxs, allowed_templates)
-        altresponse_template_step1(rules, trace, activities, act_counter, act_idxs, allowed_templates)
-        chainresponse_template_step1(rules, trace, activities, act_counter, act_idxs, allowed_templates)
-        altprecedence_template_step1(rules, trace, activities, act_counter, act_idxs, allowed_templates)
-        chainprecedence_template_step1(rules, trace, activities, act_counter, act_idxs, allowed_templates)
+        existence_template_step1(
+            rules, trace, activities, act_counter, act_idxs, allowed_templates
+        )
+        exactly_one_template_step1(
+            rules, trace, activities, act_counter, act_idxs, allowed_templates
+        )
+        init_template_step1(
+            rules, trace, activities, act_counter, act_idxs, allowed_templates
+        )
+        responded_existence_template_step1(
+            rules, trace, activities, act_counter, act_idxs, allowed_templates
+        )
+        response_template_step1(
+            rules, trace, activities, act_counter, act_idxs, allowed_templates
+        )
+        precedence_template_step1(
+            rules, trace, activities, act_counter, act_idxs, allowed_templates
+        )
+        altresponse_template_step1(
+            rules, trace, activities, act_counter, act_idxs, allowed_templates
+        )
+        chainresponse_template_step1(
+            rules, trace, activities, act_counter, act_idxs, allowed_templates
+        )
+        altprecedence_template_step1(
+            rules, trace, activities, act_counter, act_idxs, allowed_templates
+        )
+        chainprecedence_template_step1(
+            rules, trace, activities, act_counter, act_idxs, allowed_templates
+        )
 
         for i in range(occs):
             table.append(rules)
@@ -534,39 +789,76 @@ def form_rules_table(log: Union[EventLog, pd.DataFrame],
         table2[c] = np.array(table2[c])
 
     table2 = absence_template(table2, columns, activities, allowed_templates)
-    table2 = exactly_one_template_step2(table2, columns, activities, allowed_templates)
-    table2 = responded_existence_template_step2(table2, columns, activities, allowed_templates)
-    table2 = response_template_step2(table2, columns, activities, allowed_templates)
-    table2 = precedence_template_step2(table2, columns, activities, allowed_templates)
-    table2 = altresponse_template_step2(table2, columns, activities, allowed_templates)
-    table2 = chainresponse_template_step2(table2, columns, activities, allowed_templates)
-    table2 = altprecedence_template_step2(table2, columns, activities, allowed_templates)
-    table2 = chainprecedence_template_step2(table2, columns, activities, allowed_templates)
+    table2 = exactly_one_template_step2(
+        table2, columns, activities, allowed_templates
+    )
+    table2 = responded_existence_template_step2(
+        table2, columns, activities, allowed_templates
+    )
+    table2 = response_template_step2(
+        table2, columns, activities, allowed_templates
+    )
+    table2 = precedence_template_step2(
+        table2, columns, activities, allowed_templates
+    )
+    table2 = altresponse_template_step2(
+        table2, columns, activities, allowed_templates
+    )
+    table2 = chainresponse_template_step2(
+        table2, columns, activities, allowed_templates
+    )
+    table2 = altprecedence_template_step2(
+        table2, columns, activities, allowed_templates
+    )
+    table2 = chainprecedence_template_step2(
+        table2, columns, activities, allowed_templates
+    )
 
-    table2 = succession_template(table2, columns, activities, allowed_templates)
-    table2 = altsuccession_template(table2, columns, activities, allowed_templates)
-    table2 = chainsuccession_template(table2, columns, activities, allowed_templates)
-    table2 = coexistence_template(table2, columns, activities, allowed_templates)
-    table2 = noncoexistence_template(table2, columns, activities, allowed_templates)
-    table2 = nonsuccession_template(table2, columns, activities, allowed_templates)
-    table2 = nonchainsuccession_template(table2, columns, activities, allowed_templates)
+    table2 = succession_template(
+        table2, columns, activities, allowed_templates
+    )
+    table2 = altsuccession_template(
+        table2, columns, activities, allowed_templates
+    )
+    table2 = chainsuccession_template(
+        table2, columns, activities, allowed_templates
+    )
+    table2 = coexistence_template(
+        table2, columns, activities, allowed_templates
+    )
+    table2 = noncoexistence_template(
+        table2, columns, activities, allowed_templates
+    )
+    table2 = nonsuccession_template(
+        table2, columns, activities, allowed_templates
+    )
+    table2 = nonchainsuccession_template(
+        table2, columns, activities, allowed_templates
+    )
 
     return pandas_utils.instantiate_dataframe(table2)
 
 
-
-def get_rules_from_rules_df(rules_df, parameters: Optional[Dict[Any, Any]] = None) -> Dict[
-    str, Dict[Any, Dict[str, int]]]:
+def get_rules_from_rules_df(
+    rules_df, parameters: Optional[Dict[Any, Any]] = None
+) -> Dict[str, Dict[Any, Dict[str, int]]]:
     if parameters is None:
         parameters = {}
 
-    min_support_ratio = exec_utils.get_param_value(Parameters.MIN_SUPPORT_RATIO, parameters, None)
-    min_confidence_ratio = exec_utils.get_param_value(Parameters.MIN_CONFIDENCE_RATIO, parameters, None)
+    min_support_ratio = exec_utils.get_param_value(
+        Parameters.MIN_SUPPORT_RATIO, parameters, None
+    )
+    min_confidence_ratio = exec_utils.get_param_value(
+        Parameters.MIN_CONFIDENCE_RATIO, parameters, None
+    )
     rules = {}
 
     if min_support_ratio is None and min_confidence_ratio is None:
-        # auto determine the minimum support and confidence ratio by identifying the values for the best feature
-        auto_selection_multiplier = exec_utils.get_param_value(Parameters.AUTO_SELECTION_MULTIPLIER, parameters, 0.8)
+        # auto determine the minimum support and confidence ratio by
+        # identifying the values for the best feature
+        auto_selection_multiplier = exec_utils.get_param_value(
+            Parameters.AUTO_SELECTION_MULTIPLIER, parameters, 0.8
+        )
         cols_prod = []
         for col_name in rules_df:
             col = rules_df[col_name]
@@ -579,18 +871,22 @@ def get_rules_from_rules_df(rules_df, parameters: Optional[Dict[Any, Any]] = Non
         cols_prod = sorted(cols_prod, key=lambda x: (x[1], x[0]), reverse=True)
         col = rules_df[cols_prod[0][0]]
         supp = len(col[col != 0])
-        min_support_ratio = float(supp) / float(len(rules_df)) * auto_selection_multiplier
-        min_confidence_ratio = float(len(col[col == 1])) / float(supp) * auto_selection_multiplier
+        min_support_ratio = (
+            float(supp) / float(len(rules_df)) * auto_selection_multiplier
+        )
+        min_confidence_ratio = (
+            float(len(col[col == 1])) / float(supp) * auto_selection_multiplier
+        )
 
     if rules_df is not None and len(rules_df) > 0:
         for col_name in rules_df:
             col = rules_df[col_name]
             supp = len(col[col != 0])
 
-            if supp > len(rules_df) * min_support_ratio:
+            if supp >= len(rules_df) * min_support_ratio:
                 conf = len(col[col == 1])
 
-                if conf > supp * min_confidence_ratio:
+                if conf >= supp * min_confidence_ratio:
                     rule, key = __col_to_dict_rule(col_name)
                     if rule not in rules:
                         rules[rule] = {}
@@ -600,8 +896,10 @@ def get_rules_from_rules_df(rules_df, parameters: Optional[Dict[Any, Any]] = Non
     return rules
 
 
-def apply(log: Union[EventLog, pd.DataFrame], parameters: Optional[Dict[Any, Any]] = None) -> Dict[
-    str, Dict[Any, Dict[str, int]]]:
+def apply(
+    log: Union[EventLog, pd.DataFrame],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Dict[str, Dict[Any, Dict[str, int]]]:
     """
     Discovers a DECLARE model from the provided event log
 
