@@ -38,6 +38,8 @@ class Parameters(Enum):
     ANNOTATION = "annotation"
     ACT_METRIC = "act_metric"
     EDGE_METRIC = "edge_metric"
+    ACT_THRESHOLD = "act_threshold"
+    EDGE_THRESHOLD = "edge_threshold"
 
 
 def wrap_text(text: str, max_length: int = 15) -> str:
@@ -135,6 +137,12 @@ def apply(
     annotation = exec_utils.get_param_value(
         Parameters.ANNOTATION, parameters, "frequency"
     )
+    act_threshold = exec_utils.get_param_value(
+        Parameters.ACT_THRESHOLD, parameters, 0
+    )
+    edge_threshold = exec_utils.get_param_value(
+        Parameters.EDGE_THRESHOLD, parameters, 0
+    )
 
     pref_act = (
         " E="
@@ -148,11 +156,14 @@ def apply(
     )
 
     data = {"objectTypes": [], "overallActivityStats": {}}
+    added_activities = set()
 
     for act, ent in ocdfg["activities_indep"][act_key].items():
-        data["overallActivityStats"][wrap_text(act)] = {
-            "totalFrequency": pref_act + str(len(ent))
-        }
+        if len(ent) >= act_threshold:
+            data["overallActivityStats"][wrap_text(act)] = {
+                "totalFrequency": pref_act + str(len(ent))
+            }
+            added_activities.add(act)
 
     counter = 0
 
@@ -163,9 +174,10 @@ def apply(
         list_item["headerLabel"] = wrap_text(ot)
         list_item["activities"] = []
         for act, ent in content.items():
-            list_item["activities"].append(
-                {"name": wrap_text(act), "frequency": pref_act + str(len(ent))}
-            )
+            if act in added_activities:
+                list_item["activities"].append(
+                    {"name": wrap_text(act), "frequency": pref_act + str(len(ent))}
+                )
 
         content2 = ocdfg["edges"][edge_key][ot]
         content3 = ocdfg["edges_performance"][edge_key][ot]
@@ -185,34 +197,41 @@ def apply(
                 perf = sum(perf)
             else:
                 perf = mean(perf)
-            list_edges.append(
-                {
-                    "source": wrap_text(tup[0]),
-                    "target": wrap_text(tup[1]),
-                    "frequency": pref_edge + str(len(ent)),
-                    "performance": vis_utils.human_readable_stat(perf),
-                }
-            )
+
+            if tup[0] in added_activities and tup[1] in added_activities:
+                if len(ent) >= edge_threshold:
+                    list_edges.append(
+                        {
+                            "source": wrap_text(tup[0]),
+                            "target": wrap_text(tup[1]),
+                            "frequency": pref_edge + str(len(ent)),
+                            "performance": vis_utils.human_readable_stat(perf),
+                        }
+                    )
 
         for act, ent in content4.items():
-            list_edges.append(
-                {
-                    "source": "Start",
-                    "target": wrap_text(act),
-                    "frequency": pref_edge + str(len(ent)),
-                    "performance": vis_utils.human_readable_stat(0.0),
-                }
-            )
+            if act in added_activities:
+                if len(ent) >= edge_threshold:
+                    list_edges.append(
+                        {
+                            "source": "Start",
+                            "target": wrap_text(act),
+                            "frequency": pref_edge + str(len(ent)),
+                            "performance": vis_utils.human_readable_stat(0.0),
+                        }
+                    )
 
         for act, ent in content5.items():
-            list_edges.append(
-                {
-                    "source": wrap_text(act),
-                    "target": "End",
-                    "frequency": pref_edge + str(len(ent)),
-                    "performance": vis_utils.human_readable_stat(0.0),
-                }
-            )
+            if act in added_activities:
+                if len(ent) >= edge_threshold:
+                    list_edges.append(
+                        {
+                            "source": wrap_text(act),
+                            "target": "End",
+                            "frequency": pref_edge + str(len(ent)),
+                            "performance": vis_utils.human_readable_stat(0.0),
+                        }
+                    )
 
         list_item["edges"] = list_edges
 
