@@ -39,7 +39,11 @@ SEQUENCE_SYMBOL = "&#62;"
 PARALLEL_SYMBOL = "||"
 
 
-def apply(fp1: Dict[str, Any], fp2: Dict[str, Any], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Source:
+def apply(
+    fp1: Dict[str, Any],
+    fp2: Dict[str, Any],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Source:
     """
     Visualize a comparison between two footprint tables
 
@@ -62,40 +66,68 @@ def apply(fp1: Dict[str, Any], fp2: Dict[str, Any], parameters: Optional[Dict[Un
         parameters = {}
 
     if type(fp1) is list or type(fp2) is list:
-        raise Exception("footprints visualizer does not work on list of footprints!")
+        raise Exception(
+            "footprints visualizer does not work on list of footprints!"
+        )
 
-    activities1 = sorted(list(set(x[0] for x in fp1["sequence"]).union(set(x[1] for x in fp1["sequence"])).union(
-        set(x[0] for x in fp1["parallel"])).union(set(x[1] for x in fp1["parallel"]))))
-    activities2 = sorted(list(set(x[0] for x in fp2["sequence"]).union(set(x[1] for x in fp2["sequence"])).union(
-        set(x[0] for x in fp2["parallel"])).union(set(x[1] for x in fp2["parallel"]))))
+    activities1 = sorted(
+        list(
+            set(x[0] for x in fp1["sequence"])
+            .union(set(x[1] for x in fp1["sequence"]))
+            .union(set(x[0] for x in fp1["parallel"]))
+            .union(set(x[1] for x in fp1["parallel"]))
+        )
+    )
+    activities2 = sorted(
+        list(
+            set(x[0] for x in fp2["sequence"])
+            .union(set(x[1] for x in fp2["sequence"]))
+            .union(set(x[0] for x in fp2["parallel"]))
+            .union(set(x[1] for x in fp2["parallel"]))
+        )
+    )
     activities = sorted(list(set(activities1).union(set(activities2))))
     fp_table = {}
 
-    image_format = exec_utils.get_param_value(Parameters.FORMAT, parameters, "png")
-    enable_graph_title = exec_utils.get_param_value(Parameters.ENABLE_GRAPH_TITLE, parameters, constants.DEFAULT_ENABLE_GRAPH_TITLES)
-    graph_title = exec_utils.get_param_value(Parameters.GRAPH_TITLE, parameters, "Footprints")
+    image_format = exec_utils.get_param_value(
+        Parameters.FORMAT, parameters, "png"
+    )
+    enable_graph_title = exec_utils.get_param_value(
+        Parameters.ENABLE_GRAPH_TITLE,
+        parameters,
+        constants.DEFAULT_ENABLE_GRAPH_TITLES,
+    )
+    graph_title = exec_utils.get_param_value(
+        Parameters.GRAPH_TITLE, parameters, "Footprints"
+    )
 
-    filename = tempfile.NamedTemporaryFile(suffix='.gv')
+    filename = tempfile.NamedTemporaryFile(suffix=".gv")
     filename.close()
 
     footprints_table = ["digraph {\n"]
 
     if enable_graph_title:
-        footprints_table.append('label=<<FONT POINT-SIZE="20">'+graph_title+'</FONT>>;\nlabelloc="top";\n')
+        footprints_table.append(
+            'label=<<FONT POINT-SIZE="20">'
+            + graph_title
+            + '</FONT>>;\nlabelloc="top";\n'
+        )
 
     footprints_table.append("tbl [\n")
     footprints_table.append("shape=plaintext\n")
     footprints_table.append("label=<\n")
 
-    footprints_table.append("<table border='0' cellborder='1' color='blue' cellspacing='0'>\n")
+    footprints_table.append(
+        "<table border='0' cellborder='1' color='blue' cellspacing='0'>\n"
+    )
 
     footprints_table.append("<tr><td></td>")
     for act in activities:
-        footprints_table.append("<td><b>"+act+"</b></td>")
+        footprints_table.append("<td><b>" + act + "</b></td>")
     footprints_table.append("</tr>\n")
 
     for a1 in activities:
-        footprints_table.append("<tr><td><b>"+a1+"</b></td>")
+        footprints_table.append("<tr><td><b>" + a1 + "</b></td>")
         for a2 in activities:
             symb_1 = "?"
             symb_2 = "?"
@@ -119,9 +151,17 @@ def apply(fp1: Dict[str, Any], fp2: Dict[str, Any], parameters: Optional[Dict[Un
                     symb_2 = PREV_SYMBOL
 
             if symb_1 == symb_2:
-                footprints_table.append("<td><font color=\"black\">"+symb_1+"</font></td>")
+                footprints_table.append(
+                    '<td><font color="black">' + symb_1 + "</font></td>"
+                )
             else:
-                footprints_table.append("<td><font color=\"red\">"+symb_1+"&nbsp;&nbsp;"+symb_2+"</font></td>")
+                footprints_table.append(
+                    '<td><font color="red">'
+                    + symb_1
+                    + "&nbsp;&nbsp;"
+                    + symb_2
+                    + "</font></td>"
+                )
         footprints_table.append("</tr>\n")
 
     footprints_table.append("</table>\n")

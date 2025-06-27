@@ -23,7 +23,9 @@ import sys
 
 import numpy as np
 
-from pm4py.objects.random_variables.basic_structure import BasicStructureRandomVariable
+from pm4py.objects.random_variables.basic_structure import (
+    BasicStructureRandomVariable,
+)
 
 
 class Exponential(BasicStructureRandomVariable):

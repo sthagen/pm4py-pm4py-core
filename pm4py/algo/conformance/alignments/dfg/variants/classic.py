@@ -65,7 +65,13 @@ POSITION_IS_MM = 8
 POSITION_PREV = 9
 
 
-def apply(obj: Union[EventLog, Trace], dfg: Dict[Tuple[str, str], int], sa: Dict[str, int], ea: Dict[str, int], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Union[typing.AlignmentResult, typing.ListAlignments]:
+def apply(
+    obj: Union[EventLog, Trace],
+    dfg: Dict[Tuple[str, str], int],
+    sa: Dict[str, int],
+    ea: Dict[str, int],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Union[typing.AlignmentResult, typing.ListAlignments]:
     """
     Applies the alignment algorithm provided a log/trace object, and a *connected* DFG
 
@@ -136,29 +142,51 @@ def apply_log(log, dfg, sa, ea, parameters=None):
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
     aligned_traces = []
     align_dict = {}
 
-    al_empty_cost = __apply_list_activities([], dfg, sa, ea, parameters=parameters)["cost"]
+    al_empty_cost = __apply_list_activities(
+        [], dfg, sa, ea, parameters=parameters
+    )["cost"]
 
     if pandas_utils.check_is_pandas_dataframe(log):
-        case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-        traces = [tuple(x) for x in log.groupby(case_id_key)[activity_key].agg(list).to_dict().values()]
+        case_id_key = exec_utils.get_param_value(
+            Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+        )
+        traces = [
+            tuple(x)
+            for x in log.groupby(case_id_key)[activity_key]
+            .agg(list)
+            .to_dict()
+            .values()
+        ]
     else:
-        log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+        log = log_converter.apply(
+            log,
+            variant=log_converter.Variants.TO_EVENT_LOG,
+            parameters=parameters,
+        )
         traces = [tuple(x[activity_key] for x in trace) for trace in log]
 
     for trace_act in traces:
         if trace_act in align_dict:
             aligned_traces.append(align_dict[trace_act])
         else:
-            log_move_cost_function = exec_utils.get_param_value(Parameters.LOG_MOVE_COST_FUNCTION, parameters,
-                                                                {x: align_utils.STD_MODEL_LOG_MOVE_COST for x in
-                                                                 trace_act})
+            log_move_cost_function = exec_utils.get_param_value(
+                Parameters.LOG_MOVE_COST_FUNCTION,
+                parameters,
+                {x: align_utils.STD_MODEL_LOG_MOVE_COST for x in trace_act},
+            )
             trace_bwc_cost = sum(log_move_cost_function[x] for x in trace_act)
-            al_tr = __apply_list_activities(trace_act, dfg, sa, ea, parameters=parameters)
-            al_tr["fitness"] = 1.0 - al_tr["cost"] / (al_empty_cost + trace_bwc_cost)
+            al_tr = __apply_list_activities(
+                trace_act, dfg, sa, ea, parameters=parameters
+            )
+            al_tr["fitness"] = 1.0 - al_tr["cost"] / (
+                al_empty_cost + trace_bwc_cost
+            )
             al_tr["bwc"] = al_empty_cost + trace_bwc_cost
             align_dict[trace_act] = al_tr
             aligned_traces.append(align_dict[trace_act])
@@ -200,20 +228,31 @@ def apply_trace(trace, dfg, sa, ea, parameters=None):
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
     trace_act = tuple(x[activity_key] for x in trace)
 
-    return __apply_list_activities(trace_act, dfg, sa, ea, parameters=parameters)
+    return __apply_list_activities(
+        trace_act, dfg, sa, ea, parameters=parameters
+    )
 
 
-def apply_from_variants_list_dfg_string(var_list, dfg_serialization, parameters=None):
+def apply_from_variants_list_dfg_string(
+    var_list, dfg_serialization, parameters=None
+):
     if parameters is None:
         parameters = {}
 
     from pm4py.objects.dfg.importer import importer as dfg_importer
-    dfg, sa, ea = dfg_importer.deserialize(dfg_serialization, parameters=parameters)
 
-    return apply_from_variants_list(var_list, dfg, sa, ea, parameters=parameters)
+    dfg, sa, ea = dfg_importer.deserialize(
+        dfg_serialization, parameters=parameters
+    )
+
+    return apply_from_variants_list(
+        var_list, dfg, sa, ea, parameters=parameters
+    )
 
 
 def apply_from_variants_list(var_list, dfg, sa, ea, parameters=None):
@@ -223,7 +262,9 @@ def apply_from_variants_list(var_list, dfg, sa, ea, parameters=None):
     dictio_alignments = {}
     for varitem in var_list:
         variant = varitem[0]
-        dictio_alignments[variant] = apply_from_variant(variant, dfg, sa, ea, parameters=parameters)
+        dictio_alignments[variant] = apply_from_variant(
+            variant, dfg, sa, ea, parameters=parameters
+        )
     return dictio_alignments
 
 
@@ -235,8 +276,16 @@ def apply_from_variant(variant, dfg, sa, ea, parameters=None):
     return apply_trace(trace, dfg, sa, ea, parameters=parameters)
 
 
-def dijkstra_to_end_node(dfg, sa, ea, start_node, end_node, activities_model, sync_cost_function,
-                         model_move_cost_function):
+def dijkstra_to_end_node(
+    dfg,
+    sa,
+    ea,
+    start_node,
+    end_node,
+    activities_model,
+    sync_cost_function,
+    model_move_cost_function,
+):
     """
     Gets the cost of the minimum path from a node to the end node
 
@@ -283,7 +332,9 @@ def dijkstra_to_end_node(dfg, sa, ea, start_node, end_node, activities_model, sy
 
     for x in activities_model:
         if x in sync_cost_function:
-            nodes_cost[x] = min(sync_cost_function[x], model_move_cost_function[x])
+            nodes_cost[x] = min(
+                sync_cost_function[x], model_move_cost_function[x]
+            )
         else:
             nodes_cost[x] = model_move_cost_function[x]
 
@@ -338,24 +389,44 @@ def __apply_list_activities(trace, dfg, sa, ea, parameters=None):
         parameters = {}
 
     activities_trace = set(x for x in trace)
-    activities_model = set(x[0] for x in dfg).union(set(x[1] for x in dfg)).union(set(x for x in sa)).union(
-        set(x for x in ea))
+    activities_model = (
+        set(x[0] for x in dfg)
+        .union(set(x[1] for x in dfg))
+        .union(set(x for x in sa))
+        .union(set(x for x in ea))
+    )
     activities_one_instantiation = activities_trace.union(activities_model)
     activities_one_instantiation = {x: x for x in activities_one_instantiation}
-    activities_both_in_trace_and_model = activities_trace.intersection(activities_model)
+    activities_both_in_trace_and_model = activities_trace.intersection(
+        activities_model
+    )
 
-    sync_cost_function = exec_utils.get_param_value(Parameters.SYNC_COST_FUNCTION, parameters,
-                                                    {x: align_utils.STD_SYNC_COST for x in activities_both_in_trace_and_model})
-    model_move_cost_function = exec_utils.get_param_value(Parameters.MODEL_MOVE_COST_FUNCTION, parameters,
-                                                          {x: align_utils.STD_MODEL_LOG_MOVE_COST for x in activities_model})
+    sync_cost_function = exec_utils.get_param_value(
+        Parameters.SYNC_COST_FUNCTION,
+        parameters,
+        {
+            x: align_utils.STD_SYNC_COST
+            for x in activities_both_in_trace_and_model
+        },
+    )
+    model_move_cost_function = exec_utils.get_param_value(
+        Parameters.MODEL_MOVE_COST_FUNCTION,
+        parameters,
+        {x: align_utils.STD_MODEL_LOG_MOVE_COST for x in activities_model},
+    )
     # for each activity that is in the trace, provides the cost of a log move
-    # that is returned in the alignment to the user (but not used internally for ordering the states)
-    log_move_cost_function = exec_utils.get_param_value(Parameters.LOG_MOVE_COST_FUNCTION, parameters,
-                                                        {x: align_utils.STD_MODEL_LOG_MOVE_COST for x in activities_trace})
+    # that is returned in the alignment to the user (but not used internally
+    # for ordering the states)
+    log_move_cost_function = exec_utils.get_param_value(
+        Parameters.LOG_MOVE_COST_FUNCTION,
+        parameters,
+        {x: align_utils.STD_MODEL_LOG_MOVE_COST for x in activities_trace},
+    )
     # for each activity that is in the trace, provide the cost of a log move that is used internally for
     # ordering the states in the search algorithm.
-    internal_log_move_cost_function = exec_utils.get_param_value(Parameters.INTERNAL_LOG_MOVE_COST_FUNCTION, parameters,
-                                                                 None)
+    internal_log_move_cost_function = exec_utils.get_param_value(
+        Parameters.INTERNAL_LOG_MOVE_COST_FUNCTION, parameters, None
+    )
     if internal_log_move_cost_function is None:
         internal_log_move_cost_function = {}
         for x in activities_trace:
@@ -367,7 +438,9 @@ def __apply_list_activities(trace, dfg, sa, ea, parameters=None):
     start_node = str(uuid.uuid4())
     end_node = str(uuid.uuid4())
 
-    outgoing_nodes = {activities_one_instantiation[x]: set() for x in activities_model}
+    outgoing_nodes = {
+        activities_one_instantiation[x]: set() for x in activities_model
+    }
     outgoing_nodes[start_node] = set()
     for x in dfg:
         outgoing_nodes[x[0]].add(activities_one_instantiation[x[1]])
@@ -416,7 +489,9 @@ def __apply_list_activities(trace, dfg, sa, ea, parameters=None):
             # I can do some sync / move on model
             list_act = outgoing_nodes[curr[POSITION_MODEL]]
 
-            act_not_in_model = not_end_trace and trace_curr not in activities_model
+            act_not_in_model = (
+                not_end_trace and trace_curr not in activities_model
+            )
 
             # avoid scheduling model moves if the activity of the log is not in the model,
             # in that case schedule directly the model move
@@ -425,35 +500,76 @@ def __apply_list_activities(trace, dfg, sa, ea, parameters=None):
 
                 if can_sync:
                     f = curr[POSITION_F] + sync_cost_function[trace_curr]
-                    real_f = curr[POSITION_REAL_F] + sync_cost_function[trace_curr]
+                    real_f = (
+                        curr[POSITION_REAL_F] + sync_cost_function[trace_curr]
+                    )
                     h = 0
 
                     g = f + h
 
-                    new_state = (g, curr[POSITION_LOG] - 1, num_visited, -h, real_f, f, activities_one_instantiation[trace_curr],
-                                 False, False, curr)
-                    if -new_state[POSITION_LOG] > closed[new_state[POSITION_MODEL]]:
+                    new_state = (
+                        g,
+                        curr[POSITION_LOG] - 1,
+                        num_visited,
+                        -h,
+                        real_f,
+                        f,
+                        activities_one_instantiation[trace_curr],
+                        False,
+                        False,
+                        curr,
+                    )
+                    if (
+                        -new_state[POSITION_LOG]
+                        > closed[new_state[POSITION_MODEL]]
+                    ):
                         heapq.heappush(open_set, new_state)
 
                 for act in list_act:
                     if act == end_node:
                         new_state = (
-                            curr[POSITION_G], curr[POSITION_LOG], num_visited, curr[POSITION_H], curr[POSITION_REAL_F], curr[POSITION_F],
-                            end_node, False, False, curr)
-                        if -new_state[POSITION_LOG] > closed[new_state[POSITION_MODEL]]:
+                            curr[POSITION_G],
+                            curr[POSITION_LOG],
+                            num_visited,
+                            curr[POSITION_H],
+                            curr[POSITION_REAL_F],
+                            curr[POSITION_F],
+                            end_node,
+                            False,
+                            False,
+                            curr,
+                        )
+                        if (
+                            -new_state[POSITION_LOG]
+                            > closed[new_state[POSITION_MODEL]]
+                        ):
                             heapq.heappush(open_set, new_state)
-                    elif not not_end_trace or not trace_curr in list_act:
+                    elif not not_end_trace or trace_curr not in list_act:
                         f = curr[POSITION_F] + model_move_cost_function[act]
-                        real_f = curr[POSITION_REAL_F] + model_move_cost_function[act]
+                        real_f = (
+                            curr[POSITION_REAL_F]
+                            + model_move_cost_function[act]
+                        )
                         h = 0
 
                         g = f + h
 
                         new_state = (
-                            g, curr[POSITION_LOG], num_visited, -h, real_f, f, activities_one_instantiation[act], False,
+                            g,
+                            curr[POSITION_LOG],
+                            num_visited,
+                            -h,
+                            real_f,
+                            f,
+                            activities_one_instantiation[act],
+                            False,
                             True,
-                            curr)
-                        if -new_state[POSITION_LOG] > closed[new_state[POSITION_MODEL]]:
+                            curr,
+                        )
+                        if (
+                            -new_state[POSITION_LOG]
+                            > closed[new_state[POSITION_MODEL]]
+                        ):
                             heapq.heappush(open_set, new_state)
 
         if not_end_trace and not curr[POSITION_IS_MM]:
@@ -464,7 +580,18 @@ def __apply_list_activities(trace, dfg, sa, ea, parameters=None):
 
             g = f + h
 
-            new_state = (g, curr[POSITION_LOG] - 1, num_visited, -h, real_f, f, curr[POSITION_MODEL], True, False, curr)
+            new_state = (
+                g,
+                curr[POSITION_LOG] - 1,
+                num_visited,
+                -h,
+                real_f,
+                f,
+                curr[POSITION_MODEL],
+                True,
+                False,
+                curr,
+            )
             if -new_state[POSITION_LOG] > closed[new_state[POSITION_MODEL]]:
                 heapq.heappush(open_set, new_state)
 
@@ -506,11 +633,22 @@ def __return_alignment(state, trace, closed):
             moves.append((lm, mm))
     moves.reverse()
 
-    return {Outputs.ALIGNMENT.value: moves, Outputs.COST.value: cost, Outputs.VISITED.value: visited,
-            Outputs.CLOSED.value: closed, Outputs.INTERNAL_COST.value: internal_cost}
+    return {
+        Outputs.ALIGNMENT.value: moves,
+        Outputs.COST.value: cost,
+        Outputs.VISITED.value: visited,
+        Outputs.CLOSED.value: closed,
+        Outputs.INTERNAL_COST.value: internal_cost,
+    }
 
 
-def project_log_on_dfg(log: Union[EventLog, pd.DataFrame], dfg: Dict[Tuple[str, str], int], sa: Dict[str, int], ea: Dict[str, int], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> EventLog:
+def project_log_on_dfg(
+    log: Union[EventLog, pd.DataFrame],
+    dfg: Dict[Tuple[str, str], int],
+    sa: Dict[str, int],
+    ea: Dict[str, int],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> EventLog:
     """
     Projects the traces of an event log to the specified DFG, in order to assess the conformance of the different
     directly-follows relationships and their performance (as the timestamps are recorded).
@@ -556,8 +694,14 @@ def project_log_on_dfg(log: Union[EventLog, pd.DataFrame], dfg: Dict[Tuple[str, 
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
 
     log = log_converter.apply(log, parameters=parameters)
 
@@ -568,7 +712,9 @@ def project_log_on_dfg(log: Union[EventLog, pd.DataFrame], dfg: Dict[Tuple[str, 
 
     for i in range(len(log)):
         projected_trace = Trace()
-        projected_trace.attributes["@@original_trace"] = ",".join(x[activity_key] for x in log[i])
+        projected_trace.attributes["@@original_trace"] = ",".join(
+            x[activity_key] for x in log[i]
+        )
 
         if len(log[i]) > 0:
             trace = log[i]
@@ -580,15 +726,23 @@ def project_log_on_dfg(log: Union[EventLog, pd.DataFrame], dfg: Dict[Tuple[str, 
                 if alignment[j][1] == ">>":
                     # move on log
                     pass
-                elif alignment[j][0] == ">>" or alignment[j][0] == alignment[j][1]:
+                elif (
+                    alignment[j][0] == ">>"
+                    or alignment[j][0] == alignment[j][1]
+                ):
                     is_conforming = False
                     if alignment[j][0] != ">>":
                         # sync move
                         curr_timestamp = trace[z][timestamp_key]
                         is_conforming = True
                         z = z + 1
-                    event = Event({activity_key: alignment[j][1], timestamp_key: curr_timestamp,
-                                   "@@is_conforming": is_conforming})
+                    event = Event(
+                        {
+                            activity_key: alignment[j][1],
+                            timestamp_key: curr_timestamp,
+                            "@@is_conforming": is_conforming,
+                        }
+                    )
                     projected_trace.append(event)
 
         projected_log.append(projected_trace)

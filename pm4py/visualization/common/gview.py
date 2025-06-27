@@ -71,13 +71,13 @@ def matplotlib_view(gviz, parameters=None):
         import matplotlib.pyplot as plt
         import matplotlib.image as mpimg
 
-        file_name = tempfile.NamedTemporaryFile(suffix='.'+format)
+        file_name = tempfile.NamedTemporaryFile(suffix="." + format)
         file_name.close()
 
         save.save(gviz, file_name.name)
 
         img = mpimg.imread(file_name.name)
-        plt.axis('off')
+        plt.axis("off")
         plt.tight_layout(pad=0, w_pad=0, h_pad=0)
         plt.imshow(img)
         plt.show()

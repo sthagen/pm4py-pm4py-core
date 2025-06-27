@@ -31,7 +31,11 @@ class Variants(Enum):
     SKLEARN_PROFILES = sklearn_profiles
 
 
-def apply(log: Union[EventLog, EventStream, pd.DataFrame], variant=Variants.SKLEARN_PROFILES, parameters: Optional[Dict[Any, Any]] = None) -> Generator[EventLog, None, None]:
+def apply(
+    log: Union[EventLog, EventStream, pd.DataFrame],
+    variant=Variants.SKLEARN_PROFILES,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Generator[EventLog, None, None]:
     """
     Apply clustering to the provided event log
     (methods based on the extraction of profiles for the traces of the event log)

@@ -22,8 +22,14 @@ Contact: info@processintelligence.solutions
 from pm4py.objects.conversion.log import converter as log_conversion
 from pm4py.visualization.common import gview
 from pm4py.visualization.common import save as gsave
-from pm4py.visualization.petri_net.variants import wo_decoration, alignments, greedy_decoration_performance, \
-    greedy_decoration_frequency, token_decoration_performance, token_decoration_frequency
+from pm4py.visualization.petri_net.variants import (
+    wo_decoration,
+    alignments,
+    greedy_decoration_performance,
+    greedy_decoration_frequency,
+    token_decoration_performance,
+    token_decoration_frequency,
+)
 from pm4py.util import exec_utils, pandas_utils
 from enum import Enum
 from pm4py.objects.petri_net.obj import PetriNet, Marking
@@ -51,18 +57,32 @@ PERFORMANCE_GREEDY = Variants.PERFORMANCE_GREEDY
 ALIGNMENTS = Variants.ALIGNMENTS
 
 
-def apply(net: PetriNet, initial_marking: Marking = None, final_marking: Marking = None, log: Union[EventLog, EventStream, pd.DataFrame] = None, aggregated_statistics=None, parameters: Optional[Dict[Any, Any]] = None,
-          variant=Variants.WO_DECORATION) -> graphviz.Digraph:
+def apply(
+    net: PetriNet,
+    initial_marking: Marking = None,
+    final_marking: Marking = None,
+    log: Union[EventLog, EventStream, pd.DataFrame] = None,
+    aggregated_statistics=None,
+    parameters: Optional[Dict[Any, Any]] = None,
+    variant=Variants.WO_DECORATION,
+) -> graphviz.Digraph:
     if parameters is None:
         parameters = {}
     if log is not None:
         if pandas_utils.check_is_pandas_dataframe(log):
             log = dataframe_utils.convert_timestamp_columns_in_df(log)
 
-        log = log_conversion.apply(log, parameters, log_conversion.TO_EVENT_LOG)
-    return exec_utils.get_variant(variant).apply(net, initial_marking, final_marking, log=log,
-                                                 aggregated_statistics=aggregated_statistics,
-                                                 parameters=parameters)
+        log = log_conversion.apply(
+            log, parameters, log_conversion.TO_EVENT_LOG
+        )
+    return exec_utils.get_variant(variant).apply(
+        net,
+        initial_marking,
+        final_marking,
+        log=log,
+        aggregated_statistics=aggregated_statistics,
+        parameters=parameters,
+    )
 
 
 def save(gviz: graphviz.Digraph, output_file_path: str, parameters=None):

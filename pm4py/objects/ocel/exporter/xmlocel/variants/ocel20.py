@@ -47,29 +47,58 @@ class Parameters(Enum):
 RELOBJ_TAG = "relationship"
 
 
-def apply(ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = None):
+def apply(
+    ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = None
+):
     if parameters is None:
         parameters = {}
 
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, pm4_constants.DEFAULT_ENCODING)
-    event_id_column = exec_utils.get_param_value(Parameters.EVENT_ID, parameters, ocel.event_id_column)
-    event_activity_column = exec_utils.get_param_value(Parameters.EVENT_ACTIVITY, parameters, ocel.event_activity)
-    event_timestamp_column = exec_utils.get_param_value(Parameters.EVENT_TIMESTAMP, parameters, ocel.event_timestamp)
-    object_id_column = exec_utils.get_param_value(Parameters.OBJECT_ID, parameters, ocel.object_id_column)
-    object_type_column = exec_utils.get_param_value(Parameters.OBJECT_TYPE, parameters, ocel.object_type_column)
-    qualifier_column = exec_utils.get_param_value(Parameters.QUALIFIER, parameters, ocel.qualifier)
-    changed_field_column = exec_utils.get_param_value(Parameters.CHANGED_FIELD, parameters, ocel.changed_field)
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, pm4_constants.DEFAULT_ENCODING
+    )
+    event_id_column = exec_utils.get_param_value(
+        Parameters.EVENT_ID, parameters, ocel.event_id_column
+    )
+    event_activity_column = exec_utils.get_param_value(
+        Parameters.EVENT_ACTIVITY, parameters, ocel.event_activity
+    )
+    event_timestamp_column = exec_utils.get_param_value(
+        Parameters.EVENT_TIMESTAMP, parameters, ocel.event_timestamp
+    )
+    object_id_column = exec_utils.get_param_value(
+        Parameters.OBJECT_ID, parameters, ocel.object_id_column
+    )
+    object_type_column = exec_utils.get_param_value(
+        Parameters.OBJECT_TYPE, parameters, ocel.object_type_column
+    )
+    qualifier_column = exec_utils.get_param_value(
+        Parameters.QUALIFIER, parameters, ocel.qualifier
+    )
+    changed_field_column = exec_utils.get_param_value(
+        Parameters.CHANGED_FIELD, parameters, ocel.changed_field
+    )
 
     ocel = ocel_consistency.apply(ocel, parameters=parameters)
-    ocel = filtering_utils.propagate_relations_filtering(ocel, parameters=parameters)
+    ocel = filtering_utils.propagate_relations_filtering(
+        ocel, parameters=parameters
+    )
 
     objects0 = ocel.objects.to_dict("records")
     events0 = ocel.events.to_dict("records")
     object_changes0 = ocel.object_changes.to_dict("records")
     o2o_dict = ocel.o2o.groupby(object_id_column).agg(list).to_dict("tight")
-    o2o_dict = {o2o_dict["index"][i]: o2o_dict["data"][i] for i in range(len(o2o_dict["index"]))}
+    o2o_dict = {
+        o2o_dict["index"][i]: o2o_dict["data"][i]
+        for i in range(len(o2o_dict["index"]))
+    }
 
-    relations0 = ocel.relations.groupby(event_id_column)[[object_id_column, qualifier_column]].agg(list).to_dict()
+    relations0 = (
+        ocel.relations.groupby(event_id_column)[
+            [object_id_column, qualifier_column]
+        ]
+        .agg(list)
+        .to_dict()
+    )
     relations0_obj_ids = relations0[object_id_column]
     relations0_qualifiers = relations0[qualifier_column]
 
@@ -80,7 +109,11 @@ def apply(ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = N
     object_changes3 = {}
 
     for objid, obj in objects0.items():
-        obj = {x: y for x, y in obj.items() if not x.startswith("ocel:") and y is not None and not pd.isna(y)}
+        obj = {
+            x: y
+            for x, y in obj.items()
+            if not x.startswith("ocel:") and y is not None and not pd.isna(y)
+        }
         if len(obj) > 0:
             object_changes2[objid] = {}
             object_changes3[objid] = []
@@ -105,8 +138,12 @@ def apply(ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = N
 
         chng_value = chng[chng_field]
         object_changes1[oid][chng_time].append((chng_field, chng_value))
-        object_changes2[oid][chng_field].append((chng_value, chng_time.isoformat()))
-        object_changes3[oid].append((chng_field, chng_value, chng_time.isoformat()))
+        object_changes2[oid][chng_field].append(
+            (chng_value, chng_time.isoformat())
+        )
+        object_changes3[oid].append(
+            (chng_field, chng_value, chng_time.isoformat())
+        )
 
     ets, ots = attributes_per_type.get(ocel, parameters=parameters)
 
@@ -123,7 +160,9 @@ def apply(ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = N
                     this_type = "date"
                 elif "float" in v or "double" in v:
                     this_type = "float"
-                object_type_attribute = etree.SubElement(object_type_attributes, "attribute")
+                object_type_attribute = etree.SubElement(
+                    object_type_attributes, "attribute"
+                )
                 object_type_attribute.set("name", k)
                 object_type_attribute.set("type", this_type)
 
@@ -139,7 +178,9 @@ def apply(ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = N
                     this_type = "date"
                 elif "float" in v or "double" in v:
                     this_type = "float"
-                event_type_attribute = etree.SubElement(event_type_attributes, "attribute")
+                event_type_attribute = etree.SubElement(
+                    event_type_attributes, "attribute"
+                )
                 event_type_attribute.set("name", k)
                 event_type_attribute.set("type", this_type)
 
@@ -152,7 +193,9 @@ def apply(ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = N
         object_attributes = etree.SubElement(object, "attributes")
         if objid in object_changes3:
             for val in object_changes3[objid]:
-                object_attribute = etree.SubElement(object_attributes, "attribute")
+                object_attribute = etree.SubElement(
+                    object_attributes, "attribute"
+                )
                 object_attribute.set("name", val[0])
                 object_attribute.set("time", val[2])
                 object_attribute.text = str(val[1])
@@ -179,10 +222,16 @@ def apply(ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = N
                 event_object = etree.SubElement(event_objects, RELOBJ_TAG)
                 event_object.set("object-id", str(this_ids[i]))
                 event_object.set("qualifier", str(this_qualifiers[i]))
-        eve = {x: y for x, y in eve.items() if not x.startswith("ocel:") and y is not None and not pd.isna(y)}
+        eve = {
+            x: y
+            for x, y in eve.items()
+            if not x.startswith("ocel:") and y is not None and not pd.isna(y)
+        }
         if len(eve) > 0:
             for k, v in eve.items():
-                event_attribute = etree.SubElement(event_attributes, "attribute")
+                event_attribute = etree.SubElement(
+                    event_attributes, "attribute"
+                )
                 event_attribute.set("name", k)
                 event_attribute.text = str(v)
 

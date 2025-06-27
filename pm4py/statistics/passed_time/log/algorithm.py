@@ -35,7 +35,12 @@ class Variants(Enum):
 VERSIONS = {Variants.PRE, Variants.POST, Variants.PREPOST}
 
 
-def apply(log: EventLog, activity: str, variant=Variants.PRE, parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, Any]:
+def apply(
+    log: EventLog,
+    activity: str,
+    variant=Variants.PRE,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Dict[str, Any]:
     """
     Gets statistics on execution times of the paths to/from the activity
 
@@ -58,4 +63,6 @@ def apply(log: EventLog, activity: str, variant=Variants.PRE, parameters: Option
     dictio
         Dictio containing the times from/to the activity
     """
-    return exec_utils.get_variant(variant).apply(log, activity, parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        log, activity, parameters=parameters
+    )

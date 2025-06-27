@@ -60,13 +60,27 @@ def apply(case: Trace, parameters: Optional[Dict[Any, Any]] = None) -> str:
     if parameters is None:
         parameters = {}
 
-    include_case_attributes = exec_utils.get_param_value(Parameters.INCLUDE_CASE_ATTRIBUTES, parameters, True)
-    include_event_attributes = exec_utils.get_param_value(Parameters.INCLUDE_EVENT_ATTRIBUTES, parameters, True)
-    include_timestamp = exec_utils.get_param_value(Parameters.INCLUDE_TIMESTAMP, parameters, True)
-    include_header = exec_utils.get_param_value(Parameters.INCLUDE_HEADER, parameters, True)
+    include_case_attributes = exec_utils.get_param_value(
+        Parameters.INCLUDE_CASE_ATTRIBUTES, parameters, True
+    )
+    include_event_attributes = exec_utils.get_param_value(
+        Parameters.INCLUDE_EVENT_ATTRIBUTES, parameters, True
+    )
+    include_timestamp = exec_utils.get_param_value(
+        Parameters.INCLUDE_TIMESTAMP, parameters, True
+    )
+    include_header = exec_utils.get_param_value(
+        Parameters.INCLUDE_HEADER, parameters, True
+    )
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
 
     ret = ["\n"]
 
@@ -85,11 +99,15 @@ def apply(case: Trace, parameters: Optional[Dict[Any, Any]] = None) -> str:
     ret.append("\n\n")
 
     if include_header:
-        ret.append("\nthe case contains the following events (the activity of the event is reported first):\n\n")
+        ret.append(
+            "\nthe case contains the following events (the activity of the event is reported first):\n\n"
+        )
 
     for ev in case:
         stru = "%s " % (ev[activity_key])
-        ev_attrs = sorted([str(x) for x in ev if x not in [activity_key, timestamp_key]])
+        ev_attrs = sorted(
+            [str(x) for x in ev if x not in [activity_key, timestamp_key]]
+        )
 
         if include_timestamp or (ev_attrs and include_event_attributes):
             stru += "("

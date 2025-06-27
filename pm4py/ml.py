@@ -30,18 +30,18 @@ from pm4py.objects.ocel.obj import OCEL
 from pm4py.objects.log.obj import EventLog
 from pm4py.utils import __event_log_deprecation_warning
 import random
-from pm4py.util.pandas_utils import check_is_pandas_dataframe, check_pandas_dataframe_columns
+from pm4py.util.pandas_utils import (
+    check_is_pandas_dataframe,
+    check_pandas_dataframe_columns,
+)
 from pm4py.utils import get_properties, constants, pandas_utils
 
 
 def split_train_test(
     log: Union[EventLog, pd.DataFrame],
     train_percentage: float = 0.8,
-    case_id_key: str = "case:concept:name"
-) -> Union[
-    Tuple[EventLog, EventLog],
-    Tuple[pd.DataFrame, pd.DataFrame]
-]:
+    case_id_key: str = "case:concept:name",
+) -> Union[Tuple[EventLog, EventLog], Tuple[pd.DataFrame, pd.DataFrame]]:
     """
     Splits an event log into a training log and a test log for machine learning purposes.
 
@@ -78,13 +78,14 @@ def split_train_test(
         return train_df, test_df
     else:
         from pm4py.objects.log.util import split_train_test
+
         return split_train_test.split(log, train_percentage=train_percentage)
 
 
 def get_prefixes_from_log(
     log: Union[EventLog, pd.DataFrame],
     length: int,
-    case_id_key: str = "case:concept:name"
+    case_id_key: str = "case:concept:name",
 ) -> Union[EventLog, pd.DataFrame]:
     """
     Retrieves prefixes of traces in a log up to a specified length.
@@ -110,10 +111,12 @@ def get_prefixes_from_log(
     if check_is_pandas_dataframe(log):
         check_pandas_dataframe_columns(log, case_id_key=case_id_key)
         from pm4py.util import pandas_utils
+
         log = pandas_utils.insert_ev_in_tr_index(log, case_id=case_id_key)
         return log[log[constants.DEFAULT_INDEX_IN_TRACE_KEY] <= (length - 1)]
     else:
         from pm4py.objects.log.util import get_prefixes
+
         return get_prefixes.get_prefixes_from_log(log, length)
 
 
@@ -122,7 +125,7 @@ def extract_outcome_enriched_dataframe(
     activity_key: str = "concept:name",
     timestamp_key: str = "time:timestamp",
     case_id_key: str = "case:concept:name",
-    start_timestamp_key: str = "time:timestamp"
+    start_timestamp_key: str = "time:timestamp",
 ) -> pd.DataFrame:
     """
     Enriches a dataframe with additional outcome-related columns computed from the entire case.
@@ -156,14 +159,15 @@ def extract_outcome_enriched_dataframe(
         log,
         activity_key=activity_key,
         case_id_key=case_id_key,
-        timestamp_key=timestamp_key
+        timestamp_key=timestamp_key,
     )
 
     from pm4py.objects.conversion.log import converter as log_converter
+
     log = log_converter.apply(
         log,
         variant=log_converter.Variants.TO_DATA_FRAME,
-        parameters=properties
+        parameters=properties,
     )
 
     from pm4py.util import pandas_utils
@@ -173,19 +177,19 @@ def extract_outcome_enriched_dataframe(
         activity_key=activity_key,
         timestamp_key=timestamp_key,
         case_id_key=case_id_key,
-        include_case_id=True
+        include_case_id=True,
     )
     log2 = pandas_utils.insert_case_arrival_finish_rate(
         log.copy(),
         timestamp_column=timestamp_key,
         case_id_column=case_id_key,
-        start_timestamp_column=start_timestamp_key
+        start_timestamp_column=start_timestamp_key,
     )
     log2 = pandas_utils.insert_case_service_waiting_time(
         log2.copy(),
         timestamp_column=timestamp_key,
         case_id_column=case_id_key,
-        start_timestamp_column=start_timestamp_key
+        start_timestamp_column=start_timestamp_key,
     )
 
     return log2.merge(fea_df, on=case_id_key)
@@ -246,7 +250,7 @@ def extract_features_dataframe(
         log,
         activity_key=activity_key,
         timestamp_key=timestamp_key,
-        case_id_key=case_id_key
+        case_id_key=case_id_key,
     )
     for prop in properties:
         parameters[prop] = properties[prop]
@@ -258,14 +262,16 @@ def extract_features_dataframe(
     parameters["str_evsucc_attr"] = str_evsucc_attr or []
     parameters["add_case_identifier_column"] = include_case_id
 
-    from pm4py.algo.transformation.log_to_features import algorithm as log_to_features
+    from pm4py.algo.transformation.log_to_features import (
+        algorithm as log_to_features,
+    )
 
     if check_is_pandas_dataframe(log):
         check_pandas_dataframe_columns(
             log,
             activity_key=activity_key,
             case_id_key=case_id_key,
-            timestamp_key=timestamp_key
+            timestamp_key=timestamp_key,
         )
 
     data, feature_names = log_to_features.apply(log, parameters=parameters)
@@ -281,7 +287,7 @@ def extract_ocel_features(
     object_str_attributes: Optional[Collection[str]] = None,
     object_num_attributes: Optional[Collection[str]] = None,
     include_obj_id: bool = False,
-    debug: bool = False
+    debug: bool = False,
 ) -> pd.DataFrame:
     """
     Extracts a set of features from an object-centric event log (OCEL) for objects of a specified type.
@@ -326,21 +332,28 @@ def extract_ocel_features(
         "enable_object_num_attributes": bool(object_num_attributes),
         "str_obj_attr": object_str_attributes,
         "num_obj_attr": object_num_attributes,
-        "debug": debug
+        "debug": debug,
     }
 
-    from pm4py.algo.transformation.ocel.features.objects import algorithm as ocel_feature_extraction
+    from pm4py.algo.transformation.ocel.features.objects import (
+        algorithm as ocel_feature_extraction,
+    )
 
-    data, feature_names = ocel_feature_extraction.apply(ocel, parameters=parameters)
+    data, feature_names = ocel_feature_extraction.apply(
+        ocel, parameters=parameters
+    )
 
     dataframe = pandas_utils.instantiate_dataframe(data, columns=feature_names)
     dataframe = dataframe.dropna(how="any", axis=1)
     dataframe = dataframe.select_dtypes(include=np.number)
 
     if include_obj_id:
-        objects_with_type = ocel.objects[[ocel.object_id_column, ocel.object_type_column]].to_dict("records")
+        objects_with_type = ocel.objects[
+            [ocel.object_id_column, ocel.object_type_column]
+        ].to_dict("records")
         objects_with_type = [
-            x[ocel.object_id_column] for x in objects_with_type
+            x[ocel.object_id_column]
+            for x in objects_with_type
             if x[ocel.object_type_column] == obj_type
         ]
         dataframe[ocel.object_id_column] = objects_with_type
@@ -355,7 +368,7 @@ def extract_temporal_features_dataframe(
     timestamp_key: str = "time:timestamp",
     case_id_key: Optional[str] = None,
     start_timestamp_key: str = "time:timestamp",
-    resource_key: str = "org:resource"
+    resource_key: str = "org:resource",
 ) -> pd.DataFrame:
     """
     Extracts temporal features from a log object and returns them as a dataframe.
@@ -397,7 +410,7 @@ def extract_temporal_features_dataframe(
         log,
         activity_key=activity_key,
         timestamp_key=timestamp_key,
-        case_id_key=case_id_key
+        case_id_key=case_id_key,
     )
 
     from pm4py.algo.transformation.log_to_features.variants import temporal
@@ -407,7 +420,9 @@ def extract_temporal_features_dataframe(
     parameters[temporal.Parameters.TIMESTAMP_COLUMN] = timestamp_key
     if case_id_key is not None:
         parameters[temporal.Parameters.CASE_ID_COLUMN] = case_id_key
-    parameters[temporal.Parameters.START_TIMESTAMP_COLUMN] = start_timestamp_key
+    parameters[temporal.Parameters.START_TIMESTAMP_COLUMN] = (
+        start_timestamp_key
+    )
     parameters[temporal.Parameters.RESOURCE_COLUMN] = resource_key
 
     return temporal.apply(log, parameters=parameters)
@@ -418,7 +433,7 @@ def extract_target_vector(
     variant: str,
     activity_key: str = "concept:name",
     timestamp_key: str = "time:timestamp",
-    case_id_key: str = "case:concept:name"
+    case_id_key: str = "case:concept:name",
 ) -> Tuple[Any, List[str]]:
     """
     Extracts the target vector from a log object for a specific machine learning use case.
@@ -471,15 +486,17 @@ def extract_target_vector(
         log,
         activity_key=activity_key,
         timestamp_key=timestamp_key,
-        case_id_key=case_id_key
+        case_id_key=case_id_key,
     )
 
-    from pm4py.algo.transformation.log_to_target import algorithm as log_to_target
+    from pm4py.algo.transformation.log_to_target import (
+        algorithm as log_to_target,
+    )
 
     var_map = {
         "next_activity": log_to_target.Variants.NEXT_ACTIVITY,
         "next_time": log_to_target.Variants.NEXT_TIME,
-        "remaining_time": log_to_target.Variants.REMAINING_TIME
+        "remaining_time": log_to_target.Variants.REMAINING_TIME,
     }
 
     if variant not in var_map:
@@ -487,5 +504,7 @@ def extract_target_vector(
             "Please provide the variant as one of the following: 'next_activity', 'next_time', 'remaining_time'."
         )
 
-    target, classes = log_to_target.apply(log, variant=var_map[variant], parameters=parameters)
+    target, classes = log_to_target.apply(
+        log, variant=var_map[variant], parameters=parameters
+    )
     return target, classes

@@ -55,12 +55,24 @@ def form_html(gviz, name=None):
         name = html_file.name
 
     F = open(name, "w")
-    F.write('<html><head>')
-    F.write('<script type="text/javascript" src="'+constants.JQUERY_LINK+'"></script>')
-    F.write('<script type="text/javascript" src="'+constants.GRAPHVIZJS_LINK+'"></script>')
-    F.write('</head><body><div id="container"></div><script type="text/javascript">let gv = `\n')
+    F.write("<html><head>")
+    F.write(
+        '<script type="text/javascript" src="'
+        + constants.JQUERY_LINK
+        + '"></script>'
+    )
+    F.write(
+        '<script type="text/javascript" src="'
+        + constants.GRAPHVIZJS_LINK
+        + '"></script>'
+    )
+    F.write(
+        '</head><body><div id="container"></div><script type="text/javascript">let gv = `\n'
+    )
     F.write(str(gviz))
-    F.write('`;let svgXml = Viz(gv, { format: "svg"});document.getElementById("container").innerHTML = svgXml;</script></body></html>')
+    F.write(
+        '`;let svgXml = Viz(gv, { format: "svg"});document.getElementById("container").innerHTML = svgXml;</script></body></html>'
+    )
     F.close()
 
     return name
@@ -95,17 +107,27 @@ def view(gviz, parameters=None):
     if parameters is None:
         parameters = {}
 
-    iframe_width = exec_utils.get_param_value(Parameters.IFRAME_WIDTH, parameters, 900)
-    iframe_height = exec_utils.get_param_value(Parameters.IFRAME_HEIGHT, parameters, 600)
-    local_jupyter_file_name = exec_utils.get_param_value(Parameters.LOCAL_JUPYTER_FILE_NAME, parameters, "jupyter_html_vis.html")
+    iframe_width = exec_utils.get_param_value(
+        Parameters.IFRAME_WIDTH, parameters, 900
+    )
+    iframe_height = exec_utils.get_param_value(
+        Parameters.IFRAME_HEIGHT, parameters, 600
+    )
+    local_jupyter_file_name = exec_utils.get_param_value(
+        Parameters.LOCAL_JUPYTER_FILE_NAME, parameters, "jupyter_html_vis.html"
+    )
 
     temp_file_name = form_html(gviz)
 
     if vis_utils.check_visualization_inside_jupyter():
         from IPython.display import IFrame
+
         shutil.copyfile(temp_file_name, local_jupyter_file_name)
-        iframe = IFrame(local_jupyter_file_name, width=iframe_width, height=iframe_height)
+        iframe = IFrame(
+            local_jupyter_file_name, width=iframe_width, height=iframe_height
+        )
         from IPython.display import display
+
         return display(iframe)
     else:
         vis_utils.open_opsystem_image_viewer(temp_file_name)

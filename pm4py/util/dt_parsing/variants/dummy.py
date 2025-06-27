@@ -39,8 +39,10 @@ def apply(dt):
     sms = hourpart[2].split(".")
     second = int(sms[0])
     if len(sms) > 1:
-        microseconds = int(sms[1])*1000
+        microseconds = int(sms[1]) * 1000
     else:
         microseconds = 0
 
-    return datetime.datetime(year, month, day, hour, minute, second, microseconds)
+    return datetime.datetime(
+        year, month, day, hour, minute, second, microseconds
+    )

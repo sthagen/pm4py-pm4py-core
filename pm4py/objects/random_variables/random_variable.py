@@ -22,8 +22,12 @@ Contact: info@processintelligence.solutions
 import numpy as np
 
 from pm4py.objects.random_variables.constant0.random_variable import Constant0
-from pm4py.objects.random_variables.deterministic.random_variable import Deterministic
-from pm4py.objects.random_variables.exponential.random_variable import Exponential
+from pm4py.objects.random_variables.deterministic.random_variable import (
+    Deterministic,
+)
+from pm4py.objects.random_variables.exponential.random_variable import (
+    Exponential,
+)
 from pm4py.objects.random_variables.normal.random_variable import Normal
 from pm4py.objects.random_variables.uniform.random_variable import Uniform
 from pm4py.objects.random_variables.lognormal.random_variable import LogNormal
@@ -119,7 +123,9 @@ class RandomVariable(object):
         if self.random_variable is not None:
             return self.random_variable.calculate_loglikelihood(values)
 
-    def calculate_parameters(self, values, parameters=None, force_distribution=None):
+    def calculate_parameters(
+        self, values, parameters=None, force_distribution=None
+    ):
         """
         Calculate parameters of the current distribution
 
@@ -149,20 +155,42 @@ class RandomVariable(object):
             lognormal = LogNormal()
             gamma = Gamma()
 
-            if not force_distribution or not force_distribution == "EXPONENTIAL":
+            if (
+                not force_distribution
+                or not force_distribution == "EXPONENTIAL"
+            ):
                 likelihoods = list()
-                likelihoods.append([constant, constant.calculate_loglikelihood(values)])
-                if force_distribution == "NORMAL" or force_distribution is None:
+                likelihoods.append(
+                    [constant, constant.calculate_loglikelihood(values)]
+                )
+                if (
+                    force_distribution == "NORMAL"
+                    or force_distribution is None
+                ):
                     norm.calculate_parameters(values)
-                    likelihoods.append([norm, norm.calculate_loglikelihood(values)])
-                if force_distribution == "UNIFORM" or force_distribution is None:
+                    likelihoods.append(
+                        [norm, norm.calculate_loglikelihood(values)]
+                    )
+                if (
+                    force_distribution == "UNIFORM"
+                    or force_distribution is None
+                ):
                     unif.calculate_parameters(values)
-                    likelihoods.append([unif, unif.calculate_loglikelihood(values)])
-                if force_distribution == "EXPONENTIAL" or force_distribution is None:
+                    likelihoods.append(
+                        [unif, unif.calculate_loglikelihood(values)]
+                    )
+                if (
+                    force_distribution == "EXPONENTIAL"
+                    or force_distribution is None
+                ):
                     expon.calculate_parameters(values)
-                    likelihoods.append([expon, expon.calculate_loglikelihood(values)])
-                likelihoods = [x for x in likelihoods if str(x[1]) != 'nan']
-                likelihoods = sorted(likelihoods, key=lambda x: x[1], reverse=True)
+                    likelihoods.append(
+                        [expon, expon.calculate_loglikelihood(values)]
+                    )
+                likelihoods = [x for x in likelihoods if str(x[1]) != "nan"]
+                likelihoods = sorted(
+                    likelihoods, key=lambda x: x[1], reverse=True
+                )
 
                 if debug_mode:
                     print("likelihoods = ", likelihoods)

@@ -37,7 +37,10 @@ class Parameters(Enum):
 
 def __transform_to_string(stru: str) -> str:
     if stru.startswith("@@ocel_lif_activity_"):
-        return "Number of occurrences of the activity "+stru.split("@@ocel_lif_activity_")[1]
+        return (
+            "Number of occurrences of the activity "
+            + stru.split("@@ocel_lif_activity_")[1]
+        )
     elif stru.startswith("@@object_lifecycle_unq_act"):
         return "Number of unique activities in the lifecycle of the object"
     elif stru.startswith("@@object_lifecycle_length"):
@@ -49,7 +52,9 @@ def __transform_to_string(stru: str) -> str:
     elif stru.startswith("@@object_lifecycle_end_timestamp"):
         return "Completion timestamp of the lifecycle of the object"
     elif stru.startswith("@@object_degree_centrality"):
-        return "Degree centrality of the object in the object interaction graph"
+        return (
+            "Degree centrality of the object in the object interaction graph"
+        )
     elif stru.startswith("@@object_general_interaction_graph"):
         return "Number of objects related in the object interaction graph"
     elif stru.startswith("@@object_general_descendants_graph_descendants"):
@@ -65,22 +70,38 @@ def __transform_to_string(stru: str) -> str:
     elif stru.startswith("@@object_codeath"):
         return "Number of objects ending their lifecycle together with the current object"
     elif stru.startswith("@@object_interaction_graph_"):
-        return "Number of object of type "+stru.split("@@object_interaction_graph_")[1]+" related to the current object in the object interaction graph"
+        return (
+            "Number of object of type "
+            + stru.split("@@object_interaction_graph_")[1]
+            + " related to the current object in the object interaction graph"
+        )
     elif stru.startswith("@@ocel_lif_path_"):
         path = stru.split("@@ocel_lif_path_")[1]
         act1 = path.split("##")[0]
         act2 = path.split("##")[1]
-        return "Frequency of the path \""+act1+"\" -> \""+act2+"\" in the lifecycle of the object"
+        return (
+            'Frequency of the path "'
+            + act1
+            + '" -> "'
+            + act2
+            + '" in the lifecycle of the object'
+        )
 
     return stru
 
 
-def textual_abstraction_from_fea_df(fea_df: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None) -> str:
+def textual_abstraction_from_fea_df(
+    fea_df: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None
+) -> str:
     if parameters is None:
         parameters = {}
 
-    include_header = exec_utils.get_param_value(Parameters.INCLUDE_HEADER, parameters, True)
-    max_len = exec_utils.get_param_value(Parameters.MAX_LEN, parameters, constants.OPENAI_MAX_LEN)
+    include_header = exec_utils.get_param_value(
+        Parameters.INCLUDE_HEADER, parameters, True
+    )
+    max_len = exec_utils.get_param_value(
+        Parameters.MAX_LEN, parameters, constants.OPENAI_MAX_LEN
+    )
 
     cols = []
 
@@ -90,7 +111,7 @@ def textual_abstraction_from_fea_df(fea_df: pd.DataFrame, parameters: Optional[D
         if len(ser1) > 0:
             desc = __transform_to_string(c)
             avg = np.average(ser1)
-            stdavg = 0 if avg == 0 or len(ser1) == 1 else np.std(ser1)/avg
+            stdavg = 0 if avg == 0 or len(ser1) == 1 else np.std(ser1) / avg
             cols.append([desc, len(ser1), stdavg, ser1])
 
     cols = sorted(cols, key=lambda x: (x[1], x[2], x[0]), reverse=True)
@@ -99,9 +120,15 @@ def textual_abstraction_from_fea_df(fea_df: pd.DataFrame, parameters: Optional[D
 
     if include_header:
         ret.append("Beforehand, a bit of notions.")
-        ret.append("Given an object-centric event log, the object interaction graph connects objects that are related in at least an event.")
-        ret.append("The object descendants graph connects objects related in at least an event, when the lifecycle of the second object starts after the lifecycle of the first.")
-        ret.append("The object inheritance graph connects objects when there an event that ends the lifecycle of the first object and starts the lifecycle of the second one.")
+        ret.append(
+            "Given an object-centric event log, the object interaction graph connects objects that are related in at least an event."
+        )
+        ret.append(
+            "The object descendants graph connects objects related in at least an event, when the lifecycle of the second object starts after the lifecycle of the first."
+        )
+        ret.append(
+            "The object inheritance graph connects objects when there an event that ends the lifecycle of the first object and starts the lifecycle of the second one."
+        )
         ret.append("\n\n")
         ret.append("Given the following features:\n\n")
 
@@ -112,7 +139,14 @@ def textual_abstraction_from_fea_df(fea_df: pd.DataFrame, parameters: Optional[D
         if len(ret) >= max_len:
             break
 
-        stru = cols[i][0]+":    number of non-zero values: "+str(cols[i][1])+" ; quantiles of the non-zero: "+str(cols[i][3].quantile([0.0, 0.25, 0.5, 0.75, 1.0]).to_dict())+"\n"
+        stru = (
+            cols[i][0]
+            + ":    number of non-zero values: "
+            + str(cols[i][1])
+            + " ; quantiles of the non-zero: "
+            + str(cols[i][3].quantile([0.0, 0.25, 0.5, 0.75, 1.0]).to_dict())
+            + "\n"
+        )
         ret = ret + stru
 
         i = i + 1
@@ -120,15 +154,25 @@ def textual_abstraction_from_fea_df(fea_df: pd.DataFrame, parameters: Optional[D
     return ret
 
 
-def apply(ocel: OCEL, obj_type: str, parameters: Optional[Dict[Any, Any]] = None) -> str:
+def apply(
+    ocel: OCEL, obj_type: str, parameters: Optional[Dict[Any, Any]] = None
+) -> str:
     if parameters is None:
         parameters = {}
 
     debug = exec_utils.get_param_value(Parameters.DEBUG, parameters, True)
-    enable_object_lifecycle_paths = exec_utils.get_param_value(Parameters.ENABLE_OBJECT_LIFECYCLE_PATHS, parameters, False)
+    enable_object_lifecycle_paths = exec_utils.get_param_value(
+        Parameters.ENABLE_OBJECT_LIFECYCLE_PATHS, parameters, False
+    )
 
     import pm4py
 
-    fea_df = pm4py.extract_ocel_features(ocel, obj_type, include_obj_id=False, debug=debug, enable_object_lifecycle_paths=enable_object_lifecycle_paths)
+    fea_df = pm4py.extract_ocel_features(
+        ocel,
+        obj_type,
+        include_obj_id=False,
+        debug=debug,
+        enable_object_lifecycle_paths=enable_object_lifecycle_paths,
+    )
 
     return textual_abstraction_from_fea_df(fea_df, parameters=parameters)

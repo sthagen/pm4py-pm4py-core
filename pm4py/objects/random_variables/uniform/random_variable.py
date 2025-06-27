@@ -23,7 +23,9 @@ import sys
 
 import numpy as np
 
-from pm4py.objects.random_variables.basic_structure import BasicStructureRandomVariable
+from pm4py.objects.random_variables.basic_structure import (
+    BasicStructureRandomVariable,
+)
 
 
 class Uniform(BasicStructureRandomVariable):
@@ -100,7 +102,9 @@ class Uniform(BasicStructureRandomVariable):
         if len(values) > 0:
             somma = 0
             for value in values:
-                somma = somma + np.log(uniform.pdf(value, self.loc, self.scale))
+                somma = somma + np.log(
+                    uniform.pdf(value, self.loc, self.scale)
+                )
             return somma
         return -sys.float_info.max
 

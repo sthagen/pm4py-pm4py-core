@@ -48,8 +48,14 @@ def generate_label_for_transition(t):
 
 def generate_new_binary_transition(t1, t2, operator, net):
     t = PetriNet.Transition(TRANSITION_PREFIX + str(datetime.datetime.now()))
-    t.label = str(operator) + '(' + generate_label_for_transition(
-        t1) + ', ' + generate_label_for_transition(t2) + ')'
+    t.label = (
+        str(operator)
+        + "("
+        + generate_label_for_transition(t1)
+        + ", "
+        + generate_label_for_transition(t2)
+        + ")"
+    )
     return t
 
 
@@ -57,9 +63,13 @@ def loop_requirement(t1, t2):
     if t1 == t2:
         return False
     for p in pn_util.pre_set(t2):
-        if len(pn_util.pre_set(p)) != 1:  # check that the preset of the t2 preset has one entry
+        if (
+            len(pn_util.pre_set(p)) != 1
+        ):  # check that the preset of the t2 preset has one entry
             return False
-        if t1 not in pn_util.pre_set(p):  # check that t1 is the unique way to mark the preset of t2
+        if t1 not in pn_util.pre_set(
+            p
+        ):  # check that t1 is the unique way to mark the preset of t2
             return False
     for p in pn_util.post_set(t2):
         if len(pn_util.post_set(p)) != 1:
@@ -74,9 +84,13 @@ def loop_requirement(t1, t2):
         if t2 not in pn_util.pre_set(p):  # t2 has to enable t1!
             return False
     for p in pn_util.post_set(t1):
-        if len(pn_util.pre_set(p)) != 1:  # check that the preset of the t2 preset has one entry
+        if (
+            len(pn_util.pre_set(p)) != 1
+        ):  # check that the preset of the t2 preset has one entry
             return False
-        if t1 not in pn_util.pre_set(p):  # check that t1 is the unique way to mark the preset of t2
+        if t1 not in pn_util.pre_set(
+            p
+        ):  # check that t1 is the unique way to mark the preset of t2
             return False
         if t2 not in pn_util.post_set(p):
             return False
@@ -92,7 +106,9 @@ def binary_loop_detection(net):
             c2 = t2
             break
     if c1 is not None and c2 is not None:
-        t = generate_new_binary_transition(c1, c2, pt_operator.Operator.LOOP, net)
+        t = generate_new_binary_transition(
+            c1, c2, pt_operator.Operator.LOOP, net
+        )
         net.transitions.add(t)
         # reduce
         for a in c1.in_arcs:
@@ -108,8 +124,12 @@ def binary_loop_detection(net):
 def concurrent_requirement(t1, t2):
     if t1 == t2:  # check if transitions different
         return False
-    if len(pn_util.pre_set(t1)) == 0 or len(pn_util.post_set(t1)) == 0 or len(pn_util.pre_set(t2)) == 0 or len(
-            pn_util.post_set(t2)) == 0:  # not possible in WF-net, just checking...
+    if (
+        len(pn_util.pre_set(t1)) == 0
+        or len(pn_util.post_set(t1)) == 0
+        or len(pn_util.pre_set(t2)) == 0
+        or len(pn_util.post_set(t2)) == 0
+    ):  # not possible in WF-net, just checking...
         return False
     pre_pre = set()
     post_post = set()
@@ -129,11 +149,15 @@ def concurrent_requirement(t1, t2):
         post_post = set.union(post_post, pn_util.post_set(p))
         if len(pn_util.pre_set(p)) > 1 or t2 not in pn_util.pre_set(p):
             return False
-    for p in set.union(pn_util.pre_set(t1), pn_util.pre_set(t2)):  # check if presets synchronize
+    for p in set.union(
+        pn_util.pre_set(t1), pn_util.pre_set(t2)
+    ):  # check if presets synchronize
         for t in pre_pre:
             if t not in pn_util.pre_set(p):
                 return False
-    for p in set.union(pn_util.post_set(t1), pn_util.post_set(t2)):  # check if postsets synchronize
+    for p in set.union(
+        pn_util.post_set(t1), pn_util.post_set(t2)
+    ):  # check if postsets synchronize
         for t in post_post:
             if t not in pn_util.post_set(p):
                 return False
@@ -149,7 +173,9 @@ def binary_concurrency_detection(net):
             c2 = t2
             break
     if c1 is not None and c2 is not None:
-        t = generate_new_binary_transition(c1, c2, pt_operator.Operator.PARALLEL, net)
+        t = generate_new_binary_transition(
+            c1, c2, pt_operator.Operator.PARALLEL, net
+        )
         net.transitions.add(t)
         # reduce
         for a in c1.in_arcs:
@@ -167,9 +193,13 @@ def binary_concurrency_detection(net):
 
 
 def choice_requirement(t1, t2):
-    return t1 != t2 and pn_util.pre_set(t1) == pn_util.pre_set(t2) and pn_util.post_set(t1) == pn_util.post_set(
-        t2) and len(pn_util.pre_set(t1)) > 0 and len(
-        pn_util.post_set(t1)) > 0
+    return (
+        t1 != t2
+        and pn_util.pre_set(t1) == pn_util.pre_set(t2)
+        and pn_util.post_set(t1) == pn_util.post_set(t2)
+        and len(pn_util.pre_set(t1)) > 0
+        and len(pn_util.post_set(t1)) > 0
+    )
 
 
 def binary_choice_detection(net):
@@ -181,7 +211,9 @@ def binary_choice_detection(net):
             c2 = t2
             break
     if c1 is not None and c2 is not None:
-        t = generate_new_binary_transition(c1, c2, pt_operator.Operator.XOR, net)
+        t = generate_new_binary_transition(
+            c1, c2, pt_operator.Operator.XOR, net
+        )
         net.transitions.add(t)
         for a in c1.in_arcs:
             pn_util.add_arc_from_to(a.source, t, net)
@@ -210,7 +242,9 @@ def sequence_requirement(t1, t2):
             return False
         if t1 not in pn_util.pre_set(p):
             return False
-        if t2 not in pn_util.post_set(p):  # redundant check, just to be sure...
+        if t2 not in pn_util.post_set(
+            p
+        ):  # redundant check, just to be sure...
             return False
     return True
 
@@ -224,7 +258,9 @@ def binary_sequence_detection(net):
             c2 = t2
             break
     if c1 is not None and c2 is not None:
-        t = generate_new_binary_transition(c1, c2, pt_operator.Operator.SEQUENCE, net)
+        t = generate_new_binary_transition(
+            c1, c2, pt_operator.Operator.SEQUENCE, net
+        )
         net.transitions.add(t)
         for a in c1.in_arcs:
             pn_util.add_arc_from_to(a.source, t, net)
@@ -305,7 +341,7 @@ def group_blocks_in_net(net, parameters=None):
     from pm4py.algo.analysis.workflow_net import algorithm as wf_eval
 
     if not wf_eval.apply(net):
-        raise ValueError('The Petri net provided is not a WF-net')
+        raise ValueError("The Petri net provided is not a WF-net")
 
     net = deepcopy(net)
     ini_places = set(x.name for x in net.places)
@@ -359,6 +395,7 @@ def apply(net, im, fm, parameters=None):
 
     if debug:
         from pm4py.visualization.petri_net import visualizer as pn_viz
+
         pn_viz.view(pn_viz.apply(grouped_net, parameters={"format": "svg"}))
         return grouped_net
     else:
@@ -369,4 +406,4 @@ def apply(net, im, fm, parameters=None):
             tree_sort(ret)
             return ret
         else:
-            raise ValueError('Parsing of WF-net Failed')
+            raise ValueError("Parsing of WF-net Failed")

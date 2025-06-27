@@ -56,16 +56,27 @@ def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
     objects = pd.read_sql("SELECT * FROM OBJECTS", conn)
     relations = pd.read_sql("SELECT * FROM RELATIONS", conn)
 
-    events = dataframe_utils.convert_timestamp_columns_in_df(events,
-                                                                     timest_format=pm4_constants.DEFAULT_TIMESTAMP_PARSE_FORMAT,
-                                                                     timest_columns=["ocel:timestamp"])
+    events = dataframe_utils.convert_timestamp_columns_in_df(
+        events,
+        timest_format=pm4_constants.DEFAULT_TIMESTAMP_PARSE_FORMAT,
+        timest_columns=["ocel:timestamp"],
+    )
 
-    relations = dataframe_utils.convert_timestamp_columns_in_df(relations,
-                                                                     timest_format=pm4_constants.DEFAULT_TIMESTAMP_PARSE_FORMAT,
-                                                                     timest_columns=["ocel:timestamp"])
+    relations = dataframe_utils.convert_timestamp_columns_in_df(
+        relations,
+        timest_format=pm4_constants.DEFAULT_TIMESTAMP_PARSE_FORMAT,
+        timest_columns=["ocel:timestamp"],
+    )
 
-    ocel = OCEL(events=events, objects=objects, relations=relations, parameters=parameters)
+    ocel = OCEL(
+        events=events,
+        objects=objects,
+        relations=relations,
+        parameters=parameters,
+    )
     ocel = ocel_consistency.apply(ocel, parameters=parameters)
-    ocel = filtering_utils.propagate_relations_filtering(ocel, parameters=parameters)
+    ocel = filtering_utils.propagate_relations_filtering(
+        ocel, parameters=parameters
+    )
 
     return ocel

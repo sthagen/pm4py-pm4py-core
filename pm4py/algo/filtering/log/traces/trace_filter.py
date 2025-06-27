@@ -24,7 +24,9 @@ from enum import Enum
 from pm4py.util import exec_utils, constants, xes_constants
 from typing import Optional, Dict, Any, Union, List
 from pm4py.objects.conversion.log import converter as log_converter
-from pm4py.algo.filtering.common.traces.infix_to_regex import translate_infix_to_regex
+from pm4py.algo.filtering.common.traces.infix_to_regex import (
+    translate_infix_to_regex,
+)
 from pm4py.objects.log.obj import EventLog, EventStream
 import pandas as pd
 
@@ -34,7 +36,11 @@ class Parameters(Enum):
     POSITIVE = "positive"
 
 
-def apply(log: Union[EventLog, EventStream, pd.DataFrame], admitted_traces: List[List[str]], parameters: Optional[Dict[Any, Any]] = None) -> EventLog:
+def apply(
+    log: Union[EventLog, EventStream, pd.DataFrame],
+    admitted_traces: List[List[str]],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> EventLog:
     """
     Filters an event log on a set of traces. A trace is a sequence of activities and "...", in which:
     - a "..." before an activity tells that other activities can precede the given activity
@@ -63,14 +69,27 @@ def apply(log: Union[EventLog, EventStream, pd.DataFrame], admitted_traces: List
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    positive = exec_utils.get_param_value(Parameters.POSITIVE, parameters, True)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    positive = exec_utils.get_param_value(
+        Parameters.POSITIVE, parameters, True
+    )
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    filter_regex = "|".join([f"({translate_infix_to_regex(inf)})" for inf in admitted_traces])
-    filtered_log = EventLog(attributes=log.attributes, extensions=log.extensions, classifiers=log.classifiers,
-            omni_present=log.omni_present, properties=log.properties)
+    filter_regex = "|".join(
+        [f"({translate_infix_to_regex(inf)})" for inf in admitted_traces]
+    )
+    filtered_log = EventLog(
+        attributes=log.attributes,
+        extensions=log.extensions,
+        classifiers=log.classifiers,
+        omni_present=log.omni_present,
+        properties=log.properties,
+    )
 
     for case in log:
         t = constants.DEFAULT_VARIANT_SEP.join([x[activity_key] for x in case])

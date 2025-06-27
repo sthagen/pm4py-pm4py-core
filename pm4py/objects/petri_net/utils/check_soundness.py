@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,7 +19,9 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.objects.petri_net.utils.networkx_graph import create_networkx_undirected_graph
+from pm4py.objects.petri_net.utils.networkx_graph import (
+    create_networkx_undirected_graph,
+)
 from pm4py.objects.petri_net.utils import explore_path
 from pm4py.objects.petri_net import obj
 from pm4py.util import nx_utils
@@ -44,13 +46,19 @@ def check_source_and_sink_reachability(net, unique_source, unique_sink):
     boolean
         Boolean value that is true if each node is in a path from the source place to the sink place
     """
-    graph, unique_source_corr, unique_sink_corr, inv_dictionary = create_networkx_undirected_graph(net, unique_source,
-                                                                                                   unique_sink)
+    graph, unique_source_corr, unique_sink_corr, inv_dictionary = (
+        create_networkx_undirected_graph(net, unique_source, unique_sink)
+    )
     if unique_source_corr is not None and unique_sink_corr is not None:
         nodes_list = list(graph.nodes())
         finish_to_sink = list(nx_utils.ancestors(graph, unique_sink_corr))
-        connected_to_source = list(nx_utils.descendants(graph, unique_source_corr))
-        if len(finish_to_sink) == len(nodes_list) - 1 and len(connected_to_source) == len(nodes_list) - 1:
+        connected_to_source = list(
+            nx_utils.descendants(graph, unique_source_corr)
+        )
+        if (
+            len(finish_to_sink) == len(nodes_list) - 1
+            and len(connected_to_source) == len(nodes_list) - 1
+        ):
             return True
     return False
 
@@ -121,9 +129,15 @@ def check_wfnet(net):
     """
     unique_source_place = check_source_place_presence(net)
     unique_sink_place = check_sink_place_presence(net)
-    source_sink_reachability = check_source_and_sink_reachability(net, unique_source_place, unique_sink_place)
+    source_sink_reachability = check_source_and_sink_reachability(
+        net, unique_source_place, unique_sink_place
+    )
 
-    return (unique_source_place is not None) and (unique_sink_place is not None) and source_sink_reachability
+    return (
+        (unique_source_place is not None)
+        and (unique_sink_place is not None)
+        and source_sink_reachability
+    )
 
 
 def check_source_sink_place_conditions(net):
@@ -141,7 +155,8 @@ def check_source_sink_place_conditions(net):
     boolean
         Boolean value (True is good)
     """
-    # check also that the transitions connected to the source/sink place have unique arcs
+    # check also that the transitions connected to the source/sink place have
+    # unique arcs
     unique_source_place = check_source_place_presence(net)
     unique_sink_place = check_sink_place_presence(net)
     if unique_source_place is not None:
@@ -180,7 +195,7 @@ def check_easy_soundness_net_in_fin_marking(net, ini, fin):
         if alignment is not None:
             return True
         return False
-    except:
+    except BaseException:
         return False
 
 

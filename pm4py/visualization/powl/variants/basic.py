@@ -26,8 +26,14 @@ from graphviz import Digraph
 from pm4py.objects.process_tree.obj import Operator
 from pm4py.util import exec_utils, constants
 from typing import Optional, Dict, Any
-from pm4py.objects.powl.obj import POWL, Transition, SilentTransition, StrictPartialOrder, OperatorPOWL, \
-    FrequentTransition
+from pm4py.objects.powl.obj import (
+    POWL,
+    Transition,
+    SilentTransition,
+    StrictPartialOrder,
+    OperatorPOWL,
+    FrequentTransition,
+)
 
 OPERATOR_BOXES = True
 FREQUENCY_TAG_IMAGES = True
@@ -65,19 +71,25 @@ def apply(powl: POWL, parameters: Optional[Dict[Any, Any]] = None) -> Digraph:
     if parameters is None:
         parameters = {}
 
-    enable_graph_title = exec_utils.get_param_value(Parameters.ENABLE_GRAPH_TITLE, parameters, constants.DEFAULT_ENABLE_GRAPH_TITLES)
-    graph_title = exec_utils.get_param_value(Parameters.GRAPH_TITLE, parameters, "POWL model")
+    enable_graph_title = exec_utils.get_param_value(
+        Parameters.ENABLE_GRAPH_TITLE,
+        parameters,
+        constants.DEFAULT_ENABLE_GRAPH_TITLES,
+    )
+    graph_title = exec_utils.get_param_value(
+        Parameters.GRAPH_TITLE, parameters, "POWL model"
+    )
 
-    filename = tempfile.NamedTemporaryFile(suffix='.gv')
+    filename = tempfile.NamedTemporaryFile(suffix=".gv")
 
-    viz = Digraph("powl", filename=filename.name, engine='dot')
-    viz.attr('node', shape='ellipse', fixedsize='false')
-    viz.attr(nodesep='1')
-    viz.attr(ranksep='1')
-    viz.attr(compound='true')
-    viz.attr(overlap='scale')
-    viz.attr(splines='true')
-    viz.attr(rankdir='TB')
+    viz = Digraph("powl", filename=filename.name, engine="dot")
+    viz.attr("node", shape="ellipse", fixedsize="false")
+    viz.attr(nodesep="1")
+    viz.attr(ranksep="1")
+    viz.attr(compound="true")
+    viz.attr(overlap="scale")
+    viz.attr(splines="true")
+    viz.attr(rankdir="TB")
     viz.attr(style="filled")
     viz.attr(fillcolor=fillcolor)
 
@@ -127,67 +139,164 @@ def get_id(powl):
         return "cluster_" + str(id(powl))
 
 
-def add_operator_edge(vis, current_node_id, child, directory='none', style=""):
+def add_operator_edge(vis, current_node_id, child, directory="none", style=""):
     child_id = get_id(child)
     if child_id.startswith("cluster_"):
-        vis.edge(current_node_id, get_id_base(child), dir=directory, lhead=child_id, style=style, minlen='2')
+        vis.edge(
+            current_node_id,
+            get_id_base(child),
+            dir=directory,
+            lhead=child_id,
+            style=style,
+            minlen="2",
+        )
     else:
-        vis.edge(current_node_id, get_id_base(child), dir=directory, style=style)
+        vis.edge(
+            current_node_id, get_id_base(child), dir=directory, style=style
+        )
 
 
-def add_order_edge(block, child_1, child_2, directory='forward', color="black", style=""):
+def add_order_edge(
+    block, child_1, child_2, directory="forward", color="black", style=""
+):
     child_id_1 = get_id(child_1)
     child_id_2 = get_id(child_2)
     if child_id_1.startswith("cluster_"):
         if child_id_2.startswith("cluster_"):
-            block.edge(get_id_base(child_1), get_id_base(child_2), dir=directory, color=color, style=style,
-                       ltail=child_id_1, lhead=child_id_2, minlen='2')
+            block.edge(
+                get_id_base(child_1),
+                get_id_base(child_2),
+                dir=directory,
+                color=color,
+                style=style,
+                ltail=child_id_1,
+                lhead=child_id_2,
+                minlen="2",
+            )
         else:
-            block.edge(get_id_base(child_1), get_id_base(child_2), dir=directory, color=color, style=style,
-                       ltail=child_id_1, minlen='2')
+            block.edge(
+                get_id_base(child_1),
+                get_id_base(child_2),
+                dir=directory,
+                color=color,
+                style=style,
+                ltail=child_id_1,
+                minlen="2",
+            )
     else:
         if child_id_2.startswith("cluster_"):
-            block.edge(get_id_base(child_1), get_id_base(child_2), dir=directory, color=color, style=style,
-                       lhead=child_id_2, minlen='2')
+            block.edge(
+                get_id_base(child_1),
+                get_id_base(child_2),
+                dir=directory,
+                color=color,
+                style=style,
+                lhead=child_id_2,
+                minlen="2",
+            )
         else:
-            block.edge(get_id_base(child_1), get_id_base(child_2), dir=directory, color=color, style=style)
+            block.edge(
+                get_id_base(child_1),
+                get_id_base(child_2),
+                dir=directory,
+                color=color,
+                style=style,
+            )
 
 
 def repr_powl(powl, viz, color_map, level):
     font_size = "18"
     this_node_id = str(id(powl))
 
-    current_color = darken_color(fillcolor, amount=opacity_change_ratio * level)
+    current_color = darken_color(
+        fillcolor, amount=opacity_change_ratio * level
+    )
 
     if isinstance(powl, FrequentTransition):
         label = powl.activity
         if powl.skippable:
             if powl.selfloop:
-                with importlib.resources.path("pm4py.visualization.powl.variants.icons", "skip-loop-tag.svg") as gimg:
+                with importlib.resources.path(
+                    "pm4py.visualization.powl.variants.icons",
+                    "skip-loop-tag.svg",
+                ) as gimg:
                     image = str(gimg)
-                    viz.node(this_node_id, label='\n' + label, imagepos='tr', image=image,
-                             shape='box', width=min_width, fontsize=font_size, style='filled', fillcolor=current_color)
+                    viz.node(
+                        this_node_id,
+                        label="\n" + label,
+                        imagepos="tr",
+                        image=image,
+                        shape="box",
+                        width=min_width,
+                        fontsize=font_size,
+                        style="filled",
+                        fillcolor=current_color,
+                    )
             else:
-                with importlib.resources.path("pm4py.visualization.powl.variants.icons", "skip-tag.svg") as gimg:
+                with importlib.resources.path(
+                    "pm4py.visualization.powl.variants.icons", "skip-tag.svg"
+                ) as gimg:
                     image = str(gimg)
-                    viz.node(this_node_id, label='\n' + label, imagepos='tr', image=image,
-                             shape='box', width=min_width, fontsize=font_size, style='filled', fillcolor=current_color)
+                    viz.node(
+                        this_node_id,
+                        label="\n" + label,
+                        imagepos="tr",
+                        image=image,
+                        shape="box",
+                        width=min_width,
+                        fontsize=font_size,
+                        style="filled",
+                        fillcolor=current_color,
+                    )
         else:
             if powl.selfloop:
-                with importlib.resources.path("pm4py.visualization.powl.variants.icons", "loop-tag.svg") as gimg:
+                with importlib.resources.path(
+                    "pm4py.visualization.powl.variants.icons", "loop-tag.svg"
+                ) as gimg:
                     image = str(gimg)
-                    viz.node(this_node_id, label='\n' + label, imagepos='tr', image=image,
-                             shape='box', width=min_width, fontsize=font_size, style='filled', fillcolor=current_color)
+                    viz.node(
+                        this_node_id,
+                        label="\n" + label,
+                        imagepos="tr",
+                        image=image,
+                        shape="box",
+                        width=min_width,
+                        fontsize=font_size,
+                        style="filled",
+                        fillcolor=current_color,
+                    )
             else:
-                viz.node(this_node_id, label=label,
-                         shape='box', width=min_width, fontsize=font_size, style='filled', fillcolor=current_color)
+                viz.node(
+                    this_node_id,
+                    label=label,
+                    shape="box",
+                    width=min_width,
+                    fontsize=font_size,
+                    style="filled",
+                    fillcolor=current_color,
+                )
     elif isinstance(powl, Transition):
         if isinstance(powl, SilentTransition):
-            viz.node(this_node_id, label='', style='filled', fillcolor='black', shape='square',
-                     width='0.3', height='0.3', fixedsize="true")
+            viz.node(
+                this_node_id,
+                label="",
+                style="filled",
+                fillcolor="black",
+                shape="square",
+                width="0.3",
+                height="0.3",
+                fixedsize="true",
+            )
         else:
-            viz.node(this_node_id, str(powl.label), shape='box', fontsize=font_size, width=min_width, style='filled',
-                     fillcolor=current_color)
+            viz.node(
+                this_node_id,
+                str(powl.label),
+                shape="box",
+                fontsize=font_size,
+                width=min_width,
+                style="filled",
+                fillcolor=current_color,
+            )
 
     elif isinstance(powl, StrictPartialOrder):
         transitive_reduction = powl.order.get_transitive_reduction()
@@ -208,10 +317,19 @@ def repr_powl(powl, viz, color_map, level):
             block.attr(style="filled")
             block.attr(fillcolor=current_color)
             if powl.operator == Operator.LOOP:
-                with importlib.resources.path("pm4py.visualization.powl.variants.icons", "loop.svg") as gimg:
+                with importlib.resources.path(
+                    "pm4py.visualization.powl.variants.icons", "loop.svg"
+                ) as gimg:
                     image = str(gimg)
-                    block.node(this_node_id, image=image, label="", fontsize=font_size,
-                               width='0.4', height='0.4', fixedsize="true")
+                    block.node(
+                        this_node_id,
+                        image=image,
+                        label="",
+                        fontsize=font_size,
+                        width="0.4",
+                        height="0.4",
+                        fixedsize="true",
+                    )
                 do = powl.children[0]
                 redo = powl.children[1]
                 repr_powl(do, block, color_map, level=level + 1)
@@ -219,18 +337,28 @@ def repr_powl(powl, viz, color_map, level):
                 repr_powl(redo, block, color_map, level=level + 1)
                 add_operator_edge(block, this_node_id, redo, style="dashed")
             elif powl.operator == Operator.XOR:
-                with importlib.resources.path("pm4py.visualization.powl.variants.icons", "xor.svg") as gimg:
+                with importlib.resources.path(
+                    "pm4py.visualization.powl.variants.icons", "xor.svg"
+                ) as gimg:
                     image = str(gimg)
-                    block.node(this_node_id, image=image, label="", fontsize=font_size,
-                               width='0.4', height='0.4', fixedsize="true")
+                    block.node(
+                        this_node_id,
+                        image=image,
+                        label="",
+                        fontsize=font_size,
+                        width="0.4",
+                        height="0.4",
+                        fixedsize="true",
+                    )
                 for child in powl.children:
                     repr_powl(child, block, color_map, level=level + 1)
                     add_operator_edge(block, this_node_id, child)
 
 
 def darken_color(color, amount):
-    """ Darkens the given color by the specified amount """
+    """Darkens the given color by the specified amount"""
     import matplotlib.colors as mcolors
+
     amount = min(0.3, amount)
 
     rgb = mcolors.to_rgb(color)

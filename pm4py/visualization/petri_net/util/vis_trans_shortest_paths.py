@@ -19,11 +19,22 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.util.vis_utils import human_readable_stat, get_arc_penwidth, get_trans_freq_color
+from pm4py.util.vis_utils import (
+    human_readable_stat,
+    get_arc_penwidth,
+    get_trans_freq_color,
+)
 
 
-def get_shortest_paths_from_trans(original_trans, trans, spaths, visited_arcs, visited_transitions, added_elements,
-                                  rec_depth):
+def get_shortest_paths_from_trans(
+    original_trans,
+    trans,
+    spaths,
+    visited_arcs,
+    visited_transitions,
+    added_elements,
+    rec_depth,
+):
     """
     Get shortest paths from a given transition
 
@@ -64,24 +75,39 @@ def get_shortest_paths_from_trans(original_trans, trans, spaths, visited_arcs, v
                     if target_trans not in visited_transitions:
                         visited_transitions.add(target_trans)
                         if target_trans.label:
-                            el1 = ((original_trans.name, target_trans.name), 0, rec_depth)
+                            el1 = (
+                                (original_trans.name, target_trans.name),
+                                0,
+                                rec_depth,
+                            )
                             if out_arc not in spaths:
                                 spaths[out_arc] = set()
                             spaths[out_arc].add(el1)
                             added_elements.add(el1)
-                            el2 = ((original_trans.name, target_trans.name), 1, rec_depth)
+                            el2 = (
+                                (original_trans.name, target_trans.name),
+                                1,
+                                rec_depth,
+                            )
                             if place_out_arc not in spaths:
                                 spaths[place_out_arc] = set()
                             spaths[place_out_arc].add(el2)
                             added_elements.add(el2)
                         else:
-                            spaths, visited_arcs, visited_transitions, added_elements = get_shortest_paths_from_trans(
-                                original_trans,
-                                target_trans, spaths,
+                            (
+                                spaths,
                                 visited_arcs,
                                 visited_transitions,
                                 added_elements,
-                                rec_depth + 1)
+                            ) = get_shortest_paths_from_trans(
+                                original_trans,
+                                target_trans,
+                                spaths,
+                                visited_arcs,
+                                visited_transitions,
+                                added_elements,
+                                rec_depth + 1,
+                            )
                             for element in added_elements:
                                 new_element = list(element)
                                 if new_element[1] == 0:
@@ -93,7 +119,9 @@ def get_shortest_paths_from_trans(original_trans, trans, spaths, visited_arcs, v
                                     new_element[1] = 3
                                     if place_out_arc not in spaths:
                                         spaths[place_out_arc] = set()
-                                    spaths[place_out_arc].add(tuple(new_element))
+                                    spaths[place_out_arc].add(
+                                        tuple(new_element)
+                                    )
     return spaths, visited_arcs, visited_transitions, added_elements
 
 
@@ -119,11 +147,17 @@ def get_shortest_paths(net, enable_extension=False):
             visited_arcs = set()
             visited_transitions = set()
             added_elements = set()
-            spaths, visited_arcs, visited_transitions, added_elements = get_shortest_paths_from_trans(trans, trans,
-                                                                                                      spaths,
-                                                                                                      visited_arcs,
-                                                                                                      visited_transitions,
-                                                                                                      added_elements, 0)
+            spaths, visited_arcs, visited_transitions, added_elements = (
+                get_shortest_paths_from_trans(
+                    trans,
+                    trans,
+                    spaths,
+                    visited_arcs,
+                    visited_transitions,
+                    added_elements,
+                    0,
+                )
+            )
     spaths_keys = list(spaths.keys())
     for edge in spaths_keys:
         list_zeros = [el for el in spaths[edge] if el[1] == 0]
@@ -131,14 +165,18 @@ def get_shortest_paths(net, enable_extension=False):
         if list_zeros:
             spaths[edge] = {x for x in spaths[edge] if x[1] == 0}
             min_dist = min([x[2] for x in spaths[edge]])
-            possible_targets = set([x[0] for x in spaths[edge] if x[2] == min_dist])
+            possible_targets = set(
+                [x[0] for x in spaths[edge] if x[2] == min_dist]
+            )
             spaths[edge] = set()
             for target in possible_targets:
                 spaths[edge].add((target, 0, min_dist))
         elif list_ones:
             spaths[edge] = {x for x in spaths[edge] if x[1] == 1}
             min_dist = min([x[2] for x in spaths[edge]])
-            possible_targets = set([x[0] for x in spaths[edge] if x[2] == min_dist])
+            possible_targets = set(
+                [x[0] for x in spaths[edge] if x[2] == min_dist]
+            )
             spaths[edge] = set()
             for target in possible_targets:
                 spaths[edge].add((target, 1, min_dist))
@@ -150,7 +188,9 @@ def get_shortest_paths(net, enable_extension=False):
             else:
                 if enable_extension:
                     min_dist = min([x[2] for x in spaths[edge]])
-                    possible_targets = set([x[0] for x in spaths[edge] if x[2] == min_dist])
+                    possible_targets = set(
+                        [x[0] for x in spaths[edge] if x[2] == min_dist]
+                    )
                     spaths[edge] = set()
                     for target in possible_targets:
                         spaths[edge].add((target, 2, min_dist))
@@ -160,8 +200,14 @@ def get_shortest_paths(net, enable_extension=False):
     return spaths
 
 
-def get_decorations_from_dfg_spaths_acticount(net, dfg, spaths, activities_count, variant="frequency",
-                                              aggregation_measure=None, stat_locale: dict = {}):
+def get_decorations_from_dfg_spaths_acticount(
+    net,
+    dfg,
+    spaths,
+    activities_count,
+    variant="frequency",
+    aggregation_measure=None,
+):
     """
     Get decorations from Petrinet without doing any replay
     but based on DFG measures, shortest paths and activities count.
@@ -210,7 +256,9 @@ def get_decorations_from_dfg_spaths_acticount(net, dfg, spaths, activities_count
                 decorations_single_contrib[arc].append(dfg[dfg_key])
                 if dfg_key[1] not in decorations_single_contrib_trans:
                     decorations_single_contrib_trans[dfg_key[1]] = {}
-                decorations_single_contrib_trans[dfg_key[1]][dfg_key[0]] = dfg[dfg_key]
+                decorations_single_contrib_trans[dfg_key[1]][dfg_key[0]] = dfg[
+                    dfg_key
+                ]
     for arc in decorations_single_contrib:
         decorations_value = None
         if aggregation_measure == "sum":
@@ -236,8 +284,14 @@ def get_decorations_from_dfg_spaths_acticount(net, dfg, spaths, activities_count
                 arc_label = human_readable_stat(decorations_int[arc], stat_locale)
             else:
                 arc_label = str(decorations_int[arc])
-            decorations[arc] = {"label": arc_label,
-                                "penwidth": str(get_arc_penwidth(decorations_int[arc], arcs_min_value, arcs_max_value))}
+            decorations[arc] = {
+                "label": arc_label,
+                "penwidth": str(
+                    get_arc_penwidth(
+                        decorations_int[arc], arcs_min_value, arcs_max_value
+                    )
+                ),
+            }
         trans_map = {}
         for trans in net.transitions:
             if trans.label:
@@ -248,14 +302,18 @@ def get_decorations_from_dfg_spaths_acticount(net, dfg, spaths, activities_count
             for act in activities_count:
                 if act in trans_map:
                     trans = trans_map[act]
-                    color = get_trans_freq_color(activities_count[act], act_min_value, act_max_value)
+                    color = get_trans_freq_color(
+                        activities_count[act], act_min_value, act_max_value
+                    )
                     label = act + " (" + str(activities_count[act]) + ")"
                     decorations[trans] = {"label": label, "color": color}
         elif "performance" in variant:
             for act in decorations_single_contrib_trans:
                 if act in trans_map:
                     trans = trans_map[act]
-                    trans_values = list(decorations_single_contrib_trans[act].values())
+                    trans_values = list(
+                        decorations_single_contrib_trans[act].values()
+                    )
                     decorations[trans] = {"performance": mean(trans_values)}
 
     return decorations

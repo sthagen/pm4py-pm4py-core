@@ -42,7 +42,11 @@ DEFAULT_VARIANT = CLASSIC
 VERSIONS = {CLASSIC}
 
 
-def apply(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[Dict[Any, Any]] = None, variant=CLASSIC) -> Tuple[PetriNet, Marking, Marking]:
+def apply(
+    log: Union[EventLog, EventStream, pd.DataFrame],
+    parameters: Optional[Dict[Any, Any]] = None,
+    variant=CLASSIC,
+) -> Tuple[PetriNet, Marking, Marking]:
     """
     Discovers a Petri net using Heuristics Miner
 
@@ -77,14 +81,29 @@ def apply(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[
         Final marking
     """
     if pandas_utils.check_is_pandas_dataframe(log):
-        return exec_utils.get_variant(variant).apply_pandas(log, parameters=parameters)
+        return exec_utils.get_variant(variant).apply_pandas(
+            log, parameters=parameters
+        )
 
-    return exec_utils.get_variant(variant).apply(log_conversion.apply(log, variant=log_conversion.Variants.TO_EVENT_LOG, parameters=parameters),
-                                                 parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        log_conversion.apply(
+            log,
+            variant=log_conversion.Variants.TO_EVENT_LOG,
+            parameters=parameters,
+        ),
+        parameters=parameters,
+    )
 
 
-def apply_dfg(dfg: Dict[Tuple[str, str], int], activities=None, activities_occurrences=None, start_activities=None, end_activities=None,
-              parameters=None, variant=CLASSIC) -> Tuple[PetriNet, Marking, Marking]:
+def apply_dfg(
+    dfg: Dict[Tuple[str, str], int],
+    activities=None,
+    activities_occurrences=None,
+    start_activities=None,
+    end_activities=None,
+    parameters=None,
+    variant=CLASSIC,
+) -> Tuple[PetriNet, Marking, Marking]:
     """
     Discovers a Petri net using Heuristics Miner
 
@@ -125,13 +144,21 @@ def apply_dfg(dfg: Dict[Tuple[str, str], int], activities=None, activities_occur
     fm
         Final marking
     """
-    return exec_utils.get_variant(variant).apply_dfg(dfg, activities=activities,
-                                                     activities_occurrences=activities_occurrences,
-                                                     start_activities=start_activities, end_activities=end_activities,
-                                                     parameters=parameters)
+    return exec_utils.get_variant(variant).apply_dfg(
+        dfg,
+        activities=activities,
+        activities_occurrences=activities_occurrences,
+        start_activities=start_activities,
+        end_activities=end_activities,
+        parameters=parameters,
+    )
 
 
-def apply_heu(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[Dict[Any, Any]] = None, variant=CLASSIC) -> HeuristicsNet:
+def apply_heu(
+    log: Union[EventLog, EventStream, pd.DataFrame],
+    parameters: Optional[Dict[Any, Any]] = None,
+    variant=CLASSIC,
+) -> HeuristicsNet:
     """
     Discovers an Heuristics Net using Heuristics Miner
 
@@ -164,11 +191,25 @@ def apply_heu(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optio
     fm
         Final marking
     """
-    return exec_utils.get_variant(variant).apply_heu(log_conversion.apply(log, variant=log_conversion.Variants.TO_EVENT_LOG, parameters=parameters), parameters=parameters)
+    return exec_utils.get_variant(variant).apply_heu(
+        log_conversion.apply(
+            log,
+            variant=log_conversion.Variants.TO_EVENT_LOG,
+            parameters=parameters,
+        ),
+        parameters=parameters,
+    )
 
 
-def apply_heu_dfg(dfg: Dict[Tuple[str, str], int], activities=None, activities_occurrences=None, start_activities=None, end_activities=None,
-                  parameters=None, variant=CLASSIC) -> HeuristicsNet:
+def apply_heu_dfg(
+    dfg: Dict[Tuple[str, str], int],
+    activities=None,
+    activities_occurrences=None,
+    start_activities=None,
+    end_activities=None,
+    parameters=None,
+    variant=CLASSIC,
+) -> HeuristicsNet:
     """
     Discovers an Heuristics Net using Heuristics Miner
 
@@ -209,8 +250,11 @@ def apply_heu_dfg(dfg: Dict[Tuple[str, str], int], activities=None, activities_o
     fm
         Final marking
     """
-    return exec_utils.get_variant(variant).apply_heu_dfg(dfg, activities=activities,
-                                                         activities_occurrences=activities_occurrences,
-                                                         start_activities=start_activities,
-                                                         end_activities=end_activities,
-                                                         parameters=parameters)
+    return exec_utils.get_variant(variant).apply_heu_dfg(
+        dfg,
+        activities=activities,
+        activities_occurrences=activities_occurrences,
+        start_activities=start_activities,
+        end_activities=end_activities,
+        parameters=parameters,
+    )

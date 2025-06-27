@@ -33,7 +33,11 @@ class Parameters(Enum):
     FIRST_OR_LAST = "first_or_last"
 
 
-def apply(log: Union[EventLog, EventStream], activity: str, parameters: Optional[Dict[Any, Any]] = None) -> EventLog:
+def apply(
+    log: Union[EventLog, EventStream],
+    activity: str,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> EventLog:
     """
     Filters the suffixes of an activity in the event log
 
@@ -57,26 +61,43 @@ def apply(log: Union[EventLog, EventStream], activity: str, parameters: Optional
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    first_or_last = exec_utils.get_param_value(Parameters.FIRST_OR_LAST, parameters, "first")
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    first_or_last = exec_utils.get_param_value(
+        Parameters.FIRST_OR_LAST, parameters, "first"
+    )
     strict = exec_utils.get_param_value(Parameters.STRICT, parameters, True)
 
-    filtered_log = EventLog(attributes=log.attributes, extensions=log.extensions, globals=log.omni_present,
-                       classifiers=log.classifiers, properties=log.properties)
+    filtered_log = EventLog(
+        attributes=log.attributes,
+        extensions=log.extensions,
+        globals=log.omni_present,
+        classifiers=log.classifiers,
+        properties=log.properties,
+    )
 
     for trace in log:
-        activities = [x[activity_key] if activity_key in x else None for x in trace]
+        activities = [
+            x[activity_key] if activity_key in x else None for x in trace
+        ]
         if activity in activities:
             if first_or_last == "first":
                 op = min
             else:
                 op = max
-            idx_activity = op(i for i in range(len(activities)) if activities[i] == activity)
+            idx_activity = op(
+                i for i in range(len(activities)) if activities[i] == activity
+            )
             if strict:
                 idx_activity = idx_activity + 1
-            filtered_trace = Trace(attributes=trace.attributes, properties=trace.properties)
+            filtered_trace = Trace(
+                attributes=trace.attributes, properties=trace.properties
+            )
             for i in range(idx_activity, len(trace)):
                 filtered_trace.append(trace[i])
             filtered_log.append(filtered_trace)

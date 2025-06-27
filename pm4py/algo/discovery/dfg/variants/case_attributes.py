@@ -33,9 +33,16 @@ class Parameters(Enum):
     RETURN_NODES_ATTRIBUTES = "return_nodes_attributes"
 
 
-def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Union[
-    Tuple[Dict[Tuple[str, str], Dict[str, Dict[str, Any]]], Dict[str, Dict[str, Dict[str, Any]]]], Dict[
-        Tuple[str, str], Dict[str, Dict[str, Any]]]]:
+def apply(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Union[
+    Tuple[
+        Dict[Tuple[str, str], Dict[str, Dict[str, Any]]],
+        Dict[str, Dict[str, Dict[str, Any]]],
+    ],
+    Dict[Tuple[str, str], Dict[str, Dict[str, Any]]],
+]:
     """
     Discovers a directly-follows graph from an event log, with the edges that are annotated with the different values
     for the given case attributes.
@@ -65,18 +72,30 @@ def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]]
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    case_attributes = exec_utils.get_param_value(Parameters.CASE_ATTRIBUTES, parameters,
-                                                 list([xes_constants.DEFAULT_TRACEID_KEY]))
-    return_nodes_attributes = exec_utils.get_param_value(Parameters.RETURN_NODES_ATTRIBUTES, parameters, False)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    case_attributes = exec_utils.get_param_value(
+        Parameters.CASE_ATTRIBUTES,
+        parameters,
+        list([xes_constants.DEFAULT_TRACEID_KEY]),
+    )
+    return_nodes_attributes = exec_utils.get_param_value(
+        Parameters.RETURN_NODES_ATTRIBUTES, parameters, False
+    )
     dfg = {}
 
     for trace in log:
         for attr in set(case_attributes).intersection(set(trace.attributes)):
             attr_value = trace.attributes[attr]
             for i in range(len(trace) - 1):
-                ev_couple = (trace[i][activity_key], trace[i + 1][activity_key])
+                ev_couple = (
+                    trace[i][activity_key],
+                    trace[i + 1][activity_key],
+                )
                 if ev_couple not in dfg:
                     dfg[ev_couple] = {}
                 if attr not in dfg[ev_couple]:
@@ -88,7 +107,9 @@ def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]]
     if return_nodes_attributes:
         nodes = {}
         for trace in log:
-            for attr in set(case_attributes).intersection(set(trace.attributes)):
+            for attr in set(case_attributes).intersection(
+                set(trace.attributes)
+            ):
                 attr_value = trace.attributes[attr]
                 for i in range(len(trace)):
                     act = trace[i][activity_key]

@@ -36,10 +36,17 @@ GENERALIZATION_TOKEN = Variants.GENERALIZATION_TOKEN
 VERSIONS = {GENERALIZATION_TOKEN}
 
 
-def apply(log: Union[EventLog, EventStream, pd.DataFrame], petri_net: PetriNet, initial_marking: Marking, final_marking: Marking, parameters: Optional[Dict[Any, Any]] = None, variant=GENERALIZATION_TOKEN) -> float:
+def apply(
+    log: Union[EventLog, EventStream, pd.DataFrame],
+    petri_net: PetriNet,
+    initial_marking: Marking,
+    final_marking: Marking,
+    parameters: Optional[Dict[Any, Any]] = None,
+    variant=GENERALIZATION_TOKEN,
+) -> float:
     if parameters is None:
         parameters = {}
 
-    return exec_utils.get_variant(variant).apply(log,
-                                                 petri_net,
-                                                 initial_marking, final_marking, parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        log, petri_net, initial_marking, final_marking, parameters=parameters
+    )

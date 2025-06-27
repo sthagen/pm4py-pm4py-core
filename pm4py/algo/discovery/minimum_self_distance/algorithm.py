@@ -34,8 +34,11 @@ class Variants(Enum):
     PANDAS = pandas
 
 
-def apply(log_obj: Union[EventLog, pd.DataFrame, EventStream], variant: Union[str, None] = None,
-          parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, int]:
+def apply(
+    log_obj: Union[EventLog, pd.DataFrame, EventStream],
+    variant: Union[str, None] = None,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Dict[str, int]:
     if parameters is None:
         parameters = {}
 
@@ -45,4 +48,6 @@ def apply(log_obj: Union[EventLog, pd.DataFrame, EventStream], variant: Union[st
         else:
             variant = Variants.LOG
 
-    return exec_utils.get_variant(variant).apply(log_obj, parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        log_obj, parameters=parameters
+    )

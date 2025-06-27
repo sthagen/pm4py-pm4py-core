@@ -32,7 +32,10 @@ class Parameters(Enum):
     START_TIMESTAMP_KEY = constants.PARAMETER_CONSTANT_START_TIMESTAMP_KEY
 
 
-def apply(log_or_trace: Union[Trace, EventLog], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> float:
+def apply(
+    log_or_trace: Union[Trace, EventLog],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> float:
     """
     Computes the cycle time starting from an event log or a trace object
 
@@ -64,15 +67,31 @@ def apply(log_or_trace: Union[Trace, EventLog], parameters: Optional[Dict[Union[
     if parameters is None:
         parameters = {}
 
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
 
     if type(log_or_trace) is Trace:
         log = EventLog()
         log.append(log_or_trace)
     else:
-        log = converter.apply(log_or_trace, variant=converter.Variants.TO_EVENT_LOG, parameters=parameters)
+        log = converter.apply(
+            log_or_trace,
+            variant=converter.Variants.TO_EVENT_LOG,
+            parameters=parameters,
+        )
 
-    events = [(x[start_timestamp_key].timestamp(), x[timestamp_key].timestamp()) for trace in log for x in trace]
+    events = [
+        (x[start_timestamp_key].timestamp(), x[timestamp_key].timestamp())
+        for trace in log
+        for x in trace
+    ]
 
     return compute.cycle_time(events, len(log))

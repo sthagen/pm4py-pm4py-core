@@ -50,35 +50,74 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> str:
     if parameters is None:
         parameters = {}
 
-    include_timestamps = exec_utils.get_param_value(Parameters.INCLUDE_TIMESTAMPS, parameters, True)
+    include_timestamps = exec_utils.get_param_value(
+        Parameters.INCLUDE_TIMESTAMPS, parameters, True
+    )
 
-    object_ots = ocel.objects[[ocel.object_id_column, ocel.object_type_column]].to_dict("records")
-    object_ots = {x[ocel.object_id_column]: x[ocel.object_type_column] for x in object_ots}
-    events = ocel.events.sort_values([ocel.event_timestamp, ocel.event_activity, ocel.event_id_column]).to_dict("records")
-    objects = ocel.objects.sort_values(ocel.object_id_column).to_dict("records")
-    relations = ocel.relations.sort_values([ocel.event_timestamp, ocel.event_activity, ocel.object_id_column, ocel.event_id_column])
+    object_ots = ocel.objects[
+        [ocel.object_id_column, ocel.object_type_column]
+    ].to_dict("records")
+    object_ots = {
+        x[ocel.object_id_column]: x[ocel.object_type_column]
+        for x in object_ots
+    }
+    events = ocel.events.sort_values(
+        [ocel.event_timestamp, ocel.event_activity, ocel.event_id_column]
+    ).to_dict("records")
+    objects = ocel.objects.sort_values(ocel.object_id_column).to_dict(
+        "records"
+    )
+    relations = ocel.relations.sort_values(
+        [
+            ocel.event_timestamp,
+            ocel.event_activity,
+            ocel.object_id_column,
+            ocel.event_id_column,
+        ]
+    )
     tdf = relations.groupby(ocel.object_id_column)[ocel.event_timestamp]
     objects_start = tdf.first().to_dict()
     objects_end = tdf.last().to_dict()
-    objects_lifecycle = {x: objects_end[x].timestamp() - objects_start[x].timestamp() for x in objects_start}
+    objects_lifecycle = {
+        x: objects_end[x].timestamp() - objects_start[x].timestamp()
+        for x in objects_start
+    }
 
-    relations = relations.groupby(ocel.event_id_column)[ocel.object_id_column].agg(list).to_dict()
+    relations = (
+        relations.groupby(ocel.event_id_column)[ocel.object_id_column]
+        .agg(list)
+        .to_dict()
+    )
 
     ret = ["\n\nevents:\n"]
 
     for ev in events:
-        stru = ev[ocel.event_activity] + " ( related objects: "+", ".join(relations[ev[ocel.event_id_column]])  + " ) "
+        stru = (
+            ev[ocel.event_activity]
+            + " ( related objects: "
+            + ", ".join(relations[ev[ocel.event_id_column]])
+            + " ) "
+        )
         if include_timestamps:
-            stru = stru + " timestamp: "+str(ev[ocel.event_timestamp])
+            stru = stru + " timestamp: " + str(ev[ocel.event_timestamp])
         ret.append(stru)
 
     ret.append("\nobjects:\n")
 
     for obj in objects:
         obj_id = obj[ocel.object_id_column]
-        stru = obj_id + " object type: "+object_ots[obj_id]
+        stru = obj_id + " object type: " + object_ots[obj_id]
         if include_timestamps:
-            stru = stru + " ( lifecycle start: "+str(objects_start[obj_id])+" ; lifecycle end: "+str(objects_end[obj_id])+" ; lifecycle duration: "+str(objects_lifecycle[obj_id])+" )"
+            stru = (
+                stru
+                + " ( lifecycle start: "
+                + str(objects_start[obj_id])
+                + " ; lifecycle end: "
+                + str(objects_end[obj_id])
+                + " ; lifecycle duration: "
+                + str(objects_lifecycle[obj_id])
+                + " )"
+            )
         ret.append(stru)
 
     ret = "\n".join(ret)

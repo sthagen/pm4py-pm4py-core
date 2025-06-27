@@ -41,7 +41,10 @@ class Parameters(Enum):
     SHOW_PROGRESS_BAR = "show_progress_bar"
 
 
-def evaluate(aligned_traces: typing.ListAlignments, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[str, float]:
+def evaluate(
+    aligned_traces: typing.ListAlignments,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[str, float]:
     """
     Gets a dictionary expressing fitness in a synthetic way from the list of boolean values
     saying if a trace in the log is fit, and the float values of fitness associated to each trace
@@ -73,12 +76,24 @@ def evaluate(aligned_traces: typing.ListAlignments, parameters: Optional[Dict[Un
     if no_traces > 0 and total_c > 0 and total_p > 0:
         perc_fit_traces = float(100.0 * fit_traces) / float(no_traces)
         average_fitness = float(sum_of_fitness) / float(no_traces)
-        log_fitness = 0.5 * (1 - total_m / total_c) + 0.5 * (1 - total_r / total_p)
-    return {"perc_fit_traces": perc_fit_traces, "average_trace_fitness": average_fitness, "log_fitness": log_fitness,
-            "percentage_of_fitting_traces": perc_fit_traces }
+        log_fitness = 0.5 * (1 - total_m / total_c) + 0.5 * (
+            1 - total_r / total_p
+        )
+    return {
+        "perc_fit_traces": perc_fit_traces,
+        "average_trace_fitness": average_fitness,
+        "log_fitness": log_fitness,
+        "percentage_of_fitting_traces": perc_fit_traces,
+    }
 
 
-def apply(log: EventLog, petri_net: PetriNet, initial_marking: Marking, final_marking: Marking, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[str, float]:
+def apply(
+    log: EventLog,
+    petri_net: PetriNet,
+    initial_marking: Marking,
+    final_marking: Marking,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[str, float]:
     """
     Apply token replay fitness evaluation
 
@@ -103,20 +118,39 @@ def apply(log: EventLog, petri_net: PetriNet, initial_marking: Marking, final_ma
 
     if parameters is None:
         parameters = {}
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, DEFAULT_NAME_KEY)
-    token_replay_variant = exec_utils.get_param_value(Parameters.TOKEN_REPLAY_VARIANT, parameters,
-                                                      executor.Variants.TOKEN_REPLAY)
-    cleaning_token_flood = exec_utils.get_param_value(Parameters.CLEANING_TOKEN_FLOOD, parameters, False)
-    show_progress_bar = exec_utils.get_param_value(Parameters.SHOW_PROGRESS_BAR, parameters, constants.SHOW_PROGRESS_BAR)
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, DEFAULT_NAME_KEY
+    )
+    token_replay_variant = exec_utils.get_param_value(
+        Parameters.TOKEN_REPLAY_VARIANT,
+        parameters,
+        executor.Variants.TOKEN_REPLAY,
+    )
+    cleaning_token_flood = exec_utils.get_param_value(
+        Parameters.CLEANING_TOKEN_FLOOD, parameters, False
+    )
+    show_progress_bar = exec_utils.get_param_value(
+        Parameters.SHOW_PROGRESS_BAR, parameters, constants.SHOW_PROGRESS_BAR
+    )
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
 
-    parameters_tr = {token_replay.Parameters.ACTIVITY_KEY: activity_key,
-                     token_replay.Parameters.CONSIDER_REMAINING_IN_FITNESS: True,
-                     token_replay.Parameters.CLEANING_TOKEN_FLOOD: cleaning_token_flood,
-                     token_replay.Parameters.SHOW_PROGRESS_BAR: show_progress_bar,
-                     token_replay.Parameters.CASE_ID_KEY: case_id_key}
+    parameters_tr = {
+        token_replay.Parameters.ACTIVITY_KEY: activity_key,
+        token_replay.Parameters.CONSIDER_REMAINING_IN_FITNESS: True,
+        token_replay.Parameters.CLEANING_TOKEN_FLOOD: cleaning_token_flood,
+        token_replay.Parameters.SHOW_PROGRESS_BAR: show_progress_bar,
+        token_replay.Parameters.CASE_ID_KEY: case_id_key,
+    }
 
-    aligned_traces = executor.apply(log, petri_net, initial_marking, final_marking, variant=token_replay_variant,
-                                    parameters=parameters_tr)
+    aligned_traces = executor.apply(
+        log,
+        petri_net,
+        initial_marking,
+        final_marking,
+        variant=token_replay_variant,
+        parameters=parameters_tr,
+    )
 
     return evaluate(aligned_traces)

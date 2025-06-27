@@ -27,7 +27,7 @@ from pm4py.objects.dfg.obj import DFG
 from pm4py.util.compression import util as comut
 from pm4py.util.compression.dtypes import UVCL
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class IMDataStructure(ABC, Generic[T]):

@@ -34,8 +34,10 @@ class Variants(Enum):
     PANDAS = pandas
 
 
-def apply(log: Union[EventLog, pd.DataFrame], parameters: Optional[Dict[Any, Any]] = None) -> List[
-    Tuple[Tuple[str, str], int, Dict[str, Any]]]:
+def apply(
+    log: Union[EventLog, pd.DataFrame],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> List[Tuple[Tuple[str, str], int, Dict[str, Any]]]:
     """
     Provided an event log / dataframe, returns
     a list having as elements the activity-resources with the batches that are detected, divided in:
@@ -79,6 +81,10 @@ def apply(log: Union[EventLog, pd.DataFrame], parameters: Optional[Dict[Any, Any
         parameters = {}
 
     if pandas_utils.check_is_pandas_dataframe(log):
-        return exec_utils.get_variant(Variants.PANDAS).apply(log, parameters=parameters)
+        return exec_utils.get_variant(Variants.PANDAS).apply(
+            log, parameters=parameters
+        )
     else:
-        return exec_utils.get_variant(Variants.LOG).apply(log, parameters=parameters)
+        return exec_utils.get_variant(Variants.LOG).apply(
+            log, parameters=parameters
+        )

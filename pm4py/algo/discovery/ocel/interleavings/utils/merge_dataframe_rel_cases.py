@@ -36,16 +36,26 @@ class Parameters(Enum):
     INDEX_KEY = "index_key"
 
 
-def directly_follows_dataframe(dataframe: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None):
+def directly_follows_dataframe(
+    dataframe: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None
+):
     """
     Calculates the directly-follows dataframe (internal usage)
     """
     if parameters is None:
         parameters = {}
 
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    index_key = exec_utils.get_param_value(Parameters.INDEX_KEY, parameters, constants.DEFAULT_INDEX_KEY)
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    index_key = exec_utils.get_param_value(
+        Parameters.INDEX_KEY, parameters, constants.DEFAULT_INDEX_KEY
+    )
 
     if not (hasattr(dataframe, "attrs") and dataframe.attrs):
         # dataframe has not been initialized through format_dataframe
@@ -57,17 +67,26 @@ def directly_follows_dataframe(dataframe: pd.DataFrame, parameters: Optional[Dic
     insert_parameters = copy(parameters)
     insert_parameters["use_extremes_timestamp"] = True
 
-    dataframe = dataframe_utils.insert_artificial_start_end(dataframe, parameters=insert_parameters)
+    dataframe = dataframe_utils.insert_artificial_start_end(
+        dataframe, parameters=insert_parameters
+    )
 
     df_shifted = dataframe.shift(-1)
-    df_shifted.columns = [x+"_2" for x in df_shifted.columns]
+    df_shifted.columns = [x + "_2" for x in df_shifted.columns]
     dataframe = pandas_utils.concat([dataframe, df_shifted], axis=1)
-    dataframe = dataframe[dataframe[case_id_key] == dataframe[case_id_key+"_2"]]
+    dataframe = dataframe[
+        dataframe[case_id_key] == dataframe[case_id_key + "_2"]
+    ]
 
     return dataframe
 
 
-def merge_dataframes(left_df: pd.DataFrame, right_df: pd.DataFrame, case_relations: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None):
+def merge_dataframes(
+    left_df: pd.DataFrame,
+    right_df: pd.DataFrame,
+    case_relations: pd.DataFrame,
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     """
     Merge the two dataframes based on the provided case relations
 
@@ -94,16 +113,32 @@ def merge_dataframes(left_df: pd.DataFrame, right_df: pd.DataFrame, case_relatio
     if parameters is None:
         parameters = {}
 
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    left_suffix = exec_utils.get_param_value(Parameters.LEFT_SUFFIX, parameters, "_LEFT")
-    right_suffix = exec_utils.get_param_value(Parameters.RIGHT_SUFFIX, parameters, "_RIGHT")
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    left_suffix = exec_utils.get_param_value(
+        Parameters.LEFT_SUFFIX, parameters, "_LEFT"
+    )
+    right_suffix = exec_utils.get_param_value(
+        Parameters.RIGHT_SUFFIX, parameters, "_RIGHT"
+    )
 
     left_df = directly_follows_dataframe(left_df, parameters=parameters)
     right_df = directly_follows_dataframe(right_df, parameters=parameters)
 
-    left_df = left_df.merge(case_relations, left_on=case_id_key, right_on=case_id_key+left_suffix, suffixes=('', ''))
-    del left_df[case_id_key+left_suffix]
+    left_df = left_df.merge(
+        case_relations,
+        left_on=case_id_key,
+        right_on=case_id_key + left_suffix,
+        suffixes=("", ""),
+    )
+    del left_df[case_id_key + left_suffix]
 
-    left_df = left_df.merge(right_df, left_on=case_id_key+right_suffix, right_on=case_id_key, suffixes=(left_suffix, right_suffix))
+    left_df = left_df.merge(
+        right_df,
+        left_on=case_id_key + right_suffix,
+        right_on=case_id_key,
+        suffixes=(left_suffix, right_suffix),
+    )
 
     return left_df

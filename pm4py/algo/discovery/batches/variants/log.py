@@ -38,8 +38,10 @@ class Parameters(Enum):
     MIN_BATCH_SIZE = "min_batch_size"
 
 
-def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> List[
-    Tuple[Tuple[str, str], int, Dict[str, Any]]]:
+def apply(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> List[Tuple[Tuple[str, str], int, Dict[str, Any]]]:
     """
     Provided an event log, returns
     a list having as elements the activity-resources with the batches that are detected, divided in:
@@ -82,15 +84,29 @@ def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]]
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    resource_key = exec_utils.get_param_value(Parameters.RESOURCE_KEY, parameters, xes_constants.DEFAULT_RESOURCE_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters,
-                                                     xes_constants.DEFAULT_TIMESTAMP_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    resource_key = exec_utils.get_param_value(
+        Parameters.RESOURCE_KEY, parameters, xes_constants.DEFAULT_RESOURCE_KEY
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
 
-    events = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_STREAM)
+    events = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_STREAM
+    )
 
     actres_grouping = {}
 

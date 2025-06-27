@@ -59,7 +59,8 @@ def compute_place_invariants(net):
         jb = []
 
         while i < m and j < n:
-            # Find value and index of largest element in the remainder of column j
+            # Find value and index of largest element in the remainder of
+            # column j
             k = np.argmax(np.abs(A[i:m, j])) + i
             p = np.abs(A[k, j])
             if p <= tol:
@@ -89,7 +90,9 @@ def compute_place_invariants(net):
         :param incidence_matrix: Numpy Array
         :return: a collection of numpy arrays that form a base of transposed A
         """
-        # To have the same dimension as described as in https://www7.in.tum.de/~esparza/fcbook-middle.pdf and to get the correct nullspace, we have to transpose
+        # To have the same dimension as described as in
+        # https://www7.in.tum.de/~esparza/fcbook-middle.pdf and to get the
+        # correct nullspace, we have to transpose
         A = np.transpose(incidence_matrix)
         reduced, pivots = rref(A)
         free_vars = [i for i in range(A.shape[1]) if i not in pivots]

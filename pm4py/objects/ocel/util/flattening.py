@@ -35,7 +35,9 @@ class Parameters(Enum):
     EVENT_TIMESTAMP = ocel_constants.PARAM_EVENT_TIMESTAMP
 
 
-def flatten(ocel: OCEL, ot: str, parameters: Optional[Dict[Any, Any]] = None) -> pd.DataFrame:
+def flatten(
+    ocel: OCEL, ot: str, parameters: Optional[Dict[Any, Any]] = None
+) -> pd.DataFrame:
     """
     Flattens the object-centric event log to a traditional event log with the choice of an object type.
     In the flattened log, the objects of a given object type are the cases, and each case
@@ -60,22 +62,37 @@ def flatten(ocel: OCEL, ot: str, parameters: Optional[Dict[Any, Any]] = None) ->
     if parameters is None:
         parameters = {}
 
-    event_activity = exec_utils.get_param_value(Parameters.EVENT_ACTIVITY, parameters,
-                                                ocel.event_activity)
-    event_timestamp = exec_utils.get_param_value(Parameters.EVENT_TIMESTAMP, parameters,
-                                                 ocel.event_timestamp)
+    event_activity = exec_utils.get_param_value(
+        Parameters.EVENT_ACTIVITY, parameters, ocel.event_activity
+    )
+    event_timestamp = exec_utils.get_param_value(
+        Parameters.EVENT_TIMESTAMP, parameters, ocel.event_timestamp
+    )
 
     objects = ocel.objects[ocel.objects[ocel.object_type_column] == ot]
-    objects = objects.rename(columns={ocel.object_id_column: xes_constants.DEFAULT_TRACEID_KEY})
-    objects = objects.rename(columns={x: constants.CASE_ATTRIBUTE_PREFIX + x for x in objects.columns})
+    objects = objects.rename(
+        columns={ocel.object_id_column: xes_constants.DEFAULT_TRACEID_KEY}
+    )
+    objects = objects.rename(
+        columns={
+            x: constants.CASE_ATTRIBUTE_PREFIX + x for x in objects.columns
+        }
+    )
 
     relations = ocel.relations[ocel.relations[ocel.object_type_column] == ot][
-        [ocel.object_id_column, ocel.event_id_column]]
-    relations = relations.rename(columns={ocel.object_id_column: constants.CASE_CONCEPT_NAME})
+        [ocel.object_id_column, ocel.event_id_column]
+    ]
+    relations = relations.rename(
+        columns={ocel.object_id_column: constants.CASE_CONCEPT_NAME}
+    )
 
     objects = objects.merge(relations, on=constants.CASE_CONCEPT_NAME)
 
     events = ocel.events.merge(objects, on=ocel.event_id_column).rename(
-        columns={event_activity: xes_constants.DEFAULT_NAME_KEY, event_timestamp: xes_constants.DEFAULT_TIMESTAMP_KEY})
+        columns={
+            event_activity: xes_constants.DEFAULT_NAME_KEY,
+            event_timestamp: xes_constants.DEFAULT_TIMESTAMP_KEY,
+        }
+    )
 
     return events

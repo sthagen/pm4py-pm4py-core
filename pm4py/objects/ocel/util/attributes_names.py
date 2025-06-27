@@ -25,7 +25,9 @@ from pm4py.objects.ocel import constants
 from pm4py.objects.ocel.obj import OCEL
 
 
-def get_attribute_names(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> List[str]:
+def get_attribute_names(
+    ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None
+) -> List[str]:
     """
     Gets the list of attributes at the event and the object level of an object-centric event log
     (e.g. ["cost", "amount", "name"])
@@ -45,7 +47,16 @@ def get_attribute_names(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None)
     if parameters is None:
         parameters = {}
 
-    attributes = sorted(set(x for x in ocel.events.columns if not x.startswith(constants.OCEL_PREFIX)).union(
-        x for x in ocel.objects.columns if not x.startswith(constants.OCEL_PREFIX)))
+    attributes = sorted(
+        set(
+            x
+            for x in ocel.events.columns
+            if not x.startswith(constants.OCEL_PREFIX)
+        ).union(
+            x
+            for x in ocel.objects.columns
+            if not x.startswith(constants.OCEL_PREFIX)
+        )
+    )
 
     return attributes

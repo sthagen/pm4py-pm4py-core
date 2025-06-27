@@ -22,7 +22,9 @@ Contact: info@processintelligence.solutions
 from pm4py.objects.log.obj import EventLog
 
 
-def insert_event_index_as_event_attribute(stream, event_index_attr_name="@@eventindex"):
+def insert_event_index_as_event_attribute(
+    stream, event_index_attr_name="@@eventindex"
+):
     """
     Insert the current event index as event attribute
 
@@ -41,7 +43,9 @@ def insert_event_index_as_event_attribute(stream, event_index_attr_name="@@event
     return stream
 
 
-def insert_trace_index_as_event_attribute(log, trace_index_attr_name="@@traceindex"):
+def insert_trace_index_as_event_attribute(
+    log, trace_index_attr_name="@@traceindex"
+):
     """
     Inserts the current trace index as event attribute
     (overrides previous values if needed)

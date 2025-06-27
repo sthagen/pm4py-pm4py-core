@@ -31,7 +31,9 @@ def get_param_from_env(name, default):
     return default
 
 
-TEST_CUDF_DATAFRAMES_ENVIRONMENT = get_param_from_env("PM4PY_TEST_CUDF_DATAFRAMES_ENVIRONMENT", False)
+TEST_CUDF_DATAFRAMES_ENVIRONMENT = get_param_from_env(
+    "PM4PY_TEST_CUDF_DATAFRAMES_ENVIRONMENT", False
+)
 
 
 def get_default_timestamp_format():
@@ -54,31 +56,31 @@ def get_default_is_aware_enabled():
     if importlib.util.find_spec("cudf") or TEST_CUDF_DATAFRAMES_ENVIRONMENT:
         return False
         pass
-    
+
     return True
 
 
-PARAMETER_CONSTANT_ACTIVITY_KEY = 'pm4py:param:activity_key'
+PARAMETER_CONSTANT_ACTIVITY_KEY = "pm4py:param:activity_key"
 PARAMETER_CONSTANT_ATTRIBUTE_KEY = "pm4py:param:attribute_key"
-PARAMETER_CONSTANT_TIMESTAMP_KEY = 'pm4py:param:timestamp_key'
-PARAMETER_CONSTANT_START_TIMESTAMP_KEY = 'pm4py:param:start_timestamp_key'
-PARAMETER_CONSTANT_CASEID_KEY = 'pm4py:param:case_id_key'
-PARAMETER_CONSTANT_RESOURCE_KEY = 'pm4py:param:resource_key'
-PARAMETER_CONSTANT_TRANSITION_KEY = 'pm4py:param:transition_key'
-PARAMETER_CONSTANT_GROUP_KEY = 'pm4py:param:group_key'
+PARAMETER_CONSTANT_TIMESTAMP_KEY = "pm4py:param:timestamp_key"
+PARAMETER_CONSTANT_START_TIMESTAMP_KEY = "pm4py:param:start_timestamp_key"
+PARAMETER_CONSTANT_CASEID_KEY = "pm4py:param:case_id_key"
+PARAMETER_CONSTANT_RESOURCE_KEY = "pm4py:param:resource_key"
+PARAMETER_CONSTANT_TRANSITION_KEY = "pm4py:param:transition_key"
+PARAMETER_CONSTANT_GROUP_KEY = "pm4py:param:group_key"
 
-GROUPED_DATAFRAME = 'grouped_dataframe'
-RETURN_EA_COUNT_DICT_AUTOFILTER = 'return_ea_count_dict_autofilter'
+GROUPED_DATAFRAME = "grouped_dataframe"
+RETURN_EA_COUNT_DICT_AUTOFILTER = "return_ea_count_dict_autofilter"
 PARAM_MOST_COMMON_VARIANT = "most_common_variant"
 PARAM_MOST_COMMON_PATHS = "most_common_paths"
 
 CASE_CONCEPT_NAME = "case:concept:name"
-CASE_ATTRIBUTE_GLUE = 'case:concept:name'
-CASE_ATTRIBUTE_PREFIX = 'case:'
+CASE_ATTRIBUTE_GLUE = "case:concept:name"
+CASE_ATTRIBUTE_PREFIX = "case:"
 
 # the following can be removed
-PARAMETER_KEY_CASE_GLUE = 'case_id_glue'
-PARAMETER_KEY_CASE_ATTRIBUTE_PRFIX = 'case:'
+PARAMETER_KEY_CASE_GLUE = "case_id_glue"
+PARAMETER_KEY_CASE_ATTRIBUTE_PRFIX = "case:"
 
 STOCHASTIC_DISTRIBUTION = "stochastic_distribution"
 LAYOUT_INFORMATION_PETRI = "layout_information_petri"
@@ -94,8 +96,14 @@ DEFAULT_FLOW_TIME = "@@flow_time"
 DEFAULT_CLASSIFIER_ATTRIBUTE = "@@classifier"
 
 DEFAULT_ENCODING = get_param_from_env("PM4PY_DEFAULT_ENCODING", "utf-8")
-DEFAULT_XES_PARSER = get_param_from_env("PM4PY_DEFAULT_XES_PARSER", "iterparse" if importlib.util.find_spec("lxml") else "chunk_regex")
-DEFAULT_ALIGNMENTS_VARIANT = get_param_from_env("PM4PY_DEFAULT_ALIGNMENTS_VARIANT", "Variants.VERSION_STATE_EQUATION_A_STAR")
+DEFAULT_XES_PARSER = get_param_from_env(
+    "PM4PY_DEFAULT_XES_PARSER",
+    "iterparse" if importlib.util.find_spec("lxml") else "chunk_regex",
+)
+DEFAULT_ALIGNMENTS_VARIANT = get_param_from_env(
+    "PM4PY_DEFAULT_ALIGNMENTS_VARIANT",
+    "Variants.VERSION_STATE_EQUATION_A_STAR",
+)
 
 PARAM_ARTIFICIAL_START_ACTIVITY = "pm4py:param:art_start_act"
 PARAM_ARTIFICIAL_END_ACTIVITY = "pm4py:param:art_end_act"
@@ -104,23 +112,69 @@ DEFAULT_ARTIFICIAL_END_ACTIVITY = "■"
 
 DEFAULT_BUSINESS_HOURS_WORKCALENDAR = None
 
-SHOW_EVENT_LOG_DEPRECATION = True if get_param_from_env("PM4PY_SHOW_EVENT_LOG_DEPRECATION", "False").lower() == "true" else False
-SHOW_INTERNAL_WARNINGS = True if get_param_from_env("PM4PY_SHOW_INTERNAL_WARNINGS", "True").lower() == "true" else False
+SHOW_EVENT_LOG_DEPRECATION = (
+    True
+    if get_param_from_env("PM4PY_SHOW_EVENT_LOG_DEPRECATION", "False").lower()
+    == "true"
+    else False
+)
+SHOW_INTERNAL_WARNINGS = (
+    True
+    if get_param_from_env("PM4PY_SHOW_INTERNAL_WARNINGS", "True").lower()
+    == "true"
+    else False
+)
 
 TRIGGERED_DT_PARSING_WARNING = False
 
 DEFAULT_BGCOLOR = get_param_from_env("PM4PY_DEFAULT_BGCOLOR", "white")
-DEFAULT_FORMAT_GVIZ_VIEW = get_param_from_env("PM4PY_DEFAULT_FORMAT_GVIZ_VIEW", "png")
+DEFAULT_FORMAT_GVIZ_VIEW = get_param_from_env(
+    "PM4PY_DEFAULT_FORMAT_GVIZ_VIEW", "png"
+)
 DEFAULT_RANKDIR_GVIZ = get_param_from_env("PM4PY_DEFAULT_RANKDIR_GVIZ", "LR")
-DEFAULT_TIMESTAMP_PARSE_FORMAT = get_param_from_env("PM4PY_DEFAULT_TIMESTAMP_PARSE_FORMAT", get_default_timestamp_format())
-DEFAULT_XES_TIMESTAMP_PARSE_FORMAT = get_param_from_env("PM4PY_DEFAULT_XES_TIMESTAMP_PARSE_FORMAT", get_default_xes_timestamp_format())
+DEFAULT_TIMESTAMP_PARSE_FORMAT = get_param_from_env(
+    "PM4PY_DEFAULT_TIMESTAMP_PARSE_FORMAT", get_default_timestamp_format()
+)
+DEFAULT_XES_TIMESTAMP_PARSE_FORMAT = get_param_from_env(
+    "PM4PY_DEFAULT_XES_TIMESTAMP_PARSE_FORMAT",
+    get_default_xes_timestamp_format(),
+)
 
-ENABLE_MULTIPROCESSING_DEFAULT = True if get_param_from_env("PM4PY_ENABLE_MULTIPROCESSING_DEFAULT", "False").lower() == "true" else False
-SHOW_PROGRESS_BAR = True if get_param_from_env("PM4PY_SHOW_PROGRESS_BAR", "True").lower() == "true" else False
-DEFAULT_READ_XES_LEGACY_OBJECT = True if get_param_from_env("PM4PY_DEFAULT_READ_XES_LEGACY_OBJECT", "False").lower() == "true" else False
-DEFAULT_RETURN_DIAGNOSTICS_DATAFRAME = True if get_param_from_env("PM4PY_DEFAULT_RETURN_DIAGNOSTICS_DATAFRAME", "False").lower() == "true" else False
-DEFAULT_PANDAS_PARSING_DTYPE_BACKEND = get_param_from_env("PM4PY_DEFAULT_PANDAS_PARSING_DTYPE_BACKEND", "numpy_nullable")
-ENABLE_DATETIME_COLUMNS_AWARE = get_param_from_env("PM4PY_ENABLE_DATETIME_COLUMNS_AWARE", get_default_is_aware_enabled())
+ENABLE_MULTIPROCESSING_DEFAULT = (
+    True
+    if get_param_from_env(
+        "PM4PY_ENABLE_MULTIPROCESSING_DEFAULT", "False"
+    ).lower()
+    == "true"
+    else False
+)
+SHOW_PROGRESS_BAR = (
+    True
+    if get_param_from_env("PM4PY_SHOW_PROGRESS_BAR", "True").lower() == "true"
+    else False
+)
+DEFAULT_READ_XES_LEGACY_OBJECT = (
+    True
+    if get_param_from_env(
+        "PM4PY_DEFAULT_READ_XES_LEGACY_OBJECT", "False"
+    ).lower()
+    == "true"
+    else False
+)
+DEFAULT_RETURN_DIAGNOSTICS_DATAFRAME = (
+    True
+    if get_param_from_env(
+        "PM4PY_DEFAULT_RETURN_DIAGNOSTICS_DATAFRAME", "False"
+    ).lower()
+    == "true"
+    else False
+)
+DEFAULT_PANDAS_PARSING_DTYPE_BACKEND = get_param_from_env(
+    "PM4PY_DEFAULT_PANDAS_PARSING_DTYPE_BACKEND", "numpy_nullable"
+)
+ENABLE_DATETIME_COLUMNS_AWARE = get_param_from_env(
+    "PM4PY_ENABLE_DATETIME_COLUMNS_AWARE", get_default_is_aware_enabled()
+)
 
 # Default business hour slots: Mondays to Fridays, 7:00 - 17:00 (in seconds)
 DEFAULT_BUSINESS_HOUR_SLOTS = [
@@ -135,24 +189,64 @@ OPENAI_MAX_LEN = int(get_param_from_env("PM4PY_OPENAI_MAX_LEN", "10000"))
 OPENAI_API_KEY = get_param_from_env("PM4PY_OPENAI_API_KEY", None)
 ANTHROPIC_API_KEY = get_param_from_env("PM4PY_ANTHROPIC_API_KEY", None)
 GOOGLE_API_KEY = get_param_from_env("PM4PY_GOOGLE_API_KEY", None)
-OPENAI_API_URL = get_param_from_env("PM4PY_OPENAI_API_URL", "https://api.openai.com/v1/")
-OPENAI_DEFAULT_MODEL = get_param_from_env("PM4PY_OPENAI_DEFAULT_MODEL", "gpt-4.1")
-OPENAI_DEFAULT_VISION_MODEL = get_param_from_env("PM4PY_OPENAI_DEFAULT_VISION_MODEL", "gpt-4.1")
-ANTHROPIC_DEFAULT_MODEL = get_param_from_env("PM4PY_ANTHROPIC_DEFAULT_MODEL", "claude-3-7-sonnet-20250219")
-GOOGLE_DEFAULT_MODEL = get_param_from_env("PM4PY_GOOGLE_DEFAULT_MODEL", "gemini-2.0-flash")
-OPENAI_DEFAULT_STT_MODEL = get_param_from_env("PM4PY_OPENAI_DEFAULT_STT_MODEL", "whisper-1")
-OPENAI_DEFAULT_TTS_MODEL = get_param_from_env("PM4PY_OPENAI_DEFAULT_TTS_MODEL", "tts-1")
-OPENAI_DEFAULT_TTS_VOICE = get_param_from_env("PM4PY_OPENAI_DEFAULT_TTS_VOICE", "alloy")
+OPENAI_API_URL = get_param_from_env(
+    "PM4PY_OPENAI_API_URL", "https://api.openai.com/v1/"
+)
+OPENAI_DEFAULT_MODEL = get_param_from_env(
+    "PM4PY_OPENAI_DEFAULT_MODEL", "gpt-4.1"
+)
+OPENAI_DEFAULT_VISION_MODEL = get_param_from_env(
+    "PM4PY_OPENAI_DEFAULT_VISION_MODEL", "gpt-4.1"
+)
+ANTHROPIC_DEFAULT_MODEL = get_param_from_env(
+    "PM4PY_ANTHROPIC_DEFAULT_MODEL", "claude-3-7-sonnet-20250219"
+)
+GOOGLE_DEFAULT_MODEL = get_param_from_env(
+    "PM4PY_GOOGLE_DEFAULT_MODEL", "gemini-2.0-flash"
+)
+OPENAI_DEFAULT_STT_MODEL = get_param_from_env(
+    "PM4PY_OPENAI_DEFAULT_STT_MODEL", "whisper-1"
+)
+OPENAI_DEFAULT_TTS_MODEL = get_param_from_env(
+    "PM4PY_OPENAI_DEFAULT_TTS_MODEL", "tts-1"
+)
+OPENAI_DEFAULT_TTS_VOICE = get_param_from_env(
+    "PM4PY_OPENAI_DEFAULT_TTS_VOICE", "alloy"
+)
 
-ENABLE_INTERNAL_IMPORTS = False if get_param_from_env("PM4PY_ENABLE_INTERNAL_IMPORTS", "True").lower() == "false" else True
+ENABLE_INTERNAL_IMPORTS = (
+    False
+    if get_param_from_env("PM4PY_ENABLE_INTERNAL_IMPORTS", "True").lower()
+    == "false"
+    else True
+)
 
-OPENAI_EXEC_RESULT = True if get_param_from_env("PM4PY_OPENAI_EXEC_RESULT", "False").lower() == "true" else False
+OPENAI_EXEC_RESULT = (
+    True
+    if get_param_from_env("PM4PY_OPENAI_EXEC_RESULT", "False").lower()
+    == "true"
+    else False
+)
 DEFAULT_GVIZ_VIEW = get_param_from_env("PM4PY_DEFAULT_GVIZ_VIEW", None)
-DEFAULT_ENABLE_VISUALIZATIONS_VIEW = False if get_param_from_env("PM4PY_DEFAULT_ENABLE_VISUALIZATIONS_VIEW", "True").lower() == "false" else True
-DEFAULT_ENABLE_GRAPH_TITLES = True if get_param_from_env("PM4PY_DEFAULT_ENABLE_GRAPH_TITLES", "False").lower() == "true" else False
+DEFAULT_ENABLE_VISUALIZATIONS_VIEW = (
+    False
+    if get_param_from_env(
+        "PM4PY_DEFAULT_ENABLE_VISUALIZATIONS_VIEW", "True"
+    ).lower()
+    == "false"
+    else True
+)
+DEFAULT_ENABLE_GRAPH_TITLES = (
+    True
+    if get_param_from_env("PM4PY_DEFAULT_ENABLE_GRAPH_TITLES", "False").lower()
+    == "true"
+    else False
+)
 
 JQUERY_LINK = "https://code.jquery.com/jquery-3.6.3.min.js"
-GRAPHVIZJS_LINK = "https://github.com/mdaines/viz-js/releases/download/v1.8.2/viz.js"
+GRAPHVIZJS_LINK = (
+    "https://github.com/mdaines/viz-js/releases/download/v1.8.2/viz.js"
+)
 
 if importlib.util.find_spec("psutil"):
     import psutil

@@ -56,10 +56,14 @@ def draw_recursive(trie_node: Trie, parent: Union[str, None], gviz: Graph):
         gviz.edge(parent, node_id)
     children = sorted(list(trie_node.children), key=lambda x: x._label)
     for child in children:
-        draw_recursive(child, node_id if trie_node.label is not None else None, gviz)
+        draw_recursive(
+            child, node_id if trie_node.label is not None else None, gviz
+        )
 
 
-def apply(trie: Trie, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Graph:
+def apply(
+    trie: Trie, parameters: Optional[Dict[Union[str, Parameters], Any]] = None
+) -> Graph:
     """
     Represents the trie
 
@@ -79,26 +83,44 @@ def apply(trie: Trie, parameters: Optional[Dict[Union[str, Parameters], Any]] = 
     if parameters is None:
         parameters = {}
 
-    image_format = exec_utils.get_param_value(Parameters.FORMAT, parameters, "png")
-    bgcolor = exec_utils.get_param_value(Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR)
+    image_format = exec_utils.get_param_value(
+        Parameters.FORMAT, parameters, "png"
+    )
+    bgcolor = exec_utils.get_param_value(
+        Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR
+    )
 
-    enable_graph_title = exec_utils.get_param_value(Parameters.ENABLE_GRAPH_TITLE, parameters, constants.DEFAULT_ENABLE_GRAPH_TITLES)
-    graph_title = exec_utils.get_param_value(Parameters.GRAPH_TITLE, parameters, "Prefix Tree")
+    enable_graph_title = exec_utils.get_param_value(
+        Parameters.ENABLE_GRAPH_TITLE,
+        parameters,
+        constants.DEFAULT_ENABLE_GRAPH_TITLES,
+    )
+    graph_title = exec_utils.get_param_value(
+        Parameters.GRAPH_TITLE, parameters, "Prefix Tree"
+    )
 
-    filename = tempfile.NamedTemporaryFile(suffix='.gv')
+    filename = tempfile.NamedTemporaryFile(suffix=".gv")
     filename.close()
-    
-    viz = Graph("pt", filename=filename.name, engine='dot', graph_attr={'bgcolor': bgcolor})
-    viz.attr('node', shape='ellipse', fixedsize='false')
+
+    viz = Graph(
+        "pt",
+        filename=filename.name,
+        engine="dot",
+        graph_attr={"bgcolor": bgcolor},
+    )
+    viz.attr("node", shape="ellipse", fixedsize="false")
 
     if enable_graph_title:
-        viz.attr(label='<<FONT POINT-SIZE="20">'+graph_title+'</FONT>>', labelloc="top")
+        viz.attr(
+            label='<<FONT POINT-SIZE="20">' + graph_title + "</FONT>>",
+            labelloc="top",
+        )
 
     draw_recursive(trie, None, viz)
 
-    viz.attr(overlap='false')
-    viz.attr(splines='false')
-    viz.attr(rankdir='LR')
+    viz.attr(overlap="false")
+    viz.attr(splines="false")
+    viz.attr(rankdir="LR")
     viz.format = image_format.replace("html", "plain-ext")
 
     return viz

@@ -34,8 +34,13 @@ from pm4py.util.compression.dtypes import UVCL
 class POWLFlowerModelUVCL(FlowerModelUVCL):
 
     @classmethod
-    def apply(cls, obj: IMDataStructureUVCL, pool: Pool = None, manager: Manager = None, parameters: Optional[Dict[str, Any]] = None) -> Optional[
-        Tuple[OperatorPOWL, List[IMDataStructureUVCL]]]:
+    def apply(
+        cls,
+        obj: IMDataStructureUVCL,
+        pool: Pool = None,
+        manager: Manager = None,
+        parameters: Optional[Dict[str, Any]] = None,
+    ) -> Optional[Tuple[OperatorPOWL, List[IMDataStructureUVCL]]]:
         log = obj.data_structure
         uvcl_do = UVCL()
         for a in comut.get_alphabet(log):
@@ -45,5 +50,3 @@ class POWLFlowerModelUVCL(FlowerModelUVCL):
         im_uvcl_redo = IMDataStructureUVCL(uvcl_redo)
         children = [im_uvcl_do, im_uvcl_redo]
         return OperatorPOWL(Operator.LOOP, children), children
-
-

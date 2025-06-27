@@ -33,7 +33,12 @@ class Parameters(Enum):
     TIMESTAMP_KEY = PARAMETER_CONSTANT_TIMESTAMP_KEY
 
 
-def filter_on_case_performance(log: EventLog, inf_perf: float, sup_perf: float, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> EventLog:
+def filter_on_case_performance(
+    log: EventLog,
+    inf_perf: float,
+    sup_perf: float,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> EventLog:
     """
     Gets a filtered log keeping only traces that satisfy the given performance requirements
 
@@ -56,10 +61,20 @@ def filter_on_case_performance(log: EventLog, inf_perf: float, sup_perf: float, 
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY)
-    filtered_log = EventLog([trace for trace in log if satisfy_perf(trace, inf_perf, sup_perf, timestamp_key)])
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY
+    )
+    filtered_log = EventLog(
+        [
+            trace
+            for trace in log
+            if satisfy_perf(trace, inf_perf, sup_perf, timestamp_key)
+        ]
+    )
     return filtered_log
 
 
@@ -81,11 +96,13 @@ def filter_on_ncases(log: EventLog, max_no_cases: int = 1000) -> EventLog:
     """
     log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG)
 
-    filtered_log = EventLog(log[:min(len(log), max_no_cases)])
+    filtered_log = EventLog(log[: min(len(log), max_no_cases)])
     return filtered_log
 
 
-def filter_on_case_size(log: EventLog, min_case_size: int = 2, max_case_size=None) -> EventLog:
+def filter_on_case_size(
+    log: EventLog, min_case_size: int = 2, max_case_size=None
+) -> EventLog:
     """
     Get only traces in the log with a given size
 
@@ -106,13 +123,23 @@ def filter_on_case_size(log: EventLog, min_case_size: int = 2, max_case_size=Non
     log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG)
 
     if max_case_size is not None:
-        filtered_log = EventLog([trace for trace in log if min_case_size <= len(trace) <= max_case_size])
+        filtered_log = EventLog(
+            [
+                trace
+                for trace in log
+                if min_case_size <= len(trace) <= max_case_size
+            ]
+        )
     else:
-        filtered_log = EventLog([trace for trace in log if len(trace) >= min_case_size])
+        filtered_log = EventLog(
+            [trace for trace in log if len(trace) >= min_case_size]
+        )
     return filtered_log
 
 
-def satisfy_perf(trace: Trace, inf_perf: float, sup_perf: float, timestamp_key: str) -> bool:
+def satisfy_perf(
+    trace: Trace, inf_perf: float, sup_perf: float, timestamp_key: str
+) -> bool:
     """
     Checks if the trace satisfy the performance requirements
 
@@ -133,13 +160,17 @@ def satisfy_perf(trace: Trace, inf_perf: float, sup_perf: float, timestamp_key: 
         Boolean (is True if the trace satisfy the given performance requirements)
     """
     if trace:
-        trace_duration = (trace[-1][timestamp_key] - trace[0][timestamp_key]).total_seconds()
+        trace_duration = (
+            trace[-1][timestamp_key] - trace[0][timestamp_key]
+        ).total_seconds()
         return inf_perf <= trace_duration <= sup_perf
     return False
 
 
 def filter_case_performance(log, inf_perf, sup_perf, parameters=None):
-    return filter_on_case_performance(log, inf_perf, sup_perf, parameters=parameters)
+    return filter_on_case_performance(
+        log, inf_perf, sup_perf, parameters=parameters
+    )
 
 
 def apply(df, parameters=None):
@@ -151,4 +182,6 @@ def apply(df, parameters=None):
 def apply_auto_filter(df, parameters=None):
     del df
     del parameters
-    raise NotImplementedError("apply_auto_filter method not available for case filter")
+    raise NotImplementedError(
+        "apply_auto_filter method not available for case filter"
+    )

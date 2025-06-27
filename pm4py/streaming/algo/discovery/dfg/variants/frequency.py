@@ -54,10 +54,12 @@ class StreamingDfgDiscovery(StreamingAlgorithm):
             parameters = {}
 
         self.parameters = parameters
-        self.activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters,
-                                                       xes_constants.DEFAULT_NAME_KEY)
-        self.case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters,
-                                                      constants.CASE_CONCEPT_NAME)
+        self.activity_key = exec_utils.get_param_value(
+            Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+        )
+        self.case_id_key = exec_utils.get_param_value(
+            Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+        )
         self.build_dictionaries(parameters)
         StreamingAlgorithm.__init__(self)
 
@@ -76,11 +78,21 @@ class StreamingDfgDiscovery(StreamingAlgorithm):
              - Parameters.ACT_ID: identifier of the dictionary hosting the count of the activities (2)
              - Parameters.START_ACT_DICT_ID: identifier of the dictionary hosting the count of the start activities (3)
         """
-        dict_variant = exec_utils.get_param_value(Parameters.DICT_VARIANT, parameters, generator.Variants.THREAD_SAFE)
-        case_dict_id = exec_utils.get_param_value(Parameters.CASE_DICT_ID, parameters, 0)
-        dfg_dict_id = exec_utils.get_param_value(Parameters.DFG_DICT_ID, parameters, 1)
-        act_dict_id = exec_utils.get_param_value(Parameters.ACT_DICT_ID, parameters, 2)
-        start_act_dict_id = exec_utils.get_param_value(Parameters.START_ACT_DICT_ID, parameters, 3)
+        dict_variant = exec_utils.get_param_value(
+            Parameters.DICT_VARIANT, parameters, generator.Variants.THREAD_SAFE
+        )
+        case_dict_id = exec_utils.get_param_value(
+            Parameters.CASE_DICT_ID, parameters, 0
+        )
+        dfg_dict_id = exec_utils.get_param_value(
+            Parameters.DFG_DICT_ID, parameters, 1
+        )
+        act_dict_id = exec_utils.get_param_value(
+            Parameters.ACT_DICT_ID, parameters, 2
+        )
+        start_act_dict_id = exec_utils.get_param_value(
+            Parameters.START_ACT_DICT_ID, parameters, 3
+        )
         parameters_case_dict = copy(parameters)
         parameters_case_dict[Parameters.DICT_ID] = case_dict_id
         parameters_dfg = copy(parameters)
@@ -89,10 +101,18 @@ class StreamingDfgDiscovery(StreamingAlgorithm):
         parameters_activities[Parameters.DICT_ID] = act_dict_id
         parameters_start_activities = copy(parameters)
         parameters_start_activities[Parameters.DICT_ID] = start_act_dict_id
-        self.case_dict = generator.apply(variant=dict_variant, parameters=parameters_case_dict)
-        self.dfg = generator.apply(variant=dict_variant, parameters=parameters_dfg)
-        self.activities = generator.apply(variant=dict_variant, parameters=parameters_activities)
-        self.start_activities = generator.apply(variant=dict_variant, parameters=parameters_start_activities)
+        self.case_dict = generator.apply(
+            variant=dict_variant, parameters=parameters_case_dict
+        )
+        self.dfg = generator.apply(
+            variant=dict_variant, parameters=parameters_dfg
+        )
+        self.activities = generator.apply(
+            variant=dict_variant, parameters=parameters_activities
+        )
+        self.start_activities = generator.apply(
+            variant=dict_variant, parameters=parameters_start_activities
+        )
 
     def event_without_activity_or_case(self, event):
         """
@@ -135,7 +155,9 @@ class StreamingDfgDiscovery(StreamingAlgorithm):
                 if activity not in self.start_activities:
                     self.start_activities[activity] = 1
                 else:
-                    self.start_activities[activity] = int(self.start_activities[activity]) + 1
+                    self.start_activities[activity] = (
+                        int(self.start_activities[activity]) + 1
+                    )
             else:
                 df = self.encode_tuple((self.case_dict[case], activity))
                 if df not in self.dfg:
@@ -167,8 +189,12 @@ class StreamingDfgDiscovery(StreamingAlgorithm):
         """
         dfg = {eval(x): int(self.dfg[x]) for x in self.dfg}
         activities = {x: int(self.activities[x]) for x in self.activities}
-        start_activities = {x: int(self.start_activities[x]) for x in self.start_activities}
-        end_activities = dict(Counter(self.case_dict[x] for x in self.case_dict))
+        start_activities = {
+            x: int(self.start_activities[x]) for x in self.start_activities
+        }
+        end_activities = dict(
+            Counter(self.case_dict[x] for x in self.case_dict)
+        )
         return dfg, activities, start_activities, end_activities
 
 

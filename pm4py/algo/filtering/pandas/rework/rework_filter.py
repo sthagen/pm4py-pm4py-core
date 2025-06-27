@@ -36,7 +36,11 @@ class Parameters(Enum):
 INT_CASE_ACT_SIZE = "@@int_case_act_size"
 
 
-def apply(df0: pd.DataFrame, activity: str, parameters: Optional[Dict[Any, Any]] = None) -> pd.DataFrame:
+def apply(
+    df0: pd.DataFrame,
+    activity: str,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> pd.DataFrame:
     """
     Applies the rework filter on the provided dataframe and activity.
     This filter the cases of the log having at least Parameters.MIN_OCCURRENCES (default: 2) occurrences
@@ -67,21 +71,33 @@ def apply(df0: pd.DataFrame, activity: str, parameters: Optional[Dict[Any, Any]]
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    min_occurrences = exec_utils.get_param_value(Parameters.MIN_OCCURRENCES, parameters, 2)
-    positive = exec_utils.get_param_value(Parameters.POSITIVE, parameters, True)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    min_occurrences = exec_utils.get_param_value(
+        Parameters.MIN_OCCURRENCES, parameters, 2
+    )
+    positive = exec_utils.get_param_value(
+        Parameters.POSITIVE, parameters, True
+    )
 
     df = df0.copy()
     df = df[list({activity_key, case_id_key})]
     df = df[df[activity_key] == activity]
     df[INT_CASE_ACT_SIZE] = df.groupby([activity_key, case_id_key]).cumcount()
-    cases = pandas_utils.format_unique(df[df[INT_CASE_ACT_SIZE] >= (min_occurrences-1)][case_id_key].unique())
+    cases = pandas_utils.format_unique(
+        df[df[INT_CASE_ACT_SIZE] >= (min_occurrences - 1)][
+            case_id_key
+        ].unique()
+    )
 
     if positive:
         ret = df0[df0[case_id_key].isin(cases)]
     else:
         ret = df0[~df0[case_id_key].isin(cases)]
 
-    ret.attrs = copy(df0.attrs) if hasattr(df0, 'attrs') else {}
+    ret.attrs = copy(df0.attrs) if hasattr(df0, "attrs") else {}
     return ret

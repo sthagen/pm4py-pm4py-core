@@ -24,20 +24,37 @@ from itertools import combinations
 from typing import Optional, Tuple, List, TypeVar, Generic, Dict, Any
 
 from pm4py.algo.discovery.inductive.dtypes.im_ds import IMDataStructureUVCL
-from pm4py.algo.discovery.powl.inductive.fall_through.empty_traces import POWLEmptyTracesUVCL
+from pm4py.algo.discovery.powl.inductive.fall_through.empty_traces import (
+    POWLEmptyTracesUVCL,
+)
 from pm4py.algo.discovery.inductive.variants.abc import InductiveMinerFramework
 
-from pm4py.algo.discovery.powl.inductive.base_case.factory import BaseCaseFactory
+from pm4py.algo.discovery.powl.inductive.base_case.factory import (
+    BaseCaseFactory,
+)
 from pm4py.algo.discovery.powl.inductive.cuts.factory import CutFactory
-from pm4py.algo.discovery.powl.inductive.fall_through.factory import FallThroughFactory
-from pm4py.algo.discovery.powl.inductive.utils.filtering import FILTERING_TYPE, FilteringType, \
-    filter_most_frequent_variants, FILTERING_THRESHOLD, filter_most_frequent_variants_with_decreasing_factor, \
-    DEFAULT_FILTERING_TYPE
-from pm4py.algo.discovery.powl.inductive.variants.powl_discovery_varaints import POWLDiscoveryVariant
+from pm4py.algo.discovery.powl.inductive.fall_through.factory import (
+    FallThroughFactory,
+)
+from pm4py.algo.discovery.powl.inductive.utils.filtering import (
+    FILTERING_TYPE,
+    FilteringType,
+    filter_most_frequent_variants,
+    FILTERING_THRESHOLD,
+    filter_most_frequent_variants_with_decreasing_factor,
+    DEFAULT_FILTERING_TYPE,
+)
+from pm4py.algo.discovery.powl.inductive.variants.powl_discovery_varaints import (
+    POWLDiscoveryVariant, )
 
-from pm4py.objects.powl.obj import POWL, StrictPartialOrder, Sequence, OperatorPOWL
+from pm4py.objects.powl.obj import (
+    POWL,
+    StrictPartialOrder,
+    Sequence,
+    OperatorPOWL,
+)
 
-T = TypeVar('T', bound=IMDataStructureUVCL)
+T = TypeVar("T", bound=IMDataStructureUVCL)
 
 
 class IMBasePOWL(Generic[T], InductiveMinerFramework[T]):
@@ -45,13 +62,19 @@ class IMBasePOWL(Generic[T], InductiveMinerFramework[T]):
     def instance(self) -> POWLDiscoveryVariant:
         return POWLDiscoveryVariant.TREE
 
-    def apply(self, obj: IMDataStructureUVCL, parameters: Optional[Dict[str, Any]] = None) -> POWL:
+    def apply(
+        self,
+        obj: IMDataStructureUVCL,
+        parameters: Optional[Dict[str, Any]] = None,
+    ) -> POWL:
         if FILTERING_TYPE not in parameters.keys():
             filtering_type = DEFAULT_FILTERING_TYPE
         else:
             filtering_type = parameters[FILTERING_TYPE]
             if filtering_type not in FilteringType:
-                raise KeyError("Invalid FILTERING_TYPE: " + str(filtering_type))
+                raise KeyError(
+                    "Invalid FILTERING_TYPE: " + str(filtering_type)
+                )
 
         empty_traces = POWLEmptyTracesUVCL.apply(obj, parameters)
         if empty_traces is not None:
@@ -69,7 +92,9 @@ class IMBasePOWL(Generic[T], InductiveMinerFramework[T]):
             return powl
         else:
             if filtering_type is FilteringType.DYNAMIC:
-                filtered_log = filter_most_frequent_variants(obj.data_structure)
+                filtered_log = filter_most_frequent_variants(
+                    obj.data_structure
+                )
                 if len(filtered_log.data_structure) > 0:
                     return self.apply(filtered_log, parameters=parameters)
 
@@ -78,10 +103,16 @@ class IMBasePOWL(Generic[T], InductiveMinerFramework[T]):
                     t = parameters[FILTERING_THRESHOLD]
                     if isinstance(t, float) and 0 <= t < 1:
                         if t > 0:
-                            filtered_log = filter_most_frequent_variants_with_decreasing_factor(obj.data_structure,
-                                                                                                decreasing_factor=t)
-                            if 0 < len(filtered_log.data_structure) < len(obj.data_structure):
-                                return self.apply(filtered_log, parameters=parameters)
+                            filtered_log = filter_most_frequent_variants_with_decreasing_factor(
+                                obj.data_structure, decreasing_factor=t)
+                            if (
+                                0
+                                < len(filtered_log.data_structure)
+                                < len(obj.data_structure)
+                            ):
+                                return self.apply(
+                                    filtered_log, parameters=parameters
+                                )
                     else:
                         raise KeyError("Invalid filtering threshold!")
             else:
@@ -90,16 +121,29 @@ class IMBasePOWL(Generic[T], InductiveMinerFramework[T]):
             ft = self.fall_through(obj, parameters)
             return self._recurse(ft[0], ft[1], parameters=parameters)
 
-    def apply_base_cases(self, obj: T, parameters: Optional[Dict[str, Any]] = None) -> Optional[POWL]:
+    def apply_base_cases(
+        self, obj: T, parameters: Optional[Dict[str, Any]] = None
+    ) -> Optional[POWL]:
         return BaseCaseFactory.apply_base_cases(obj, parameters=parameters)
 
-    def find_cut(self, obj: T, parameters: Optional[Dict[str, Any]] = None) -> Optional[Tuple[POWL, List[T]]]:
+    def find_cut(
+        self, obj: T, parameters: Optional[Dict[str, Any]] = None
+    ) -> Optional[Tuple[POWL, List[T]]]:
         return CutFactory.find_cut(obj, parameters=parameters)
 
-    def fall_through(self, obj: T, parameters: Optional[Dict[str, Any]] = None) -> Tuple[POWL, List[T]]:
-        return FallThroughFactory.fall_through(obj, self._pool, self._manager, parameters=parameters)
+    def fall_through(
+        self, obj: T, parameters: Optional[Dict[str, Any]] = None
+    ) -> Tuple[POWL, List[T]]:
+        return FallThroughFactory.fall_through(
+            obj, self._pool, self._manager, parameters=parameters
+        )
 
-    def _recurse(self, powl: POWL, objs: List[T], parameters: Optional[Dict[str, Any]] = None):
+    def _recurse(
+        self,
+        powl: POWL,
+        objs: List[T],
+        parameters: Optional[Dict[str, Any]] = None,
+    ):
         children = [self.apply(obj, parameters=parameters) for obj in objs]
         if isinstance(powl, StrictPartialOrder):
             powl_new = StrictPartialOrder(children)

@@ -43,7 +43,7 @@ def get_temp_file_name(format):
     format
         Format of the target image
     """
-    filename = tempfile.NamedTemporaryFile(suffix='.' + format)
+    filename = tempfile.NamedTemporaryFile(suffix="." + format)
 
     name = filename.name
 
@@ -75,12 +75,20 @@ def apply(sna: SNA, parameters=None):
     if parameters is None:
         parameters = {}
 
-    weight_threshold = exec_utils.get_param_value(Parameters.WEIGHT_THRESHOLD, parameters, 0)
+    weight_threshold = exec_utils.get_param_value(
+        Parameters.WEIGHT_THRESHOLD, parameters, 0
+    )
     directed = sna.is_directed
 
     temp_file_name = get_temp_file_name("html")
 
-    got_net = Network(height="750px", width="100%", bgcolor="black", font_color="#3de975", directed=directed)
+    got_net = Network(
+        height="750px",
+        width="100%",
+        bgcolor="black",
+        font_color="#3de975",
+        directed=directed,
+    )
     # set the physics layout of the network
     got_net.barnes_hut()
 
@@ -90,10 +98,22 @@ def apply(sna: SNA, parameters=None):
             dst = c[1]
 
             # I have to add some options here, there is no parameter
-            highlight = {'border': "#3de975", 'background': "#41e9df"}
+            highlight = {"border": "#3de975", "background": "#41e9df"}
             # color = {'border': "#000000", 'background': "#123456"}
-            got_net.add_node(src, src, title=src, labelHighlightBold=True, color={'highlight': highlight})
-            got_net.add_node(dst, dst, title=dst, labelHighlightBold=True, color={'highlight': highlight})
+            got_net.add_node(
+                src,
+                src,
+                title=src,
+                labelHighlightBold=True,
+                color={"highlight": highlight},
+            )
+            got_net.add_node(
+                dst,
+                dst,
+                title=dst,
+                labelHighlightBold=True,
+                color={"highlight": highlight},
+            )
             got_net.add_edge(src, dst, value=w, title=w)
 
     neighbor_map = got_net.get_adj_list()
@@ -106,24 +126,24 @@ def apply(sna: SNA, parameters=None):
         else:
             node["title"] = "<h3>" + node["title"] + " Links: </h3>"
         for neighbor in neighbor_map[node["id"]]:
-            if (counter % 10 == 0):
+            if counter % 10 == 0:
                 node["title"] += "<br>::: " + neighbor
             else:
                 node["title"] += " ::: " + neighbor
             node["value"] = len(neighbor_map[node["id"]])
             counter += 1
 
-    got_net.show_buttons(filter_=['nodes', 'edges', 'physics'])
+    got_net.show_buttons(filter_=["nodes", "edges", "physics"])
 
     F = open(temp_file_name, "w")
     try:
         F.write(got_net.generate_html())
         F.close()
-    except:
+    except BaseException:
         # networkx 3.1
         F.close()
         got_net.write_html(temp_file_name)
-    
+
     return temp_file_name
 
 
@@ -142,15 +162,29 @@ def view(temp_file_name, parameters=None):
         parameters = {}
 
     if constants.DEFAULT_ENABLE_VISUALIZATIONS_VIEW:
-        iframe_width = exec_utils.get_param_value(Parameters.IFRAME_WIDTH, parameters, 900)
-        iframe_height = exec_utils.get_param_value(Parameters.IFRAME_HEIGHT, parameters, 600)
-        local_jupyter_file_name = exec_utils.get_param_value(Parameters.LOCAL_JUPYTER_FILE_NAME, parameters, "jupyter_sna_vis.html")
+        iframe_width = exec_utils.get_param_value(
+            Parameters.IFRAME_WIDTH, parameters, 900
+        )
+        iframe_height = exec_utils.get_param_value(
+            Parameters.IFRAME_HEIGHT, parameters, 600
+        )
+        local_jupyter_file_name = exec_utils.get_param_value(
+            Parameters.LOCAL_JUPYTER_FILE_NAME,
+            parameters,
+            "jupyter_sna_vis.html",
+        )
 
         if vis_utils.check_visualization_inside_jupyter():
             from IPython.display import IFrame
+
             shutil.copyfile(temp_file_name, local_jupyter_file_name)
-            iframe = IFrame(local_jupyter_file_name, width=iframe_width, height=iframe_height)
+            iframe = IFrame(
+                local_jupyter_file_name,
+                width=iframe_width,
+                height=iframe_height,
+            )
             from IPython.display import display
+
             return display(iframe)
         else:
             vis_utils.open_opsystem_image_viewer(temp_file_name)

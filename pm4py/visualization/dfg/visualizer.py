@@ -40,7 +40,14 @@ class Variants(Enum):
 DEFAULT_VARIANT = Variants.FREQUENCY
 
 
-def apply(dfg0: Dict[Tuple[str, str], float], log: EventLog = None, activities_count : Dict[str, int] = None, serv_time: Dict[str, float] = None, parameters: Optional[Dict[Any, Any]] = None, variant=DEFAULT_VARIANT) -> graphviz.Digraph:
+def apply(
+    dfg0: Dict[Tuple[str, str], float],
+    log: EventLog = None,
+    activities_count: Dict[str, int] = None,
+    serv_time: Dict[str, float] = None,
+    parameters: Optional[Dict[Any, Any]] = None,
+    variant=DEFAULT_VARIANT,
+) -> graphviz.Digraph:
     """
     Visualize a frequency/performance directly-follows graph
 
@@ -67,7 +74,13 @@ def apply(dfg0: Dict[Tuple[str, str], float], log: EventLog = None, activities_c
         Graphviz digraph
     """
     dfg = deepcopy(dfg0)
-    return exec_utils.get_variant(variant).apply(dfg, log=log, activities_count=activities_count, serv_time=serv_time, parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        dfg,
+        log=log,
+        activities_count=activities_count,
+        serv_time=serv_time,
+        parameters=parameters,
+    )
 
 
 def save(gviz, output_file_path, parameters=None):

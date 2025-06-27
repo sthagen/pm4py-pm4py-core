@@ -42,4 +42,6 @@ def apply(heu_net, parameters=None, variant=Variants.TO_PETRI_NET):
         Variant of the algorithm:
             - Variants.TO_PETRI_NET
     """
-    return exec_utils.get_variant(variant).apply(heu_net, parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        heu_net, parameters=parameters
+    )

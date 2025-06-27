@@ -26,15 +26,15 @@ import sys
 
 class Operator(Enum):
     # sequence operator
-    SEQUENCE = '->'
+    SEQUENCE = "->"
     # exclusive choice operator
-    XOR = 'X'
+    XOR = "X"
     # parallel operator
-    PARALLEL = '+'
+    PARALLEL = "+"
     # loop operator
-    LOOP = '*'
+    LOOP = "*"
     # or operator
-    OR = 'O'
+    OR = "O"
     # interleaving operator
     INTERLEAVING = "<>"
     # partially-ordered operator
@@ -172,24 +172,40 @@ class ProcessTree(object):
             Maximum level of indentation
         """
         if self.operator is not None:
-            rep = str(self._operator) + '( '
+            rep = str(self._operator) + "( "
             for i in range(0, len(self._children)):
                 child = self._children[i]
                 if len(child.children) == 0:
                     if child.label is not None:
-                        rep += '\'' + child.to_string(level=level+1) + '\'' + ', ' if i < len(self._children) - 1 else '\'' + child.to_string(level=level+1) + '\''
+                        rep += (
+                            "'" + child.to_string(level=level + 1) + "'" + ", "
+                            if i < len(self._children) - 1
+                            else "'" + child.to_string(level=level + 1) + "'"
+                        )
                     else:
-                        rep += child.to_string(level=level+1) + ', ' if i < len(self._children) - 1 else child.to_string(level=level+1)
+                        rep += (
+                            child.to_string(level=level + 1) + ", "
+                            if i < len(self._children) - 1
+                            else child.to_string(level=level + 1)
+                        )
                 else:
-                    rep += child.to_string(level=level+1) + ', ' if i < len(self._children) - 1 else child.to_string(level=level+1)
-            stru = rep + ' )'
+                    rep += (
+                        child.to_string(level=level + 1) + ", "
+                        if i < len(self._children) - 1
+                        else child.to_string(level=level + 1)
+                    )
+            stru = rep + " )"
             if level == 0 and indent:
-                stru = "\n".join(hie_utils.indent_representation(stru, max_indent=max_indent))
+                stru = "\n".join(
+                    hie_utils.indent_representation(
+                        stru, max_indent=max_indent
+                    )
+                )
             return stru
         elif self.label is not None:
             return self.label
         else:
-            return 'tau'
+            return "tau"
 
     def __repr__(self):
         """

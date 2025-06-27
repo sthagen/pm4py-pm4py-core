@@ -31,7 +31,10 @@ class Parameters(Enum):
     CASE_ID_KEY = constants.PARAMETER_CONSTANT_CASEID_KEY
 
 
-def apply(df: pd.DataFrame, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[str, Dict[str, int]]:
+def apply(
+    df: pd.DataFrame,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[str, Dict[str, int]]:
     """
     Computes for each trace of the event log how much rework occurs.
     The rework is computed as the difference between the total number of activities of a trace and the
@@ -56,12 +59,24 @@ def apply(df: pd.DataFrame, parameters: Optional[Dict[Union[str, Parameters], An
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
 
-    grouped_df = df.groupby(case_id_key)[activity_key].agg(["count", "nunique"]).reset_index().to_dict("records")
+    grouped_df = (
+        df.groupby(case_id_key)[activity_key]
+        .agg(["count", "nunique"])
+        .reset_index()
+        .to_dict("records")
+    )
     rework_cases = {}
     for el in grouped_df:
-        rework_cases[el["case:concept:name"]] = {"number_activities": el["count"], "rework": el["count"] - el["nunique"]}
+        rework_cases[el["case:concept:name"]] = {
+            "number_activities": el["count"],
+            "rework": el["count"] - el["nunique"],
+        }
 
     return rework_cases

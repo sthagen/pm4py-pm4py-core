@@ -24,7 +24,13 @@ from pm4py.objects.log.obj import EventLog, EventStream
 from pm4py.objects.conversion.log import converter as log_converter
 import pandas as pd
 from enum import Enum
-from pm4py.util import constants, xes_constants, exec_utils, pandas_utils, nx_utils
+from pm4py.util import (
+    constants,
+    xes_constants,
+    exec_utils,
+    pandas_utils,
+    nx_utils,
+)
 from pm4py.util import regex, string_distance
 
 
@@ -65,7 +71,10 @@ def __normalized_edit_distance(s1: str, s2: str) -> float:
     return ned
 
 
-def apply(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[Dict[Any, Any]] = None) -> pd.DataFrame:
+def apply(
+    log: Union[EventLog, EventStream, pd.DataFrame],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> pd.DataFrame:
     """
     Applies the technique of contextual label-splitting, to distinguish between different meanings of the same
     activity. The result is a Pandas dataframe where the contextual label-splitting has been applied.
@@ -102,20 +111,42 @@ def apply(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[
     if parameters is None:
         parameters = {}
 
-    index_key = exec_utils.get_param_value(Parameters.INDEX_KEY, parameters, constants.DEFAULT_INDEX_KEY)
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    target_column = exec_utils.get_param_value(Parameters.TARGET_COLUMN, parameters, xes_constants.DEFAULT_NAME_KEY)
-    activities_suffix = exec_utils.get_param_value(Parameters.ACTIVITIES_SUFFIX, parameters, "_")
+    index_key = exec_utils.get_param_value(
+        Parameters.INDEX_KEY, parameters, constants.DEFAULT_INDEX_KEY
+    )
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    target_column = exec_utils.get_param_value(
+        Parameters.TARGET_COLUMN, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    activities_suffix = exec_utils.get_param_value(
+        Parameters.ACTIVITIES_SUFFIX, parameters, "_"
+    )
 
-    target_activities = exec_utils.get_param_value(Parameters.TARGET_ACTIVITIES, parameters, None)
+    target_activities = exec_utils.get_param_value(
+        Parameters.TARGET_ACTIVITIES, parameters, None
+    )
 
-    prefix_length = exec_utils.get_param_value(Parameters.PREFIX_LENGTH, parameters, 2)
-    suffix_length = exec_utils.get_param_value(Parameters.SUFFIX_LENGTH, parameters, 2)
-    min_edge_weight = exec_utils.get_param_value(Parameters.MIN_EDGE_WEIGHT, parameters, 0.0)
+    prefix_length = exec_utils.get_param_value(
+        Parameters.PREFIX_LENGTH, parameters, 2
+    )
+    suffix_length = exec_utils.get_param_value(
+        Parameters.SUFFIX_LENGTH, parameters, 2
+    )
+    min_edge_weight = exec_utils.get_param_value(
+        Parameters.MIN_EDGE_WEIGHT, parameters, 0.0
+    )
 
     sharobj = regex.SharedObj()
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_DATA_FRAME, parameters=parameters)
+    log = log_converter.apply(
+        log,
+        variant=log_converter.Variants.TO_DATA_FRAME,
+        parameters=parameters,
+    )
     if index_key not in log:
         log = pandas_utils.insert_index(log, index_key)
 
@@ -145,17 +176,27 @@ def apply(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[
 
     # keep some internal dictionaries.
     # in particular, 'dict_segments_indexes' maps every activity to some corresponding segments (prefix+suffix).
-    # each prefix is mapped to the set of indexes (of the events) of the log for which the prefix applies.
+    # each prefix is mapped to the set of indexes (of the events) of the log
+    # for which the prefix applies.
     for i in range(len(activities)):
         for j in range(len(activities[i])):
-            segment = (activities[i][j], tuple(activities[i][max(0, j - prefix_length):j] + activities[i][j + 1:min(
-                len(activities[i]), j + suffix_length + 1)]))
+            segment = (
+                activities[i][j],
+                tuple(
+                    activities[i][max(0, j - prefix_length): j]
+                    + activities[i][
+                        j + 1: min(len(activities[i]), j + suffix_length + 1)
+                    ]
+                ),
+            )
             if activities[i][j] not in dict_segments_indexes:
                 dict_segments_indexes[activities[i][j]] = {}
             if segment not in dict_segments_indexes[activities[i][j]]:
                 dict_segments_indexes[activities[i][j]][segment] = set()
             if segment[1] not in segments_chars_mapping:
-                segments_chars_mapping[segment[1]] = __get_tuple_char_mapping(segment[1], sharobj)
+                segments_chars_mapping[segment[1]] = __get_tuple_char_mapping(
+                    segment[1], sharobj
+                )
             dict_segments_indexes[activities[i][j]][segment].add(indexes[i][j])
 
     G = nx_utils.Graph()
@@ -175,14 +216,18 @@ def apply(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[
                     if segment != segment2:
                         map_seg2 = segments_chars_mapping[segment2[1]]
 
-                        weight = 1 - __normalized_edit_distance(map_seg, map_seg2)
+                        weight = 1 - __normalized_edit_distance(
+                            map_seg, map_seg2
+                        )
                         if weight > min_edge_weight:
                             G.add_edge(segment, segment2, weight=weight)
 
     # STEP 2
     # applies modularity maximization clustering and stores the results
     if G.edges:
-        communities = nx_utils.greedy_modularity_communities(G, weight="weight")
+        communities = nx_utils.greedy_modularity_communities(
+            G, weight="weight"
+        )
     else:
         # when the graph contains no edges, avoid to apply clustering, instead
         # consider each node as standalone
@@ -202,10 +247,14 @@ def apply(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[
     # STEP 3
     # set-up the re-labeling if needed
     for act in dict_segments_clustering:
-        dict_segments_clustering[act] = sorted(dict_segments_clustering[act], key=lambda x: (len(x[1]), x[0]), reverse=True)
+        dict_segments_clustering[act] = sorted(
+            dict_segments_clustering[act],
+            key=lambda x: (len(x[1]), x[0]),
+            reverse=True,
+        )
 
         if len(dict_segments_clustering[act]) > 1:
-            #print(act, "remapped")
+            # print(act, "remapped")
 
             for i in range(len(dict_segments_clustering[act])):
                 for x in dict_segments_clustering[act][i][1]:

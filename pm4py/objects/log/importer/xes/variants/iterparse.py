@@ -44,8 +44,8 @@ class Parameters(Enum):
 
 
 # ITERPARSE EVENTS
-_EVENT_END = 'end'
-_EVENT_START = 'start'
+_EVENT_END = "end"
+_EVENT_START = "start"
 
 
 def count_traces(context):
@@ -95,18 +95,32 @@ def import_from_context(context, num_traces, parameters=None):
     if parameters is None:
         parameters = {}
 
-    max_no_traces_to_import = exec_utils.get_param_value(Parameters.MAX_TRACES, parameters, sys.maxsize)
-    timestamp_sort = exec_utils.get_param_value(Parameters.TIMESTAMP_SORT, parameters, False)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    reverse_sort = exec_utils.get_param_value(Parameters.REVERSE_SORT, parameters, False)
-    show_progress_bar = exec_utils.get_param_value(Parameters.SHOW_PROGRESS_BAR, parameters, constants.SHOW_PROGRESS_BAR)
+    max_no_traces_to_import = exec_utils.get_param_value(
+        Parameters.MAX_TRACES, parameters, sys.maxsize
+    )
+    timestamp_sort = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_SORT, parameters, False
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    reverse_sort = exec_utils.get_param_value(
+        Parameters.REVERSE_SORT, parameters, False
+    )
+    show_progress_bar = exec_utils.get_param_value(
+        Parameters.SHOW_PROGRESS_BAR, parameters, constants.SHOW_PROGRESS_BAR
+    )
 
     date_parser = dt_parser.get()
     progress = None
     if importlib.util.find_spec("tqdm") and show_progress_bar:
         from tqdm.auto import tqdm
-        progress = tqdm(total=num_traces, desc="parsing log, completed traces :: ")
+
+        progress = tqdm(
+            total=num_traces, desc="parsing log, completed traces :: "
+        )
 
     log = None
     trace = None
@@ -116,27 +130,44 @@ def import_from_context(context, num_traces, parameters=None):
 
     for tree_event, elem in context:
         if tree_event == _EVENT_START:  # starting to read
-            parent = tree[elem.getparent()] if elem.getparent() in tree else None
+            parent = (
+                tree[elem.getparent()] if elem.getparent() in tree else None
+            )
 
             if elem.tag.endswith(xes_constants.TAG_STRING):
                 if parent is not None:
-                    tree = __parse_attribute(elem, parent, elem.get(xes_constants.KEY_KEY),
-                                             elem.get(xes_constants.KEY_VALUE), tree)
+                    tree = __parse_attribute(
+                        elem,
+                        parent,
+                        elem.get(xes_constants.KEY_KEY),
+                        elem.get(xes_constants.KEY_VALUE),
+                        tree,
+                    )
                 continue
 
             elif elem.tag.endswith(xes_constants.TAG_DATE):
                 try:
                     dt = date_parser.apply(elem.get(xes_constants.KEY_VALUE))
-                    tree = __parse_attribute(elem, parent, elem.get(xes_constants.KEY_KEY), dt, tree)
+                    tree = __parse_attribute(
+                        elem, parent, elem.get(xes_constants.KEY_KEY), dt, tree
+                    )
                 except TypeError:
-                    logging.info("failed to parse date: " + str(elem.get(xes_constants.KEY_VALUE)))
+                    logging.info(
+                        "failed to parse date: "
+                        + str(elem.get(xes_constants.KEY_VALUE))
+                    )
                 except ValueError:
-                    logging.info("failed to parse date: " + str(elem.get(xes_constants.KEY_VALUE)))
+                    logging.info(
+                        "failed to parse date: "
+                        + str(elem.get(xes_constants.KEY_VALUE))
+                    )
                 continue
 
             elif elem.tag.endswith(xes_constants.TAG_EVENT):
                 if event is not None:
-                    raise SyntaxError('file contains <event> in another <event> tag')
+                    raise SyntaxError(
+                        "file contains <event> in another <event> tag"
+                    )
                 event = Event()
                 tree[elem] = event
                 continue
@@ -145,7 +176,9 @@ def import_from_context(context, num_traces, parameters=None):
                 if len(log) >= max_no_traces_to_import:
                     break
                 if trace is not None:
-                    raise SyntaxError('file contains <trace> in another <trace> tag')
+                    raise SyntaxError(
+                        "file contains <trace> in another <trace> tag"
+                    )
                 trace = Trace()
                 tree[elem] = trace.attributes
                 continue
@@ -154,18 +187,36 @@ def import_from_context(context, num_traces, parameters=None):
                 if parent is not None:
                     try:
                         val = float(elem.get(xes_constants.KEY_VALUE))
-                        tree = __parse_attribute(elem, parent, elem.get(xes_constants.KEY_KEY), val, tree)
+                        tree = __parse_attribute(
+                            elem,
+                            parent,
+                            elem.get(xes_constants.KEY_KEY),
+                            val,
+                            tree,
+                        )
                     except ValueError:
-                        logging.info("failed to parse float: " + str(elem.get(xes_constants.KEY_VALUE)))
+                        logging.info(
+                            "failed to parse float: "
+                            + str(elem.get(xes_constants.KEY_VALUE))
+                        )
                 continue
 
             elif elem.tag.endswith(xes_constants.TAG_INT):
                 if parent is not None:
                     try:
                         val = int(elem.get(xes_constants.KEY_VALUE))
-                        tree = __parse_attribute(elem, parent, elem.get(xes_constants.KEY_KEY), val, tree)
+                        tree = __parse_attribute(
+                            elem,
+                            parent,
+                            elem.get(xes_constants.KEY_KEY),
+                            val,
+                            tree,
+                        )
                     except ValueError:
-                        logging.info("failed to parse int: " + str(elem.get(xes_constants.KEY_VALUE)))
+                        logging.info(
+                            "failed to parse int: "
+                            + str(elem.get(xes_constants.KEY_VALUE))
+                        )
                 continue
 
             elif elem.tag.endswith(xes_constants.TAG_BOOLEAN):
@@ -175,56 +226,87 @@ def import_from_context(context, num_traces, parameters=None):
                         val = False
                         if str(val0).lower() == "true":
                             val = True
-                        tree = __parse_attribute(elem, parent, elem.get(xes_constants.KEY_KEY), val, tree)
+                        tree = __parse_attribute(
+                            elem,
+                            parent,
+                            elem.get(xes_constants.KEY_KEY),
+                            val,
+                            tree,
+                        )
                     except ValueError:
-                        logging.info("failed to parse boolean: " + str(elem.get(xes_constants.KEY_VALUE)))
+                        logging.info(
+                            "failed to parse boolean: "
+                            + str(elem.get(xes_constants.KEY_VALUE))
+                        )
                 continue
 
             elif elem.tag.endswith(xes_constants.TAG_LIST):
                 if parent is not None:
                     # lists have no value, hence we put None as a value
-                    tree = __parse_attribute(elem, parent, elem.get(xes_constants.KEY_KEY), None, tree)
+                    tree = __parse_attribute(
+                        elem,
+                        parent,
+                        elem.get(xes_constants.KEY_KEY),
+                        None,
+                        tree,
+                    )
                 continue
 
             elif elem.tag.endswith(xes_constants.TAG_ID):
                 if parent is not None:
-                    tree = __parse_attribute(elem, parent, elem.get(xes_constants.KEY_KEY),
-                                             elem.get(xes_constants.KEY_VALUE), tree)
+                    tree = __parse_attribute(
+                        elem,
+                        parent,
+                        elem.get(xes_constants.KEY_KEY),
+                        elem.get(xes_constants.KEY_VALUE),
+                        tree,
+                    )
                 continue
 
             elif elem.tag.endswith(xes_constants.TAG_EXTENSION):
                 if log is None:
-                    raise SyntaxError('extension found outside of <log> tag')
-                if elem.get(xes_constants.KEY_NAME) is not None and elem.get(
-                        xes_constants.KEY_PREFIX) is not None and elem.get(xes_constants.KEY_URI) is not None:
+                    raise SyntaxError("extension found outside of <log> tag")
+                if (
+                    elem.get(xes_constants.KEY_NAME) is not None
+                    and elem.get(xes_constants.KEY_PREFIX) is not None
+                    and elem.get(xes_constants.KEY_URI) is not None
+                ):
                     log.extensions[elem.get(xes_constants.KEY_NAME)] = {
-                        xes_constants.KEY_PREFIX: elem.get(xes_constants.KEY_PREFIX),
-                        xes_constants.KEY_URI: elem.get(xes_constants.KEY_URI)}
+                        xes_constants.KEY_PREFIX: elem.get(
+                            xes_constants.KEY_PREFIX
+                        ),
+                        xes_constants.KEY_URI: elem.get(xes_constants.KEY_URI),
+                    }
                 continue
 
             elif elem.tag.endswith(xes_constants.TAG_GLOBAL):
                 if log is None:
-                    raise SyntaxError('global found outside of <log> tag')
+                    raise SyntaxError("global found outside of <log> tag")
                 if elem.get(xes_constants.KEY_SCOPE) is not None:
                     log.omni_present[elem.get(xes_constants.KEY_SCOPE)] = {}
-                    tree[elem] = log.omni_present[elem.get(xes_constants.KEY_SCOPE)]
+                    tree[elem] = log.omni_present[
+                        elem.get(xes_constants.KEY_SCOPE)
+                    ]
                 continue
 
             elif elem.tag.endswith(xes_constants.TAG_CLASSIFIER):
                 if log is None:
-                    raise SyntaxError('classifier found outside of <log> tag')
+                    raise SyntaxError("classifier found outside of <log> tag")
                 if elem.get(xes_constants.KEY_KEYS) is not None:
                     classifier_value = elem.get(xes_constants.KEY_KEYS)
                     if "'" in classifier_value:
-                        log.classifiers[elem.get(xes_constants.KEY_NAME)] = [x for x in classifier_value.split("'")
-                                                                             if x.strip()]
+                        log.classifiers[elem.get(xes_constants.KEY_NAME)] = [
+                            x for x in classifier_value.split("'") if x.strip()
+                        ]
                     else:
-                        log.classifiers[elem.get(xes_constants.KEY_NAME)] = classifier_value.split()
+                        log.classifiers[elem.get(xes_constants.KEY_NAME)] = (
+                            classifier_value.split()
+                        )
                 continue
 
             elif elem.tag.endswith(xes_constants.TAG_LOG):
                 if log is not None:
-                    raise SyntaxError('file contains > 1 <log> tags')
+                    raise SyntaxError("file contains > 1 <log> tags")
                 log = EventLog()
                 tree[elem] = log.attributes
                 continue
@@ -263,19 +345,33 @@ def import_from_context(context, num_traces, parameters=None):
     del context, progress
 
     if timestamp_sort:
-        log = sorting.sort_timestamp(log, timestamp_key=timestamp_key, reverse_sort=reverse_sort)
+        log = sorting.sort_timestamp(
+            log, timestamp_key=timestamp_key, reverse_sort=reverse_sort
+        )
 
     # sets the activity key as default classifier in the log's properties
-    log.properties[constants.PARAMETER_CONSTANT_ACTIVITY_KEY] = xes_constants.DEFAULT_NAME_KEY
-    log.properties[constants.PARAMETER_CONSTANT_ATTRIBUTE_KEY] = xes_constants.DEFAULT_NAME_KEY
+    log.properties[constants.PARAMETER_CONSTANT_ACTIVITY_KEY] = (
+        xes_constants.DEFAULT_NAME_KEY
+    )
+    log.properties[constants.PARAMETER_CONSTANT_ATTRIBUTE_KEY] = (
+        xes_constants.DEFAULT_NAME_KEY
+    )
     # sets the default timestamp key
-    log.properties[constants.PARAMETER_CONSTANT_TIMESTAMP_KEY] = xes_constants.DEFAULT_TIMESTAMP_KEY
+    log.properties[constants.PARAMETER_CONSTANT_TIMESTAMP_KEY] = (
+        xes_constants.DEFAULT_TIMESTAMP_KEY
+    )
     # sets the default resource key
-    log.properties[constants.PARAMETER_CONSTANT_RESOURCE_KEY] = xes_constants.DEFAULT_RESOURCE_KEY
+    log.properties[constants.PARAMETER_CONSTANT_RESOURCE_KEY] = (
+        xes_constants.DEFAULT_RESOURCE_KEY
+    )
     # sets the default transition key
-    log.properties[constants.PARAMETER_CONSTANT_TRANSITION_KEY] = xes_constants.DEFAULT_TRANSITION_KEY
+    log.properties[constants.PARAMETER_CONSTANT_TRANSITION_KEY] = (
+        xes_constants.DEFAULT_TRANSITION_KEY
+    )
     # sets the default group key
-    log.properties[constants.PARAMETER_CONSTANT_GROUP_KEY] = xes_constants.DEFAULT_GROUP_KEY
+    log.properties[constants.PARAMETER_CONSTANT_GROUP_KEY] = (
+        xes_constants.DEFAULT_GROUP_KEY
+    )
 
     return log
 
@@ -332,8 +428,12 @@ def import_log(filename, parameters=None):
     if parameters is None:
         parameters = {}
 
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING)
-    show_progress_bar = exec_utils.get_param_value(Parameters.SHOW_PROGRESS_BAR, parameters, constants.SHOW_PROGRESS_BAR)
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING
+    )
+    show_progress_bar = exec_utils.get_param_value(
+        Parameters.SHOW_PROGRESS_BAR, parameters, constants.SHOW_PROGRESS_BAR
+    )
     is_compressed = filename.lower().endswith(".gz")
 
     if importlib.util.find_spec("tqdm") and show_progress_bar:
@@ -341,18 +441,23 @@ def import_log(filename, parameters=None):
             f = gzip.open(filename, "rb")
         else:
             f = open(filename, "rb")
-        context = etree.iterparse(f, events=[_EVENT_START, _EVENT_END], encoding=encoding)
+        context = etree.iterparse(
+            f, events=[_EVENT_START, _EVENT_END], encoding=encoding
+        )
         num_traces = count_traces(context)
         f.close()
     else:
-        # avoid the iteration to calculate the number of traces is "tqdm" is not used
+        # avoid the iteration to calculate the number of traces is "tqdm" is
+        # not used
         num_traces = 0
 
     if is_compressed:
         f = gzip.open(filename, "rb")
     else:
         f = open(filename, "rb")
-    context = etree.iterparse(f, events=[_EVENT_START, _EVENT_END], encoding=encoding)
+    context = etree.iterparse(
+        f, events=[_EVENT_START, _EVENT_END], encoding=encoding
+    )
 
     log = import_from_context(context, num_traces, parameters=parameters)
     f.close()
@@ -387,9 +492,15 @@ def import_from_string(log_string, parameters=None):
     if parameters is None:
         parameters = {}
 
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING)
-    show_progress_bar = exec_utils.get_param_value(Parameters.SHOW_PROGRESS_BAR, parameters, constants.SHOW_PROGRESS_BAR)
-    decompress_serialization = exec_utils.get_param_value(Parameters.DECOMPRESS_SERIALIZATION, parameters, False)
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING
+    )
+    show_progress_bar = exec_utils.get_param_value(
+        Parameters.SHOW_PROGRESS_BAR, parameters, constants.SHOW_PROGRESS_BAR
+    )
+    decompress_serialization = exec_utils.get_param_value(
+        Parameters.DECOMPRESS_SERIALIZATION, parameters, False
+    )
 
     if type(log_string) is str:
         log_string = log_string.encode(constants.DEFAULT_ENCODING)
@@ -401,12 +512,15 @@ def import_from_string(log_string, parameters=None):
             s = gzip.GzipFile(fileobj=b, mode="rb")
         else:
             s = b
-        context = etree.iterparse(s, events=[_EVENT_START, _EVENT_END], encoding=encoding)
+        context = etree.iterparse(
+            s, events=[_EVENT_START, _EVENT_END], encoding=encoding
+        )
         num_traces = count_traces(context)
         s.close()
         b.close()
     else:
-        # avoid the iteration to calculate the number of traces is "tqdm" is not used
+        # avoid the iteration to calculate the number of traces is "tqdm" is
+        # not used
         num_traces = 0
 
     # second iteration: actually read the content
@@ -415,7 +529,9 @@ def import_from_string(log_string, parameters=None):
         s = gzip.GzipFile(fileobj=b, mode="rb")
     else:
         s = b
-    context = etree.iterparse(s, events=[_EVENT_START, _EVENT_END], encoding=encoding)
+    context = etree.iterparse(
+        s, events=[_EVENT_START, _EVENT_END], encoding=encoding
+    )
     log = import_from_context(context, num_traces, parameters=parameters)
     s.close()
     b.close()
@@ -432,10 +548,16 @@ def __parse_attribute(elem, store, key, value, tree):
             store[key] = value
     else:
         if elem.getchildren()[0].tag.endswith(xes_constants.TAG_VALUES):
-            store[key] = {xes_constants.KEY_VALUE: value, xes_constants.KEY_CHILDREN: list()}
+            store[key] = {
+                xes_constants.KEY_VALUE: value,
+                xes_constants.KEY_CHILDREN: list(),
+            }
             tree[elem] = store[key][xes_constants.KEY_CHILDREN]
             tree[elem.getchildren()[0]] = tree[elem]
         else:
-            store[key] = {xes_constants.KEY_VALUE: value, xes_constants.KEY_CHILDREN: dict()}
+            store[key] = {
+                xes_constants.KEY_VALUE: value,
+                xes_constants.KEY_CHILDREN: dict(),
+            }
             tree[elem] = store[key][xes_constants.KEY_CHILDREN]
     return tree

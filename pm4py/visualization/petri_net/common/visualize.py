@@ -29,7 +29,10 @@ from pm4py.util import exec_utils, constants
 from enum import Enum
 from typing import List, Tuple, Dict
 from collections import defaultdict, deque
-from pm4py.util.constants import PARAMETER_CONSTANT_ACTIVITY_KEY, PARAMETER_CONSTANT_TIMESTAMP_KEY
+from pm4py.util.constants import (
+    PARAMETER_CONSTANT_ACTIVITY_KEY,
+    PARAMETER_CONSTANT_TIMESTAMP_KEY,
+)
 
 
 class Parameters(Enum):
@@ -46,9 +49,15 @@ class Parameters(Enum):
     GRAPH_TITLE = "graph_title"
 
 
-def sort_petri_net(transitions: List[PetriNet.Transition], places: List[PetriNet.Place], arcs: List[PetriNet.Arc],
-                   initial_marking: Dict[PetriNet.Place, int], final_marking: Dict[PetriNet.Place, int]) -> Tuple[
-    List[PetriNet.Transition], List[PetriNet.Place], List[PetriNet.Arc]]:
+def sort_petri_net(
+    transitions: List[PetriNet.Transition],
+    places: List[PetriNet.Place],
+    arcs: List[PetriNet.Arc],
+    initial_marking: Dict[PetriNet.Place, int],
+    final_marking: Dict[PetriNet.Place, int],
+) -> Tuple[
+    List[PetriNet.Transition], List[PetriNet.Place], List[PetriNet.Arc]
+]:
     """
     Sorts the Petri net elements based on reachability from/to the initial/final marking
 
@@ -85,8 +94,10 @@ def sort_petri_net(transitions: List[PetriNet.Transition], places: List[PetriNet
             transition_to_place[arc.source].append(arc.target)
 
     # initialize distance dictionaries
-    place_distance = {place: float('inf') for place in places}
-    transition_distance = {transition: float('inf') for transition in transitions}
+    place_distance = {place: float("inf") for place in places}
+    transition_distance = {
+        transition: float("inf") for transition in transitions
+    }
 
     # initialize the queue with initial marking places
     queue = deque([place for place in initial_marking])
@@ -104,14 +115,21 @@ def sort_petri_net(transitions: List[PetriNet.Transition], places: List[PetriNet
             if transition_distance[transition] > current_distance + 1:
                 transition_distance[transition] = current_distance + 1
                 for place in transition_to_place[transition]:
-                    if place_distance[place] > transition_distance[transition] + 1:
-                        place_distance[place] = transition_distance[transition] + 1
+                    if (
+                        place_distance[place]
+                        > transition_distance[transition] + 1
+                    ):
+                        place_distance[place] = (
+                            transition_distance[transition] + 1
+                        )
                         queue.append(place)
 
     # calculate distance from the final marking for sorting purposes
     # initialize distance dictionaries
-    place_distance_final = {place: float('inf') for place in places}
-    transition_distance_final = {transition: float('inf') for transition in transitions}
+    place_distance_final = {place: float("inf") for place in places}
+    transition_distance_final = {
+        transition: float("inf") for transition in transitions
+    }
 
     # initialize the queue with final marking places
     queue = deque([place for place in final_marking])
@@ -129,8 +147,13 @@ def sort_petri_net(transitions: List[PetriNet.Transition], places: List[PetriNet
             if transition_distance_final[transition] > current_distance + 1:
                 transition_distance_final[transition] = current_distance + 1
                 for place in place_to_transition[transition]:
-                    if place_distance_final[place] > transition_distance_final[transition] + 1:
-                        place_distance_final[place] = transition_distance_final[transition] + 1
+                    if (
+                        place_distance_final[place]
+                        > transition_distance_final[transition] + 1
+                    ):
+                        place_distance_final[place] = (
+                            transition_distance_final[transition] + 1
+                        )
                         queue.append(place)
 
     # sort places, transitions, and arcs based on distances
@@ -138,18 +161,35 @@ def sort_petri_net(transitions: List[PetriNet.Transition], places: List[PetriNet
         return (place_distance[place], -place_distance_final[place])
 
     def get_transition_priority(transition):
-        return (transition_distance[transition], -transition_distance_final[transition])
+        return (
+            transition_distance[transition],
+            -transition_distance_final[transition],
+        )
 
     sorted_places = sorted(places, key=get_place_priority)
     sorted_transitions = sorted(transitions, key=get_transition_priority)
-    sorted_arcs = sorted(arcs, key=lambda x: (
-        get_place_priority(x.source) if x.source in places else get_transition_priority(x.source),
-        get_place_priority(x.target) if x.target in places else get_transition_priority(x.target)))
+    sorted_arcs = sorted(
+        arcs,
+        key=lambda x: (
+            (
+                get_place_priority(x.source)
+                if x.source in places
+                else get_transition_priority(x.source)
+            ),
+            (
+                get_place_priority(x.target)
+                if x.target in places
+                else get_transition_priority(x.target)
+            ),
+        ),
+    )
 
     return sorted_transitions, sorted_places, sorted_arcs
 
 
-def apply(net, initial_marking, final_marking, decorations=None, parameters=None):
+def apply(
+    net, initial_marking, final_marking, decorations=None, parameters=None
+):
     """
     Apply method for Petri net visualization (it calls the
     graphviz_visualization method)
@@ -175,26 +215,61 @@ def apply(net, initial_marking, final_marking, decorations=None, parameters=None
     if parameters is None:
         parameters = {}
 
-    image_format = exec_utils.get_param_value(Parameters.FORMAT, parameters, "png")
+    image_format = exec_utils.get_param_value(
+        Parameters.FORMAT, parameters, "png"
+    )
     debug = exec_utils.get_param_value(Parameters.DEBUG, parameters, False)
-    set_rankdir = exec_utils.get_param_value(Parameters.RANKDIR, parameters, None)
-    font_size = exec_utils.get_param_value(Parameters.FONT_SIZE, parameters, "12")
-    bgcolor = exec_utils.get_param_value(Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR)
-    enable_graph_title = exec_utils.get_param_value(Parameters.ENABLE_GRAPH_TITLE, parameters, constants.DEFAULT_ENABLE_GRAPH_TITLES)
-    graph_title = exec_utils.get_param_value(Parameters.GRAPH_TITLE, parameters, "Petri Net")
+    set_rankdir = exec_utils.get_param_value(
+        Parameters.RANKDIR, parameters, None
+    )
+    font_size = exec_utils.get_param_value(
+        Parameters.FONT_SIZE, parameters, "12"
+    )
+    bgcolor = exec_utils.get_param_value(
+        Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR
+    )
+    enable_graph_title = exec_utils.get_param_value(
+        Parameters.ENABLE_GRAPH_TITLE,
+        parameters,
+        constants.DEFAULT_ENABLE_GRAPH_TITLES,
+    )
+    graph_title = exec_utils.get_param_value(
+        Parameters.GRAPH_TITLE, parameters, "Petri Net"
+    )
 
     if decorations is None:
-        decorations = exec_utils.get_param_value(Parameters.DECORATIONS, parameters, None)
+        decorations = exec_utils.get_param_value(
+            Parameters.DECORATIONS, parameters, None
+        )
 
-    return graphviz_visualization(net, image_format=image_format, initial_marking=initial_marking,
-                                  final_marking=final_marking, decorations=decorations, debug=debug,
-                                  set_rankdir=set_rankdir, font_size=font_size, bgcolor=bgcolor,
-                                  enable_graph_title=enable_graph_title, graph_title=graph_title)
+    return graphviz_visualization(
+        net,
+        image_format=image_format,
+        initial_marking=initial_marking,
+        final_marking=final_marking,
+        decorations=decorations,
+        debug=debug,
+        set_rankdir=set_rankdir,
+        font_size=font_size,
+        bgcolor=bgcolor,
+        enable_graph_title=enable_graph_title,
+        graph_title=graph_title,
+    )
 
 
-def graphviz_visualization(net, image_format="png", initial_marking=None, final_marking=None, decorations=None,
-                           debug=False, set_rankdir=None, font_size="12", bgcolor=constants.DEFAULT_BGCOLOR,
-                           enable_graph_title: bool = constants.DEFAULT_ENABLE_GRAPH_TITLES, graph_title: str = "Petri Net"):
+def graphviz_visualization(
+    net,
+    image_format="png",
+    initial_marking=None,
+    final_marking=None,
+    decorations=None,
+    debug=False,
+    set_rankdir=None,
+    font_size="12",
+    bgcolor=constants.DEFAULT_BGCOLOR,
+    enable_graph_title: bool = constants.DEFAULT_ENABLE_GRAPH_TITLES,
+    graph_title: str = "Petri Net",
+):
     """
     Provides visualization for the petrinet
 
@@ -233,28 +308,50 @@ def graphviz_visualization(net, image_format="png", initial_marking=None, final_
 
     font_size = str(font_size)
 
-    filename = tempfile.NamedTemporaryFile(suffix='.gv')
+    filename = tempfile.NamedTemporaryFile(suffix=".gv")
     filename.close()
 
-    viz = Digraph(net.name, filename=filename.name, engine='dot', graph_attr={'bgcolor': bgcolor})
+    viz = Digraph(
+        net.name,
+        filename=filename.name,
+        engine="dot",
+        graph_attr={"bgcolor": bgcolor},
+    )
     if set_rankdir:
-        viz.graph_attr['rankdir'] = set_rankdir
+        viz.graph_attr["rankdir"] = set_rankdir
     else:
-        viz.graph_attr['rankdir'] = 'LR'
+        viz.graph_attr["rankdir"] = "LR"
 
     if enable_graph_title:
-        viz.attr(label='<<FONT POINT-SIZE="'+str(2*int(font_size))+'">'+graph_title+'</FONT>>', labelloc="top")
+        viz.attr(
+            label='<<FONT POINT-SIZE="'
+            + str(2 * int(font_size))
+            + '">'
+            + graph_title
+            + "</FONT>>",
+            labelloc="top",
+        )
 
     transitions = list(net.transitions)
     places = list(net.places)
     arcs = list(net.arcs)
 
-    transitions, places, arcs = sort_petri_net(transitions, places, arcs, initial_marking, final_marking)
+    transitions, places, arcs = sort_petri_net(
+        transitions, places, arcs, initial_marking, final_marking
+    )
 
-    viz.attr('node', shape='box')
+    viz.attr("node", shape="box")
     for t in transitions:
-        label = decorations[t]["label"] if t in decorations and "label" in decorations[t] else ""
-        fillcolor = decorations[t]["color"] if t in decorations and "color" in decorations[t] else None
+        label = (
+            decorations[t]["label"]
+            if t in decorations and "label" in decorations[t]
+            else ""
+        )
+        fillcolor = (
+            decorations[t]["color"]
+            if t in decorations and "color" in decorations[t]
+            else None
+        )
         textcolor = "black"
 
         if t.label is not None and not label:
@@ -271,48 +368,117 @@ def graphviz_visualization(net, image_format="png", initial_marking=None, final_
             else:
                 fillcolor = bgcolor
 
-        viz.node(str(id(t)), label, style='filled', fillcolor=fillcolor, border='1', fontsize=font_size,
-                 fontcolor=textcolor)
+        viz.node(
+            str(id(t)),
+            label,
+            style="filled",
+            fillcolor=fillcolor,
+            border="1",
+            fontsize=font_size,
+            fontcolor=textcolor,
+        )
 
         if petri_properties.TRANS_GUARD in t.properties:
             guard = t.properties[petri_properties.TRANS_GUARD]
             viz.node(str(id(t)) + "guard", style="dotted", label=guard)
-            viz.edge(str(id(t)) + "guard", str(id(t)), arrowhead="none", style="dotted")
+            viz.edge(
+                str(id(t)) + "guard",
+                str(id(t)),
+                arrowhead="none",
+                style="dotted",
+            )
 
     for p in places:
-        label = decorations[p]["label"] if p in decorations and "label" in decorations[p] else ""
-        fillcolor = decorations[p]["color"] if p in decorations and "color" in decorations[p] else bgcolor
+        label = (
+            decorations[p]["label"]
+            if p in decorations and "label" in decorations[p]
+            else ""
+        )
+        fillcolor = (
+            decorations[p]["color"]
+            if p in decorations and "color" in decorations[p]
+            else bgcolor
+        )
 
         label = str(label)
         if p in initial_marking:
             if initial_marking[p] == 1:
-                viz.node(str(id(p)), "<&#9679;>", fontsize="34", fixedsize='true', shape="circle", width='0.75',
-                         style="filled", fillcolor=fillcolor)
+                viz.node(
+                    str(id(p)),
+                    "<&#9679;>",
+                    fontsize="34",
+                    fixedsize="true",
+                    shape="circle",
+                    width="0.75",
+                    style="filled",
+                    fillcolor=fillcolor,
+                )
             else:
                 marking_label = str(initial_marking[p])
                 if len(marking_label) >= 3:
-                    viz.node(str(id(p)), marking_label, fontsize="34", shape="ellipse", style="filled",
-                             fillcolor=fillcolor)
+                    viz.node(
+                        str(id(p)),
+                        marking_label,
+                        fontsize="34",
+                        shape="ellipse",
+                        style="filled",
+                        fillcolor=fillcolor,
+                    )
                 else:
-                    viz.node(str(id(p)), marking_label, fontsize="34", fixedsize='true', shape="circle", width='0.75',
-                             style="filled", fillcolor=fillcolor)
+                    viz.node(
+                        str(id(p)),
+                        marking_label,
+                        fontsize="34",
+                        fixedsize="true",
+                        shape="circle",
+                        width="0.75",
+                        style="filled",
+                        fillcolor=fillcolor,
+                    )
         elif p in final_marking:
             # <&#9632;>
-            viz.node(str(id(p)), "<&#9632;>", fontsize="32", shape='doublecircle', fixedsize='true', width='0.75',
-                     style="filled", fillcolor=fillcolor)
+            viz.node(
+                str(id(p)),
+                "<&#9632;>",
+                fontsize="32",
+                shape="doublecircle",
+                fixedsize="true",
+                width="0.75",
+                style="filled",
+                fillcolor=fillcolor,
+            )
         else:
             if debug:
-                viz.node(str(id(p)), str(p.name), fontsize=font_size, shape="ellipse")
+                viz.node(
+                    str(id(p)),
+                    str(p.name),
+                    fontsize=font_size,
+                    shape="ellipse",
+                )
             else:
                 if p in decorations and "label" in decorations[p]:
-                    viz.node(str(id(p)), label, style='filled', fillcolor=fillcolor,
-                             fontsize=font_size, shape="ellipse")
+                    viz.node(
+                        str(id(p)),
+                        label,
+                        style="filled",
+                        fillcolor=fillcolor,
+                        fontsize=font_size,
+                        shape="ellipse",
+                    )
                 else:
-                    viz.node(str(id(p)), label, shape='circle', fixedsize='true', width='0.75', style="filled",
-                             fillcolor=fillcolor)
+                    viz.node(
+                        str(id(p)),
+                        label,
+                        shape="circle",
+                        fixedsize="true",
+                        width="0.75",
+                        style="filled",
+                        fillcolor=fillcolor,
+                    )
 
     # check if there is an arc with weight different than 1.
-    # in that case, all the arcs in the visualization should have the arc weight visible
+    # in that case, all the arcs in the visualization should have the arc
+    # weight visible
     arc_weight_visible = False
     for arc in arcs:
         if arc.weight != 1:
@@ -320,9 +486,21 @@ def graphviz_visualization(net, image_format="png", initial_marking=None, final_
             break
 
     for a in arcs:
-        penwidth = decorations[a]["penwidth"] if a in decorations and "penwidth" in decorations[a] else None
-        label = decorations[a]["label"] if a in decorations and "label" in decorations[a] else ""
-        color = decorations[a]["color"] if a in decorations and "color" in decorations[a] else None
+        penwidth = (
+            decorations[a]["penwidth"]
+            if a in decorations and "penwidth" in decorations[a]
+            else None
+        )
+        label = (
+            decorations[a]["label"]
+            if a in decorations and "label" in decorations[a]
+            else ""
+        )
+        color = (
+            decorations[a]["color"]
+            if a in decorations and "color" in decorations[a]
+            else None
+        )
 
         if not label and arc_weight_visible:
             label = a.weight
@@ -331,15 +509,29 @@ def graphviz_visualization(net, image_format="png", initial_marking=None, final_
         arrowhead = "normal"
 
         if petri_properties.ARCTYPE in a.properties:
-            if a.properties[petri_properties.ARCTYPE] == petri_properties.RESET_ARC:
+            if (
+                a.properties[petri_properties.ARCTYPE]
+                == petri_properties.RESET_ARC
+            ):
                 arrowhead = "vee"
-            elif a.properties[petri_properties.ARCTYPE] == petri_properties.INHIBITOR_ARC:
+            elif (
+                a.properties[petri_properties.ARCTYPE]
+                == petri_properties.INHIBITOR_ARC
+            ):
                 arrowhead = "dot"
 
-        viz.edge(str(id(a.source)), str(id(a.target)), label=label,
-                 penwidth=penwidth, color=color, fontsize=font_size, arrowhead=arrowhead, fontcolor=color)
+        viz.edge(
+            str(id(a.source)),
+            str(id(a.target)),
+            label=label,
+            penwidth=penwidth,
+            color=color,
+            fontsize=font_size,
+            arrowhead=arrowhead,
+            fontcolor=color,
+        )
 
-    viz.attr(overlap='false')
+    viz.attr(overlap="false")
 
     viz.format = image_format.replace("html", "plain-ext")
 

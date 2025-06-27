@@ -45,12 +45,17 @@ def apply(df, parameters=None):
 
     if parameters is None:
         parameters = {}
-    variant_stats = case_statistics.get_variant_statistics(df, parameters=parameters)
-    activity_key = parameters[
-        pm4_constants.PARAMETER_CONSTANT_ACTIVITY_KEY] if pm4_constants.PARAMETER_CONSTANT_ACTIVITY_KEY in parameters else xes.DEFAULT_NAME_KEY
+    variant_stats = case_statistics.get_variant_statistics(
+        df, parameters=parameters
+    )
+    activity_key = (
+        parameters[pm4_constants.PARAMETER_CONSTANT_ACTIVITY_KEY]
+        if pm4_constants.PARAMETER_CONSTANT_ACTIVITY_KEY in parameters
+        else xes.DEFAULT_NAME_KEY
+    )
     log = EventLog()
     for vd in variant_stats:
-        variant = vd['variant']
+        variant = vd["variant"]
         trace = Trace()
         for activity in variant:
             event = Event()

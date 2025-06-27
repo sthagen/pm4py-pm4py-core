@@ -33,7 +33,10 @@ class Parameters(Enum):
     TIMESTAMP_KEY = constants.PARAMETER_CONSTANT_TIMESTAMP_KEY
 
 
-def apply(log: Union[EventLog, EventStream], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> List[int]:
+def apply(
+    log: Union[EventLog, EventStream],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> List[int]:
     """
     Counts the intersections of each interval event with the other interval events of the log
     (all the events are considered, not looking at the activity)
@@ -56,15 +59,28 @@ def apply(log: Union[EventLog, EventStream], parameters: Optional[Dict[Union[str
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters,
-                                                     xes_constants.DEFAULT_TIMESTAMP_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
 
     points = []
     for trace in log:
         for event in trace:
-            points.append((event[start_timestamp_key].timestamp(), event[timestamp_key].timestamp()))
+            points.append(
+                (
+                    event[start_timestamp_key].timestamp(),
+                    event[timestamp_key].timestamp(),
+                )
+            )
 
     return compute.apply(points, parameters=parameters)

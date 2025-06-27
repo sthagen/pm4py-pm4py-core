@@ -28,7 +28,8 @@ def unroll(value):
     return value
 
 
-# this function can be moved to a util when string values of the parameters are no longer supported. (or is no longer needed ;-))
+# this function can be moved to a util when string values of the
+# parameters are no longer supported. (or is no longer needed ;-))
 def get_param_value(p, parameters, default):
     if parameters is None:
         return unroll(default)

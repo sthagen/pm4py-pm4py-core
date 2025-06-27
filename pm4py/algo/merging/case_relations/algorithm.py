@@ -30,8 +30,13 @@ class Variants(Enum):
     PANDAS = pandas
 
 
-def apply(dataframe1: pd.DataFrame, dataframe2: pd.DataFrame, case_relations: pd.DataFrame, variant=Variants.PANDAS,
-          parameters: Optional[Dict[Any, Any]] = None) -> pd.DataFrame:
+def apply(
+    dataframe1: pd.DataFrame,
+    dataframe2: pd.DataFrame,
+    case_relations: pd.DataFrame,
+    variant=Variants.PANDAS,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> pd.DataFrame:
     """
     Merges the two dataframes (dataframe1 and dataframe2), inserting the events of the second
     dataframe inside the cases of the first dataframe.
@@ -59,4 +64,6 @@ def apply(dataframe1: pd.DataFrame, dataframe2: pd.DataFrame, case_relations: pd
     merged_dataframe
         Merged dataframe
     """
-    return exec_utils.get_variant(variant).apply(dataframe1, dataframe2, case_relations, parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        dataframe1, dataframe2, case_relations, parameters=parameters
+    )

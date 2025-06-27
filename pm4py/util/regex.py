@@ -30,8 +30,37 @@ def get_new_char(label, shared_obj):
     shared_obj
         Shared object
     """
-    list_to_avoid = ["[", "]", "(", ")", "*", "+", "^", "?", "\r", "\n", " ", "\t", "$", "\"", "!", "#", "&", "%", "|",
-                     ".", ",", ";", "-", "'", "\\", "/", "{", "}", "$"]
+    list_to_avoid = [
+        "[",
+        "]",
+        "(",
+        ")",
+        "*",
+        "+",
+        "^",
+        "?",
+        "\r",
+        "\n",
+        " ",
+        "\t",
+        "$",
+        '"',
+        "!",
+        "#",
+        "&",
+        "%",
+        "|",
+        ".",
+        ",",
+        ";",
+        "-",
+        "'",
+        "\\",
+        "/",
+        "{",
+        "}",
+        "$",
+    ]
     shared_obj.count_char = shared_obj.count_char + 1
     while chr(shared_obj.count_char) in list_to_avoid:
         shared_obj.count_char = shared_obj.count_char + 1

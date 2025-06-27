@@ -29,7 +29,9 @@ from pm4py.util import ml_utils
 
 from pm4py.objects.conversion.log import converter as log_converter
 from pm4py.objects.log.obj import EventLog
-from pm4py.algo.transformation.log_to_features import algorithm as log_to_features
+from pm4py.algo.transformation.log_to_features import (
+    algorithm as log_to_features,
+)
 from pm4py.objects.log.util import sorting
 from pm4py.util import constants, xes_constants
 from pm4py.util import exec_utils, pandas_utils
@@ -58,11 +60,13 @@ def smooth(y: np.ndarray, box_pts: int) -> np.ndarray:
         Smoothened y
     """
     box = np.ones(box_pts) / box_pts
-    y_smooth = np.convolve(y, box, mode='same')
+    y_smooth = np.convolve(y, box, mode="same")
     return y_smooth
 
 
-def apply(log: EventLog, parameters: Optional[Dict[str, Any]] = None) -> Tuple[List[datetime], np.ndarray]:
+def apply(
+    log: EventLog, parameters: Optional[Dict[str, Any]] = None
+) -> Tuple[List[datetime], np.ndarray]:
     """
     Analyse the evolution of the features over the time using a locally linear embedding.
 
@@ -87,23 +91,40 @@ def apply(log: EventLog, parameters: Optional[Dict[str, Any]] = None) -> Tuple[L
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
 
     if pandas_utils.check_is_pandas_dataframe(log):
         # keep only the needed columns
-        case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
+        case_id_key = exec_utils.get_param_value(
+            Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+        )
         log = log[[case_id_key, activity_key, timestamp_key]]
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
     log = sorting.sort_timestamp(log, timestamp_key)
 
     x = [trace[0][timestamp_key] for trace in log]
-    data, feature_names = log_to_features.apply(log, parameters={"str_ev_attr": [activity_key], "str_evsucc_attr": [activity_key]})
+    data, feature_names = log_to_features.apply(
+        log,
+        parameters={
+            "str_ev_attr": [activity_key],
+            "str_evsucc_attr": [activity_key],
+        },
+    )
     data = np.array([np.array(x) for x in data])
 
-    tsne = ml_utils.LocallyLinearEmbedding(n_components=1, eigen_solver='dense')
+    tsne = ml_utils.LocallyLinearEmbedding(
+        n_components=1, eigen_solver="dense"
+    )
     data = tsne.fit_transform(data)
     data = np.ndarray.flatten(data)
 

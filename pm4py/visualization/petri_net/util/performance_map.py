@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,4 +19,15 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.objects.petri_net.utils.performance_map import calculate_annotation_for_trace, single_element_statistics, find_min_max_trans_frequency, find_min_max_arc_frequency, aggregate_stats, find_min_max_arc_performance, aggregate_statistics, get_transition_performance_with_token_replay, get_idx_exceeding_specified_acti_performance, filter_cases_exceeding_specified_acti_performance
+from pm4py.objects.petri_net.utils.performance_map import (
+    calculate_annotation_for_trace,
+    single_element_statistics,
+    find_min_max_trans_frequency,
+    find_min_max_arc_frequency,
+    aggregate_stats,
+    find_min_max_arc_performance,
+    aggregate_statistics,
+    get_transition_performance_with_token_replay,
+    get_idx_exceeding_specified_acti_performance,
+    filter_cases_exceeding_specified_acti_performance,
+)

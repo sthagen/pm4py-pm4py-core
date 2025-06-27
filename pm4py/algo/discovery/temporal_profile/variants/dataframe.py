@@ -24,7 +24,9 @@ from typing import Optional, Dict, Any
 
 import pandas as pd
 
-from pm4py.algo.discovery.dfg.adapters.pandas.df_statistics import get_partial_order_dataframe
+from pm4py.algo.discovery.dfg.adapters.pandas.df_statistics import (
+    get_partial_order_dataframe,
+)
 from pm4py.util import exec_utils, constants, xes_constants
 from pm4py.util import typing
 
@@ -39,7 +41,9 @@ class Parameters(Enum):
     WORKCALENDAR = "workcalendar"
 
 
-def apply(df: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None) -> typing.TemporalProfile:
+def apply(
+    df: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None
+) -> typing.TemporalProfile:
     """
     Gets the temporal profile from a dataframe.
 
@@ -66,26 +70,62 @@ def apply(df: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None) -> typi
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters, None)
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY, parameters, None
+    )
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
 
-    business_hours = exec_utils.get_param_value(Parameters.BUSINESS_HOURS, parameters, False)
-    business_hours_slots = exec_utils.get_param_value(Parameters.BUSINESS_HOUR_SLOTS, parameters, constants.DEFAULT_BUSINESS_HOUR_SLOTS)
+    business_hours = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOURS, parameters, False
+    )
+    business_hours_slots = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOUR_SLOTS,
+        parameters,
+        constants.DEFAULT_BUSINESS_HOUR_SLOTS,
+    )
 
-    workcalendar = exec_utils.get_param_value(Parameters.WORKCALENDAR, parameters, constants.DEFAULT_BUSINESS_HOURS_WORKCALENDAR)
+    workcalendar = exec_utils.get_param_value(
+        Parameters.WORKCALENDAR,
+        parameters,
+        constants.DEFAULT_BUSINESS_HOURS_WORKCALENDAR,
+    )
 
-    efg = get_partial_order_dataframe(df, activity_key=activity_key, timestamp_key=timestamp_key,
-                                      start_timestamp_key=start_timestamp_key, case_id_glue=case_id_key,
-                                      keep_first_following=False, business_hours=business_hours, business_hours_slot=business_hours_slots, workcalendar=workcalendar)
+    efg = get_partial_order_dataframe(
+        df,
+        activity_key=activity_key,
+        timestamp_key=timestamp_key,
+        start_timestamp_key=start_timestamp_key,
+        case_id_glue=case_id_key,
+        keep_first_following=False,
+        business_hours=business_hours,
+        business_hours_slot=business_hours_slots,
+        workcalendar=workcalendar,
+    )
     efg = efg[[activity_key, activity_key + "_2", "@@flow_time"]]
-    temporal_profile = efg.groupby([activity_key, activity_key + "_2"]).agg(["mean", "std"]).reset_index().fillna(
-        0).to_dict("records")
+    temporal_profile = (
+        efg.groupby([activity_key, activity_key + "_2"])
+        .agg(["mean", "std"])
+        .reset_index()
+        .fillna(0)
+        .to_dict("records")
+    )
 
     temporal_profile = {
-        (x[(activity_key, "")], x[(activity_key + "_2", "")]): (x[("@@flow_time", "mean")], x[("@@flow_time", "std")])
-        for x in temporal_profile}
+        (x[(activity_key, "")], x[(activity_key + "_2", "")]): (
+            x[("@@flow_time", "mean")],
+            x[("@@flow_time", "std")],
+        )
+        for x in temporal_profile
+    }
 
     return temporal_profile

@@ -25,14 +25,18 @@ from typing import Union, TypeVar, Generic, Optional, Dict, Any
 from pm4py.algo.discovery.inductive.dtypes.im_ds import IMDataStructure
 from pm4py.objects.process_tree.obj import ProcessTree
 
-T = TypeVar('T', bound=Union[IMDataStructure])
+T = TypeVar("T", bound=Union[IMDataStructure])
 
 
 class BaseCase(ABC, Generic[T]):
 
     @classmethod
-    def apply(cls, obj=T, parameters: Optional[Dict[str, Any]] = None) -> Optional[ProcessTree]:
-        return cls.leaf(obj, parameters) if cls.holds(obj, parameters) else None
+    def apply(
+        cls, obj=T, parameters: Optional[Dict[str, Any]] = None
+    ) -> Optional[ProcessTree]:
+        return (
+            cls.leaf(obj, parameters) if cls.holds(obj, parameters) else None
+        )
 
     @classmethod
     @abstractmethod
@@ -41,5 +45,7 @@ class BaseCase(ABC, Generic[T]):
 
     @classmethod
     @abstractmethod
-    def leaf(cls, obj=T, parameters: Optional[Dict[str, Any]] = None) -> ProcessTree:
+    def leaf(
+        cls, obj=T, parameters: Optional[Dict[str, Any]] = None
+    ) -> ProcessTree:
         pass

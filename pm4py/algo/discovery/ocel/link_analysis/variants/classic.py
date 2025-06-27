@@ -36,7 +36,9 @@ class Parameters(Enum):
     PROPAGATE = "propagate"
 
 
-def propagate_associations(associations: Dict[str, Set[str]]) -> Dict[str, Set[str]]:
+def propagate_associations(
+    associations: Dict[str, Set[str]]
+) -> Dict[str, Set[str]]:
     """
     Propagate the associations, such that the eventually-follows
     flow between the events of the event log is considered
@@ -74,7 +76,9 @@ def propagate_associations(associations: Dict[str, Set[str]]) -> Dict[str, Set[s
     return associations
 
 
-def apply(dataframe: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None) -> pd.DataFrame:
+def apply(
+    dataframe: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None
+) -> pd.DataFrame:
     """
     Performs a link analysis between the entries of the current dataframe.
     The link analysis permits advanced filtering based on events connected in an
@@ -110,24 +114,46 @@ def apply(dataframe: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None) 
     if parameters is None:
         parameters = {}
 
-    out_column = exec_utils.get_param_value(Parameters.OUT_COLUMN, parameters, constants.CASE_CONCEPT_NAME)
-    in_column = exec_utils.get_param_value(Parameters.IN_COLUMN, parameters, constants.CASE_CONCEPT_NAME)
-    sorting_column = exec_utils.get_param_value(Parameters.SORTING_COLUMN, parameters,
-                                                xes_constants.DEFAULT_TIMESTAMP_KEY)
-    index_column = exec_utils.get_param_value(Parameters.INDEX_COLUMN, parameters, constants.DEFAULT_INDEX_KEY)
-    look_forward = exec_utils.get_param_value(Parameters.LOOK_FORWARD, parameters, True)
-    keep_first_occurrence = exec_utils.get_param_value(Parameters.KEEP_FIRST_OCCURRENCE, parameters, False)
-    propagate = exec_utils.get_param_value(Parameters.PROPAGATE, parameters, False)
+    out_column = exec_utils.get_param_value(
+        Parameters.OUT_COLUMN, parameters, constants.CASE_CONCEPT_NAME
+    )
+    in_column = exec_utils.get_param_value(
+        Parameters.IN_COLUMN, parameters, constants.CASE_CONCEPT_NAME
+    )
+    sorting_column = exec_utils.get_param_value(
+        Parameters.SORTING_COLUMN,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    index_column = exec_utils.get_param_value(
+        Parameters.INDEX_COLUMN, parameters, constants.DEFAULT_INDEX_KEY
+    )
+    look_forward = exec_utils.get_param_value(
+        Parameters.LOOK_FORWARD, parameters, True
+    )
+    keep_first_occurrence = exec_utils.get_param_value(
+        Parameters.KEEP_FIRST_OCCURRENCE, parameters, False
+    )
+    propagate = exec_utils.get_param_value(
+        Parameters.PROPAGATE, parameters, False
+    )
 
     dataframe = dataframe.sort_values(sorting_column)
     dataframe = pandas_utils.insert_index(dataframe, index_column)
 
     df_red1 = dataframe[[out_column, index_column]]
     df_red2 = dataframe[[in_column, index_column]]
-    df_red = df_red1.merge(df_red2, left_on=out_column, right_on=in_column, suffixes=("_out", "_in"))
+    df_red = df_red1.merge(
+        df_red2,
+        left_on=out_column,
+        right_on=in_column,
+        suffixes=("_out", "_in"),
+    )
 
     if look_forward:
-        df_red = df_red[df_red[index_column + "_out"] < df_red[index_column + "_in"]]
+        df_red = df_red[
+            df_red[index_column + "_out"] < df_red[index_column + "_in"]
+        ]
 
     if keep_first_occurrence:
         df_red = df_red.groupby(index_column + "_out").first().reset_index()
@@ -149,12 +175,18 @@ def apply(dataframe: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None) 
             out_clmn.append(k)
             in_clmn.append(v)
 
-    rel = pandas_utils.instantiate_dataframe({index_column + "_out": out_clmn, index_column + "_in": in_clmn})
+    rel = pandas_utils.instantiate_dataframe(
+        {index_column + "_out": out_clmn, index_column + "_in": in_clmn}
+    )
 
     df_link = dataframe.copy()
     df_link.columns = [x + "_out" for x in df_link.columns]
-    df_link = df_link.merge(rel, left_on=index_column + "_out", right_on=index_column + "_out")
+    df_link = df_link.merge(
+        rel, left_on=index_column + "_out", right_on=index_column + "_out"
+    )
     dataframe.columns = [x + "_in" for x in dataframe.columns]
-    df_link = df_link.merge(dataframe, left_on=index_column + "_in", right_on=index_column + "_in")
+    df_link = df_link.merge(
+        dataframe, left_on=index_column + "_in", right_on=index_column + "_in"
+    )
 
     return df_link

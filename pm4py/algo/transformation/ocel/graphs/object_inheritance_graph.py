@@ -24,20 +24,22 @@ from typing import Optional, Dict, Any, Set, Tuple
 from copy import copy
 
 
-def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Set[Tuple[str, str]]:
+def apply(
+    ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None
+) -> Set[Tuple[str, str]]:
     """
     Calculates the object descendants graph.
     Two objects o1 and o2, both related to an event e, are connected if:
     - e is the last event of the lifecycle of o1
     - e is the first event of the lifecycle of o2
-    
+
     Parameters
     -----------------
     ocel
         Object-centric event log
     parameters
         Parameters of the algorithm
-    
+
     Returns
     -----------------
     object_inheritance_graph
@@ -49,7 +51,11 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Set[Tuple[
     graph = set()
 
     ordered_events = ocel.events[ocel.event_id_column].to_numpy().tolist()
-    ev_rel_obj = ocel.relations.groupby(ocel.event_id_column)[ocel.object_id_column].agg(list).to_dict()
+    ev_rel_obj = (
+        ocel.relations.groupby(ocel.event_id_column)[ocel.object_id_column]
+        .agg(list)
+        .to_dict()
+    )
     last_event_per_obj = {}
     set_objects = set()
 

@@ -35,7 +35,9 @@ class Parameters(Enum):
     NUM_ENTITIES = "num_entities"
 
 
-def sample_ocel_events(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
+def sample_ocel_events(
+    ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None
+) -> OCEL:
     """
     Keeps a sample of the events of an object-centric event log
 
@@ -56,8 +58,12 @@ def sample_ocel_events(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) 
     if parameters is None:
         parameters = {}
 
-    event_id_column = exec_utils.get_param_value(Parameters.EVENT_ID, parameters, ocel.event_id_column)
-    num_entities = exec_utils.get_param_value(Parameters.NUM_ENTITIES, parameters, 100)
+    event_id_column = exec_utils.get_param_value(
+        Parameters.EVENT_ID, parameters, ocel.event_id_column
+    )
+    num_entities = exec_utils.get_param_value(
+        Parameters.NUM_ENTITIES, parameters, 100
+    )
 
     events = pandas_utils.format_unique(ocel.events[event_id_column].unique())
     num_events = min(len(events), num_entities)
@@ -68,10 +74,14 @@ def sample_ocel_events(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) 
     ocel = copy(ocel)
     ocel.events = ocel.events[ocel.events[event_id_column].isin(picked_events)]
 
-    return filtering_utils.propagate_event_filtering(ocel, parameters=parameters)
+    return filtering_utils.propagate_event_filtering(
+        ocel, parameters=parameters
+    )
 
 
-def sample_ocel_objects(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
+def sample_ocel_objects(
+    ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None
+) -> OCEL:
     """
     Random samples the objects of the object-centric event log.
     Then, only the events related to at least one of these objects are filtered from the event log.
@@ -95,16 +105,26 @@ def sample_ocel_objects(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None)
     if parameters is None:
         parameters = {}
 
-    object_id_column = exec_utils.get_param_value(Parameters.OBJECT_ID, parameters, ocel.object_id_column)
-    num_entities = exec_utils.get_param_value(Parameters.NUM_ENTITIES, parameters, 100)
+    object_id_column = exec_utils.get_param_value(
+        Parameters.OBJECT_ID, parameters, ocel.object_id_column
+    )
+    num_entities = exec_utils.get_param_value(
+        Parameters.NUM_ENTITIES, parameters, 100
+    )
 
-    objects = pandas_utils.format_unique(ocel.objects[object_id_column].unique())
+    objects = pandas_utils.format_unique(
+        ocel.objects[object_id_column].unique()
+    )
     num_objects = min(len(objects), num_entities)
 
     random.shuffle(objects)
     picked_objects = objects[:num_objects]
 
     ocel = copy(ocel)
-    ocel.objects = ocel.objects[ocel.objects[object_id_column].isin(picked_objects)]
+    ocel.objects = ocel.objects[
+        ocel.objects[object_id_column].isin(picked_objects)
+    ]
 
-    return filtering_utils.propagate_object_filtering(ocel, parameters=parameters)
+    return filtering_utils.propagate_object_filtering(
+        ocel, parameters=parameters
+    )

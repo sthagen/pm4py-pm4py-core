@@ -35,7 +35,9 @@ class Parameters(Enum):
     INDEX_KEY = "index_key"
 
 
-def apply(dataframe: pd.DataFrame, parameters=None) -> Tuple[Dict[Collection[str], int], Dict[str, Collection[str]]]:
+def apply(
+    dataframe: pd.DataFrame, parameters=None
+) -> Tuple[Dict[Collection[str], int], Dict[str, Collection[str]]]:
     """
     Efficient method returning the variants from a Pandas dataframe (through Numpy)
 
@@ -71,10 +73,20 @@ def apply(dataframe: pd.DataFrame, parameters=None) -> Tuple[Dict[Collection[str
     if parameters is None:
         parameters = {}
 
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    index_key = exec_utils.get_param_value(Parameters.INDEX_KEY, parameters, constants.DEFAULT_INDEX_KEY)
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    index_key = exec_utils.get_param_value(
+        Parameters.INDEX_KEY, parameters, constants.DEFAULT_INDEX_KEY
+    )
 
     if not (hasattr(dataframe, "attrs") and dataframe.attrs):
         # dataframe has not been initialized through format_dataframe
@@ -84,7 +96,9 @@ def apply(dataframe: pd.DataFrame, parameters=None) -> Tuple[Dict[Collection[str
     case_variant = dict()
 
     if importlib.util.find_spec("cudf"):
-        case_variant = dataframe.groupby(case_id_key)[activity_key].agg(list).to_dict()
+        case_variant = (
+            dataframe.groupby(case_id_key)[activity_key].agg(list).to_dict()
+        )
         case_variant = {x: tuple(y) for x, y in case_variant.items()}
         variants_counter = Counter(case_variant.values())
     else:
@@ -92,7 +106,9 @@ def apply(dataframe: pd.DataFrame, parameters=None) -> Tuple[Dict[Collection[str
         cases = dataframe[case_id_key].to_numpy()
         activities = dataframe[activity_key].to_numpy()
 
-        c_unq, c_ind, c_counts = np.unique(cases, return_index=True, return_counts=True)
+        c_unq, c_ind, c_counts = np.unique(
+            cases, return_index=True, return_counts=True
+        )
 
         for i in range(len(c_ind)):
             si = c_ind[i]

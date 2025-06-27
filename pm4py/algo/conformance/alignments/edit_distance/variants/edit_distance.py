@@ -40,7 +40,11 @@ class Parameters(Enum):
     TIMESTAMP_KEY = constants.PARAMETER_CONSTANT_TIMESTAMP_KEY
 
 
-def apply(log1: EventLog, log2: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> typing.ListAlignments:
+def apply(
+    log1: EventLog,
+    log2: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> typing.ListAlignments:
     """
     Aligns each trace of the first log against the second log, minimizing the edit distance
 
@@ -61,17 +65,33 @@ def apply(log1: EventLog, log2: EventLog, parameters: Optional[Dict[Union[str, P
     if parameters is None:
         parameters = {}
 
-    log1 = log_converter.apply(log1, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
-    log2 = log_converter.apply(log2, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log1 = log_converter.apply(
+        log1,
+        variant=log_converter.Variants.TO_EVENT_LOG,
+        parameters=parameters,
+    )
+    log2 = log_converter.apply(
+        log2,
+        variant=log_converter.Variants.TO_EVENT_LOG,
+        parameters=parameters,
+    )
 
-    anti_alignment = exec_utils.get_param_value(Parameters.PERFORM_ANTI_ALIGNMENT, parameters, False)
+    anti_alignment = exec_utils.get_param_value(
+        Parameters.PERFORM_ANTI_ALIGNMENT, parameters, False
+    )
 
     aligned_traces = []
 
-    # form a mapping dictionary associating each activity of the two logs to an ASCII character
-    mapping = log_regex.form_encoding_dictio_from_two_logs(log1, log2, parameters=parameters)
-    # encode the second log (against which we want to align each trace of the first log)
-    list_encodings = log_regex.get_encoded_log(log2, mapping, parameters=parameters)
+    # form a mapping dictionary associating each activity of the two logs to
+    # an ASCII character
+    mapping = log_regex.form_encoding_dictio_from_two_logs(
+        log1, log2, parameters=parameters
+    )
+    # encode the second log (against which we want to align each trace of the
+    # first log)
+    list_encodings = log_regex.get_encoded_log(
+        log2, mapping, parameters=parameters
+    )
     # optimization: keep one item per variant
     set_encodings = set(list_encodings)
     list_encodings = list(set_encodings)
@@ -82,36 +102,54 @@ def apply(log1: EventLog, log2: EventLog, parameters: Optional[Dict[Union[str, P
     else:
         list_encodings = sorted(list_encodings, key=lambda x: len(x))
 
-    # keeps an alignment cache (to avoid re-calculating the same edit distances :) )
+    # keeps an alignment cache (to avoid re-calculating the same edit
+    # distances :) )
     cache_align = {}
 
     best_worst_cost = min(len(x) for x in list_encodings)
 
     for trace in log1:
         # gets the alignment
-        align_result = align_trace(trace, list_encodings, set_encodings, mapping, cache_align=cache_align,
-                                   parameters=parameters)
+        align_result = align_trace(
+            trace,
+            list_encodings,
+            set_encodings,
+            mapping,
+            cache_align=cache_align,
+            parameters=parameters,
+        )
         aligned_traces.append(align_result)
 
     # assign fitness to traces
     for index, align in enumerate(aligned_traces):
         if align is not None:
-            unfitness_upper_part = align['cost'] // align_utils.STD_MODEL_LOG_MOVE_COST
+            unfitness_upper_part = (
+                align["cost"] // align_utils.STD_MODEL_LOG_MOVE_COST
+            )
             if unfitness_upper_part == 0:
-                align['fitness'] = 1
+                align["fitness"] = 1
             elif (len(log1[index]) + best_worst_cost) > 0:
-                align['fitness'] = 1 - (
-                        (align['cost'] // align_utils.STD_MODEL_LOG_MOVE_COST) / (len(log1[index]) + best_worst_cost))
+                align["fitness"] = 1 - (
+                    (align["cost"] // align_utils.STD_MODEL_LOG_MOVE_COST)
+                    / (len(log1[index]) + best_worst_cost)
+                )
             else:
-                align['fitness'] = 0
-            align["bwc"] = (len(log1[index]) + best_worst_cost) * align_utils.STD_MODEL_LOG_MOVE_COST
+                align["fitness"] = 0
+            align["bwc"] = (
+                len(log1[index]) + best_worst_cost
+            ) * align_utils.STD_MODEL_LOG_MOVE_COST
 
     return aligned_traces
 
 
-def align_trace(trace: Trace, list_encodings: List[str], set_encodings: Set[str], mapping: Dict[str, str],
-                cache_align: Optional[Dict[Any, Any]] = None,
-                parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> typing.AlignmentResult:
+def align_trace(
+    trace: Trace,
+    list_encodings: List[str],
+    set_encodings: Set[str],
+    mapping: Dict[str, str],
+    cache_align: Optional[Dict[Any, Any]] = None,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> typing.AlignmentResult:
     """
     Aligns a trace against a list of traces, minimizing the edit distance
 
@@ -139,26 +177,39 @@ def align_trace(trace: Trace, list_encodings: List[str], set_encodings: Set[str]
     if parameters is None:
         parameters = {}
 
-    # keeps an alignment cache (to avoid re-calculating the same edit distances :) )
+    # keeps an alignment cache (to avoid re-calculating the same edit
+    # distances :) )
     if cache_align is None:
         cache_align = {}
 
-    anti_alignment = exec_utils.get_param_value(Parameters.PERFORM_ANTI_ALIGNMENT, parameters, False)
-    comparison_function = string_distance.argmax_levenshtein if anti_alignment else string_distance.argmin_levenshtein
+    anti_alignment = exec_utils.get_param_value(
+        Parameters.PERFORM_ANTI_ALIGNMENT, parameters, False
+    )
+    comparison_function = (
+        string_distance.argmax_levenshtein
+        if anti_alignment
+        else string_distance.argmin_levenshtein
+    )
 
     # encode the current trace using the mapping dictionary
-    encoded_trace = log_regex.get_encoded_trace(trace, mapping, parameters=parameters)
+    encoded_trace = log_regex.get_encoded_trace(
+        trace, mapping, parameters=parameters
+    )
     inv_mapping = {y: x for x, y in mapping.items()}
 
     if encoded_trace not in cache_align:
         if not anti_alignment and encoded_trace in set_encodings:
-            # the trace is already in the encodings. we don't need to calculate any edit distance
+            # the trace is already in the encodings. we don't need to calculate
+            # any edit distance
             argmin_dist = encoded_trace
         else:
-            # finds the encoded trace of the other log that is at minimal distance
+            # finds the encoded trace of the other log that is at minimal
+            # distance
             argmin_dist = comparison_function(encoded_trace, list_encodings)
 
-        seq_match = difflib.SequenceMatcher(None, encoded_trace, argmin_dist).get_matching_blocks()
+        seq_match = difflib.SequenceMatcher(
+            None, encoded_trace, argmin_dist
+        ).get_matching_blocks()
         i = 0
         j = 0
         align_trace = []
@@ -173,7 +224,12 @@ def align_trace(trace: Trace, list_encodings: List[str], set_encodings: Set[str]
                 total_cost += align_utils.STD_MODEL_LOG_MOVE_COST
                 j = j + 1
             for z in range(el.size):
-                align_trace.append((inv_mapping[encoded_trace[i]], inv_mapping[argmin_dist[j]]))
+                align_trace.append(
+                    (
+                        inv_mapping[encoded_trace[i]],
+                        inv_mapping[argmin_dist[j]],
+                    )
+                )
                 i = i + 1
                 j = j + 1
 
@@ -185,7 +241,11 @@ def align_trace(trace: Trace, list_encodings: List[str], set_encodings: Set[str]
         return cache_align[encoded_trace]
 
 
-def project_log_on_variant(log: Union[EventLog, pd.DataFrame], variant: List[str], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> EventLog:
+def project_log_on_variant(
+    log: Union[EventLog, pd.DataFrame],
+    variant: List[str],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> EventLog:
     """
     Projects the traces of an event log to the specified variant, in order to assess the conformance of the different
     directly-follows relationships and their performance (as the timestamps are recorded).
@@ -228,8 +288,14 @@ def project_log_on_variant(log: Union[EventLog, pd.DataFrame], variant: List[str
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
 
     log = log_converter.apply(log, parameters=parameters)
 
@@ -246,7 +312,9 @@ def project_log_on_variant(log: Union[EventLog, pd.DataFrame], variant: List[str
 
     for i in range(len(log)):
         projected_trace = Trace()
-        projected_trace.attributes["@@original_trace"] = ",".join(x[activity_key] for x in log[i])
+        projected_trace.attributes["@@original_trace"] = ",".join(
+            x[activity_key] for x in log[i]
+        )
 
         if len(log[i]) > 0:
             trace = log[i]
@@ -258,15 +326,23 @@ def project_log_on_variant(log: Union[EventLog, pd.DataFrame], variant: List[str
                 if alignment[j][1] == ">>":
                     # move on log
                     pass
-                elif alignment[j][0] == ">>" or alignment[j][0] == alignment[j][1]:
+                elif (
+                    alignment[j][0] == ">>"
+                    or alignment[j][0] == alignment[j][1]
+                ):
                     is_conforming = False
                     if alignment[j][0] != ">>":
                         # sync move
                         curr_timestamp = trace[z][timestamp_key]
                         is_conforming = True
                         z = z + 1
-                    event = Event({activity_key: alignment[j][1], timestamp_key: curr_timestamp,
-                                   "@@is_conforming": is_conforming})
+                    event = Event(
+                        {
+                            activity_key: alignment[j][1],
+                            timestamp_key: curr_timestamp,
+                            "@@is_conforming": is_conforming,
+                        }
+                    )
                     projected_trace.append(event)
 
             projected_log.append(projected_trace)

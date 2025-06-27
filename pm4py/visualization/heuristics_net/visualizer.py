@@ -38,7 +38,11 @@ class Variants(Enum):
 DEFAULT_VARIANT = Variants.PYDOTPLUS
 
 
-def apply(heu_net: HeuristicsNet, parameters: Optional[Dict[Any, Any]] = None, variant=DEFAULT_VARIANT) -> str:
+def apply(
+    heu_net: HeuristicsNet,
+    parameters: Optional[Dict[Any, Any]] = None,
+    variant=DEFAULT_VARIANT,
+) -> str:
     """
     Gets a representation of an Heuristics Net
 
@@ -58,10 +62,16 @@ def apply(heu_net: HeuristicsNet, parameters: Optional[Dict[Any, Any]] = None, v
     gviz
         Representation of the Heuristics Net
     """
-    return exec_utils.get_variant(variant).apply(heu_net, parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        heu_net, parameters=parameters
+    )
 
 
-def get_graph(heu_net: HeuristicsNet, parameters: Optional[Dict[Any, Any]] = None, variant=DEFAULT_VARIANT) -> pydotplus.graphviz.Dot:
+def get_graph(
+    heu_net: HeuristicsNet,
+    parameters: Optional[Dict[Any, Any]] = None,
+    variant=DEFAULT_VARIANT,
+) -> pydotplus.graphviz.Dot:
     """
     Gets a representation of an Heuristics Net
 
@@ -81,7 +91,9 @@ def get_graph(heu_net: HeuristicsNet, parameters: Optional[Dict[Any, Any]] = Non
     graph
         Pydotplus graph
     """
-    return exec_utils.get_variant(variant).get_graph(heu_net, parameters=parameters)
+    return exec_utils.get_variant(variant).get_graph(
+        heu_net, parameters=parameters
+    )
 
 
 def view(figure):
@@ -104,8 +116,9 @@ def view(figure):
         if constants.DEFAULT_GVIZ_VIEW == "matplotlib_view":
             import matplotlib.pyplot as plt
             import matplotlib.image as mpimg
+
             img = mpimg.imread(figure)
-            plt.axis('off')
+            plt.axis("off")
             plt.tight_layout(pad=0, w_pad=0, h_pad=0)
             plt.imshow(img)
             plt.show()

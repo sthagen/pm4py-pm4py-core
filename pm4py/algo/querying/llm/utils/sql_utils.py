@@ -34,11 +34,32 @@ def mask_non_alphanumeric(stri):
     ret = []
     for el in stri_split:
         for char in el:
-            if char.isalnum() or char == " " or char in ["(", ")", "*", ".", ",", "'", "\"", "=", "<", ">", "_", "+",
-                                                         "-", "!"]:
+            if (
+                char.isalnum()
+                or char == " "
+                or char
+                in [
+                    "(",
+                    ")",
+                    "*",
+                    ".",
+                    ",",
+                    "'",
+                    '"',
+                    "=",
+                    "<",
+                    ">",
+                    "_",
+                    "+",
+                    "-",
+                    "!",
+                ]
+            ):
                 ret.append(char)
             else:
-                ret.append(ref_stri_1 + ref_stri_2 + str(ord(char)) + ref_stri_1)
+                ret.append(
+                    ref_stri_1 + ref_stri_2 + str(ord(char)) + ref_stri_1
+                )
     return "".join(ret)
 
 

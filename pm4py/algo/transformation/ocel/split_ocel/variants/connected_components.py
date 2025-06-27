@@ -56,9 +56,15 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     if parameters is None:
         parameters = {}
 
-    centrality_measure = exec_utils.get_param_value(Parameters.CENTRALITY_MEASURE, parameters, None)
-    max_value_centrality = exec_utils.get_param_value(Parameters.MAX_VALUE_CENTRALITY, parameters, sys.maxsize)
-    enable_prints = exec_utils.get_param_value(Parameters.ENABLE_PRINTS, parameters, False)
+    centrality_measure = exec_utils.get_param_value(
+        Parameters.CENTRALITY_MEASURE, parameters, None
+    )
+    max_value_centrality = exec_utils.get_param_value(
+        Parameters.MAX_VALUE_CENTRALITY, parameters, sys.maxsize
+    )
+    enable_prints = exec_utils.get_param_value(
+        Parameters.ENABLE_PRINTS, parameters, False
+    )
 
     g0 = object_interaction_graph.apply(ocel, parameters=parameters)
     g = nx_utils.Graph()
@@ -71,7 +77,13 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     if centrality_measure is not None:
         degree_centrality = centrality_measure(g)
         if enable_prints:
-            print(sorted([(x, y) for x, y in degree_centrality.items()], key=lambda x: (x[1], x[0]), reverse=True))
+            print(
+                sorted(
+                    [(x, y) for x, y in degree_centrality.items()],
+                    key=lambda x: (x[1], x[0]),
+                    reverse=True,
+                )
+            )
 
         for n in degree_centrality:
             if degree_centrality[n] > max_value_centrality:
@@ -86,10 +98,18 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
 
     for index, cc in enumerate(conn_comp):
         subocel = OCEL()
-        subocel.objects = ocel.objects[ocel.objects[ocel.object_id_column].isin(cc)]
-        subocel.relations = ocel.relations[ocel.relations[ocel.object_id_column].isin(cc)]
-        included_evs = pandas_utils.format_unique(subocel.relations[ocel.event_id_column].unique())
-        subocel.events = ocel.events[ocel.events[ocel.event_id_column].isin(included_evs)]
+        subocel.objects = ocel.objects[
+            ocel.objects[ocel.object_id_column].isin(cc)
+        ]
+        subocel.relations = ocel.relations[
+            ocel.relations[ocel.object_id_column].isin(cc)
+        ]
+        included_evs = pandas_utils.format_unique(
+            subocel.relations[ocel.event_id_column].unique()
+        )
+        subocel.events = ocel.events[
+            ocel.events[ocel.event_id_column].isin(included_evs)
+        ]
 
         ret.append(subocel)
 

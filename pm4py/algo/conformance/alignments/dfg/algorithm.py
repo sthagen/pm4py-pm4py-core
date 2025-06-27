@@ -32,7 +32,14 @@ class Variants(Enum):
     CLASSIC = classic
 
 
-def apply(obj: Union[EventLog, pd.DataFrame, Trace], dfg: Dict[Tuple[str, str], int], sa: Dict[str, int], ea: Dict[str, int], variant=Variants.CLASSIC, parameters: Optional[Dict[Any, Any]] = None) -> Union[typing.AlignmentResult, typing.ListAlignments]:
+def apply(
+    obj: Union[EventLog, pd.DataFrame, Trace],
+    dfg: Dict[Tuple[str, str], int],
+    sa: Dict[str, int],
+    ea: Dict[str, int],
+    variant=Variants.CLASSIC,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Union[typing.AlignmentResult, typing.ListAlignments]:
     """
     Applies the alignment algorithm provided a log/trace object, and a *connected* DFG
 
@@ -57,4 +64,6 @@ def apply(obj: Union[EventLog, pd.DataFrame, Trace], dfg: Dict[Tuple[str, str], 
     ali
         Result of the alignment
     """
-    return exec_utils.get_variant(variant).apply(obj, dfg, sa, ea, parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        obj, dfg, sa, ea, parameters=parameters
+    )

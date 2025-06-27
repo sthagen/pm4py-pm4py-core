@@ -31,7 +31,13 @@ from copy import copy
 from pm4py.objects.petri_net.obj import PetriNet, Marking
 
 
-def openai_query(prompt: str, api_key: Optional[str] = None, openai_model: Optional[str] = None, api_url: Optional[str] = None, **kwargs) -> str:
+def openai_query(
+    prompt: str,
+    api_key: Optional[str] = None,
+    openai_model: Optional[str] = None,
+    api_url: Optional[str] = None,
+    **kwargs
+) -> str:
     """
     Executes the provided prompt, obtaining the answer from the OpenAI APIs.
 
@@ -58,10 +64,16 @@ def openai_query(prompt: str, api_key: Optional[str] = None, openai_model: Optio
         parameters["openai_model"] = openai_model
 
     from pm4py.algo.querying.llm.connectors import openai as perform_query
+
     return perform_query.apply(prompt, parameters=parameters)
 
 
-def google_query(prompt: str, api_key: Optional[str] = None, model: Optional[str] = None, **kwargs) -> str:
+def google_query(
+    prompt: str,
+    api_key: Optional[str] = None,
+    model: Optional[str] = None,
+    **kwargs
+) -> str:
     """
     Executes the provided prompt, obtaining the answer from the Google APIs.
 
@@ -84,10 +96,16 @@ def google_query(prompt: str, api_key: Optional[str] = None, model: Optional[str
         parameters["google_model"] = model
 
     from pm4py.algo.querying.llm.connectors import google as perform_query
+
     return perform_query.apply(prompt, parameters=parameters)
 
 
-def anthropic_query(prompt: str, api_key: Optional[str] = None, model: Optional[str] = None, **kwargs) -> str:
+def anthropic_query(
+    prompt: str,
+    api_key: Optional[str] = None,
+    model: Optional[str] = None,
+    **kwargs
+) -> str:
     """
     Executes the provided prompt, obtaining the answer from the Google APIs.
 
@@ -110,10 +128,22 @@ def anthropic_query(prompt: str, api_key: Optional[str] = None, model: Optional[
         parameters["anthropic_model"] = model
 
     from pm4py.algo.querying.llm.connectors import anthropic as perform_query
+
     return perform_query.apply(prompt, parameters=parameters)
 
 
-def abstract_dfg(log_obj: Union[pd.DataFrame, EventLog, EventStream], max_len: int = constants.OPENAI_MAX_LEN, include_performance: bool = True, relative_frequency: bool = False, response_header: bool = True, primary_performance_aggregation: str = "mean", secondary_performance_aggregation: Optional[str] = None, activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> str:
+def abstract_dfg(
+    log_obj: Union[pd.DataFrame, EventLog, EventStream],
+    max_len: int = constants.OPENAI_MAX_LEN,
+    include_performance: bool = True,
+    relative_frequency: bool = False,
+    response_header: bool = True,
+    primary_performance_aggregation: str = "mean",
+    secondary_performance_aggregation: Optional[str] = None,
+    activity_key: str = "concept:name",
+    timestamp_key: str = "time:timestamp",
+    case_id_key: str = "case:concept:name",
+) -> str:
     """
     Obtains the DFG (Directly-Follows Graph) abstraction of a traditional event log.
 
@@ -139,19 +169,39 @@ def abstract_dfg(log_obj: Union[pd.DataFrame, EventLog, EventStream], max_len: i
     __event_log_deprecation_warning(log_obj)
 
     parameters = get_properties(
-        log_obj, activity_key=activity_key, timestamp_key=timestamp_key, case_id_key=case_id_key)
+        log_obj,
+        activity_key=activity_key,
+        timestamp_key=timestamp_key,
+        case_id_key=case_id_key,
+    )
     parameters["max_len"] = max_len
     parameters["include_performance"] = include_performance
     parameters["relative_frequency"] = relative_frequency
     parameters["response_header"] = response_header
-    parameters["primary_performance_aggregation"] = primary_performance_aggregation
-    parameters["secondary_performance_aggregation"] = secondary_performance_aggregation
+    parameters["primary_performance_aggregation"] = (
+        primary_performance_aggregation
+    )
+    parameters["secondary_performance_aggregation"] = (
+        secondary_performance_aggregation
+    )
 
     from pm4py.algo.querying.llm.abstractions import log_to_dfg_descr
+
     return log_to_dfg_descr.apply(log_obj, parameters=parameters)
 
 
-def abstract_variants(log_obj: Union[pd.DataFrame, EventLog, EventStream], max_len: int = constants.OPENAI_MAX_LEN, include_performance: bool = True, relative_frequency: bool = False, response_header: bool = True, primary_performance_aggregation: str = "mean", secondary_performance_aggregation: Optional[str] = None,  activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> str:
+def abstract_variants(
+    log_obj: Union[pd.DataFrame, EventLog, EventStream],
+    max_len: int = constants.OPENAI_MAX_LEN,
+    include_performance: bool = True,
+    relative_frequency: bool = False,
+    response_header: bool = True,
+    primary_performance_aggregation: str = "mean",
+    secondary_performance_aggregation: Optional[str] = None,
+    activity_key: str = "concept:name",
+    timestamp_key: str = "time:timestamp",
+    case_id_key: str = "case:concept:name",
+) -> str:
     """
     Obtains the variants abstraction of a traditional event log.
 
@@ -177,15 +227,24 @@ def abstract_variants(log_obj: Union[pd.DataFrame, EventLog, EventStream], max_l
     __event_log_deprecation_warning(log_obj)
 
     parameters = get_properties(
-        log_obj, activity_key=activity_key, timestamp_key=timestamp_key, case_id_key=case_id_key)
+        log_obj,
+        activity_key=activity_key,
+        timestamp_key=timestamp_key,
+        case_id_key=case_id_key,
+    )
     parameters["max_len"] = max_len
     parameters["include_performance"] = include_performance
     parameters["relative_frequency"] = relative_frequency
     parameters["response_header"] = response_header
-    parameters["primary_performance_aggregation"] = primary_performance_aggregation
-    parameters["secondary_performance_aggregation"] = secondary_performance_aggregation
+    parameters["primary_performance_aggregation"] = (
+        primary_performance_aggregation
+    )
+    parameters["secondary_performance_aggregation"] = (
+        secondary_performance_aggregation
+    )
 
     from pm4py.algo.querying.llm.abstractions import log_to_variants_descr
+
     return log_to_variants_descr.apply(log_obj, parameters=parameters)
 
 
@@ -207,11 +266,19 @@ def abstract_ocel(ocel: OCEL, include_timestamps: bool = True) -> str:
     parameters = {}
     parameters["include_timestamps"] = include_timestamps
 
-    from pm4py.algo.transformation.ocel.description import algorithm as ocel_description
+    from pm4py.algo.transformation.ocel.description import (
+        algorithm as ocel_description,
+    )
+
     return ocel_description.apply(ocel, parameters=parameters)
 
 
-def abstract_ocel_ocdfg(ocel: OCEL, include_header: bool = True, include_timestamps: bool = True, max_len: int = constants.OPENAI_MAX_LEN) -> str:
+def abstract_ocel_ocdfg(
+    ocel: OCEL,
+    include_header: bool = True,
+    include_timestamps: bool = True,
+    max_len: int = constants.OPENAI_MAX_LEN,
+) -> str:
     """
     Obtains the abstraction of an object-centric event log, representing the object-centric directly-follows graph in text.
 
@@ -234,10 +301,18 @@ def abstract_ocel_ocdfg(ocel: OCEL, include_header: bool = True, include_timesta
     parameters["max_len"] = max_len
 
     from pm4py.algo.querying.llm.abstractions import ocel_ocdfg_descr
+
     return ocel_ocdfg_descr.apply(ocel, parameters=parameters)
 
 
-def abstract_ocel_features(ocel: OCEL, obj_type: str, include_header: bool = True, max_len: int = constants.OPENAI_MAX_LEN, debug: bool = False, enable_object_lifecycle_paths: bool = True) -> str:
+def abstract_ocel_features(
+    ocel: OCEL,
+    obj_type: str,
+    include_header: bool = True,
+    max_len: int = constants.OPENAI_MAX_LEN,
+    debug: bool = False,
+    enable_object_lifecycle_paths: bool = True,
+) -> str:
     """
     Obtains the abstraction of an object-centric event log, representing the features and their values in text.
 
@@ -263,10 +338,18 @@ def abstract_ocel_features(ocel: OCEL, obj_type: str, include_header: bool = Tru
     parameters["enable_object_lifecycle_paths"] = enable_object_lifecycle_paths
 
     from pm4py.algo.querying.llm.abstractions import ocel_fea_descr
+
     return ocel_fea_descr.apply(ocel, obj_type, parameters=parameters)
 
 
-def abstract_event_stream(log_obj: Union[pd.DataFrame, EventLog, EventStream], max_len: int = constants.OPENAI_MAX_LEN, response_header: bool = True, activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> str:
+def abstract_event_stream(
+    log_obj: Union[pd.DataFrame, EventLog, EventStream],
+    max_len: int = constants.OPENAI_MAX_LEN,
+    response_header: bool = True,
+    activity_key: str = "concept:name",
+    timestamp_key: str = "time:timestamp",
+    case_id_key: str = "case:concept:name",
+) -> str:
     """
     Obtains the event stream abstraction of a traditional event log.
 
@@ -288,15 +371,22 @@ def abstract_event_stream(log_obj: Union[pd.DataFrame, EventLog, EventStream], m
     __event_log_deprecation_warning(log_obj)
 
     parameters = get_properties(
-        log_obj, activity_key=activity_key, timestamp_key=timestamp_key, case_id_key=case_id_key)
+        log_obj,
+        activity_key=activity_key,
+        timestamp_key=timestamp_key,
+        case_id_key=case_id_key,
+    )
     parameters["max_len"] = max_len
     parameters["response_header"] = response_header
 
     from pm4py.algo.querying.llm.abstractions import stream_to_descr
+
     return stream_to_descr.apply(log_obj, parameters=parameters)
 
 
-def abstract_petri_net(net: PetriNet, im: Marking, fm: Marking, response_header: bool = True) -> str:
+def abstract_petri_net(
+    net: PetriNet, im: Marking, fm: Marking, response_header: bool = True
+) -> str:
     """
     Obtains an abstraction of a Petri net.
 
@@ -317,10 +407,17 @@ def abstract_petri_net(net: PetriNet, im: Marking, fm: Marking, response_header:
     parameters["response_header"] = response_header
 
     from pm4py.algo.querying.llm.abstractions import net_to_descr
+
     return net_to_descr.apply(net, im, fm, parameters=parameters)
 
 
-def abstract_log_attributes(log_obj: Union[pd.DataFrame, EventLog, EventStream], max_len: int = constants.OPENAI_MAX_LEN, activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> str:
+def abstract_log_attributes(
+    log_obj: Union[pd.DataFrame, EventLog, EventStream],
+    max_len: int = constants.OPENAI_MAX_LEN,
+    activity_key: str = "concept:name",
+    timestamp_key: str = "time:timestamp",
+    case_id_key: str = "case:concept:name",
+) -> str:
     """
     Abstracts the attributes of a log by reporting their names, types, and top values.
 
@@ -341,14 +438,26 @@ def abstract_log_attributes(log_obj: Union[pd.DataFrame, EventLog, EventStream],
     __event_log_deprecation_warning(log_obj)
 
     parameters = get_properties(
-        log_obj, activity_key=activity_key, timestamp_key=timestamp_key, case_id_key=case_id_key)
+        log_obj,
+        activity_key=activity_key,
+        timestamp_key=timestamp_key,
+        case_id_key=case_id_key,
+    )
     parameters["max_len"] = max_len
 
     from pm4py.algo.querying.llm.abstractions import log_to_cols_descr
+
     return log_to_cols_descr.apply(log_obj, parameters=parameters)
 
 
-def abstract_log_features(log_obj: Union[pd.DataFrame, EventLog, EventStream], max_len: int = constants.OPENAI_MAX_LEN, include_header: bool = True, activity_key: str = "concept:name", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> str:
+def abstract_log_features(
+    log_obj: Union[pd.DataFrame, EventLog, EventStream],
+    max_len: int = constants.OPENAI_MAX_LEN,
+    include_header: bool = True,
+    activity_key: str = "concept:name",
+    timestamp_key: str = "time:timestamp",
+    case_id_key: str = "case:concept:name",
+) -> str:
     """
     Abstracts the machine learning features obtained from a log by reporting the top features until the desired length is achieved.
 
@@ -370,15 +479,23 @@ def abstract_log_features(log_obj: Union[pd.DataFrame, EventLog, EventStream], m
     __event_log_deprecation_warning(log_obj)
 
     parameters = get_properties(
-        log_obj, activity_key=activity_key, timestamp_key=timestamp_key, case_id_key=case_id_key)
+        log_obj,
+        activity_key=activity_key,
+        timestamp_key=timestamp_key,
+        case_id_key=case_id_key,
+    )
     parameters["max_len"] = max_len
     parameters["include_header"] = include_header
 
     from pm4py.algo.querying.llm.abstractions import log_to_fea_descr
+
     return log_to_fea_descr.apply(log_obj, parameters=parameters)
 
 
-def abstract_temporal_profile(temporal_profile: Dict[Tuple[str, str], Tuple[float, float]], include_header: bool = True) -> str:
+def abstract_temporal_profile(
+    temporal_profile: Dict[Tuple[str, str], Tuple[float, float]],
+    include_header: bool = True,
+) -> str:
     """
     Abstracts a temporal profile model into a descriptive string.
 
@@ -399,10 +516,19 @@ def abstract_temporal_profile(temporal_profile: Dict[Tuple[str, str], Tuple[floa
     parameters["include_header"] = include_header
 
     from pm4py.algo.querying.llm.abstractions import tempprofile_to_descr
+
     return tempprofile_to_descr.apply(temporal_profile, parameters=parameters)
 
 
-def abstract_case(case: Trace, include_case_attributes: bool = True, include_event_attributes: bool = True, include_timestamp: bool = True, include_header: bool = True, activity_key: str = "concept:name", timestamp_key: str = "time:timestamp") -> str:
+def abstract_case(
+    case: Trace,
+    include_case_attributes: bool = True,
+    include_event_attributes: bool = True,
+    include_timestamp: bool = True,
+    include_header: bool = True,
+    activity_key: str = "concept:name",
+    timestamp_key: str = "time:timestamp",
+) -> str:
     """
     Textually abstracts a single case from an event log.
 
@@ -431,6 +557,7 @@ def abstract_case(case: Trace, include_case_attributes: bool = True, include_eve
     parameters[constants.PARAMETER_CONSTANT_TIMESTAMP_KEY] = timestamp_key
 
     from pm4py.algo.querying.llm.abstractions import case_to_descr
+
     return case_to_descr.apply(case, parameters=parameters)
 
 
@@ -454,6 +581,7 @@ def abstract_declare(declare_model, include_header: bool = True) -> str:
     parameters["include_header"] = include_header
 
     from pm4py.algo.querying.llm.abstractions import declare_to_descr
+
     return declare_to_descr.apply(declare_model, parameters=parameters)
 
 
@@ -477,11 +605,17 @@ def abstract_log_skeleton(log_skeleton, include_header: bool = True) -> str:
     parameters["include_header"] = include_header
 
     from pm4py.algo.querying.llm.abstractions import logske_to_descr
+
     return logske_to_descr.apply(log_skeleton, parameters=parameters)
 
 
-def __execute_prompt_to_db_query(log: pd.DataFrame, prompt: str, executor=openai_query,
-                                 execute_query: bool = True, **kwargs) -> Union[str, pd.DataFrame]:
+def __execute_prompt_to_db_query(
+    log: pd.DataFrame,
+    prompt: str,
+    executor=openai_query,
+    execute_query: bool = True,
+    **kwargs
+) -> Union[str, pd.DataFrame]:
     """
     Internal method to retrieve (and execute) a SQL query corresponding to a prompt
     """
@@ -499,7 +633,9 @@ def __execute_prompt_to_db_query(log: pd.DataFrame, prompt: str, executor=openai
     sql_query = sql_query.strip()
 
     if not sql_query:
-        raise Exception("The response does not contain a valid SQL query: " + response)
+        raise Exception(
+            "The response does not contain a valid SQL query: " + response
+        )
 
     if execute_query:
         result = duckdb.query(sql_query).to_df()
@@ -510,9 +646,14 @@ def __execute_prompt_to_db_query(log: pd.DataFrame, prompt: str, executor=openai
     return sql_query
 
 
-def nlp_to_log_query(log: pd.DataFrame, query: str, executor=openai_query,
-                     obtain_query: bool = True, execute_query: bool = True, **kwargs) -> Union[
-    str, pd.DataFrame]:
+def nlp_to_log_query(
+    log: pd.DataFrame,
+    query: str,
+    executor=openai_query,
+    obtain_query: bool = True,
+    execute_query: bool = True,
+    **kwargs
+) -> Union[str, pd.DataFrame]:
     """
     Translates a natural language statement into a database (SQL) query executable against the event log.
 
@@ -532,20 +673,37 @@ def nlp_to_log_query(log: pd.DataFrame, query: str, executor=openai_query,
         resp = pm4py.llm.nlp_to_log_query(log, "How many cases are contained in the event log?", api_key="sk-5HNn")
         print(resp)
     """
-    from pm4py.algo.querying.llm.injection import algorithm as domain_knowledge_injector
-    prompt = "Could you provide a database query for the following question?\n\n" + query
+    from pm4py.algo.querying.llm.injection import (
+        algorithm as domain_knowledge_injector,
+    )
+
+    prompt = (
+        "Could you provide a database query for the following question?\n\n"
+        + query
+    )
     prompt += domain_knowledge_injector.apply(log, parameters=kwargs)
     prompt += "\n\nPlease include the SQL query between the ```sql and the ``` tags.\n\n"
 
     if obtain_query:
-        return __execute_prompt_to_db_query(log, prompt, executor=executor, execute_query=execute_query, **kwargs)
+        return __execute_prompt_to_db_query(
+            log,
+            prompt,
+            executor=executor,
+            execute_query=execute_query,
+            **kwargs
+        )
 
     return prompt
 
 
-def nlp_to_log_filter(log: pd.DataFrame, filter_query: str, executor=openai_query,
-                      obtain_query: bool = True, execute_query: bool = True, **kwargs) -> Union[
-    str, pd.DataFrame]:
+def nlp_to_log_filter(
+    log: pd.DataFrame,
+    filter_query: str,
+    executor=openai_query,
+    obtain_query: bool = True,
+    execute_query: bool = True,
+    **kwargs
+) -> Union[str, pd.DataFrame]:
     """
     Translates a filtering query expressed in natural language into a database (SQL) query that is used to filter the
     event log.
@@ -566,19 +724,36 @@ def nlp_to_log_filter(log: pd.DataFrame, filter_query: str, executor=openai_quer
         resp = pm4py.llm.nlp_to_log_filter(log, "There is an event with activity: pay compensation", api_key="sk-5HNn")
         print(resp)
     """
-    from pm4py.algo.querying.llm.injection import algorithm as domain_knowledge_injector
-    prompt = "Could you provide a database query to filter all the events of the cases for which at least an event (row) is satisfying the following filtering query?\n\n" + filter_query
+    from pm4py.algo.querying.llm.injection import (
+        algorithm as domain_knowledge_injector,
+    )
+
+    prompt = (
+        "Could you provide a database query to filter all the events of the cases for which at least an event (row) is satisfying the following filtering query?\n\n" +
+        filter_query)
     prompt += domain_knowledge_injector.apply(log, parameters=kwargs)
     prompt += "\n\nPlease include the SQL query between the ```sql and the ``` tags.\n\n"
 
     if obtain_query:
-        return __execute_prompt_to_db_query(log, prompt, executor=executor, execute_query=execute_query, **kwargs)
+        return __execute_prompt_to_db_query(
+            log,
+            prompt,
+            executor=executor,
+            execute_query=execute_query,
+            **kwargs
+        )
 
     return prompt
 
 
-def automated_hypotheses_formulation(dataframe: pd.DataFrame, executor=openai_query, obtain_query: bool = True, execute_query: bool = True,
-                                     max_len=10000, **kwargs) -> Union[str, List[Tuple[str, str, Union[str, None]]]]:
+def automated_hypotheses_formulation(
+    dataframe: pd.DataFrame,
+    executor=openai_query,
+    obtain_query: bool = True,
+    execute_query: bool = True,
+    max_len=10000,
+    **kwargs
+) -> Union[str, List[Tuple[str, str, Union[str, None]]]]:
     """
     Automatically formulate some hypotheses on the event data.
     The result of this method is either:
@@ -605,11 +780,16 @@ def automated_hypotheses_formulation(dataframe: pd.DataFrame, executor=openai_qu
     import duckdb
     from pm4py.algo.querying.llm.abstractions import log_to_cols_descr
 
-    from pm4py.algo.querying.llm.injection import algorithm as domain_knowledge_injector
+    from pm4py.algo.querying.llm.injection import (
+        algorithm as domain_knowledge_injector,
+    )
+
     prompt = "Could you formulate some hypotheses over the event data? The directly-follows graph, the list of attributes, and additional process mining/database knowledge follow.\n\n"
     prompt += abstract_dfg(dataframe, max_len=int(max_len / 3))
     prompt += "\n\n"
-    prompt += log_to_cols_descr.apply(dataframe, parameters={"max_len": int(max_len / 3)})
+    prompt += log_to_cols_descr.apply(
+        dataframe, parameters={"max_len": int(max_len / 3)}
+    )
     prompt += "\n\n"
     prompt += domain_knowledge_injector.apply(dataframe, parameters=kwargs)
     prompt += "Please provide each hypothesis along with a SQL query. Please include the SQL queries between the ```sql and the ``` tags.\n"
@@ -621,29 +801,45 @@ def automated_hypotheses_formulation(dataframe: pd.DataFrame, executor=openai_qu
         obtained_queries = response.split("```sql")
         obtained_descriptions = response.split("<description>")
 
-        if len(obtained_queries) > 1 and len(obtained_descriptions) > 1 and len(obtained_queries) == len(
-                obtained_descriptions):
+        if (
+            len(obtained_queries) > 1
+            and len(obtained_descriptions) > 1
+            and len(obtained_queries) == len(obtained_descriptions)
+        ):
             del obtained_queries[0]
             del obtained_descriptions[0]
 
             obtained_queries = [x.split("```")[0] for x in obtained_queries]
-            obtained_descriptions = [x.split("</description>")[0].strip() for x in obtained_descriptions]
+            obtained_descriptions = [
+                x.split("</description>")[0].strip()
+                for x in obtained_descriptions
+            ]
             obtained_results = [None] * len(obtained_descriptions)
 
             if execute_query:
                 for i in range(len(obtained_queries)):
                     try:
-                        obtained_results[i] = duckdb.sql(obtained_queries[i]).to_df()
-                    except:
+                        obtained_results[i] = duckdb.sql(
+                            obtained_queries[i]
+                        ).to_df()
+                    except BaseException:
                         print("Exception executing query nr. %d" % i)
 
-            return [(obtained_descriptions[i], obtained_queries[i], obtained_results[i]) for i in
-                    range(len(obtained_queries))]
+            return [
+                (
+                    obtained_descriptions[i],
+                    obtained_queries[i],
+                    obtained_results[i],
+                )
+                for i in range(len(obtained_queries))
+            ]
 
     return prompt
 
 
-def explain_visualization(vis_saver, *args, connector=openai_query, **kwargs) -> str:
+def explain_visualization(
+    vis_saver, *args, connector=openai_query, **kwargs
+) -> str:
     """
     Explains a process mining visualization using LLMs by saving it as a .png image and providing the image to the Large Language Model along with a description.
 
@@ -670,4 +866,8 @@ def explain_visualization(vis_saver, *args, connector=openai_query, **kwargs) ->
     parameters = copy(kwargs) if kwargs is not None else {}
     parameters["image_path"] = image_path
 
-    return connector("Could you explain the included process mining visualization?\n\n" + description, **parameters)
+    return connector(
+        "Could you explain the included process mining visualization?\n\n"
+        + description,
+        **parameters
+    )

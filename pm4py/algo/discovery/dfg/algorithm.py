@@ -21,7 +21,13 @@ Contact: info@processintelligence.solutions
 '''
 
 from pm4py import util as pmutil
-from pm4py.algo.discovery.dfg.variants import native, performance, freq_triples, case_attributes, clean
+from pm4py.algo.discovery.dfg.variants import (
+    native,
+    performance,
+    freq_triples,
+    case_attributes,
+    clean,
+)
 from pm4py.objects.conversion.log import converter as log_conversion
 from pm4py.util import xes_constants as xes_util
 from pm4py.util import exec_utils
@@ -48,7 +54,7 @@ class Variants(Enum):
     PERFORMANCE_GREEDY = performance
     FREQ_TRIPLES = freq_triples
     CASE_ATTRIBUTES = case_attributes
-    CLEAN = clean # 'novel' replacement for native
+    CLEAN = clean  # 'novel' replacement for native
 
 
 DFG_NATIVE = Variants.NATIVE
@@ -61,10 +67,21 @@ DFG_CLEAN = Variants.CLEAN
 
 DEFAULT_VARIANT = Variants.NATIVE
 
-VERSIONS = {DFG_NATIVE, DFG_FREQUENCY, DFG_PERFORMANCE, DFG_FREQUENCY_GREEDY, DFG_PERFORMANCE_GREEDY, FREQ_TRIPLES}
+VERSIONS = {
+    DFG_NATIVE,
+    DFG_FREQUENCY,
+    DFG_PERFORMANCE,
+    DFG_FREQUENCY_GREEDY,
+    DFG_PERFORMANCE_GREEDY,
+    FREQ_TRIPLES,
+}
 
 
-def apply(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[Dict[Any, Any]] = None, variant=DEFAULT_VARIANT) -> Dict[Tuple[str, str], float]:
+def apply(
+    log: Union[EventLog, EventStream, pd.DataFrame],
+    parameters: Optional[Dict[Any, Any]] = None,
+    variant=DEFAULT_VARIANT,
+) -> Dict[Tuple[str, str], float]:
     """
     Calculates DFG graph (frequency or performance) starting from a log
 
@@ -91,27 +108,46 @@ def apply(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[
     dfg
         DFG graph
     """
-    if variant == Variants.CLEAN and pandas_utils.check_is_pandas_dataframe(log):
+    if variant == Variants.CLEAN and pandas_utils.check_is_pandas_dataframe(
+        log
+    ):
         return clean.apply(log, parameters)
     elif variant is None:
         variant = Variants.NATIVE
-    
+
     if parameters is None:
         parameters = {}
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_util.DEFAULT_NAME_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters, None)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes_util.DEFAULT_TIMESTAMP_KEY)
-    case_id_glue = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, pmutil.constants.CASE_CONCEPT_NAME)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_util.DEFAULT_NAME_KEY
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY, parameters, None
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY, parameters, xes_util.DEFAULT_TIMESTAMP_KEY
+    )
+    case_id_glue = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, pmutil.constants.CASE_CONCEPT_NAME
+    )
 
-    if pandas_utils.check_is_pandas_dataframe(log) and not variant == Variants.FREQ_TRIPLES:
-        dfg_frequency, dfg_performance = df_statistics.get_dfg_graph(log, measure="both",
-                                                                     activity_key=activity_key,
-                                                                     timestamp_key=timestamp_key,
-                                                                     case_id_glue=case_id_glue,
-                                                                     start_timestamp_key=start_timestamp_key)
+    if (
+        pandas_utils.check_is_pandas_dataframe(log)
+        and not variant == Variants.FREQ_TRIPLES
+    ):
+        dfg_frequency, dfg_performance = df_statistics.get_dfg_graph(
+            log,
+            measure="both",
+            activity_key=activity_key,
+            timestamp_key=timestamp_key,
+            case_id_glue=case_id_glue,
+            start_timestamp_key=start_timestamp_key,
+        )
         if variant in [Variants.PERFORMANCE, Variants.PERFORMANCE_GREEDY]:
             return dfg_performance
         else:
             return dfg_frequency
 
-    return exec_utils.get_variant(variant).apply(log_conversion.apply(log, parameters, log_conversion.TO_EVENT_LOG), parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        log_conversion.apply(log, parameters, log_conversion.TO_EVENT_LOG),
+        parameters=parameters,
+    )

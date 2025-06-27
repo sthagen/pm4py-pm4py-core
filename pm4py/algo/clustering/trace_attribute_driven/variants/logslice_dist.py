@@ -30,10 +30,14 @@ from pm4py.algo.clustering.trace_attribute_driven.variants import act_dist_calc
 
 
 def log2sublog(log, str):
-    tracefilter_log = filter_subsets.apply_trace_attributes(log, [str],
-                                                            parameters={
-                                                                constants.PARAMETER_CONSTANT_ATTRIBUTE_KEY: "AMOUNT_REQ",
-                                                                "positive": True})
+    tracefilter_log = filter_subsets.apply_trace_attributes(
+        log,
+        [str],
+        parameters={
+            constants.PARAMETER_CONSTANT_ATTRIBUTE_KEY: "AMOUNT_REQ",
+            "positive": True,
+        },
+    )
 
     return tracefilter_log
 
@@ -76,25 +80,40 @@ def slice_dist_suc(log_1, log_2, unit):
             for j in range(min_len):
                 dfg2 = native.apply(min_log[j])
                 df2_dfg = act_dist_calc.occu_var_act(dfg2)
-                df_dfg = pandas_utils.merge(df1_dfg, df2_dfg, how='outer', on='var').fillna(0)
-                dist_vec[j] = pdist(np.array([df_dfg['freq_x'].values, df_dfg['freq_y'].values]), 'cosine')[0]
+                df_dfg = pandas_utils.merge(
+                    df1_dfg, df2_dfg, how="outer", on="var"
+                ).fillna(0)
+                dist_vec[j] = pdist(
+                    np.array(
+                        [df_dfg["freq_x"].values, df_dfg["freq_y"].values]
+                    ),
+                    "cosine",
+                )[0]
                 dist_matrix[i][j] = dist_vec[j]
                 if j == (min_len - 1):
                     max_loc_col = np.argmin(dist_vec)
                     if abs(dist_vec[max_loc_col]) <= 1e-8:
                         index_rec.discard(max_loc_col)
-                        max_freq[i] = var_count_max[i] * var_count_min[max_loc_col] * 2
-                        max_per_var[i] = dist_vec[max_loc_col] * max_freq[i] * 2
+                        max_freq[i] = (
+                            var_count_max[i] * var_count_min[max_loc_col] * 2
+                        )
+                        max_per_var[i] = (
+                            dist_vec[max_loc_col] * max_freq[i] * 2
+                        )
                     else:
-                        max_freq[i] = var_count_max[i] * var_count_min[max_loc_col]
+                        max_freq[i] = (
+                            var_count_max[i] * var_count_min[max_loc_col]
+                        )
                         max_per_var[i] = dist_vec[max_loc_col] * max_freq[i]
 
-        if (len(index_rec) != 0):
+        if len(index_rec) != 0:
             for i in list(index_rec):
                 min_loc_row = np.argmin(dist_matrix[:, i])
                 min_freq[i] = var_count_max[min_loc_row] * var_count_min[i]
                 min_per_var[i] = dist_matrix[min_loc_row, i] * min_freq[i]
-        dist = (np.sum(max_per_var) + np.sum(min_per_var)) / (np.sum(max_freq) + np.sum(min_freq))
+        dist = (np.sum(max_per_var) + np.sum(min_per_var)) / (
+            np.sum(max_freq) + np.sum(min_freq)
+        )
 
     return dist
 
@@ -132,30 +151,49 @@ def slice_dist_act(log_1, log_2, unit, parameters=None):
     else:
         for i in range(max_len):
             dist_vec = np.zeros(min_len)
-            act1 = attributes_filter.get_attribute_values(max_log[i], "concept:name")
+            act1 = attributes_filter.get_attribute_values(
+                max_log[i], "concept:name"
+            )
             df1_act = act_dist_calc.occu_var_act(act1)
             for j in range(min_len):
-                act2 = attributes_filter.get_attribute_values(min_log[j], "concept:name")
+                act2 = attributes_filter.get_attribute_values(
+                    min_log[j], "concept:name"
+                )
                 df2_act = act_dist_calc.occu_var_act(act2)
-                df_act = pandas_utils.merge(df1_act, df2_act, how='outer', on='var').fillna(0)
-                dist_vec[j] = pdist(np.array([df_act['freq_x'].values, df_act['freq_y'].values]), 'cosine')[0]
+                df_act = pandas_utils.merge(
+                    df1_act, df2_act, how="outer", on="var"
+                ).fillna(0)
+                dist_vec[j] = pdist(
+                    np.array(
+                        [df_act["freq_x"].values, df_act["freq_y"].values]
+                    ),
+                    "cosine",
+                )[0]
                 dist_matrix[i][j] = dist_vec[j]
                 if j == (min_len - 1):
                     max_loc_col = np.argmin(dist_vec)
                     if abs(dist_vec[max_loc_col]) <= 1e-8:
                         index_rec.discard(max_loc_col)
-                        max_freq[i] = var_count_max[i] * var_count_min[max_loc_col] * 2
-                        max_per_var[i] = dist_vec[max_loc_col] * max_freq[i] * 2
+                        max_freq[i] = (
+                            var_count_max[i] * var_count_min[max_loc_col] * 2
+                        )
+                        max_per_var[i] = (
+                            dist_vec[max_loc_col] * max_freq[i] * 2
+                        )
                     else:
-                        max_freq[i] = var_count_max[i] * var_count_min[max_loc_col]
+                        max_freq[i] = (
+                            var_count_max[i] * var_count_min[max_loc_col]
+                        )
                         max_per_var[i] = dist_vec[max_loc_col] * max_freq[i]
 
-        if (len(index_rec) != 0):
+        if len(index_rec) != 0:
             for i in list(index_rec):
                 min_loc_row = np.argmin(dist_matrix[:, i])
                 min_freq[i] = var_count_max[min_loc_row] * var_count_min[i]
                 min_per_var[i] = dist_matrix[min_loc_row, i] * min_freq[i]
 
-        dist = (np.sum(max_per_var) + np.sum(min_per_var)) / (np.sum(max_freq) + np.sum(min_freq))
+        dist = (np.sum(max_per_var) + np.sum(min_per_var)) / (
+            np.sum(max_freq) + np.sum(min_freq)
+        )
 
     return dist

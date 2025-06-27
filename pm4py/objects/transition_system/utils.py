@@ -81,10 +81,22 @@ def remove_all_arcs_from_to(fr, to, ts):
     -------
     None
     """
-    names_transitions_to_delete = [t.name for t in ts.transitions if t in fr.outgoing and t in to.incoming]
-    ts.transitions = set([t for t in ts.transitions if t.name not in names_transitions_to_delete])
-    fr.outgoing = set([t for t in fr.outgoing if t.name not in names_transitions_to_delete])
-    to.incoming = set([t for t in to.incoming if t.name not in names_transitions_to_delete])
+    names_transitions_to_delete = [
+        t.name for t in ts.transitions if t in fr.outgoing and t in to.incoming
+    ]
+    ts.transitions = set(
+        [
+            t
+            for t in ts.transitions
+            if t.name not in names_transitions_to_delete
+        ]
+    )
+    fr.outgoing = set(
+        [t for t in fr.outgoing if t.name not in names_transitions_to_delete]
+    )
+    to.incoming = set(
+        [t for t in to.incoming if t.name not in names_transitions_to_delete]
+    )
 
 
 def transitive_reduction(ts):
@@ -103,7 +115,11 @@ def transitive_reduction(ts):
 
     def check(this_state, this_child, this_done):
         if this_child not in this_done:
-            child_children = [tr.to_state for tr in ts.transitions if tr in this_child.outgoing]
+            child_children = [
+                tr.to_state
+                for tr in ts.transitions
+                if tr in this_child.outgoing
+            ]
             for child_child in child_children:
                 remove_all_arcs_from_to(this_state, child_child, ts)
                 check(this_state, child_child, this_done)
@@ -111,6 +127,8 @@ def transitive_reduction(ts):
 
     for state in ts.states:
         done = set()
-        children = [tr.to_state for tr in ts.transitions if tr in state.outgoing]
+        children = [
+            tr.to_state for tr in ts.transitions if tr in state.outgoing
+        ]
         for child in children:
             check(state, child, done)

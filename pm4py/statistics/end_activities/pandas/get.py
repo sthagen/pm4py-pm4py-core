@@ -40,7 +40,10 @@ class Parameters(Enum):
     KEEP_ONCE_PER_CASE = "keep_once_per_case"
 
 
-def get_end_activities(df: pd.DataFrame, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[str, int]:
+def get_end_activities(
+    df: pd.DataFrame,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[str, int]:
     """
     Get end activities count
 
@@ -61,12 +64,22 @@ def get_end_activities(df: pd.DataFrame, parameters: Optional[Dict[Union[str, Pa
     if parameters is None:
         parameters = {}
 
-    case_id_glue = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME)
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, DEFAULT_NAME_KEY)
-    grouped_df = parameters[GROUPED_DATAFRAME] if GROUPED_DATAFRAME in parameters else None
+    case_id_glue = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME
+    )
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, DEFAULT_NAME_KEY
+    )
+    grouped_df = (
+        parameters[GROUPED_DATAFRAME]
+        if GROUPED_DATAFRAME in parameters
+        else None
+    )
 
     if grouped_df is None:
         grouped_df = df.groupby(case_id_glue, sort=False)
 
-    endact_dict = dict(Counter(grouped_df[activity_key].last().to_numpy().tolist()))
+    endact_dict = dict(
+        Counter(grouped_df[activity_key].last().to_numpy().tolist())
+    )
     return endact_dict

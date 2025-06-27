@@ -24,7 +24,9 @@ from sklearn.tree import export_text
 from typing import Dict, Tuple, Set, List
 
 
-def apply(clf: DecisionTreeClassifier, columns: List[str]) -> Tuple[Dict[str, str], Dict[str, Set[str]]]:
+def apply(
+    clf: DecisionTreeClassifier, columns: List[str]
+) -> Tuple[Dict[str, str], Dict[str, Set[str]]]:
     """
     Translates a decision tree object into a dictionary
     associating a set of conditions for each target class
@@ -52,9 +54,11 @@ def apply(clf: DecisionTreeClassifier, columns: List[str]) -> Tuple[Dict[str, st
             this_part = tree_string[i].split("--- ")[1]
             this_part_idx_space = this_part.index(" ")
             this_part_0 = this_part[:this_part_idx_space]
-            this_part_1 = this_part[this_part_idx_space+1:]
+            this_part_1 = this_part[this_part_idx_space + 1:]
             if "class" in this_part:
-                all_levels = "(" + " && ".join([levels[i] for i in range(level)]) + ")"
+                all_levels = (
+                    "(" + " && ".join([levels[i] for i in range(level)]) + ")"
+                )
                 target_class = this_part.split(": ")[-1]
                 if target_class not in target_classes:
                     target_classes[target_class] = []
@@ -64,7 +68,9 @@ def apply(clf: DecisionTreeClassifier, columns: List[str]) -> Tuple[Dict[str, st
                 for j in range(level):
                     variables[target_class].add(levels[j].split(" ")[0])
             else:
-                levels[level] = columns[int(this_part_0.split("_")[1])] + " " + this_part_1
+                levels[level] = (
+                    columns[int(this_part_0.split("_")[1])] + " " + this_part_1
+                )
         i = i + 1
     for cl in target_classes:
         target_classes[cl] = " || ".join(target_classes[cl])

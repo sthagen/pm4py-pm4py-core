@@ -38,7 +38,10 @@ class Parameters(Enum):
     SAMPLE_SIZE = "sample_size"
 
 
-def apply(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Tuple[Dict[Tuple[str, str], int], Dict[Tuple[str, str], float]]:
+def apply(
+    log: Union[EventLog, EventStream, pd.DataFrame],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Tuple[Dict[Tuple[str, str], int], Dict[Tuple[str, str], float]]:
     """
     Applies the correlation miner (splits the log in smaller chunks)
 
@@ -59,34 +62,52 @@ def apply(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters,
-                                                     xes_constants.DEFAULT_TIMESTAMP_KEY)
-    sample_size = exec_utils.get_param_value(Parameters.SAMPLE_SIZE, parameters, 100000)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    sample_size = exec_utils.get_param_value(
+        Parameters.SAMPLE_SIZE, parameters, 100000
+    )
 
     PS_matrixes = []
     duration_matrixes = []
 
     if pandas_utils.check_is_pandas_dataframe(log):
         # keep only the two columns before conversion
-        log = log[list(set([activity_key, timestamp_key, start_timestamp_key]))]
+        log = log[
+            list(set([activity_key, timestamp_key, start_timestamp_key]))
+        ]
         log = log.sort_values([timestamp_key, start_timestamp_key])
         activities_counter = log[activity_key].value_counts().to_dict()
         activities = sorted(list(activities_counter.keys()))
     else:
-        log = converter.apply(log, variant=converter.Variants.TO_EVENT_STREAM, parameters={"deepcopy": False, "include_case_attributes": False})
+        log = converter.apply(
+            log,
+            variant=converter.Variants.TO_EVENT_STREAM,
+            parameters={"deepcopy": False, "include_case_attributes": False},
+        )
         activities_counter = Counter(x[activity_key] for x in log)
         activities = sorted(list(activities_counter.keys()))
 
     prev = 0
     while prev < len(log):
-        sample = log[prev:min(len(log), prev + sample_size)]
-        transf_stream, activities_grouped, activities = classic.preprocess_log(sample, activities=activities,
-                                                                               parameters=parameters)
-        PS_matrix, duration_matrix = classic.get_PS_dur_matrix(activities_grouped, activities,
-                                                               parameters=parameters)
+        sample = log[prev: min(len(log), prev + sample_size)]
+        transf_stream, activities_grouped, activities = classic.preprocess_log(
+            sample, activities=activities, parameters=parameters
+        )
+        PS_matrix, duration_matrix = classic.get_PS_dur_matrix(
+            activities_grouped, activities, parameters=parameters
+        )
         PS_matrixes.append(PS_matrix)
         duration_matrixes.append(duration_matrix)
 
@@ -101,4 +122,6 @@ def apply(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[
         z = z + 1
     PS_matrix = PS_matrix / float(len(PS_matrixes))
 
-    return classic.resolve_lp_get_dfg(PS_matrix, duration_matrix, activities, activities_counter)
+    return classic.resolve_lp_get_dfg(
+        PS_matrix, duration_matrix, activities, activities_counter
+    )

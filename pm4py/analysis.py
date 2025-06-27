@@ -39,13 +39,13 @@ import deprecation
 @deprecation.deprecated(
     deprecated_in="2.3.0",
     removed_in="3.0.0",
-    details="this method will be removed in a future release."
+    details="this method will be removed in a future release.",
 )
 def construct_synchronous_product_net(
     trace: Trace,
     petri_net: PetriNet,
     initial_marking: Marking,
-    final_marking: Marking
+    final_marking: Marking,
 ) -> Tuple[PetriNet, Marking, Marking]:
     """
     Constructs the synchronous product net between a trace and a Petri net process model.
@@ -68,6 +68,7 @@ def construct_synchronous_product_net(
     from pm4py.objects.petri_net.utils.petri_utils import construct_trace_net
     from pm4py.objects.petri_net.utils.synchronous_product import construct
     from pm4py.objects.petri_net.utils.align_utils import SKIP
+
     trace_net, trace_im, trace_fm = construct_trace_net(trace)
     sync_net, sync_im, sync_fm = construct(
         trace_net,
@@ -76,14 +77,13 @@ def construct_synchronous_product_net(
         petri_net,
         initial_marking,
         final_marking,
-        SKIP
+        SKIP,
     )
     return sync_net, sync_im, sync_fm
 
 
 def compute_emd(
-    language1: Dict[List[str], float],
-    language2: Dict[List[str], float]
+    language1: Dict[List[str], float], language2: Dict[List[str], float]
 ) -> float:
     """
     Computes the Earth Mover Distance (EMD) between two stochastic languages. For example, one language may be extracted from a log, and the other from a process model.
@@ -106,7 +106,10 @@ def compute_emd(
         emd_distance = pm4py.compute_emd(language_log, language_model)
         print(emd_distance)
     """
-    from pm4py.algo.evaluation.earth_mover_distance import algorithm as earth_mover_distance
+    from pm4py.algo.evaluation.earth_mover_distance import (
+        algorithm as earth_mover_distance,
+    )
+
     return earth_mover_distance.apply(language1, language2)
 
 
@@ -114,7 +117,7 @@ def solve_marking_equation(
     petri_net: PetriNet,
     initial_marking: Marking,
     final_marking: Marking,
-    cost_function: Dict[PetriNet.Transition, float] = None
+    cost_function: Dict[PetriNet.Transition, float] = None,
 ) -> float:
     """
     Solves the marking equation of a Petri net using an Integer Linear Programming (ILP) approach. An optional transition-based cost function can be provided to minimize the solution.
@@ -133,7 +136,9 @@ def solve_marking_equation(
         net, im, fm = pm4py.read_pnml('model.pnml')
         heuristic = pm4py.solve_marking_equation(net, im, fm)
     """
-    from pm4py.algo.analysis.marking_equation import algorithm as marking_equation
+    from pm4py.algo.analysis.marking_equation import (
+        algorithm as marking_equation,
+    )
 
     if cost_function is None:
         cost_function = {t: 1 for t in petri_net.transitions}
@@ -142,7 +147,7 @@ def solve_marking_equation(
         petri_net,
         initial_marking,
         final_marking,
-        parameters={'costs': cost_function}
+        parameters={"costs": cost_function},
     )
     return marking_equation.get_h_value(me)
 
@@ -150,14 +155,14 @@ def solve_marking_equation(
 @deprecation.deprecated(
     deprecated_in="2.3.0",
     removed_in="3.0.0",
-    details="this method will be removed in a future release."
+    details="this method will be removed in a future release.",
 )
 def solve_extended_marking_equation(
     trace: Trace,
     sync_net: PetriNet,
     sync_im: Marking,
     sync_fm: Marking,
-    split_points: Optional[List[int]] = None
+    split_points: Optional[List[int]] = None,
 ) -> float:
     """
     Computes a heuristic value (an underestimation of the cost of an alignment) between a trace
@@ -181,7 +186,10 @@ def solve_extended_marking_equation(
         log = pm4py.read_xes('log.xes')
         ext_mark_eq_heu = pm4py.solve_extended_marking_equation(log[0], net, im, fm)
     """
-    from pm4py.algo.analysis.extended_marking_equation import algorithm as extended_marking_equation
+    from pm4py.algo.analysis.extended_marking_equation import (
+        algorithm as extended_marking_equation,
+    )
+
     parameters = {}
     if split_points is not None:
         parameters[
@@ -197,7 +205,7 @@ def check_soundness(
     petri_net: PetriNet,
     initial_marking: Marking,
     final_marking: Marking,
-    print_diagnostics: bool = False
+    print_diagnostics: bool = False,
 ) -> Tuple[bool, Dict[str, Any]]:
     """
     Checks if a given Petri net is a sound Workflow net (WF-net).
@@ -233,6 +241,7 @@ def check_soundness(
         is_sound = pm4py.check_soundness(net, im, fm)
     """
     from pm4py.algo.analysis.woflan import algorithm as woflan
+
     return woflan.apply(
         petri_net,
         initial_marking,
@@ -240,8 +249,8 @@ def check_soundness(
         parameters={
             "return_asap_when_not_sound": True,
             "return_diagnostics": True,
-            "print_diagnostics": print_diagnostics
-        }
+            "print_diagnostics": print_diagnostics,
+        },
     )
 
 
@@ -250,7 +259,7 @@ def cluster_log(
     sklearn_clusterer=None,
     activity_key: str = "concept:name",
     timestamp_key: str = "time:timestamp",
-    case_id_key: str = "case:concept:name"
+    case_id_key: str = "case:concept:name",
 ) -> Generator[EventLog, None, None]:
     """
     Applies clustering to the provided event log by extracting profiles for the log's traces and clustering them using a Scikit-Learn clusterer (default is K-Means with two clusters).
@@ -276,12 +285,13 @@ def cluster_log(
         log,
         activity_key=activity_key,
         case_id_key=case_id_key,
-        timestamp_key=timestamp_key
+        timestamp_key=timestamp_key,
     )
     if sklearn_clusterer is not None:
         properties["sklearn_clusterer"] = sklearn_clusterer
 
     from pm4py.algo.clustering.profiles import algorithm as clusterer
+
     return clusterer.apply(log, parameters=properties)
 
 
@@ -291,7 +301,7 @@ def insert_artificial_start_end(
     timestamp_key: str = "time:timestamp",
     case_id_key: str = "case:concept:name",
     artificial_start=constants.DEFAULT_ARTIFICIAL_START_ACTIVITY,
-    artificial_end=constants.DEFAULT_ARTIFICIAL_END_ACTIVITY
+    artificial_end=constants.DEFAULT_ARTIFICIAL_END_ACTIVITY,
 ) -> Union[EventLog, pd.DataFrame]:
     """
     Inserts artificial start and end activities into an event log or a Pandas DataFrame.
@@ -322,20 +332,29 @@ def insert_artificial_start_end(
         log,
         activity_key=activity_key,
         case_id_key=case_id_key,
-        timestamp_key=timestamp_key
+        timestamp_key=timestamp_key,
     )
     properties[constants.PARAM_ARTIFICIAL_START_ACTIVITY] = artificial_start
     properties[constants.PARAM_ARTIFICIAL_END_ACTIVITY] = artificial_end
 
     if check_is_pandas_dataframe(log):
         check_pandas_dataframe_columns(
-            log, activity_key=activity_key, case_id_key=case_id_key, timestamp_key=timestamp_key
+            log,
+            activity_key=activity_key,
+            case_id_key=case_id_key,
+            timestamp_key=timestamp_key,
         )
         from pm4py.objects.log.util import dataframe_utils
-        return dataframe_utils.insert_artificial_start_end(log, parameters=properties)
+
+        return dataframe_utils.insert_artificial_start_end(
+            log, parameters=properties
+        )
     else:
         from pm4py.objects.log.util import artificial
-        return artificial.insert_artificial_start_end(log, parameters=properties)
+
+        return artificial.insert_artificial_start_end(
+            log, parameters=properties
+        )
 
 
 def insert_case_service_waiting_time(
@@ -346,7 +365,7 @@ def insert_case_service_waiting_time(
     activity_key: str = "concept:name",
     timestamp_key: str = "time:timestamp",
     case_id_key: str = "case:concept:name",
-    start_timestamp_key: str = "time:timestamp"
+    start_timestamp_key: str = "time:timestamp",
 ) -> pd.DataFrame:
     """
     Inserts service time, waiting time, and sojourn time information for each case into a Pandas DataFrame.
@@ -380,14 +399,15 @@ def insert_case_service_waiting_time(
         log,
         activity_key=activity_key,
         case_id_key=case_id_key,
-        timestamp_key=timestamp_key
+        timestamp_key=timestamp_key,
     )
 
     from pm4py.objects.conversion.log import converter as log_converter
+
     log_df = log_converter.apply(
         log,
         variant=log_converter.Variants.TO_DATA_FRAME,
-        parameters=properties
+        parameters=properties,
     )
 
     return pandas_utils.insert_case_service_waiting_time(
@@ -397,7 +417,7 @@ def insert_case_service_waiting_time(
         start_timestamp_column=start_timestamp_key,
         service_time_column=service_time_column,
         waiting_time_column=waiting_time_column,
-        sojourn_time_column=sojourn_time_column
+        sojourn_time_column=sojourn_time_column,
     )
 
 
@@ -408,7 +428,7 @@ def insert_case_arrival_finish_rate(
     activity_key: str = "concept:name",
     timestamp_key: str = "time:timestamp",
     case_id_key: str = "case:concept:name",
-    start_timestamp_key: str = "time:timestamp"
+    start_timestamp_key: str = "time:timestamp",
 ) -> pd.DataFrame:
     """
     Inserts arrival and finish rate information for each case into a Pandas DataFrame.
@@ -444,14 +464,15 @@ def insert_case_arrival_finish_rate(
         log,
         activity_key=activity_key,
         case_id_key=case_id_key,
-        timestamp_key=timestamp_key
+        timestamp_key=timestamp_key,
     )
 
     from pm4py.objects.conversion.log import converter as log_converter
+
     log_df = log_converter.apply(
         log,
         variant=log_converter.Variants.TO_DATA_FRAME,
-        parameters=properties
+        parameters=properties,
     )
 
     return pandas_utils.insert_case_arrival_finish_rate(
@@ -460,7 +481,7 @@ def insert_case_arrival_finish_rate(
         timestamp_column=timestamp_key,
         start_timestamp_column=start_timestamp_key,
         arrival_rate_column=arrival_rate_column,
-        finish_rate_column=finish_rate_column
+        finish_rate_column=finish_rate_column,
     )
 
 
@@ -483,13 +504,12 @@ def check_is_workflow_net(net: PetriNet) -> bool:
         is_wfnet = pm4py.check_is_workflow_net(net)
     """
     from pm4py.algo.analysis.workflow_net import algorithm
+
     return algorithm.apply(net)
 
 
 def maximal_decomposition(
-    net: PetriNet,
-    im: Marking,
-    fm: Marking
+    net: PetriNet, im: Marking, fm: Marking
 ) -> List[Tuple[PetriNet, Marking, Marking]]:
     """
     Calculates the maximal decomposition of an accepting Petri net into its maximal components.
@@ -510,6 +530,7 @@ def maximal_decomposition(
             pm4py.view_petri_net(subnet, subim, subfm, format='svg')
     """
     from pm4py.objects.petri_net.utils.decomposition import decompose
+
     return decompose(net, im, fm)
 
 
@@ -517,7 +538,7 @@ def simplicity_petri_net(
     net: PetriNet,
     im: Marking,
     fm: Marking,
-    variant: Optional[str] = "arc_degree"
+    variant: Optional[str] = "arc_degree",
 ) -> float:
     """
     Computes the simplicity metric for a given Petri net model.
@@ -548,18 +569,25 @@ def simplicity_petri_net(
     """
     if variant == "arc_degree":
         from pm4py.algo.evaluation.simplicity.variants import arc_degree
+
         return arc_degree.apply(net)
     elif variant == "extended_cardoso":
         from pm4py.algo.evaluation.simplicity.variants import extended_cardoso
+
         return extended_cardoso.apply(net)
     elif variant == "extended_cyclomatic":
-        from pm4py.algo.evaluation.simplicity.variants import extended_cyclomatic
+        from pm4py.algo.evaluation.simplicity.variants import (
+            extended_cyclomatic,
+        )
+
         return extended_cyclomatic.apply(net, im)
 
 
 def generate_marking(
     net: PetriNet,
-    place_or_dct_places: Union[str, PetriNet.Place, Dict[str, int], Dict[PetriNet.Place, int]]
+    place_or_dct_places: Union[
+        str, PetriNet.Place, Dict[str, int], Dict[PetriNet.Place, int]
+    ],
 ) -> Marking:
     """
     Generates a marking for a given Petri net based on specified places and token counts.
@@ -591,11 +619,14 @@ def generate_marking(
         dct_keys = list(place_or_dct_places)
         if dct_keys:
             if isinstance(dct_keys[0], PetriNet.Place):
-                # A dictionary mapping Place objects to token counts is specified
+                # A dictionary mapping Place objects to token counts is
+                # specified
                 return Marking(place_or_dct_places)
             elif isinstance(dct_keys[0], str):
                 # A dictionary mapping place names to token counts is specified
-                return Marking({dct_places[x]: y for x, y in place_or_dct_places.items()})
+                return Marking(
+                    {dct_places[x]: y for x, y in place_or_dct_places.items()}
+                )
 
 
 def reduce_petri_net_invisibles(net: PetriNet) -> PetriNet:
@@ -614,13 +645,12 @@ def reduce_petri_net_invisibles(net: PetriNet) -> PetriNet:
         net = pm4py.reduce_petri_net_invisibles(net)
     """
     from pm4py.objects.petri_net.utils import reduction
+
     return reduction.apply_simple_reduction(net)
 
 
 def reduce_petri_net_implicit_places(
-    net: PetriNet,
-    im: Marking,
-    fm: Marking
+    net: PetriNet, im: Marking, fm: Marking
 ) -> Tuple[PetriNet, Marking, Marking]:
     """
     Reduces the number of implicit places in the provided Petri net.
@@ -639,12 +669,12 @@ def reduce_petri_net_implicit_places(
         net, im, fm = pm4py.reduce_petri_net_implicit_places(net, im, fm)
     """
     from pm4py.objects.petri_net.utils import murata
+
     return murata.apply_reduction(net, im, fm)
 
 
 def get_enabled_transitions(
-    net: PetriNet,
-    marking: Marking
+    net: PetriNet, marking: Marking
 ) -> Set[PetriNet.Transition]:
     """
     Retrieves the set of transitions that are enabled in a given marking of a Petri net.
@@ -663,6 +693,7 @@ def get_enabled_transitions(
         enabled_transitions = pm4py.get_enabled_transitions(net, im)
     """
     from pm4py.objects.petri_net import semantics
+
     return semantics.enabled_transitions(net, marking)
 
 

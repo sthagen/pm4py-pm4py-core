@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,9 +19,12 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.algo.discovery.footprints.tree.variants import bottomup as bottomup_discovery
+from pm4py.algo.discovery.footprints.tree.variants import (
+    bottomup as bottomup_discovery,
+)
 from pm4py.objects.process_tree.utils import bottomup as bottomup_util
 from enum import Enum
+
 
 class Outputs(Enum):
     DFG = "dfg"
@@ -71,7 +74,9 @@ def apply(tree, conf_results, parameters=None):
     end_activities = {}
 
     if isinstance(conf_results, list):
-        raise Exception("the visualization can only be applied with total footprints (not trace-by-trace)!")
+        raise Exception(
+            "the visualization can only be applied with total footprints (not trace-by-trace)!"
+        )
     elif isinstance(conf_results, dict):
         footprints = conf_results
         start_activities = conf_results[START_ACTIVITIES]
@@ -79,9 +84,17 @@ def apply(tree, conf_results, parameters=None):
     else:
         footprints = conf_results
 
-    bottomup_nodes = bottomup_util.get_bottomup_nodes(tree, parameters=parameters)
-    labels_dictio = {x.label: x for x in bottomup_nodes if x.operator is None and x.label is not None}
-    all_fp_dictio = bottomup_discovery.get_all_footprints(tree, parameters=parameters)
+    bottomup_nodes = bottomup_util.get_bottomup_nodes(
+        tree, parameters=parameters
+    )
+    labels_dictio = {
+        x.label: x
+        for x in bottomup_nodes
+        if x.operator is None and x.label is not None
+    }
+    all_fp_dictio = bottomup_discovery.get_all_footprints(
+        tree, parameters=parameters
+    )
     conf_colors = {}
 
     for res in start_activities:
@@ -97,8 +110,10 @@ def apply(tree, conf_results, parameters=None):
             conf_colors[labels_dictio[res[0]]] = FP_DEV_COLOR
             conf_colors[labels_dictio[res[1]]] = FP_DEV_COLOR
             for n in bottomup_nodes:
-                if res[0] in all_fp_dictio[n][Outputs.ACTIVITIES.value] and res[1] in all_fp_dictio[n][
-                    Outputs.ACTIVITIES.value]:
+                if (
+                    res[0] in all_fp_dictio[n][Outputs.ACTIVITIES.value]
+                    and res[1] in all_fp_dictio[n][Outputs.ACTIVITIES.value]
+                ):
                     conf_colors[n] = FP_DEV_COLOR
                     break
 

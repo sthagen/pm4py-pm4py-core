@@ -40,7 +40,9 @@ class BatchType(Enum):
     CONC_BATCHING = "Concurrent batching"
 
 
-def __merge_overlapping_intervals(intervals: List[Tuple[float, float, Set[Any]]]) -> List[Tuple[float, float, Set[Any]]]:
+def __merge_overlapping_intervals(
+    intervals: List[Tuple[float, float, Set[Any]]]
+) -> List[Tuple[float, float, Set[Any]]]:
     """
     Iterative method that merges the overlapping time intervals
     (an interval [a, b] is overlapping to [c, d] if a <= c <= b or c <= a <= d).
@@ -52,8 +54,11 @@ def __merge_overlapping_intervals(intervals: List[Tuple[float, float, Set[Any]]]
         while i < len(intervals) - 1:
             if intervals[i][1] > intervals[i + 1][0]:
                 # decide to merge interval i and i+1
-                new_interval = (min(intervals[i][0], intervals[i + 1][0]), max(intervals[i][1], intervals[i + 1][1]),
-                                intervals[i][2].union(intervals[i + 1][2]))
+                new_interval = (
+                    min(intervals[i][0], intervals[i + 1][0]),
+                    max(intervals[i][1], intervals[i + 1][1]),
+                    intervals[i][2].union(intervals[i + 1][2]),
+                )
                 # add the new interval to the list
                 intervals.append(new_interval)
                 # remove the i+1 interval
@@ -70,8 +75,9 @@ def __merge_overlapping_intervals(intervals: List[Tuple[float, float, Set[Any]]]
     return intervals
 
 
-def __merge_near_intervals(intervals: List[Tuple[float, float, Set[Any]]], max_allowed_distance: float) -> List[
-    Tuple[float, float, Set[Any]]]:
+def __merge_near_intervals(
+    intervals: List[Tuple[float, float, Set[Any]]], max_allowed_distance: float
+) -> List[Tuple[float, float, Set[Any]]]:
     """
     Merge the non-overlapping time intervals that are nearer than max_allowed_distance.
     (an interval [a, b] that is non-overlapping with [c, d] having b < c, is merged if c - b <= max_allowed_distance).
@@ -83,8 +89,11 @@ def __merge_near_intervals(intervals: List[Tuple[float, float, Set[Any]]], max_a
         while i < len(intervals) - 1:
             if intervals[i + 1][0] - intervals[i][1] <= max_allowed_distance:
                 # decide to merge interval i and i+1
-                new_interval = (min(intervals[i][0], intervals[i + 1][0]), max(intervals[i][1], intervals[i + 1][1]),
-                                intervals[i][2].union(intervals[i + 1][2]))
+                new_interval = (
+                    min(intervals[i][0], intervals[i + 1][0]),
+                    max(intervals[i][1], intervals[i + 1][1]),
+                    intervals[i][2].union(intervals[i + 1][2]),
+                )
                 # remove the i+1 interval
                 del intervals[i + 1]
                 # remove the i interval
@@ -117,8 +126,12 @@ def __check_batch_type(batch: Tuple[float, float, Set[Any]]) -> str:
     # take the maximum of the right-extreme of each interval
     max_right_events = max(ev[1] for ev in events_batch)
 
-    # CONDITION 1 - All the events in the batch have identical start and end timestamps
-    if min_left_events == max_left_events and min_right_events == max_right_events:
+    # CONDITION 1 - All the events in the batch have identical start and end
+    # timestamps
+    if (
+        min_left_events == max_left_events
+        and min_right_events == max_right_events
+    ):
         return BatchType.SIMULTANEOUS.value
     # CONDITION 4 - All the events in the batch have identical start timestamp:
     if min_left_events == max_left_events:
@@ -128,11 +141,13 @@ def __check_batch_type(batch: Tuple[float, float, Set[Any]]) -> str:
         return BatchType.BATCHING_END.value
 
     # now we could be in the SEQUENTIAL batching or the CONCURRENT batching
-    # in order to be in the SEQUENTIAL, we need that for all the consecutive events the end of the first is equal to the start of the second
+    # in order to be in the SEQUENTIAL, we need that for all the consecutive
+    # events the end of the first is equal to the start of the second
     is_sequential = True
     i = 0
     while i < len(events_batch) - 1:
-        # if there are two consecutive events that are not sequentially matched, then we automatically fall inside the CONCURRENT batching
+        # if there are two consecutive events that are not sequentially
+        # matched, then we automatically fall inside the CONCURRENT batching
         if events_batch[i][1] != events_batch[i + 1][0]:
             is_sequential = False
             break
@@ -143,21 +158,31 @@ def __check_batch_type(batch: Tuple[float, float, Set[Any]]) -> str:
         return BatchType.CONC_BATCHING.value
 
 
-def __detect_single(events: List[Tuple[float, float, str]], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[
-    str, List[Any]]:
+def __detect_single(
+    events: List[Tuple[float, float, str]],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[str, List[Any]]:
     """
     Detect if there are batches in the execution of events having a given activity-resource combination
     """
     if parameters is None:
         parameters = {}
 
-    ret = {BatchType.SIMULTANEOUS.value: [], BatchType.BATCHING_START.value: [], BatchType.BATCHING_END.value: [],
-           BatchType.CONC_BATCHING.value: [], BatchType.SEQ_BATCHING.value: []}
-    merge_distance = exec_utils.get_param_value(Parameters.MERGE_DISTANCE, parameters, 15 * 60)
-    min_batch_size = exec_utils.get_param_value(Parameters.MIN_BATCH_SIZE, parameters, 2)
+    ret = {
+        BatchType.SIMULTANEOUS.value: [],
+        BatchType.BATCHING_START.value: [],
+        BatchType.BATCHING_END.value: [],
+        BatchType.CONC_BATCHING.value: [],
+        BatchType.SEQ_BATCHING.value: [],
+    }
+    merge_distance = exec_utils.get_param_value(
+        Parameters.MERGE_DISTANCE, parameters, 15 * 60
+    )
+    min_batch_size = exec_utils.get_param_value(
+        Parameters.MIN_BATCH_SIZE, parameters, 2
+    )
 
-    intervals = [(e[0], e[1], {copy(e)}) for e in
-                 events]
+    intervals = [(e[0], e[1], {copy(e)}) for e in events]
     heapq.heapify(intervals)
     intervals = __merge_overlapping_intervals(intervals)
     intervals = __merge_near_intervals(intervals, merge_distance)
@@ -169,8 +194,10 @@ def __detect_single(events: List[Tuple[float, float, str]], parameters: Optional
     return ret
 
 
-def detect(actres_grouping: Dict[Tuple[str, str], List[Tuple[float, float, str]]],
-           parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> List[Tuple[Tuple[str, str], int, Dict[str, Any]]]:
+def detect(
+    actres_grouping: Dict[Tuple[str, str], List[Tuple[float, float, str]]],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> List[Tuple[Tuple[str, str], int, Dict[str, Any]]]:
     """
     Provided an activity-resource grouping of the events of the event log, returns
     a list having as elements the activity-resources with the batches that are detected, divided in:
@@ -206,7 +233,9 @@ def detect(actres_grouping: Dict[Tuple[str, str], List[Tuple[float, float, str]]
         parameters = {}
     ret = []
     for actres in actres_grouping:
-        batches = __detect_single(actres_grouping[actres], parameters=parameters)
+        batches = __detect_single(
+            actres_grouping[actres], parameters=parameters
+        )
         if batches:
             total_length = sum(len(y) for y in batches.values())
             ret.append((actres, total_length, batches))

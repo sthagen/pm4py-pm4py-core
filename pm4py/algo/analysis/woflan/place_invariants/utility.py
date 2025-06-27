@@ -41,7 +41,8 @@ def removearray(L, arr):
     if ind != size:
         L.pop(ind)
     else:
-        raise ValueError('array not found in list.')
+        raise ValueError("array not found in list.")
+
 
 def transform_basis(basis, style=None):
     """
@@ -53,8 +54,8 @@ def transform_basis(basis, style=None):
     At the moment, 'uniform' (all weights have value 0 or 1), and 'weighted' (all weights are >=0) are supported
     :return: List of p-invariants that fits the style
     """
-    if style==None:
-        style='weighted'
+    if style is None:
+        style = "weighted"
 
     # First, we want to check if a vector of a basis only contains non-positve entries. If so, then we multiply the
     # vector -1.
@@ -68,13 +69,16 @@ def transform_basis(basis, style=None):
             modified_base.append(-1 * vector)
         else:
             modified_base.append(vector)
-    #For uniform variants, it is necessary that the weight for a place is either 0 or 1. We collect the variants for
-    #which this condition does not hold. We also collect the variants for the weighted invariants the entry is <0.
+    # For uniform variants, it is necessary that the weight for a place is either 0 or 1. We collect the variants for
+    # which this condition does not hold. We also collect the variants for the
+    # weighted invariants the entry is <0.
     to_modify = []
 
     for vector in modified_base:
         for entry in vector:
-            if ((entry < 0 or entry > 1) and style=='uniform') or ( entry < 0 and style=='weighted'):
+            if ((entry < 0 or entry > 1) and style == "uniform") or (
+                entry < 0 and style == "weighted"
+            ):
                 to_modify.append(vector)
                 break
     # if we have nothing to modify, we are done
@@ -100,7 +104,7 @@ def transform_basis(basis, style=None):
             prob.solve()"""
             # problem is solved
 
-            c = [1]*len(set_B) + [0] * (len(vector) + 1)
+            c = [1] * len(set_B) + [0] * (len(vector) + 1)
             zeros = [0] * (len(set_B) + len(vector) + 1)
             Aub = []
             bub = []
@@ -148,16 +152,27 @@ def transform_basis(basis, style=None):
                 Aub = np.zeros((1, len(c))).astype(np.float64)
                 bub = np.zeros(1).transpose().astype(np.float64)
 
-            # this is highly critical and LP solutions are not always correct :(
+            # this is highly critical and LP solutions are not always correct
+            # :(
 
             proposed_solver = solver.SCIPY
             if importlib.util.find_spec("pulp"):
                 proposed_solver = solver.PULP
             else:
                 if constants.SHOW_INTERNAL_WARNINGS:
-                    warnings.warn("solution from scipy may be unstable. Please install PuLP (pip install pulp) for fully reliable results.")
+                    warnings.warn(
+                        "solution from scipy may be unstable. Please install PuLP (pip install pulp) for fully reliable results."
+                    )
 
-            sol = solver.apply(c, Aub, bub, Aeq, beq, variant=proposed_solver, parameters={"method": "revised simplex", "require_ilp": True})
+            sol = solver.apply(
+                c,
+                Aub,
+                bub,
+                Aeq,
+                beq,
+                variant=proposed_solver,
+                parameters={"method": "revised simplex", "require_ilp": True},
+            )
             points = solver.get_points_from_sol(sol, variant=proposed_solver)
             val = solver.get_prim_obj_from_sol(sol, variant=proposed_solver)
 
@@ -168,7 +183,9 @@ def transform_basis(basis, style=None):
                     for i in range(len(new_vector)):
                         new_vector[i] = points[len(set_B)] * vector[i]
                         for j in range(len(modified_base)):
-                            new_vector[i] = new_vector[i] + modified_base[j][i] * points[j]
+                            new_vector[i] = (
+                                new_vector[i] + modified_base[j][i] * points[j]
+                            )
                 elif style == "uniform":
                     for i in range(len(new_vector)):
                         new_vector[i] = points[len(set_B) + 1 + i]
@@ -187,8 +204,8 @@ def compute_uncovered_places(invariants, net):
     :param net: Petri Net object of PM4Py
     :return: List of uncovered place over all invariants
     """
-    place_list=sorted(list(net.places), key=lambda x: x.name)
-    unncovered_list=place_list.copy()
+    place_list = sorted(list(net.places), key=lambda x: x.name)
+    unncovered_list = place_list.copy()
     for invariant in invariants:
         for index, value in enumerate(invariant):
             if value != 0:

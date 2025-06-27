@@ -32,7 +32,9 @@ def check_dot_installed():
     import subprocess
 
     try:
-        val = subprocess.run(['dot', '-V'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        val = subprocess.run(
+            ["dot", "-V"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
         return val.returncode == 0
-    except:
+    except BaseException:
         return False

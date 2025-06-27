@@ -36,19 +36,24 @@ class Parameters(Enum):
     TIMESTAMP_KEY = constants.PARAMETER_CONSTANT_TIMESTAMP_KEY
 
 
-CONST_AUX_ACT = 'aux_act_'
-CONST_AUX_CASE = 'aux_case_'
-CONST_COUNT = 'count_'
+CONST_AUX_ACT = "aux_act_"
+CONST_AUX_CASE = "aux_case_"
+CONST_COUNT = "count_"
 
 
-def apply(log: pl.DataFrame, parameters: Optional[Dict[str, Any]] = None) -> DFG:
+def apply(
+    log: pl.DataFrame, parameters: Optional[Dict[str, Any]] = None
+) -> DFG:
     parameters = {} if parameters is None else parameters
     act_key = exec_utils.get_param_value(
-        Parameters.ACTIVITY_KEY, parameters, xes_util.DEFAULT_NAME_KEY)
+        Parameters.ACTIVITY_KEY, parameters, xes_util.DEFAULT_NAME_KEY
+    )
     cid_key = exec_utils.get_param_value(
-        Parameters.CASE_ID_KEY, parameters, constants.CASE_ATTRIBUTE_GLUE)
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_ATTRIBUTE_GLUE
+    )
     time_key = exec_utils.get_param_value(
-        Parameters.TIMESTAMP_KEY, parameters, xes_util.DEFAULT_TIMESTAMP_KEY)
+        Parameters.TIMESTAMP_KEY, parameters, xes_util.DEFAULT_TIMESTAMP_KEY
+    )
     aux_act = CONST_AUX_ACT + str(time.time())
     aux_case = CONST_AUX_CASE + str(time.time())
     df = log[[cid_key, act_key, time_key]].clone()
@@ -61,14 +66,25 @@ def apply(log: pl.DataFrame, parameters: Optional[Dict[str, Any]] = None) -> DFG
     excl_starter = df[0, act_key]
     borders = df.filter(df[cid_key] != df[aux_case])
 
-    for d in filter(lambda d: d[aux_act] is not None, borders.groupby([aux_act]).count().to_dicts()):
-        v = d['count'] + 1 if d[aux_act] == excl_starter else d['count']
+    for d in filter(
+        lambda d: d[aux_act] is not None,
+        borders.groupby([aux_act]).count().to_dicts(),
+    ):
+        v = d["count"] + 1 if d[aux_act] == excl_starter else d["count"]
         dfg.start_activities[d[aux_act]] = v
 
-    for d in filter(lambda d: d[act_key] is not None, borders.groupby([act_key]).count().to_dicts()):
-        dfg.end_activities[d[act_key]] = d['count']
+    for d in filter(
+        lambda d: d[act_key] is not None,
+        borders.groupby([act_key]).count().to_dicts(),
+    ):
+        dfg.end_activities[d[act_key]] = d["count"]
 
-    for d in df.filter((df[cid_key] == df[aux_case])).groupby([act_key, aux_act]).count().to_dicts():
-        dfg.graph[(d[act_key], d[aux_act])] = d['count']
+    for d in (
+        df.filter((df[cid_key] == df[aux_case]))
+        .groupby([act_key, aux_act])
+        .count()
+        .to_dicts()
+    ):
+        dfg.graph[(d[act_key], d[aux_act])] = d["count"]
 
     return dfg

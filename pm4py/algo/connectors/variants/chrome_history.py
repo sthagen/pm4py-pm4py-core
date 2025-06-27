@@ -55,13 +55,21 @@ def apply(parameters: Optional[Dict[Any, str]] = None) -> pd.DataFrame:
     if parameters is None:
         parameters = {}
 
-    history_db_path = exec_utils.get_param_value(Parameters.HISTORY_DB_PATH, parameters, "C:\\Users\\" + os.getenv(
-        'USERNAME') + "\\AppData\\Local\\Google\\Chrome\\User Data")
+    history_db_path = exec_utils.get_param_value(
+        Parameters.HISTORY_DB_PATH,
+        parameters,
+        "C:\\Users\\"
+        + os.getenv("USERNAME")
+        + "\\AppData\\Local\\Google\\Chrome\\User Data",
+    )
     print(history_db_path)
 
     if os.path.isdir(history_db_path):
-        profiles = [(os.path.join(history_db_path, x, "History"), x) for x in os.listdir(history_db_path) if
-                    x.startswith("Profile ")]
+        profiles = [
+            (os.path.join(history_db_path, x, "History"), x)
+            for x in os.listdir(history_db_path)
+            if x.startswith("Profile ")
+        ]
     else:
         profiles = [(history_db_path, "DEFAULT")]
 
@@ -72,22 +80,39 @@ def apply(parameters: Optional[Dict[Any, str]] = None) -> pd.DataFrame:
         conn = sqlite3.connect(prof[0])
         curs = conn.cursor()
         curs.execute(
-            "SELECT b.url, datetime(a.visit_time / 1000000 + (strftime('%s', '1601-01-01')), 'unixepoch', 'localtime') FROM (SELECT url, visit_time FROM visits) a JOIN (SELECT id, url FROM urls) b ON a.url = b.id")
+            "SELECT b.url, datetime(a.visit_time / 1000000 + (strftime('%s', '1601-01-01')), 'unixepoch', 'localtime') FROM (SELECT url, visit_time FROM visits) a JOIN (SELECT id, url FROM urls) b ON a.url = b.id"
+        )
         res = curs.fetchall()
         for r in res:
-            ev = {"case:concept:name": prof[1], "concept:name": r[0].split("//")[-1].split("?")[0].replace(",", ""),
-                  "complete_url": r[0],
-                  "domain": r[0].split("//")[-1].split("/")[0], "url_wo_parameters": r[0].split("//")[-1].split("?")[0],
-                  "time:timestamp": datetime.strptime(r[1], "%Y-%m-%d %H:%M:%S")}
-            if len(ev["case:concept:name"].strip()) > 0 and len(ev["concept:name"].strip()) > 0:
+            ev = {
+                "case:concept:name": prof[1],
+                "concept:name": r[0]
+                .split("//")[-1]
+                .split("?")[0]
+                .replace(",", ""),
+                "complete_url": r[0],
+                "domain": r[0].split("//")[-1].split("/")[0],
+                "url_wo_parameters": r[0].split("//")[-1].split("?")[0],
+                "time:timestamp": datetime.strptime(r[1], "%Y-%m-%d %H:%M:%S"),
+            }
+            if (
+                len(ev["case:concept:name"].strip()) > 0
+                and len(ev["concept:name"].strip()) > 0
+            ):
                 events.append(ev)
         curs.close()
         conn.close()
 
     dataframe = pandas_utils.instantiate_dataframe(events)
     if len(dataframe) > 0:
-        dataframe = pandas_utils.insert_index(dataframe, "@@index", copy_dataframe=False, reset_index=False)
+        dataframe = pandas_utils.insert_index(
+            dataframe, "@@index", copy_dataframe=False, reset_index=False
+        )
         dataframe = dataframe.sort_values(["time:timestamp", "@@index"])
-        dataframe["@@case_index"] = dataframe.groupby("case:concept:name", sort=False).ngroup()
-        dataframe = dataframe.sort_values(["@@case_index", "time:timestamp", "@@index"])
+        dataframe["@@case_index"] = dataframe.groupby(
+            "case:concept:name", sort=False
+        ).ngroup()
+        dataframe = dataframe.sort_values(
+            ["@@case_index", "time:timestamp", "@@index"]
+        )
     return dataframe

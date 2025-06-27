@@ -79,7 +79,9 @@ def shortest_path(*args, **kwargs):
 
 
 def strongly_connected_components(*args, **kwargs):
-    return DEFAULT_NX_ENVIRONMENT.strongly_connected_components(*args, **kwargs)
+    return DEFAULT_NX_ENVIRONMENT.strongly_connected_components(
+        *args, **kwargs
+    )
 
 
 def has_path(*args, **kwargs):
@@ -107,7 +109,8 @@ def degree_centrality(*args, **kwargs):
 
 
 def greedy_modularity_communities(*args, **kwargs):
-    return DEFAULT_NX_ENVIRONMENT.algorithms.community.greedy_modularity_communities(*args, **kwargs)
+    return DEFAULT_NX_ENVIRONMENT.algorithms.community.greedy_modularity_communities(
+        *args, **kwargs)
 
 
 def maximum_flow_value(*args, **kwargs):
@@ -115,7 +118,9 @@ def maximum_flow_value(*args, **kwargs):
 
 
 def minimum_weight_full_matching(*args, **kwargs):
-    return DEFAULT_NX_ENVIRONMENT.bipartite.minimum_weight_full_matching(*args, **kwargs)
+    return DEFAULT_NX_ENVIRONMENT.bipartite.minimum_weight_full_matching(
+        *args, **kwargs
+    )
 
 
 def Edmonds(*args, **kwargs):
@@ -148,7 +153,12 @@ def __format_attrs(attributes0: Dict[str, Any]) -> Dict[str, Any]:
     return attributes
 
 
-def neo4j_upload(nx_graph: nx.DiGraph, session, clean_db: bool = True, parameters: Optional[Dict[Any, Any]] = None):
+def neo4j_upload(
+    nx_graph: nx.DiGraph,
+    session,
+    clean_db: bool = True,
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     """
     Uploads a NetworkX DiGraph obtained from a traditional/object-centric event log to a Neo4J session
 
@@ -167,8 +177,9 @@ def neo4j_upload(nx_graph: nx.DiGraph, session, clean_db: bool = True, parameter
     if parameters is None:
         parameters = {}
 
-    show_progress_bar = exec_utils.get_param_value(Parameters.SHOW_PROGRESS_BAR, parameters,
-                                                   constants.SHOW_PROGRESS_BAR)
+    show_progress_bar = exec_utils.get_param_value(
+        Parameters.SHOW_PROGRESS_BAR, parameters, constants.SHOW_PROGRESS_BAR
+    )
 
     if clean_db:
         session.run("MATCH (n) DETACH DELETE n")
@@ -180,13 +191,18 @@ def neo4j_upload(nx_graph: nx.DiGraph, session, clean_db: bool = True, parameter
 
     if importlib.util.find_spec("tqdm") and show_progress_bar:
         from tqdm.auto import tqdm
-        nodes_progress = tqdm(total=len(nodes), desc="uploading nodes, completed :: ")
+
+        nodes_progress = tqdm(
+            total=len(nodes), desc="uploading nodes, completed :: "
+        )
 
     for node_id in nodes:
-        node_attrs = __format_attrs(nx_graph.nodes[node_id]['attr'])
+        node_attrs = __format_attrs(nx_graph.nodes[node_id]["attr"])
         node_type = node_attrs["type"]
 
-        command = "CREATE (n:" + node_type + " {id: $id})\nSET n += $properties"
+        command = (
+            "CREATE (n:" + node_type + " {id: $id})\nSET n += $properties"
+        )
 
         session.run(command, id=node_id, properties=node_attrs)
 
@@ -198,15 +214,28 @@ def neo4j_upload(nx_graph: nx.DiGraph, session, clean_db: bool = True, parameter
 
     if importlib.util.find_spec("tqdm") and show_progress_bar:
         from tqdm.auto import tqdm
-        edges_progress = tqdm(total=len(edges), desc="uploading edges, completed :: ")
+
+        edges_progress = tqdm(
+            total=len(edges), desc="uploading edges, completed :: "
+        )
 
     for edge_id in edges:
-        edge_attr = __format_attrs(nx_graph.edges[edge_id]['attr'])
+        edge_attr = __format_attrs(nx_graph.edges[edge_id]["attr"])
         edge_type = edge_attr["type"]
 
-        command = "MATCH (a {id: $id1}), (b {id: $id2})\nCREATE (a)-[r:" + edge_type + " $props]->(b)"
+        command = (
+            "MATCH (a {id: $id1}), (b {id: $id2})\nCREATE (a)-[r:"
+            + edge_type
+            + " $props]->(b)"
+        )
 
-        session.run(command, id1=edge_id[0], id2=edge_id[1], props=edge_attr, edge_type=edge_type)
+        session.run(
+            command,
+            id1=edge_id[0],
+            id2=edge_id[1],
+            props=edge_attr,
+            edge_type=edge_type,
+        )
 
         if edges_progress is not None:
             edges_progress.update()
@@ -215,7 +244,9 @@ def neo4j_upload(nx_graph: nx.DiGraph, session, clean_db: bool = True, parameter
         edges_progress.close()
 
 
-def neo4j_download(session, parameters: Optional[Dict[Any, Any]] = None) -> nx.DiGraph:
+def neo4j_download(
+    session, parameters: Optional[Dict[Any, Any]] = None
+) -> nx.DiGraph:
     """
     Downloads a NetworkX DiGraph starting from a Neo4J database.
 
@@ -235,13 +266,16 @@ def neo4j_download(session, parameters: Optional[Dict[Any, Any]] = None) -> nx.D
         parameters = {}
 
     from pm4py.util import dt_parsing
+
     date_parser = dt_parsing.parser.get()
 
     nodes = session.run("MATCH (n) RETURN n")
     nodes = [dict(node["n"]) for node in nodes]
 
     edges = session.run("MATCH (n)-[r]->(m) RETURN n, r, m")
-    edges = [(edge["n"]["id"], edge["m"]["id"], dict(edge["r"])) for edge in edges]
+    edges = [
+        (edge["n"]["id"], edge["m"]["id"], dict(edge["r"])) for edge in edges
+    ]
 
     nx_graph = DiGraph()
 
@@ -262,7 +296,9 @@ def neo4j_download(session, parameters: Optional[Dict[Any, Any]] = None) -> nx.D
     return nx_graph
 
 
-def nx_to_ocel(nx_graph: nx.DiGraph, parameters: Optional[Dict[Any, Any]] = None):
+def nx_to_ocel(
+    nx_graph: nx.DiGraph, parameters: Optional[Dict[Any, Any]] = None
+):
     """
     Transforms a NetworkX DiGraph representing an OCEL to a proper OCEL.
 
@@ -294,48 +330,71 @@ def nx_to_ocel(nx_graph: nx.DiGraph, parameters: Optional[Dict[Any, Any]] = None
     object_types = {}
 
     for node_id in nx_graph.nodes:
-        node_attrs = nx_graph.nodes[node_id]['attr']
-        node_type = node_attrs['type']
+        node_attrs = nx_graph.nodes[node_id]["attr"]
+        node_type = node_attrs["type"]
 
-        if node_type == 'EVENT':
-            activity = node_attrs['ocel:activity']
-            timestamp = node_attrs['ocel:timestamp']
+        if node_type == "EVENT":
+            activity = node_attrs["ocel:activity"]
+            timestamp = node_attrs["ocel:timestamp"]
             events_activity[node_id] = activity
             events_timestamp[node_id] = timestamp
             events.append(node_attrs)
-        elif node_type == 'OBJECT':
-            object_type = node_attrs['ocel:type']
+        elif node_type == "OBJECT":
+            object_type = node_attrs["ocel:type"]
             object_types[node_id] = object_type
             objects.append(node_attrs)
-        elif node_type == 'CHANGE':
+        elif node_type == "CHANGE":
             object_changes.append(node_attrs)
 
     for edge_id in nx_graph.edges:
         source = edge_id[0]
         target = edge_id[1]
-        edge_attrs = nx_graph.edges[edge_id]['attr']
-        edge_type = edge_attrs['type']
-        qualifier = edge_attrs['qualifier'] if 'qualifier' in edge_attrs else ''
+        edge_attrs = nx_graph.edges[edge_id]["attr"]
+        edge_type = edge_attrs["type"]
+        qualifier = (
+            edge_attrs["qualifier"] if "qualifier" in edge_attrs else ""
+        )
 
-        if edge_type == 'E2O':
+        if edge_type == "E2O":
             activity = events_activity[source]
             timestamp = events_timestamp[source]
             object_type = object_types[target]
             relations.append(
-                {"ocel:eid": source, "ocel:oid": target, "ocel:activity": activity, "ocel:timestamp": timestamp,
-                 "ocel:type": object_type, "ocel:qualifier": qualifier})
-        elif edge_type == 'O2O':
-            o2o.append({"ocel:oid": source, "ocel:oid_2": target, "ocel:qualifier": qualifier})
+                {
+                    "ocel:eid": source,
+                    "ocel:oid": target,
+                    "ocel:activity": activity,
+                    "ocel:timestamp": timestamp,
+                    "ocel:type": object_type,
+                    "ocel:qualifier": qualifier,
+                }
+            )
+        elif edge_type == "O2O":
+            o2o.append(
+                {
+                    "ocel:oid": source,
+                    "ocel:oid_2": target,
+                    "ocel:qualifier": qualifier,
+                }
+            )
 
     events = pandas_utils.instantiate_dataframe(events)
     objects = pandas_utils.instantiate_dataframe(objects)
     relations = pandas_utils.instantiate_dataframe(relations)
     o2o = pandas_utils.instantiate_dataframe(o2o) if o2o else None
-    object_changes = pandas_utils.instantiate_dataframe(object_changes) if object_changes else None
+    object_changes = (
+        pandas_utils.instantiate_dataframe(object_changes)
+        if object_changes
+        else None
+    )
 
     internal_index = "@@index"
-    events = pandas_utils.insert_index(events, internal_index, reset_index=False, copy_dataframe=False)
-    relations = pandas_utils.insert_index(relations, internal_index, reset_index=False, copy_dataframe=False)
+    events = pandas_utils.insert_index(
+        events, internal_index, reset_index=False, copy_dataframe=False
+    )
+    relations = pandas_utils.insert_index(
+        relations, internal_index, reset_index=False, copy_dataframe=False
+    )
 
     events = events.sort_values(["ocel:timestamp", internal_index])
     relations = relations.sort_values(["ocel:timestamp", internal_index])
@@ -351,10 +410,14 @@ def nx_to_ocel(nx_graph: nx.DiGraph, parameters: Optional[Dict[Any, Any]] = None
 
     from pm4py.objects.ocel.obj import OCEL
 
-    return OCEL(events, objects, relations, o2o=o2o, object_changes=object_changes)
+    return OCEL(
+        events, objects, relations, o2o=o2o, object_changes=object_changes
+    )
 
 
-def nx_to_event_log(nx_graph: nx.DiGraph, parameters: Optional[Dict[Any, Any]] = None):
+def nx_to_event_log(
+    nx_graph: nx.DiGraph, parameters: Optional[Dict[Any, Any]] = None
+):
     """
     Transforms a NetworkX DiGraph representing a traditional event log to a proper event log.
 
@@ -378,8 +441,16 @@ def nx_to_event_log(nx_graph: nx.DiGraph, parameters: Optional[Dict[Any, Any]] =
 
     log = EventLog()
 
-    case_nodes = [(k, v["attr"]) for k, v in nx_graph.nodes.items() if v["attr"]["type"] == "CASE"]
-    event_nodes = [(k, v["attr"]) for k, v in nx_graph.nodes.items() if v["attr"]["type"] == "EVENT"]
+    case_nodes = [
+        (k, v["attr"])
+        for k, v in nx_graph.nodes.items()
+        if v["attr"]["type"] == "CASE"
+    ]
+    event_nodes = [
+        (k, v["attr"])
+        for k, v in nx_graph.nodes.items()
+        if v["attr"]["type"] == "EVENT"
+    ]
 
     cases = {}
     for i in range(len(case_nodes)):

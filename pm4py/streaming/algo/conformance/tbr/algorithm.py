@@ -51,4 +51,6 @@ def apply(net, im, fm, variant=Variants.CLASSIC, parameters=None):
     conf_stream_obj
         Conformance streaming object
     """
-    return exec_utils.get_variant(variant).apply(net, im, fm, parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        net, im, fm, parameters=parameters
+    )

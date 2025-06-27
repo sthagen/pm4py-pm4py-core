@@ -51,7 +51,9 @@ def sna_result_to_nx_graph(sna: SNA, parameters=None):
     if parameters is None:
         parameters = {}
 
-    weight_threshold = exec_utils.get_param_value(Parameters.WEIGHT_THRESHOLD, parameters, 0.0)
+    weight_threshold = exec_utils.get_param_value(
+        Parameters.WEIGHT_THRESHOLD, parameters, 0.0
+    )
     directed = sna.is_directed
 
     if directed:
@@ -59,12 +61,16 @@ def sna_result_to_nx_graph(sna: SNA, parameters=None):
     else:
         graph = nx_utils.Graph()
 
-    graph.add_edges_from({c for c, w in sna.connections.items() if w >= weight_threshold})
+    graph.add_edges_from(
+        {c for c, w in sna.connections.items() if w >= weight_threshold}
+    )
 
     return graph
 
 
-def cluster_affinity_propagation(sna: SNA, parameters=None) -> Dict[str, List[str]]:
+def cluster_affinity_propagation(
+    sna: SNA, parameters=None
+) -> Dict[str, List[str]]:
     """
     Performs a clustering using the affinity propagation algorithm provided by Scikit Learn
 
@@ -86,7 +92,11 @@ def cluster_affinity_propagation(sna: SNA, parameters=None) -> Dict[str, List[st
     if parameters is None:
         parameters = {}
 
-    originators = list(set(x[0] for x, y in sna.connections.items()).union(set(x[1] for x, y in sna.connections.items())))
+    originators = list(
+        set(x[0] for x, y in sna.connections.items()).union(
+            set(x[1] for x, y in sna.connections.items())
+        )
+    )
     matrix = np.zeros((len(originators), len(originators)))
     for c, w in sna.connections.items():
         matrix[originators.index(c[0]), originators.index(c[1])] = w

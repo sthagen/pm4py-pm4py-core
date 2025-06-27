@@ -52,22 +52,34 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     if parameters is None:
         parameters = {}
 
-    ordered_events = parameters["ordered_events"] if "ordered_events" in parameters else ocel.events[
-        ocel.event_id_column].to_numpy()
+    ordered_events = (
+        parameters["ordered_events"]
+        if "ordered_events" in parameters
+        else ocel.events[ocel.event_id_column].to_numpy()
+    )
 
     data = []
     feature_names = []
 
-    event_str_attributes = exec_utils.get_param_value(Parameters.EVENT_STR_ATTRIBUTES, parameters, None)
+    event_str_attributes = exec_utils.get_param_value(
+        Parameters.EVENT_STR_ATTRIBUTES, parameters, None
+    )
 
     if event_str_attributes is not None:
         dct_corr = {}
         dct_corr_values = {}
 
         for attr in event_str_attributes:
-            events_attr_not_na = ocel.events[[ocel.event_id_column, attr]].dropna(subset=[attr]).to_dict("records")
+            events_attr_not_na = (
+                ocel.events[[ocel.event_id_column, attr]]
+                .dropna(subset=[attr])
+                .to_dict("records")
+            )
             if events_attr_not_na:
-                events_attr_not_na = {x[ocel.event_id_column]: str(x[attr]) for x in events_attr_not_na}
+                events_attr_not_na = {
+                    x[ocel.event_id_column]: str(x[attr])
+                    for x in events_attr_not_na
+                }
                 dct_corr[attr] = events_attr_not_na
                 dct_corr_values[attr] = list(set(events_attr_not_na.values()))
 
@@ -75,7 +87,9 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
 
         for attr in dct_corr_list:
             for value in dct_corr_values[attr]:
-                feature_names.append("@@event_attr_value_"+attr+"_"+value)
+                feature_names.append(
+                    "@@event_attr_value_" + attr + "_" + value
+                )
 
         for ev in ordered_events:
             data.append([0.0] * len(feature_names))

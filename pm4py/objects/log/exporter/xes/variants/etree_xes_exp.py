@@ -27,7 +27,7 @@ try:
     # and this variant cannot be used.
     # after all, the default variant is now the "line_by_line" one.
     from lxml import etree
-except:
+except BaseException:
     pass
 
 from pm4py.objects.conversion.log import converter as log_converter
@@ -56,7 +56,7 @@ __TYPE_CORRESPONDENCE = {
     "dict": xes_util.TAG_LIST,
     "numpy.int64": xes_util.TAG_INT,
     "numpy.float64": xes_util.TAG_FLOAT,
-    "numpy.datetime64": xes_util.TAG_DATE
+    "numpy.datetime64": xes_util.TAG_DATE,
 }
 # if a type is not found in the previous list, then default to string
 __DEFAULT_TYPE = xes_util.TAG_STRING
@@ -131,9 +131,15 @@ def __export_extensions(log, root):
     for ext in log.extensions.keys():
         ext_value = log.extensions[ext]
         log_extension = etree.SubElement(root, xes_util.TAG_EXTENSION)
-        if ext is not None and not ext_value[xes_util.KEY_PREFIX] is None and ext_value[xes_util.KEY_URI] is not None:
+        if (
+            ext is not None
+            and not ext_value[xes_util.KEY_PREFIX] is None
+            and ext_value[xes_util.KEY_URI] is not None
+        ):
             log_extension.set(xes_util.KEY_NAME, ext)
-            log_extension.set(xes_util.KEY_PREFIX, ext_value[xes_util.KEY_PREFIX])
+            log_extension.set(
+                xes_util.KEY_PREFIX, ext_value[xes_util.KEY_PREFIX]
+            )
             log_extension.set(xes_util.KEY_URI, ext_value[xes_util.KEY_URI])
 
 
@@ -204,24 +210,41 @@ def __export_attributes_element(log_element, xml_element):
             attr_type_xes = __get_xes_attr_type(attr, attr_type)
             if attr_type is not None and attr_type_xes is not None:
                 if attr_type_xes == xes_util.TAG_LIST:
-                    if attr_value['value'] is None:
-                        this_attribute = etree.SubElement(xml_element, attr_type_xes)
+                    if attr_value["value"] is None:
+                        this_attribute = etree.SubElement(
+                            xml_element, attr_type_xes
+                        )
                         this_attribute.set(xes_util.KEY_KEY, attr)
-                        this_attribute_values = etree.SubElement(this_attribute, "values")
-                        __export_attributes_element(attr_value['children'], this_attribute_values)
+                        this_attribute_values = etree.SubElement(
+                            this_attribute, "values"
+                        )
+                        __export_attributes_element(
+                            attr_value["children"], this_attribute_values
+                        )
                     else:
-                        attr_type = type(attr_value['value']).__name__
+                        attr_type = type(attr_value["value"]).__name__
                         attr_type_xes = __get_xes_attr_type(attr, attr_type)
                         if attr_type is not None and attr_type_xes is not None:
                             if attr_value is not None:
-                                this_attribute = etree.SubElement(xml_element, attr_type_xes)
+                                this_attribute = etree.SubElement(
+                                    xml_element, attr_type_xes
+                                )
                                 this_attribute.set(xes_util.KEY_KEY, attr)
-                                this_attribute.set(xes_util.KEY_VALUE, str(attr_value['value']))
-                                __export_attributes_element(attr_value['children'], this_attribute)
+                                this_attribute.set(
+                                    xes_util.KEY_VALUE,
+                                    str(attr_value["value"]),
+                                )
+                                __export_attributes_element(
+                                    attr_value["children"], this_attribute
+                                )
                 else:
-                    attr_value = __get_xes_attr_value(attr_value, attr_type_xes)
+                    attr_value = __get_xes_attr_value(
+                        attr_value, attr_type_xes
+                    )
                     if attr_value is not None:
-                        this_attribute = etree.SubElement(xml_element, attr_type_xes)
+                        this_attribute = etree.SubElement(
+                            xml_element, attr_type_xes
+                        )
                         this_attribute.set(xes_util.KEY_KEY, attr)
                         this_attribute.set(xes_util.KEY_VALUE, str(attr_value))
 
@@ -259,12 +282,17 @@ def __export_traces(log, root, parameters=None):
     if parameters is None:
         parameters = {}
 
-    show_progress_bar = exec_utils.get_param_value(Parameters.SHOW_PROGRESS_BAR, parameters, constants.SHOW_PROGRESS_BAR)
+    show_progress_bar = exec_utils.get_param_value(
+        Parameters.SHOW_PROGRESS_BAR, parameters, constants.SHOW_PROGRESS_BAR
+    )
 
     progress = None
     if importlib.util.find_spec("tqdm") and show_progress_bar:
         from tqdm.auto import tqdm
-        progress = tqdm(total=len(log), desc="exporting log, completed traces :: ")
+
+        progress = tqdm(
+            total=len(log), desc="exporting log, completed traces :: "
+        )
 
     for tr in log:
         trace = etree.SubElement(root, xes_util.TAG_TRACE)
@@ -293,9 +321,14 @@ def export_log_tree(log, parameters=None):
     tree
         XML tree
     """
-    # If the log is in log_instance.EventStream, then transform it into log_instance.EventLog format
+    # If the log is in log_instance.EventStream, then transform it into
+    # log_instance.EventLog format
     if type(log) is log_instance.EventStream:
-        log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+        log = log_converter.apply(
+            log,
+            variant=log_converter.Variants.TO_EVENT_LOG,
+            parameters=parameters,
+        )
     root = etree.Element(xes_util.TAG_LOG)
     root.set(xes_util.TAG_VERSION, xes_util.VALUE_XES_VERSION)
     root.set(xes_util.TAG_FEATURES, xes_util.VALUE_XES_FEATURES)
@@ -336,8 +369,12 @@ def export_log_as_string(log, parameters=None):
     if parameters is None:
         parameters = {}
 
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING)
-    compress = exec_utils.get_param_value(Parameters.COMPRESS, parameters, False)
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING
+    )
+    compress = exec_utils.get_param_value(
+        Parameters.COMPRESS, parameters, False
+    )
 
     # Gets the XML tree to export
     tree = export_log_tree(log, parameters=parameters)
@@ -373,8 +410,14 @@ def __export_log(log, output_file_path, parameters=None):
     """
     parameters = dict() if parameters is None else parameters
 
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING)
-    compress = exec_utils.get_param_value(Parameters.COMPRESS, parameters, output_file_path.lower().endswith(".gz"))
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING
+    )
+    compress = exec_utils.get_param_value(
+        Parameters.COMPRESS,
+        parameters,
+        output_file_path.lower().endswith(".gz"),
+    )
 
     # Gets the XML tree to export
     tree = export_log_tree(log, parameters=parameters)

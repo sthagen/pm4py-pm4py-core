@@ -42,8 +42,11 @@ class Outputs(Enum):
     GROUP_MEMBER_CONTRIBUTION = "group_member_contribution"
 
 
-def apply_from_clustering_or_roles(log_obj: Union[pd.DataFrame, EventLog], ja_clustering_or_roles: Dict[str, List[str]],
-                                   parameters: Optional[Dict[Any, str]] = None) -> Dict[str, Any]:
+def apply_from_clustering_or_roles(
+    log_obj: Union[pd.DataFrame, EventLog],
+    ja_clustering_or_roles: Dict[str, List[str]],
+    parameters: Optional[Dict[Any, str]] = None,
+) -> Dict[str, Any]:
     """
     Provides the local diagnostics for the organizational model starting from a log object and the results
     of the similar activities clustering / the roles detection algorithm.
@@ -75,11 +78,16 @@ def apply_from_clustering_or_roles(log_obj: Union[pd.DataFrame, EventLog], ja_cl
     if parameters is None:
         parameters = {}
 
-    res_act, act_res = util.get_res_act_from_log(log_obj, parameters=parameters)
+    res_act, act_res = util.get_res_act_from_log(
+        log_obj, parameters=parameters
+    )
     resources = util.get_resources_from_log(log_obj, parameters=parameters)
 
     if type(ja_clustering_or_roles) is list:
-        ja_clustering_or_roles = {str(i): ja_clustering_or_roles[i].originator_importance for i in range(len(ja_clustering_or_roles))}
+        ja_clustering_or_roles = {
+            str(i): ja_clustering_or_roles[i].originator_importance
+            for i in range(len(ja_clustering_or_roles))
+        }
 
     groups = {}
     for cluster in ja_clustering_or_roles:
@@ -90,7 +98,10 @@ def apply_from_clustering_or_roles(log_obj: Union[pd.DataFrame, EventLog], ja_cl
     return __apply(res_act, act_res, groups, parameters=parameters)
 
 
-def apply_from_group_attribute(log_obj: Union[pd.DataFrame, EventLog], parameters: Optional[Dict[Any, str]] = None) -> Dict[str, Any]:
+def apply_from_group_attribute(
+    log_obj: Union[pd.DataFrame, EventLog],
+    parameters: Optional[Dict[Any, str]] = None,
+) -> Dict[str, Any]:
     """
     Provides the local diagnostics for the organizational model starting from a log object and considering
     the group specified by the attribute
@@ -120,13 +131,19 @@ def apply_from_group_attribute(log_obj: Union[pd.DataFrame, EventLog], parameter
     if parameters is None:
         parameters = {}
 
-    res_act, act_res = util.get_res_act_from_log(log_obj, parameters=parameters)
+    res_act, act_res = util.get_res_act_from_log(
+        log_obj, parameters=parameters
+    )
     groups = util.get_groups_from_log(log_obj, parameters=parameters)
     return __apply(res_act, act_res, groups, parameters=parameters)
 
 
-def __apply(res_act: Dict[str, Dict[str, int]], act_res: Dict[str, Dict[str, int]], groups: Dict[str, Dict[str, int]],
-            parameters: Optional[Dict[Any, str]] = None) -> Dict[str, Any]:
+def __apply(
+    res_act: Dict[str, Dict[str, int]],
+    act_res: Dict[str, Dict[str, int]],
+    groups: Dict[str, Dict[str, int]],
+    parameters: Optional[Dict[Any, str]] = None,
+) -> Dict[str, Any]:
     """
     Provides the local diagnostics for the organizational model
 
@@ -158,18 +175,28 @@ def __apply(res_act: Dict[str, Dict[str, int]], act_res: Dict[str, Dict[str, int
         parameters = {}
 
     ret = {}
-    ret[Outputs.GROUP_RELATIVE_FOCUS.value] = __group_relative_focus(res_act, act_res, groups, parameters=parameters)
-    ret[Outputs.GROUP_RELATIVE_STAKE.value] = __group_relative_stake(res_act, act_res, groups, parameters=parameters)
-    ret[Outputs.GROUP_COVERAGE.value] = __group_coverage(res_act, act_res, groups, parameters=parameters)
-    ret[Outputs.GROUP_MEMBER_CONTRIBUTION.value] = __group_member_contribution(res_act, act_res, groups,
-                                                                               parameters=parameters)
+    ret[Outputs.GROUP_RELATIVE_FOCUS.value] = __group_relative_focus(
+        res_act, act_res, groups, parameters=parameters
+    )
+    ret[Outputs.GROUP_RELATIVE_STAKE.value] = __group_relative_stake(
+        res_act, act_res, groups, parameters=parameters
+    )
+    ret[Outputs.GROUP_COVERAGE.value] = __group_coverage(
+        res_act, act_res, groups, parameters=parameters
+    )
+    ret[Outputs.GROUP_MEMBER_CONTRIBUTION.value] = __group_member_contribution(
+        res_act, act_res, groups, parameters=parameters
+    )
 
     return ret
 
 
-def __group_relative_focus(res_act: Dict[str, Dict[str, int]], act_res: Dict[str, Dict[str, int]],
-                           groups: Dict[str, Dict[str, int]], parameters: Optional[Dict[Any, str]] = None) -> Dict[
-    str, Dict[str, float]]:
+def __group_relative_focus(
+    res_act: Dict[str, Dict[str, int]],
+    act_res: Dict[str, Dict[str, int]],
+    groups: Dict[str, Dict[str, int]],
+    parameters: Optional[Dict[Any, str]] = None,
+) -> Dict[str, Dict[str, float]]:
     """
     Calculates the relative focus metric
 
@@ -212,9 +239,12 @@ def __group_relative_focus(res_act: Dict[str, Dict[str, int]], act_res: Dict[str
     return ret
 
 
-def __group_relative_stake(res_act: Dict[str, Dict[str, int]], act_res: Dict[str, Dict[str, int]],
-                           groups: Dict[str, Dict[str, int]], parameters: Optional[Dict[Any, str]] = None) -> Dict[
-    str, Dict[str, float]]:
+def __group_relative_stake(
+    res_act: Dict[str, Dict[str, int]],
+    act_res: Dict[str, Dict[str, int]],
+    groups: Dict[str, Dict[str, int]],
+    parameters: Optional[Dict[Any, str]] = None,
+) -> Dict[str, Dict[str, float]]:
     """
     Calculates the relative stake metric
 
@@ -259,9 +289,12 @@ def __group_relative_stake(res_act: Dict[str, Dict[str, int]], act_res: Dict[str
     return ret
 
 
-def __group_coverage(res_act: Dict[str, Dict[str, int]], act_res: Dict[str, Dict[str, int]],
-                     groups: Dict[str, Dict[str, int]], parameters: Optional[Dict[Any, str]] = None) -> Dict[
-    str, Dict[str, float]]:
+def __group_coverage(
+    res_act: Dict[str, Dict[str, int]],
+    act_res: Dict[str, Dict[str, int]],
+    groups: Dict[str, Dict[str, int]],
+    parameters: Optional[Dict[Any, str]] = None,
+) -> Dict[str, Dict[str, float]]:
     """
     Calculates the group coverage metric
 
@@ -297,9 +330,12 @@ def __group_coverage(res_act: Dict[str, Dict[str, int]], act_res: Dict[str, Dict
     return ret
 
 
-def __group_member_contribution(res_act: Dict[str, Dict[str, int]], act_res: Dict[str, Dict[str, int]],
-                                groups: Dict[str, Dict[str, int]], parameters: Optional[Dict[Any, str]] = None) -> Dict[
-    str, Dict[str, Dict[str, int]]]:
+def __group_member_contribution(
+    res_act: Dict[str, Dict[str, int]],
+    act_res: Dict[str, Dict[str, int]],
+    groups: Dict[str, Dict[str, int]],
+    parameters: Optional[Dict[Any, str]] = None,
+) -> Dict[str, Dict[str, Dict[str, int]]]:
     """
     Calculates the member contribution metric
 

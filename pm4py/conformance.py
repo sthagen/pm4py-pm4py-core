@@ -30,7 +30,10 @@ from pm4py.objects.petri_net.obj import PetriNet, Marking
 from pm4py.objects.process_tree.obj import ProcessTree
 from pm4py.util import xes_constants, constants
 from pm4py.utils import get_properties, __event_log_deprecation_warning
-from pm4py.util.pandas_utils import check_is_pandas_dataframe, check_pandas_dataframe_columns
+from pm4py.util.pandas_utils import (
+    check_is_pandas_dataframe,
+    check_pandas_dataframe_columns,
+)
 import pandas as pd
 import deprecation
 
@@ -44,7 +47,7 @@ def conformance_diagnostics_token_based_replay(
     timestamp_key: str = "time:timestamp",
     case_id_key: str = "case:concept:name",
     return_diagnostics_dataframe: bool = constants.DEFAULT_RETURN_DIAGNOSTICS_DATAFRAME,
-    opt_parameters: Optional[Dict[Any, Any]] = None
+    opt_parameters: Optional[Dict[Any, Any]] = None,
 ) -> List[Dict[str, Any]]:
     """
     Apply token-based replay for conformance checking analysis.
@@ -53,12 +56,12 @@ def conformance_diagnostics_token_based_replay(
     Token-based replay matches a trace against a Petri net model, starting from the initial marking, to discover which transitions are executed and in which places there are remaining or missing tokens for the given process instance. Token-based replay is useful for conformance checking: a trace fits the model if, during its execution, all transitions can be fired without the need to insert any missing tokens. If reaching the final marking is imposed, a trace fits if it reaches the final marking without any missing or remaining tokens.
 
     In PM4Py, the token replayer implementation can handle hidden transitions by calculating the shortest paths between places. It can be used with any Petri net model that has unique visible transitions and hidden transitions. When a visible transition needs to be fired and not all places in its preset have the correct number of tokens, the current marking is checked to see if any hidden transitions can be fired to enable the visible transition. The hidden transitions are then fired, reaching a marking that permits the firing of the visible transition.
-    
+
     The approach is described in:
     Berti, Alessandro, and Wil MP van der Aalst. "Reviving Token-based Replay: Increasing Speed While Improving Diagnostics." ATAED@ Petri Nets/ACSD. 2019.
 
     The output of the token-based replay, stored in the variable `replayed_traces`, contains for each trace in the log:
-    
+
     - **trace_is_fit**: Boolean value indicating whether the trace conforms to the model.
     - **activated_transitions**: List of transitions activated in the model by the token-based replay.
     - **reached_marking**: Marking reached at the end of the replay.
@@ -116,11 +119,12 @@ def conformance_diagnostics_token_based_replay(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
-            case_id_key=case_id_key
+            case_id_key=case_id_key,
         )
 
     if return_diagnostics_dataframe:
         from pm4py.convert import convert_to_event_log
+
         log = convert_to_event_log(log, case_id_key=case_id_key)
         case_id_key = None
 
@@ -128,7 +132,7 @@ def conformance_diagnostics_token_based_replay(
         log,
         activity_key=activity_key,
         timestamp_key=timestamp_key,
-        case_id_key=case_id_key
+        case_id_key=case_id_key,
     )
 
     if opt_parameters is None:
@@ -138,19 +142,14 @@ def conformance_diagnostics_token_based_replay(
         properties[k] = v
 
     from pm4py.algo.conformance.tokenreplay import algorithm as token_replay
+
     result = token_replay.apply(
-        log,
-        petri_net,
-        initial_marking,
-        final_marking,
-        parameters=properties
+        log, petri_net, initial_marking, final_marking, parameters=properties
     )
 
     if return_diagnostics_dataframe:
         return token_replay.get_diagnostics_dataframe(
-            log,
-            result,
-            parameters=properties
+            log, result, parameters=properties
         )
 
     return result
@@ -165,7 +164,7 @@ def conformance_diagnostics_alignments(
     case_id_key: str = "case:concept:name",
     variant_str: Optional[str] = None,
     return_diagnostics_dataframe: bool = constants.DEFAULT_RETURN_DIAGNOSTICS_DATAFRAME,
-    **kwargs
+    **kwargs,
 ) -> List[Dict[str, Any]]:
     """
     Apply the alignments algorithm between a log and a process model.
@@ -180,7 +179,7 @@ def conformance_diagnostics_alignments(
         * **Moves on model not involving hidden transitions**: The move is unfit and signals a deviation.
 
     For each trace, a dictionary is associated containing, among other details:
-    
+
     - **alignment**: The alignment pairs (sync moves, moves on log, moves on model).
     - **cost**: The cost of the alignment based on the provided cost function.
     - **fitness**: Equals 1 if the trace fits perfectly.
@@ -224,11 +223,12 @@ def conformance_diagnostics_alignments(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
-            case_id_key=case_id_key
+            case_id_key=case_id_key,
         )
 
     if return_diagnostics_dataframe:
         from pm4py.convert import convert_to_event_log
+
         log = convert_to_event_log(log, case_id_key=case_id_key)
         case_id_key = None
 
@@ -236,7 +236,7 @@ def conformance_diagnostics_alignments(
         log,
         activity_key=activity_key,
         timestamp_key=timestamp_key,
-        case_id_key=case_id_key
+        case_id_key=case_id_key,
     )
     if kwargs:
         for k, v in kwargs.items():
@@ -245,19 +245,30 @@ def conformance_diagnostics_alignments(
     if len(args) == 3:
         if isinstance(args[0], PetriNet):
             # Petri net alignments
-            from pm4py.algo.conformance.alignments.petri_net import algorithm as alignments
+            from pm4py.algo.conformance.alignments.petri_net import (
+                algorithm as alignments,
+            )
+
             variant = alignments.DEFAULT_VARIANT
             if variant_str is not None:
                 variant = variant_str
             if multi_processing:
                 result = alignments.apply_multiprocessing(
-                    log, args[0], args[1], args[2],
-                    parameters=properties, variant=variant
+                    log,
+                    args[0],
+                    args[1],
+                    args[2],
+                    parameters=properties,
+                    variant=variant,
                 )
             else:
                 result = alignments.apply(
-                    log, args[0], args[1], args[2],
-                    parameters=properties, variant=variant
+                    log,
+                    args[0],
+                    args[1],
+                    args[2],
+                    parameters=properties,
+                    variant=variant,
                 )
 
             if return_diagnostics_dataframe:
@@ -268,17 +279,21 @@ def conformance_diagnostics_alignments(
             return result
         elif isinstance(args[0], dict):
             # DFG alignments
-            from pm4py.algo.conformance.alignments.dfg import algorithm as dfg_alignment
+            from pm4py.algo.conformance.alignments.dfg import (
+                algorithm as dfg_alignment,
+            )
+
             result = dfg_alignment.apply(
-                log, args[0], args[1], args[2],
-                parameters=properties
+                log, args[0], args[1], args[2], parameters=properties
             )
 
             return result
     elif len(args) == 1:
         if isinstance(args[0], ProcessTree):
             # Process tree alignments
-            from pm4py.algo.conformance.alignments.process_tree.variants import search_graph_pt
+            from pm4py.algo.conformance.alignments.process_tree.variants import (
+                search_graph_pt, )
+
             if multi_processing:
                 result = search_graph_pt.apply_multiprocessing(
                     log, args[0], parameters=properties
@@ -291,33 +306,32 @@ def conformance_diagnostics_alignments(
             return result
         elif isinstance(args[0], (EventLog, pd.DataFrame)):
             # Edit distance alignments (log to log)
-            from pm4py.algo.conformance.alignments.edit_distance import algorithm as edit_distance_alignments
+            from pm4py.algo.conformance.alignments.edit_distance import (
+                algorithm as edit_distance_alignments,
+            )
+
             result = edit_distance_alignments.apply(
-                log, args[0],
-                parameters=properties
+                log, args[0], parameters=properties
             )
 
             return result
     # Try to convert to Petri net
     import pm4py
-    from pm4py.algo.conformance.alignments.petri_net import algorithm as alignments
+    from pm4py.algo.conformance.alignments.petri_net import (
+        algorithm as alignments,
+    )
+
     net, im, fm = pm4py.convert_to_petri_net(*args)
     if multi_processing:
         result = alignments.apply_multiprocessing(
-            log, net, im, fm,
-            parameters=properties
+            log, net, im, fm, parameters=properties
         )
     else:
-        result = alignments.apply(
-            log, net, im, fm,
-            parameters=properties
-        )
+        result = alignments.apply(log, net, im, fm, parameters=properties)
 
     if return_diagnostics_dataframe:
         return alignments.get_diagnostics_dataframe(
-            log,
-            result,
-            parameters=properties
+            log, result, parameters=properties
         )
 
     return result
@@ -330,7 +344,7 @@ def fitness_token_based_replay(
     final_marking: Marking,
     activity_key: str = "concept:name",
     timestamp_key: str = "time:timestamp",
-    case_id_key: str = "case:concept:name"
+    case_id_key: str = "case:concept:name",
 ) -> Dict[str, float]:
     """
     Calculate the fitness using token-based replay.
@@ -344,7 +358,7 @@ def fitness_token_based_replay(
     Token-based replay matches a trace against a Petri net model, starting from the initial marking, to discover which transitions are executed and in which places there are remaining or missing tokens for the given process instance. Token-based replay is useful for conformance checking: a trace fits the model if, during its execution, all transitions can be fired without the need to insert any missing tokens. If reaching the final marking is imposed, a trace fits if it reaches the final marking without any missing or remaining tokens.
 
     In PM4Py, the token replayer implementation can handle hidden transitions by calculating the shortest paths between places. It can be used with any Petri net model that has unique visible transitions and hidden transitions. When a visible transition needs to be fired and not all places in its preset have the correct number of tokens, the current marking is checked to see if any hidden transitions can be fired to enable the visible transition. The hidden transitions are then fired, reaching a marking that permits the firing of the visible transition.
-    
+
     The approach is described in:
     Berti, Alessandro, and Wil MP van der Aalst. "Reviving Token-based Replay: Increasing Speed While Improving Diagnostics." ATAED@ Petri Nets/ACSD. 2019.
 
@@ -390,24 +404,27 @@ def fitness_token_based_replay(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
-            case_id_key=case_id_key
+            case_id_key=case_id_key,
         )
 
     properties = get_properties(
         log,
         activity_key=activity_key,
         timestamp_key=timestamp_key,
-        case_id_key=case_id_key
+        case_id_key=case_id_key,
     )
 
-    from pm4py.algo.evaluation.replay_fitness import algorithm as replay_fitness
+    from pm4py.algo.evaluation.replay_fitness import (
+        algorithm as replay_fitness,
+    )
+
     result = replay_fitness.apply(
         log,
         petri_net,
         initial_marking,
         final_marking,
         variant=replay_fitness.Variants.TOKEN_BASED,
-        parameters=properties
+        parameters=properties,
     )
 
     return result
@@ -422,7 +439,7 @@ def fitness_alignments(
     activity_key: str = "concept:name",
     timestamp_key: str = "time:timestamp",
     case_id_key: str = "case:concept:name",
-    variant_str: Optional[str] = None
+    variant_str: Optional[str] = None,
 ) -> Dict[str, float]:
     """
     Calculate the fitness using alignments.
@@ -483,15 +500,18 @@ def fitness_alignments(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
-            case_id_key=case_id_key
+            case_id_key=case_id_key,
         )
 
-    from pm4py.algo.evaluation.replay_fitness import algorithm as replay_fitness
+    from pm4py.algo.evaluation.replay_fitness import (
+        algorithm as replay_fitness,
+    )
+
     parameters = get_properties(
         log,
         activity_key=activity_key,
         timestamp_key=timestamp_key,
-        case_id_key=case_id_key
+        case_id_key=case_id_key,
     )
     parameters["multiprocessing"] = multi_processing
     result = replay_fitness.apply(
@@ -501,7 +521,7 @@ def fitness_alignments(
         final_marking,
         variant=replay_fitness.Variants.ALIGNMENT_BASED,
         align_variant=variant_str,
-        parameters=parameters
+        parameters=parameters,
     )
 
     return result
@@ -514,7 +534,7 @@ def precision_token_based_replay(
     final_marking: Marking,
     activity_key: str = "concept:name",
     timestamp_key: str = "time:timestamp",
-    case_id_key: str = "case:concept:name"
+    case_id_key: str = "case:concept:name",
 ) -> float:
     """
     Calculate precision using token-based replay.
@@ -522,7 +542,7 @@ def precision_token_based_replay(
     Token-based replay matches a trace against a Petri net model, starting from the initial marking, to discover which transitions are executed and in which places there are remaining or missing tokens for the given process instance. Token-based replay is useful for conformance checking: a trace fits the model if, during its execution, all transitions can be fired without the need to insert any missing tokens. If reaching the final marking is imposed, a trace fits if it reaches the final marking without any missing or remaining tokens.
 
     In PM4Py, the token replayer implementation can handle hidden transitions by calculating the shortest paths between places. It can be used with any Petri net model that has unique visible transitions and hidden transitions. When a visible transition needs to be fired and not all places in its preset have the correct number of tokens, the current marking is checked to see if any hidden transitions can be fired to enable the visible transition. The hidden transitions are then fired, reaching a marking that permits the firing of the visible transition.
-    
+
     The approach is described in:
     Berti, Alessandro, and Wil MP van der Aalst. "Reviving Token-based Replay: Increasing Speed While Improving Diagnostics." ATAED@ Petri Nets/ACSD. 2019.
 
@@ -569,24 +589,27 @@ def precision_token_based_replay(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
-            case_id_key=case_id_key
+            case_id_key=case_id_key,
         )
 
     properties = get_properties(
         log,
         activity_key=activity_key,
         timestamp_key=timestamp_key,
-        case_id_key=case_id_key
+        case_id_key=case_id_key,
     )
 
-    from pm4py.algo.evaluation.precision import algorithm as precision_evaluator
+    from pm4py.algo.evaluation.precision import (
+        algorithm as precision_evaluator,
+    )
+
     result = precision_evaluator.apply(
         log,
         petri_net,
         initial_marking,
         final_marking,
         variant=precision_evaluator.Variants.ETCONFORMANCE_TOKEN,
-        parameters=properties
+        parameters=properties,
     )
 
     return result
@@ -600,7 +623,7 @@ def precision_alignments(
     multi_processing: bool = constants.ENABLE_MULTIPROCESSING_DEFAULT,
     activity_key: str = "concept:name",
     timestamp_key: str = "time:timestamp",
-    case_id_key: str = "case:concept:name"
+    case_id_key: str = "case:concept:name",
 ) -> float:
     """
     Calculate the precision of the model with respect to the event log using alignments.
@@ -657,15 +680,18 @@ def precision_alignments(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
-            case_id_key=case_id_key
+            case_id_key=case_id_key,
         )
 
-    from pm4py.algo.evaluation.precision import algorithm as precision_evaluator
+    from pm4py.algo.evaluation.precision import (
+        algorithm as precision_evaluator,
+    )
+
     parameters = get_properties(
         log,
         activity_key=activity_key,
         timestamp_key=timestamp_key,
-        case_id_key=case_id_key
+        case_id_key=case_id_key,
     )
     parameters["multiprocessing"] = multi_processing
     result = precision_evaluator.apply(
@@ -674,7 +700,7 @@ def precision_alignments(
         initial_marking,
         final_marking,
         variant=precision_evaluator.Variants.ALIGN_ETCONFORMANCE,
-        parameters=parameters
+        parameters=parameters,
     )
 
     return result
@@ -687,7 +713,7 @@ def generalization_tbr(
     final_marking: Marking,
     activity_key: str = "concept:name",
     timestamp_key: str = "time:timestamp",
-    case_id_key: str = "case:concept:name"
+    case_id_key: str = "case:concept:name",
 ) -> float:
     """
     Compute the generalization of the model against the event log.
@@ -733,15 +759,18 @@ def generalization_tbr(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
-            case_id_key=case_id_key
+            case_id_key=case_id_key,
         )
 
-    from pm4py.algo.evaluation.generalization import algorithm as generalization_evaluator
+    from pm4py.algo.evaluation.generalization import (
+        algorithm as generalization_evaluator,
+    )
+
     parameters = get_properties(
         log,
         activity_key=activity_key,
         timestamp_key=timestamp_key,
-        case_id_key=case_id_key
+        case_id_key=case_id_key,
     )
     result = generalization_evaluator.apply(
         log,
@@ -749,7 +778,7 @@ def generalization_tbr(
         initial_marking,
         final_marking,
         variant=generalization_evaluator.Variants.GENERALIZATION_TOKEN,
-        parameters=parameters
+        parameters=parameters,
     )
 
     return result
@@ -760,7 +789,7 @@ def replay_prefix_tbr(
     net: PetriNet,
     im: Marking,
     fm: Marking,
-    activity_key: str = "concept:name"
+    activity_key: str = "concept:name",
 ) -> Marking:
     """
     Replay a prefix (list of activities) on a given accepting Petri net using Token-Based Replay.
@@ -794,21 +823,24 @@ def replay_prefix_tbr(
     purpose_log.append(trace)
 
     from pm4py.algo.conformance.tokenreplay.variants import token_replay
+
     parameters_tr = {
         token_replay.Parameters.CONSIDER_REMAINING_IN_FITNESS: False,
         token_replay.Parameters.TRY_TO_REACH_FINAL_MARKING_THROUGH_HIDDEN: False,
         token_replay.Parameters.STOP_IMMEDIATELY_UNFIT: True,
         token_replay.Parameters.WALK_THROUGH_HIDDEN_TRANS: True,
-        token_replay.Parameters.ACTIVITY_KEY: activity_key
+        token_replay.Parameters.ACTIVITY_KEY: activity_key,
     }
-    res = token_replay.apply(purpose_log, net, im, fm, parameters=parameters_tr)[0]
+    res = token_replay.apply(
+        purpose_log, net, im, fm, parameters=parameters_tr
+    )[0]
     return res["reached_marking"]
 
 
 @deprecation.deprecated(
     deprecated_in="2.3.0",
     removed_in="3.0.0",
-    details="Conformance checking using footprints will not be exposed in a future release."
+    details="Conformance checking using footprints will not be exposed in a future release.",
 )
 def __convert_to_fp(*args) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
     """
@@ -823,6 +855,7 @@ def __convert_to_fp(*args) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
         This is an internal method and is deprecated.
     """
     import pm4py
+
     while isinstance(args, tuple):
         if len(args) == 1:
             args = args[0]
@@ -838,9 +871,11 @@ def __convert_to_fp(*args) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
 @deprecation.deprecated(
     deprecated_in="2.3.0",
     removed_in="3.0.0",
-    details="Conformance checking using footprints will not be exposed in a future release."
+    details="Conformance checking using footprints will not be exposed in a future release.",
 )
-def conformance_diagnostics_footprints(*args) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+def conformance_diagnostics_footprints(
+    *args,
+) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
     """
     Provide conformance checking diagnostics using footprints.
 
@@ -871,18 +906,17 @@ def conformance_diagnostics_footprints(*args) -> Union[List[Dict[str, Any]], Dic
     """
     fp1 = __convert_to_fp(args[0])
     fp2 = __convert_to_fp(args[1:])
-    from pm4py.algo.conformance.footprints import algorithm as footprints_conformance
+    from pm4py.algo.conformance.footprints import (
+        algorithm as footprints_conformance,
+    )
+
     if isinstance(fp1, list):
         result = footprints_conformance.apply(
-            fp1,
-            fp2,
-            variant=footprints_conformance.Variants.TRACE_EXTENSIVE
+            fp1, fp2, variant=footprints_conformance.Variants.TRACE_EXTENSIVE
         )
     else:
         result = footprints_conformance.apply(
-            fp1,
-            fp2,
-            variant=footprints_conformance.Variants.LOG_EXTENSIVE
+            fp1, fp2, variant=footprints_conformance.Variants.LOG_EXTENSIVE
         )
 
     return result
@@ -891,7 +925,7 @@ def conformance_diagnostics_footprints(*args) -> Union[List[Dict[str, Any]], Dic
 @deprecation.deprecated(
     deprecated_in="2.3.0",
     removed_in="3.0.0",
-    details="Conformance checking using footprints will not be exposed in a future release."
+    details="Conformance checking using footprints will not be exposed in a future release.",
 )
 def fitness_footprints(*args) -> Dict[str, float]:
     """
@@ -929,6 +963,7 @@ def fitness_footprints(*args) -> Dict[str, float]:
     fp1 = __convert_to_fp(args[0])
     fp2 = __convert_to_fp(args[1:])
     from pm4py.algo.conformance.footprints.util import evaluation
+
     result = evaluation.fp_fitness(fp1, fp2, fp_conf)
 
     return result
@@ -937,7 +972,7 @@ def fitness_footprints(*args) -> Dict[str, float]:
 @deprecation.deprecated(
     deprecated_in="2.3.0",
     removed_in="3.0.0",
-    details="Conformance checking using footprints will not be exposed in a future release."
+    details="Conformance checking using footprints will not be exposed in a future release.",
 )
 def precision_footprints(*args) -> float:
     """
@@ -971,6 +1006,7 @@ def precision_footprints(*args) -> float:
     fp1 = __convert_to_fp(args[0])
     fp2 = __convert_to_fp(args[1:])
     from pm4py.algo.conformance.footprints.util import evaluation
+
     result = evaluation.fp_precision(fp1, fp2)
 
     return result
@@ -979,7 +1015,7 @@ def precision_footprints(*args) -> float:
 @deprecation.deprecated(
     removed_in="2.3.0",
     deprecated_in="3.0.0",
-    details="This method will be removed in a future release."
+    details="This method will be removed in a future release.",
 )
 def __check_is_fit_process_tree(trace, tree) -> bool:
     """
@@ -996,6 +1032,7 @@ def __check_is_fit_process_tree(trace, tree) -> bool:
     __event_log_deprecation_warning(trace)
 
     from pm4py.discovery import discover_footprints
+
     log = EventLog()
     log.append(trace)
     fp_tree = discover_footprints(tree)
@@ -1006,13 +1043,10 @@ def __check_is_fit_process_tree(trace, tree) -> bool:
         return False
     else:
         from pm4py.convert import convert_to_petri_net
+
         net, im, fm = convert_to_petri_net(tree)
         tbr_conf_res = conformance_diagnostics_token_based_replay(
-            log,
-            net,
-            im,
-            fm,
-            return_diagnostics_dataframe=False
+            log, net, im, fm, return_diagnostics_dataframe=False
         )[0]
         # CHECK 2) If TBR indicates fit, return True
         if tbr_conf_res["trace_is_fit"]:
@@ -1020,9 +1054,7 @@ def __check_is_fit_process_tree(trace, tree) -> bool:
         else:
             # CHECK 3) Use alignments for definitive fit assessment
             align_conf_res = conformance_diagnostics_alignments(
-                log,
-                tree,
-                return_diagnostics_dataframe=False
+                log, tree, return_diagnostics_dataframe=False
             )[0]
             return align_conf_res["fitness"] == 1.0
 
@@ -1030,14 +1062,14 @@ def __check_is_fit_process_tree(trace, tree) -> bool:
 @deprecation.deprecated(
     removed_in="2.3.0",
     deprecated_in="3.0.0",
-    details="This method will be removed in a future release."
+    details="This method will be removed in a future release.",
 )
 def __check_is_fit_petri_net(
     trace,
     net: PetriNet,
     im: Marking,
     fm: Marking,
-    activity_key=xes_constants.DEFAULT_NAME_KEY
+    activity_key=xes_constants.DEFAULT_NAME_KEY,
 ) -> bool:
     """
     Check if a trace object fits a Petri net model.
@@ -1062,14 +1094,14 @@ def __check_is_fit_petri_net(
     activities_trace = set([x[activity_key] for x in trace])
     diff = activities_trace.difference(activities_model)
     if diff:
-        # CHECK 1) If there are activities in the trace not present in the model, return False
+        # CHECK 1) If there are activities in the trace not present in the
+        # model, return False
         return False
     else:
         log = EventLog()
         log.append(trace)
         tbr_conf_res = conformance_diagnostics_token_based_replay(
-            log, net, im, fm,
-            return_diagnostics_dataframe=False
+            log, net, im, fm, return_diagnostics_dataframe=False
         )[0]
         # CHECK 2) If TBR indicates fit, return True
         if tbr_conf_res["trace_is_fit"]:
@@ -1077,11 +1109,7 @@ def __check_is_fit_petri_net(
         else:
             # CHECK 3) Use alignments for definitive fit assessment
             align_conf_res = conformance_diagnostics_alignments(
-                log,
-                net,
-                im,
-                fm,
-                return_diagnostics_dataframe=False
+                log, net, im, fm, return_diagnostics_dataframe=False
             )[0]
             return align_conf_res["fitness"] == 1.0
 
@@ -1089,11 +1117,10 @@ def __check_is_fit_petri_net(
 @deprecation.deprecated(
     deprecated_in="2.3.0",
     removed_in="3.0.0",
-    details="This method will be removed in a future release."
+    details="This method will be removed in a future release.",
 )
 def check_is_fitting(
-    *args,
-    activity_key=xes_constants.DEFAULT_NAME_KEY
+    *args, activity_key=xes_constants.DEFAULT_NAME_KEY
 ) -> bool:
     """
     Check if a trace object fits a process model.
@@ -1114,8 +1141,9 @@ def check_is_fitting(
 
     try:
         model = convert_to_process_tree(*model)
-    except:
-        # If the model cannot be expressed as a process tree, attempt Petri net conversion
+    except BaseException:
+        # If the model cannot be expressed as a process tree, attempt Petri net
+        # conversion
         model = convert_to_petri_net(*model)
 
     if not isinstance(trace, Trace):
@@ -1128,11 +1156,7 @@ def check_is_fitting(
         return __check_is_fit_process_tree(trace, model)
     elif isinstance(model, tuple) and isinstance(model[0], PetriNet):
         return __check_is_fit_petri_net(
-            trace,
-            model[0],
-            model[1],
-            model[2],
-            activity_key=activity_key
+            trace, model[0], model[1], model[2], activity_key=activity_key
         )
 
 
@@ -1143,7 +1167,7 @@ def conformance_temporal_profile(
     activity_key: str = "concept:name",
     timestamp_key: str = "time:timestamp",
     case_id_key: str = "case:concept:name",
-    return_diagnostics_dataframe: bool = constants.DEFAULT_RETURN_DIAGNOSTICS_DATAFRAME
+    return_diagnostics_dataframe: bool = constants.DEFAULT_RETURN_DIAGNOSTICS_DATAFRAME,
 ) -> List[List[Tuple[float, float, float, float]]]:
     """
     Perform conformance checking on the provided log using the provided temporal profile.
@@ -1152,7 +1176,7 @@ def conformance_temporal_profile(
     For example, consider a log with a single case:
     - A (timestamp: 2000-01)
     - B (timestamp: 2002-01)
-    
+
     Given the temporal profile:
     ```python
     {
@@ -1210,29 +1234,28 @@ def conformance_temporal_profile(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
-            case_id_key=case_id_key
+            case_id_key=case_id_key,
         )
 
     properties = get_properties(
         log,
         activity_key=activity_key,
         timestamp_key=timestamp_key,
-        case_id_key=case_id_key
+        case_id_key=case_id_key,
     )
     properties["zeta"] = zeta
 
-    from pm4py.algo.conformance.temporal_profile import algorithm as temporal_profile_conformance
+    from pm4py.algo.conformance.temporal_profile import (
+        algorithm as temporal_profile_conformance,
+    )
+
     result = temporal_profile_conformance.apply(
-        log,
-        temporal_profile,
-        parameters=properties
+        log, temporal_profile, parameters=properties
     )
 
     if return_diagnostics_dataframe:
         return temporal_profile_conformance.get_diagnostics_dataframe(
-            log,
-            result,
-            parameters=properties
+            log, result, parameters=properties
         )
 
     return result
@@ -1244,7 +1267,7 @@ def conformance_declare(
     activity_key: str = "concept:name",
     timestamp_key: str = "time:timestamp",
     case_id_key: str = "case:concept:name",
-    return_diagnostics_dataframe: bool = constants.DEFAULT_RETURN_DIAGNOSTICS_DATAFRAME
+    return_diagnostics_dataframe: bool = constants.DEFAULT_RETURN_DIAGNOSTICS_DATAFRAME,
 ) -> List[Dict[str, Any]]:
     """
     Apply conformance checking against a DECLARE model.
@@ -1283,11 +1306,12 @@ def conformance_declare(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
-            case_id_key=case_id_key
+            case_id_key=case_id_key,
         )
 
     if return_diagnostics_dataframe:
         from pm4py.convert import convert_to_event_log
+
         log = convert_to_event_log(log, case_id_key=case_id_key)
         case_id_key = None
 
@@ -1295,21 +1319,18 @@ def conformance_declare(
         log,
         activity_key=activity_key,
         timestamp_key=timestamp_key,
-        case_id_key=case_id_key
+        case_id_key=case_id_key,
     )
 
     from pm4py.algo.conformance.declare import algorithm as declare_conformance
+
     result = declare_conformance.apply(
-        log,
-        declare_model,
-        parameters=properties
+        log, declare_model, parameters=properties
     )
 
     if return_diagnostics_dataframe:
         return declare_conformance.get_diagnostics_dataframe(
-            log,
-            result,
-            parameters=properties
+            log, result, parameters=properties
         )
 
     return result
@@ -1321,7 +1342,7 @@ def conformance_log_skeleton(
     activity_key: str = "concept:name",
     timestamp_key: str = "time:timestamp",
     case_id_key: str = "case:concept:name",
-    return_diagnostics_dataframe: bool = constants.DEFAULT_RETURN_DIAGNOSTICS_DATAFRAME
+    return_diagnostics_dataframe: bool = constants.DEFAULT_RETURN_DIAGNOSTICS_DATAFRAME,
 ) -> List[Set[Any]]:
     """
     Perform conformance checking using the log skeleton.
@@ -1373,11 +1394,12 @@ def conformance_log_skeleton(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
-            case_id_key=case_id_key
+            case_id_key=case_id_key,
         )
 
     if return_diagnostics_dataframe:
         from pm4py.convert import convert_to_event_log
+
         log = convert_to_event_log(log, case_id_key=case_id_key)
         case_id_key = None
 
@@ -1385,21 +1407,20 @@ def conformance_log_skeleton(
         log,
         activity_key=activity_key,
         timestamp_key=timestamp_key,
-        case_id_key=case_id_key
+        case_id_key=case_id_key,
     )
 
-    from pm4py.algo.conformance.log_skeleton import algorithm as log_skeleton_conformance
+    from pm4py.algo.conformance.log_skeleton import (
+        algorithm as log_skeleton_conformance,
+    )
+
     result = log_skeleton_conformance.apply(
-        log,
-        log_skeleton,
-        parameters=properties
+        log, log_skeleton, parameters=properties
     )
 
     if return_diagnostics_dataframe:
         return log_skeleton_conformance.get_diagnostics_dataframe(
-            log,
-            result,
-            parameters=properties
+            log, result, parameters=properties
         )
 
     return result

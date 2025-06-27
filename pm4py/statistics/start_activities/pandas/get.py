@@ -40,7 +40,10 @@ class Parameters(Enum):
     KEEP_ONCE_PER_CASE = "keep_once_per_case"
 
 
-def get_start_activities(df: pd.DataFrame, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[str, int]:
+def get_start_activities(
+    df: pd.DataFrame,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[str, int]:
     """
     Get start activities count
 
@@ -61,10 +64,20 @@ def get_start_activities(df: pd.DataFrame, parameters: Optional[Dict[Union[str, 
     if parameters is None:
         parameters = {}
 
-    case_id_glue = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME)
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, DEFAULT_NAME_KEY)
+    case_id_glue = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME
+    )
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, DEFAULT_NAME_KEY
+    )
 
-    grouped_df = parameters[GROUPED_DATAFRAME] if GROUPED_DATAFRAME in parameters else df.groupby(case_id_glue, sort=False)
+    grouped_df = (
+        parameters[GROUPED_DATAFRAME]
+        if GROUPED_DATAFRAME in parameters
+        else df.groupby(case_id_glue, sort=False)
+    )
 
-    startact_dict = dict(Counter(grouped_df[activity_key].first().to_numpy().tolist()))
+    startact_dict = dict(
+        Counter(grouped_df[activity_key].first().to_numpy().tolist())
+    )
     return startact_dict

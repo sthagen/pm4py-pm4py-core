@@ -28,7 +28,10 @@ from typing import Union
 import pandas as pd
 
 from pm4py.objects.log.obj import EventLog, EventStream
-from pm4py.util.pandas_utils import check_is_pandas_dataframe, check_pandas_dataframe_columns
+from pm4py.util.pandas_utils import (
+    check_is_pandas_dataframe,
+    check_pandas_dataframe_columns,
+)
 from pm4py.utils import get_properties, __event_log_deprecation_warning
 from pm4py.objects.org.sna.obj import SNA
 from pm4py.objects.org.roles.obj import Role
@@ -36,7 +39,13 @@ from pm4py.util import xes_constants
 from typing import Dict, Tuple, Any, List
 
 
-def discover_handover_of_work_network(log: Union[EventLog, pd.DataFrame], beta=0, resource_key: str = "org:resource", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> SNA:
+def discover_handover_of_work_network(
+    log: Union[EventLog, pd.DataFrame],
+    beta=0,
+    resource_key: str = "org:resource",
+    timestamp_key: str = "time:timestamp",
+    case_id_key: str = "case:concept:name",
+) -> SNA:
     """
     Calculates the handover of work network of the event log.
 
@@ -65,16 +74,33 @@ def discover_handover_of_work_network(log: Union[EventLog, pd.DataFrame], beta=0
     __event_log_deprecation_warning(log)
 
     from pm4py.algo.organizational_mining.sna import algorithm as sna
-    parameters = get_properties(log, resource_key=resource_key, timestamp_key=timestamp_key, case_id_key=case_id_key)
+
+    parameters = get_properties(
+        log,
+        resource_key=resource_key,
+        timestamp_key=timestamp_key,
+        case_id_key=case_id_key,
+    )
     parameters["beta"] = beta
     if check_is_pandas_dataframe(log):
-        check_pandas_dataframe_columns(log, timestamp_key=timestamp_key, case_id_key=case_id_key)
-        return sna.apply(log, variant=sna.Variants.HANDOVER_PANDAS, parameters=parameters)
+        check_pandas_dataframe_columns(
+            log, timestamp_key=timestamp_key, case_id_key=case_id_key
+        )
+        return sna.apply(
+            log, variant=sna.Variants.HANDOVER_PANDAS, parameters=parameters
+        )
     else:
-        return sna.apply(log, variant=sna.Variants.HANDOVER_LOG, parameters=parameters)
+        return sna.apply(
+            log, variant=sna.Variants.HANDOVER_LOG, parameters=parameters
+        )
 
 
-def discover_working_together_network(log: Union[EventLog, pd.DataFrame], resource_key: str = "org:resource", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> SNA:
+def discover_working_together_network(
+    log: Union[EventLog, pd.DataFrame],
+    resource_key: str = "org:resource",
+    timestamp_key: str = "time:timestamp",
+    case_id_key: str = "case:concept:name",
+) -> SNA:
     """
     Calculates the working together network of the process.
     Two resource nodes are connected in the graph if the resources collaborate on an instance of the process.
@@ -97,17 +123,39 @@ def discover_working_together_network(log: Union[EventLog, pd.DataFrame], resour
     """
     __event_log_deprecation_warning(log)
 
-    properties = get_properties(log, resource_key=resource_key, timestamp_key=timestamp_key, case_id_key=case_id_key)
+    properties = get_properties(
+        log,
+        resource_key=resource_key,
+        timestamp_key=timestamp_key,
+        case_id_key=case_id_key,
+    )
 
     from pm4py.algo.organizational_mining.sna import algorithm as sna
+
     if check_is_pandas_dataframe(log):
-        check_pandas_dataframe_columns(log, timestamp_key=timestamp_key, case_id_key=case_id_key)
-        return sna.apply(log, variant=sna.Variants.WORKING_TOGETHER_PANDAS, parameters=properties)
+        check_pandas_dataframe_columns(
+            log, timestamp_key=timestamp_key, case_id_key=case_id_key
+        )
+        return sna.apply(
+            log,
+            variant=sna.Variants.WORKING_TOGETHER_PANDAS,
+            parameters=properties,
+        )
     else:
-        return sna.apply(log, variant=sna.Variants.WORKING_TOGETHER_LOG, parameters=properties)
+        return sna.apply(
+            log,
+            variant=sna.Variants.WORKING_TOGETHER_LOG,
+            parameters=properties,
+        )
 
 
-def discover_activity_based_resource_similarity(log: Union[EventLog, pd.DataFrame], activity_key: str = "concept:name", resource_key: str = "org:resource", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> SNA:
+def discover_activity_based_resource_similarity(
+    log: Union[EventLog, pd.DataFrame],
+    activity_key: str = "concept:name",
+    resource_key: str = "org:resource",
+    timestamp_key: str = "time:timestamp",
+    case_id_key: str = "case:concept:name",
+) -> SNA:
     """
     Calculates similarity between the resources in the event log based on their activity profiles.
 
@@ -131,17 +179,43 @@ def discover_activity_based_resource_similarity(log: Union[EventLog, pd.DataFram
     """
     __event_log_deprecation_warning(log)
 
-    properties = get_properties(log, activity_key=activity_key, resource_key=resource_key, timestamp_key=timestamp_key, case_id_key=case_id_key)
+    properties = get_properties(
+        log,
+        activity_key=activity_key,
+        resource_key=resource_key,
+        timestamp_key=timestamp_key,
+        case_id_key=case_id_key,
+    )
 
     from pm4py.algo.organizational_mining.sna import algorithm as sna
+
     if check_is_pandas_dataframe(log):
-        check_pandas_dataframe_columns(log, activity_key=activity_key, timestamp_key=timestamp_key, case_id_key=case_id_key)
-        return sna.apply(log, variant=sna.Variants.JOINTACTIVITIES_PANDAS, parameters=properties)
+        check_pandas_dataframe_columns(
+            log,
+            activity_key=activity_key,
+            timestamp_key=timestamp_key,
+            case_id_key=case_id_key,
+        )
+        return sna.apply(
+            log,
+            variant=sna.Variants.JOINTACTIVITIES_PANDAS,
+            parameters=properties,
+        )
     else:
-        return sna.apply(log, variant=sna.Variants.JOINTACTIVITIES_LOG, parameters=properties)
+        return sna.apply(
+            log,
+            variant=sna.Variants.JOINTACTIVITIES_LOG,
+            parameters=properties,
+        )
 
 
-def discover_subcontracting_network(log: Union[EventLog, pd.DataFrame], n=2, resource_key: str = "org:resource", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> SNA:
+def discover_subcontracting_network(
+    log: Union[EventLog, pd.DataFrame],
+    n=2,
+    resource_key: str = "org:resource",
+    timestamp_key: str = "time:timestamp",
+    case_id_key: str = "case:concept:name",
+) -> SNA:
     """
     Calculates the subcontracting network of the process.
 
@@ -166,16 +240,36 @@ def discover_subcontracting_network(log: Union[EventLog, pd.DataFrame], n=2, res
     __event_log_deprecation_warning(log)
 
     from pm4py.algo.organizational_mining.sna import algorithm as sna
-    parameters = get_properties(log, resource_key=resource_key, timestamp_key=timestamp_key, case_id_key=case_id_key)
+
+    parameters = get_properties(
+        log,
+        resource_key=resource_key,
+        timestamp_key=timestamp_key,
+        case_id_key=case_id_key,
+    )
     parameters["n"] = n
     if check_is_pandas_dataframe(log):
-        check_pandas_dataframe_columns(log, timestamp_key=timestamp_key, case_id_key=case_id_key)
-        return sna.apply(log, variant=sna.Variants.SUBCONTRACTING_PANDAS, parameters=parameters)
+        check_pandas_dataframe_columns(
+            log, timestamp_key=timestamp_key, case_id_key=case_id_key
+        )
+        return sna.apply(
+            log,
+            variant=sna.Variants.SUBCONTRACTING_PANDAS,
+            parameters=parameters,
+        )
     else:
-        return sna.apply(log, variant=sna.Variants.SUBCONTRACTING_LOG, parameters=parameters)
+        return sna.apply(
+            log, variant=sna.Variants.SUBCONTRACTING_LOG, parameters=parameters
+        )
 
 
-def discover_organizational_roles(log: Union[EventLog, pd.DataFrame], activity_key: str = "concept:name", resource_key: str = "org:resource", timestamp_key: str = "time:timestamp", case_id_key: str = "case:concept:name") -> List[Role]:
+def discover_organizational_roles(
+    log: Union[EventLog, pd.DataFrame],
+    activity_key: str = "concept:name",
+    resource_key: str = "org:resource",
+    timestamp_key: str = "time:timestamp",
+    case_id_key: str = "case:concept:name",
+) -> List[Role]:
     """
     Mines the organizational roles.
 
@@ -204,17 +298,44 @@ def discover_organizational_roles(log: Union[EventLog, pd.DataFrame], activity_k
     """
     __event_log_deprecation_warning(log)
 
-    properties = get_properties(log, activity_key=activity_key, resource_key=resource_key, timestamp_key=timestamp_key, case_id_key=case_id_key)
+    properties = get_properties(
+        log,
+        activity_key=activity_key,
+        resource_key=resource_key,
+        timestamp_key=timestamp_key,
+        case_id_key=case_id_key,
+    )
 
     from pm4py.algo.organizational_mining.roles import algorithm as roles
+
     if check_is_pandas_dataframe(log):
-        check_pandas_dataframe_columns(log, activity_key=activity_key, timestamp_key=timestamp_key, case_id_key=case_id_key)
-        return roles.apply(log, variant=roles.Variants.PANDAS, parameters=properties)
+        check_pandas_dataframe_columns(
+            log,
+            activity_key=activity_key,
+            timestamp_key=timestamp_key,
+            case_id_key=case_id_key,
+        )
+        return roles.apply(
+            log, variant=roles.Variants.PANDAS, parameters=properties
+        )
     else:
-        return roles.apply(log, variant=roles.Variants.LOG, parameters=properties)
+        return roles.apply(
+            log, variant=roles.Variants.LOG, parameters=properties
+        )
 
 
-def discover_network_analysis(log: Union[pd.DataFrame, EventLog, EventStream], out_column: str, in_column: str, node_column_source: str, node_column_target: str, edge_column: str, edge_reference: str = "_out", performance: bool = False, sorting_column: str = xes_constants.DEFAULT_TIMESTAMP_KEY, timestamp_column: str = xes_constants.DEFAULT_TIMESTAMP_KEY) -> Dict[Tuple[str, str], Dict[str, Any]]:
+def discover_network_analysis(
+    log: Union[pd.DataFrame, EventLog, EventStream],
+    out_column: str,
+    in_column: str,
+    node_column_source: str,
+    node_column_target: str,
+    edge_column: str,
+    edge_reference: str = "_out",
+    performance: bool = False,
+    sorting_column: str = xes_constants.DEFAULT_TIMESTAMP_KEY,
+    timestamp_column: str = xes_constants.DEFAULT_TIMESTAMP_KEY,
+) -> Dict[Tuple[str, str], Dict[str, Any]]:
     """
     Performs a network analysis of the log based on the provided parameters.
 
@@ -272,7 +393,9 @@ def discover_network_analysis(log: Union[pd.DataFrame, EventLog, EventStream], o
     if check_is_pandas_dataframe(log):
         check_pandas_dataframe_columns(log)
 
-    from pm4py.algo.organizational_mining.network_analysis.variants import dataframe
+    from pm4py.algo.organizational_mining.network_analysis.variants import (
+        dataframe,
+    )
 
     parameters = {}
     parameters[dataframe.Parameters.OUT_COLUMN] = out_column
@@ -285,5 +408,8 @@ def discover_network_analysis(log: Union[pd.DataFrame, EventLog, EventStream], o
     parameters[dataframe.Parameters.TIMESTAMP_KEY] = timestamp_column
     parameters[dataframe.Parameters.INCLUDE_PERFORMANCE] = performance
 
-    from pm4py.algo.organizational_mining.network_analysis import algorithm as network_analysis
+    from pm4py.algo.organizational_mining.network_analysis import (
+        algorithm as network_analysis,
+    )
+
     return network_analysis.apply(log, parameters=parameters)

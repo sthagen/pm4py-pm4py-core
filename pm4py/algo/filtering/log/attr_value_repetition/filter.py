@@ -34,7 +34,11 @@ class Parameters(Enum):
     MAX_REP = "max_rep"
 
 
-def apply(log: EventLog, value: Any, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> EventLog:
+def apply(
+    log: EventLog,
+    value: Any,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> EventLog:
     """
     Filters the trace of the log where the given attribute value is repeated
     (in a range of repetitions that is specified by the user)
@@ -59,14 +63,26 @@ def apply(log: EventLog, value: Any, parameters: Optional[Dict[Union[str, Parame
     if parameters is None:
         parameters = {}
 
-    log = converter.apply(log, variant=converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = converter.apply(
+        log, variant=converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    attribute_key = exec_utils.get_param_value(Parameters.ATTRIBUTE_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
+    attribute_key = exec_utils.get_param_value(
+        Parameters.ATTRIBUTE_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
     min_rep = exec_utils.get_param_value(Parameters.MIN_REP, parameters, 2)
-    max_rep = exec_utils.get_param_value(Parameters.MAX_REP, parameters, sys.maxsize)
+    max_rep = exec_utils.get_param_value(
+        Parameters.MAX_REP, parameters, sys.maxsize
+    )
 
-    filtered_log = EventLog(list(), attributes=log.attributes, extensions=log.extensions, classifiers=log.classifiers,
-                            omni_present=log.omni_present, properties=log.properties)
+    filtered_log = EventLog(
+        list(),
+        attributes=log.attributes,
+        extensions=log.extensions,
+        classifiers=log.classifiers,
+        omni_present=log.omni_present,
+        properties=log.properties,
+    )
 
     for trace in log:
         rep = 0

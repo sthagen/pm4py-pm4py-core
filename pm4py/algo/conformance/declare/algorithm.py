@@ -32,8 +32,12 @@ class Variants(Enum):
     CLASSIC = classic
 
 
-def apply(log: Union[EventLog, pd.DataFrame], model: Dict[str, Dict[Any, Dict[str, int]]], variant=Variants.CLASSIC,
-          parameters: Optional[Dict[Any, Any]] = None) -> List[Dict[str, Any]]:
+def apply(
+    log: Union[EventLog, pd.DataFrame],
+    model: Dict[str, Dict[Any, Dict[str, int]]],
+    variant=Variants.CLASSIC,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> List[Dict[str, Any]]:
     """
     Applies conformance checking against a DECLARE model.
 
@@ -62,7 +66,9 @@ def apply(log: Union[EventLog, pd.DataFrame], model: Dict[str, Dict[Any, Dict[st
     return exec_utils.get_variant(variant).apply(log, model, parameters)
 
 
-def get_diagnostics_dataframe(log, conf_result, variant=Variants.CLASSIC, parameters=None) -> pd.DataFrame:
+def get_diagnostics_dataframe(
+    log, conf_result, variant=Variants.CLASSIC, parameters=None
+) -> pd.DataFrame:
     """
     Gets the diagnostics dataframe from a log and the results
     of DECLARE-based conformance checking
@@ -84,4 +90,6 @@ def get_diagnostics_dataframe(log, conf_result, variant=Variants.CLASSIC, parame
     diagn_dataframe
         Diagnostics dataframe
     """
-    return exec_utils.get_variant(variant).get_diagnostics_dataframe(log, conf_result, parameters)
+    return exec_utils.get_variant(variant).get_diagnostics_dataframe(
+        log, conf_result, parameters
+    )

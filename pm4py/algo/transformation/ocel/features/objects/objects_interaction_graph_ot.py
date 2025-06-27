@@ -46,13 +46,23 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     if parameters is None:
         parameters = {}
 
-    ordered_objects = parameters["ordered_objects"] if "ordered_objects" in parameters else ocel.objects[
-        ocel.object_id_column].to_numpy()
+    ordered_objects = (
+        parameters["ordered_objects"]
+        if "ordered_objects" in parameters
+        else ocel.objects[ocel.object_id_column].to_numpy()
+    )
 
-    object_types = pandas_utils.format_unique(ocel.objects[ocel.object_type_column].unique())
+    object_types = pandas_utils.format_unique(
+        ocel.objects[ocel.object_type_column].unique()
+    )
 
-    object_type_association = ocel.objects[[ocel.object_id_column, ocel.object_type_column]].to_dict("records")
-    object_type_association = {x[ocel.object_id_column]: x[ocel.object_type_column] for x in object_type_association}
+    object_type_association = ocel.objects[
+        [ocel.object_id_column, ocel.object_type_column]
+    ].to_dict("records")
+    object_type_association = {
+        x[ocel.object_id_column]: x[ocel.object_type_column]
+        for x in object_type_association
+    }
 
     g0 = object_interaction_graph.apply(ocel, parameters=parameters)
     conn = {}
@@ -65,7 +75,7 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
         conn[el[1]].add(el[0])
 
     data = []
-    feature_names = ["@@object_interaction_graph_"+ot for ot in object_types]
+    feature_names = ["@@object_interaction_graph_" + ot for ot in object_types]
 
     for obj in ordered_objects:
         data.append([])

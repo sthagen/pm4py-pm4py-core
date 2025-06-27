@@ -41,7 +41,11 @@ class Parameters(Enum):
     STRICT = "strict"
 
 
-def apply(df: pd.DataFrame, activity: str, parameters: Optional[Dict[Any, Any]] = None):
+def apply(
+    df: pd.DataFrame,
+    activity: str,
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     """
     Filter all the suffixes to a given activity (first or last occurrence of the activity in the case).
 
@@ -67,23 +71,41 @@ def apply(df: pd.DataFrame, activity: str, parameters: Optional[Dict[Any, Any]] 
     if parameters is None:
         parameters = {}
 
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    index_in_trace_key = exec_utils.get_param_value(Parameters.INDEX_IN_TRACE_KEY, parameters, constants.DEFAULT_INDEX_IN_TRACE_KEY)
-    temp_column = exec_utils.get_param_value(Parameters.TEMP_COLUMN, parameters, "@@temp_column")
-    first_or_last = exec_utils.get_param_value(Parameters.FIRST_OR_LAST, parameters, "first")
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    index_in_trace_key = exec_utils.get_param_value(
+        Parameters.INDEX_IN_TRACE_KEY,
+        parameters,
+        constants.DEFAULT_INDEX_IN_TRACE_KEY,
+    )
+    temp_column = exec_utils.get_param_value(
+        Parameters.TEMP_COLUMN, parameters, "@@temp_column"
+    )
+    first_or_last = exec_utils.get_param_value(
+        Parameters.FIRST_OR_LAST, parameters, "first"
+    )
     strict = exec_utils.get_param_value(Parameters.STRICT, parameters, True)
 
     if index_in_trace_key not in df.columns:
-        df = pandas_utils.insert_ev_in_tr_index(df, column_name=index_in_trace_key, case_id=case_id_key)
+        df = pandas_utils.insert_ev_in_tr_index(
+            df, column_name=index_in_trace_key, case_id=case_id_key
+        )
 
     position_activity = df[df[activity_key] == activity].groupby(case_id_key)
     if first_or_last == "first":
         position_activity = position_activity.first()
     elif first_or_last == "last":
         position_activity = position_activity.last()
-    position_activity = position_activity.reset_index()[[case_id_key, index_in_trace_key]].to_dict("records")
-    position_activity = {x[case_id_key]: x[index_in_trace_key] for x in position_activity}
+    position_activity = position_activity.reset_index()[
+        [case_id_key, index_in_trace_key]
+    ].to_dict("records")
+    position_activity = {
+        x[case_id_key]: x[index_in_trace_key] for x in position_activity
+    }
 
     df[temp_column] = df[case_id_key].map(position_activity)
     if strict:

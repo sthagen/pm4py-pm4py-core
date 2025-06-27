@@ -31,7 +31,10 @@ class Parameters(Enum):
     ACTIVITY_KEY = constants.PARAMETER_CONSTANT_ACTIVITY_KEY
 
 
-def apply(log: Union[EventLog, EventStream], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[str, int]:
+def apply(
+    log: Union[EventLog, EventStream],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[str, int]:
     """
     Associates to each activity (with at least one rework) the number of cases in the log for which
     the rework happened.
@@ -54,7 +57,9 @@ def apply(log: Union[EventLog, EventStream], parameters: Optional[Dict[Union[str
 
     log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG)
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
     ret = Counter()
 
     for trace in log:

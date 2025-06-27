@@ -19,4 +19,7 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.algo.querying.llm.injection.db_knowledge.variants import pandas_duckdb, sqlite3_traditional
+from pm4py.algo.querying.llm.injection.db_knowledge.variants import (
+    pandas_duckdb,
+    sqlite3_traditional,
+)

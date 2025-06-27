@@ -28,7 +28,11 @@ class TransitionSystem(object):
             self.__name = name
             self.__incoming = set() if incoming is None else incoming
             self.__outgoing = set() if outgoing is None else outgoing
-            self.__data = {constants.INGOING_EVENTS: [], constants.OUTGOING_EVENTS: []} if data is None else data
+            self.__data = (
+                {constants.INGOING_EVENTS: [], constants.OUTGOING_EVENTS: []}
+                if data is None
+                else data
+            )
 
         def __get_name(self):
             return self.__name
@@ -104,9 +108,11 @@ class TransitionSystem(object):
 
         def __eq__(self, other):
             if isinstance(other, TransitionSystem.Transition):
-                return (self.__name == other.__name and
-                        self.__from_state == other.__from_state and
-                        self.__to_state == other.__to_state)
+                return (
+                    self.__name == other.__name
+                    and self.__from_state == other.__from_state
+                    and self.__to_state == other.__to_state
+                )
             return False
 
         def __hash__(self):
@@ -139,13 +145,21 @@ class TransitionSystem(object):
 
     def __eq__(self, other):
         if isinstance(other, TransitionSystem):
-            return (self.__name == other.__name and
-                    self.__states == other.__states and
-                    self.__transitions == other.__transitions)
+            return (
+                self.__name == other.__name
+                and self.__states == other.__states
+                and self.__transitions == other.__transitions
+            )
         return False
 
     def __hash__(self):
-        return hash((str(self.__name), frozenset(self.__states), frozenset(self.__transitions)))
+        return hash(
+            (
+                str(self.__name),
+                frozenset(self.__states),
+                frozenset(self.__transitions),
+            )
+        )
 
     name = property(__get_name, __set_name)
     states = property(__get_states)

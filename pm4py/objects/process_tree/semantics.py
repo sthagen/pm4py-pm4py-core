@@ -40,10 +40,17 @@ class GenerationTree(ProcessTree):
             tree.children[i] = GenerationTree(tree.children[i])
             tree.children[i].parent = self
             i = i + 1
-        ProcessTree.__init__(self, operator=tree.operator, parent=tree.parent, children=tree.children, label=tree.label)
+        ProcessTree.__init__(
+            self,
+            operator=tree.operator,
+            parent=tree.parent,
+            children=tree.children,
+            label=tree.label,
+        )
 
     def __eq__(self, other):
-        # method that is different from default one (different taus must give different ID in log generation!!!!)
+        # method that is different from default one (different taus must give
+        # different ID in log generation!!!!)
         return id(self) == id(other)
 
     def __hash__(self):
@@ -84,7 +91,9 @@ def generate_log(pt0, no_traces=100):
         for label in ex_seq_labels:
             event = Event()
             event[xes.DEFAULT_NAME_KEY] = label
-            event[xes.DEFAULT_TIMESTAMP_KEY] = datetime.datetime.fromtimestamp(curr_timestamp)
+            event[xes.DEFAULT_TIMESTAMP_KEY] = datetime.datetime.fromtimestamp(
+                curr_timestamp
+            )
 
             trace.append(event)
 
@@ -154,7 +163,9 @@ def execute_enabled(enabled, open, closed, execution_sequence=None):
     execution_sequence
         Execution sequence
     """
-    execution_sequence = list() if execution_sequence is None else execution_sequence
+    execution_sequence = (
+        list() if execution_sequence is None else execution_sequence
+    )
     vertex = random.sample(list(enabled), 1)[0]
     enabled.remove(vertex)
     open.add(vertex)
@@ -163,7 +174,10 @@ def execute_enabled(enabled, open, closed, execution_sequence=None):
         if vertex.operator is pt_opt.Operator.LOOP:
             while len(vertex.children) < 3:
                 vertex.children.append(ProcessTree(parent=vertex))
-        if vertex.operator is pt_opt.Operator.SEQUENCE or vertex.operator is pt_opt.Operator.LOOP:
+        if (
+            vertex.operator is pt_opt.Operator.SEQUENCE
+            or vertex.operator is pt_opt.Operator.LOOP
+        ):
             c = vertex.children[0]
             enabled.add(c)
             execution_sequence.append((c, pt_st.State.ENABLED))
@@ -172,19 +186,27 @@ def execute_enabled(enabled, open, closed, execution_sequence=None):
             for x in vertex.children:
                 if x in closed:
                     closed.remove(x)
-            map(lambda c: execution_sequence.append((c, pt_st.State.ENABLED)), vertex.children)
+            map(
+                lambda c: execution_sequence.append((c, pt_st.State.ENABLED)),
+                vertex.children,
+            )
         elif vertex.operator is pt_opt.Operator.XOR:
             vc = vertex.children
             c = vc[random.randint(0, len(vc) - 1)]
             enabled.add(c)
             execution_sequence.append((c, pt_st.State.ENABLED))
         elif vertex.operator is pt_opt.Operator.OR:
-            some_children = [c for c in vertex.children if random.random() < 0.5]
+            some_children = [
+                c for c in vertex.children if random.random() < 0.5
+            ]
             enabled |= set(some_children)
             for x in some_children:
                 if x in closed:
                     closed.remove(x)
-            map(lambda c: execution_sequence.append((c, pt_st.State.ENABLED)), some_children)
+            map(
+                lambda c: execution_sequence.append((c, pt_st.State.ENABLED)),
+                some_children,
+            )
         elif vertex.operator is pt_opt.Operator.INTERLEAVING:
             random.shuffle(vertex.children)
             c = vertex.children[0]
@@ -241,11 +263,19 @@ def process_closed(closed_node, enabled, open, closed, execution_sequence):
             close(vertex, enabled, open, closed, execution_sequence)
         else:
             enable = None
-            if vertex.operator is pt_opt.Operator.SEQUENCE or vertex.operator is pt_opt.Operator.INTERLEAVING:
-                enable = vertex.children[vertex.children.index(closed_node) + 1]
+            if (
+                vertex.operator is pt_opt.Operator.SEQUENCE
+                or vertex.operator is pt_opt.Operator.INTERLEAVING
+            ):
+                enable = vertex.children[
+                    vertex.children.index(closed_node) + 1
+                ]
             elif vertex.operator is pt_opt.Operator.LOOP:
-                enable = vertex.children[random.randint(1, 2)] if vertex.children.index(closed_node) == 0 else \
-                    vertex.children[0]
+                enable = (
+                    vertex.children[random.randint(1, 2)]
+                    if vertex.children.index(closed_node) == 0
+                    else vertex.children[0]
+                )
             if enable is not None:
                 enabled.add(enable)
                 execution_sequence.append((enable, pt_st.State.ENABLED))
@@ -272,7 +302,11 @@ def should_close(vertex, closed, child):
     """
     if vertex.children is None:
         return True
-    elif vertex.operator is pt_opt.Operator.LOOP or vertex.operator is pt_opt.Operator.SEQUENCE or vertex.operator is pt_opt.Operator.INTERLEAVING:
+    elif (
+        vertex.operator is pt_opt.Operator.LOOP
+        or vertex.operator is pt_opt.Operator.SEQUENCE
+        or vertex.operator is pt_opt.Operator.INTERLEAVING
+    ):
         return vertex.children.index(child) == len(vertex.children) - 1
     elif vertex.operator is pt_opt.Operator.XOR:
         return True

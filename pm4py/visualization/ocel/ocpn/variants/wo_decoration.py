@@ -149,12 +149,14 @@ def apply(
             # case
             if place in all_places_diagn:
                 this_diagn = all_places_diagn[place]
-                place_label = "p=%d m=%d\nc=%d r=%d" % (
-                    this_diagn["p"],
-                    this_diagn["m"],
-                    this_diagn["c"],
-                    this_diagn["r"],
-                )
+                if place_shape == "circle":
+                    place_shape = "ellipse"
+                    place_label = "p=%d m=%d\nc=%d r=%d" % (
+                        this_diagn["p"],
+                        this_diagn["m"],
+                        this_diagn["c"],
+                        this_diagn["r"],
+                    )
 
             viz.node(
                 places[place],
@@ -211,6 +213,7 @@ def apply(
                     label=arc_label,
                 )
 
+    viz.attr('graph', nodesep='0.1', ranksep='0.2')
     viz.attr(rankdir=rankdir)
     viz.format = image_format.replace("html", "plain-ext")
 

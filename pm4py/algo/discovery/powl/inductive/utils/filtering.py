@@ -45,7 +45,9 @@ def filter_most_frequent_variants(log):
     return IMDataStructureUVCL(new_log)
 
 
-def filter_most_frequent_variants_with_decreasing_factor(log, decreasing_factor):
+def filter_most_frequent_variants_with_decreasing_factor(
+    log, decreasing_factor
+):
     sorted_variants = sorted(log, key=log.get, reverse=True)
     new_log = Counter()
 
@@ -54,7 +56,10 @@ def filter_most_frequent_variants_with_decreasing_factor(log, decreasing_factor)
 
     for variant in sorted_variants:
         frequency = log[variant]
-        if already_added_sum == 0 or frequency > decreasing_factor * prev_var_count:
+        if (
+            already_added_sum == 0
+            or frequency > decreasing_factor * prev_var_count
+        ):
             new_log[variant] = frequency
             already_added_sum = already_added_sum + frequency
             prev_var_count = frequency

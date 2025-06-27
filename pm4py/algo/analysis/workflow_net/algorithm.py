@@ -31,7 +31,11 @@ class Variants(Enum):
     PETRI_NET = petri_net
 
 
-def apply(net: PetriNet, parameters: Optional[Dict[Any, Any]] = None, variant=Variants.PETRI_NET) -> bool:
+def apply(
+    net: PetriNet,
+    parameters: Optional[Dict[Any, Any]] = None,
+    variant=Variants.PETRI_NET,
+) -> bool:
     """
     Checks if a Petri net is a workflow net
 

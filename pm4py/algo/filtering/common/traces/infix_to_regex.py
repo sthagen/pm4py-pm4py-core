@@ -21,6 +21,7 @@ Contact: info@processintelligence.solutions
 '''
 from re import escape
 
+
 def translate_infix_to_regex(infix):
     regex = "^"
     for i, act in enumerate(infix):
@@ -31,9 +32,9 @@ def translate_infix_to_regex(infix):
             else:
                 regex = f"{regex}([^,]*,)*"
         else:
-            if act: 
+            if act:
                 act = escape(act)
-            
+
             if is_last_activity:
                 regex = f"{regex}{act}"
             else:

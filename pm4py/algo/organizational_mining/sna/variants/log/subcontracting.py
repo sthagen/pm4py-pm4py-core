@@ -41,7 +41,10 @@ class Parameters(Enum):
 N = Parameters.N
 
 
-def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> SNA:
+def apply(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> SNA:
     """
     Calculates the Subcontracting metric
 
@@ -61,16 +64,30 @@ def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]]
     if parameters is None:
         parameters = {}
 
-    resource_key = exec_utils.get_param_value(Parameters.RESOURCE_KEY, parameters, xes.DEFAULT_RESOURCE_KEY)
+    resource_key = exec_utils.get_param_value(
+        Parameters.RESOURCE_KEY, parameters, xes.DEFAULT_RESOURCE_KEY
+    )
     n = exec_utils.get_param_value(Parameters.N, parameters, 2)
 
-    parameters_variants = {variants_filter.Parameters.ACTIVITY_KEY: resource_key,
-                           variants_filter.Parameters.ATTRIBUTE_KEY: resource_key}
-    variants_occ = {x: len(y) for x, y in variants_filter.get_variants(log, parameters=parameters_variants).items()}
+    parameters_variants = {
+        variants_filter.Parameters.ACTIVITY_KEY: resource_key,
+        variants_filter.Parameters.ATTRIBUTE_KEY: resource_key,
+    }
+    variants_occ = {
+        x: len(y)
+        for x, y in variants_filter.get_variants(
+            log, parameters=parameters_variants
+        ).items()
+    }
     variants_resources = list(variants_occ.keys())
-    resources = [variants_util.get_activities_from_variant(y) for y in variants_resources]
+    resources = [
+        variants_util.get_activities_from_variant(y)
+        for y in variants_resources
+    ]
 
-    flat_list = sorted(list(set([item for sublist in resources for item in sublist])))
+    flat_list = sorted(
+        list(set([item for sublist in resources for item in sublist]))
+    )
 
     metric_matrix = numpy.zeros((len(flat_list), len(flat_list)))
 
@@ -96,6 +113,8 @@ def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]]
     connections = {}
     for key1 in sum_i_to_j:
         for key2 in sum_i_to_j[key1]:
-            connections[(flat_list[key1], flat_list[key2])] = sum_i_to_j[key1][key2] / dividend
+            connections[(flat_list[key1], flat_list[key2])] = (
+                sum_i_to_j[key1][key2] / dividend
+            )
 
     return SNA(connections, True)

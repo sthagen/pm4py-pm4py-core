@@ -58,16 +58,30 @@ def filter_log_events_attr(log, values, parameters=None):
     if parameters is None:
         parameters = {}
 
-    attribute_key = exec_utils.get_param_value(Parameters.ATTRIBUTE_KEY, parameters, DEFAULT_NAME_KEY)
-    positive = exec_utils.get_param_value(Parameters.POSITIVE, parameters, True)
+    attribute_key = exec_utils.get_param_value(
+        Parameters.ATTRIBUTE_KEY, parameters, DEFAULT_NAME_KEY
+    )
+    positive = exec_utils.get_param_value(
+        Parameters.POSITIVE, parameters, True
+    )
 
-    stream = log_converter.apply(log, variant=log_converter.TO_EVENT_STREAM, parameters={"deepcopy": False})
+    stream = log_converter.apply(
+        log,
+        variant=log_converter.TO_EVENT_STREAM,
+        parameters={"deepcopy": False},
+    )
     if positive:
-        stream = EventStream(list(filter(lambda x: x[attribute_key] in values, stream)))
+        stream = EventStream(
+            list(filter(lambda x: x[attribute_key] in values, stream))
+        )
     else:
-        stream = EventStream(list(filter(lambda x: x[attribute_key] not in values, stream)))
+        stream = EventStream(
+            list(filter(lambda x: x[attribute_key] not in values, stream))
+        )
 
-    filtered_log = log_converter.apply(stream, variant=log_converter.Variants.TO_EVENT_LOG)
+    filtered_log = log_converter.apply(
+        stream, variant=log_converter.Variants.TO_EVENT_LOG
+    )
 
     return filtered_log
 
@@ -99,8 +113,12 @@ def filter_log_traces_attr(log, values, parameters=None):
     if parameters is None:
         parameters = {}
 
-    attribute_key = exec_utils.get_param_value(Parameters.ATTRIBUTE_KEY, parameters, DEFAULT_NAME_KEY)
-    positive = exec_utils.get_param_value(Parameters.POSITIVE, parameters, True)
+    attribute_key = exec_utils.get_param_value(
+        Parameters.ATTRIBUTE_KEY, parameters, DEFAULT_NAME_KEY
+    )
+    positive = exec_utils.get_param_value(
+        Parameters.POSITIVE, parameters, True
+    )
 
     filtered_log = EventLog()
     for trace in log:

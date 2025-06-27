@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,7 +19,10 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.objects.ocel.util import events_per_type_per_activity, objects_per_type_per_activity
+from pm4py.objects.ocel.util import (
+    events_per_type_per_activity,
+    objects_per_type_per_activity,
+)
 from typing import Optional, Dict, Any
 from pm4py.objects.ocel.obj import OCEL
 
@@ -46,8 +49,12 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     if parameters is None:
         parameters = {}
 
-    ev_per_type_per_act = events_per_type_per_activity.apply(ocel, parameters=parameters)
-    obj_per_type_per_act = objects_per_type_per_activity.apply(ocel, parameters=parameters)
+    ev_per_type_per_act = events_per_type_per_activity.apply(
+        ocel, parameters=parameters
+    )
+    obj_per_type_per_act = objects_per_type_per_activity.apply(
+        ocel, parameters=parameters
+    )
 
     ret = {"divergence": set(), "convergence": set()}
 

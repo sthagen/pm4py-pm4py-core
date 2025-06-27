@@ -33,8 +33,11 @@ class Variants(Enum):
     GRAPHVIZ = graphviz
 
 
-def apply(ocel: OCEL, variant=Variants.GRAPHVIZ,
-          parameters: Optional[Dict[Any, Any]] = None) -> Digraph:
+def apply(
+    ocel: OCEL,
+    variant=Variants.GRAPHVIZ,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Digraph:
     """
     Shows the relationships between the different event and object types of the
     object-centric event log.

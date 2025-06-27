@@ -22,7 +22,9 @@ Contact: info@processintelligence.solutions
 from pm4py.util.colors import get_transitions_color
 
 
-def get_alignments_decoration(net, im, fm, log=None, aligned_traces=None, parameters=None):
+def get_alignments_decoration(
+    net, im, fm, log=None, aligned_traces=None, parameters=None
+):
     """
     Get a decoration for the Petri net based on alignments
 
@@ -49,8 +51,13 @@ def get_alignments_decoration(net, im, fm, log=None, aligned_traces=None, parame
     if parameters is None:
         parameters = {}
     if aligned_traces is None and log is not None:
-        from pm4py.algo.conformance.alignments.petri_net import algorithm as alignments
-        aligned_traces = alignments.apply(log, net, im, fm, parameters={"ret_tuple_as_trans_desc": True})
+        from pm4py.algo.conformance.alignments.petri_net import (
+            algorithm as alignments,
+        )
+
+        aligned_traces = alignments.apply(
+            log, net, im, fm, parameters={"ret_tuple_as_trans_desc": True}
+        )
     decorations = {}
     net_transitions = {}
     for trans in net.transitions:
@@ -63,18 +70,33 @@ def get_alignments_decoration(net, im, fm, log=None, aligned_traces=None, parame
             if move_trans_name in net_transitions:
                 trans = net_transitions[move_trans_name]
                 if trans not in decorations:
-                    decorations[trans] = {"count_fit": 0, "count_move_on_model": 0}
+                    decorations[trans] = {
+                        "count_fit": 0,
+                        "count_move_on_model": 0,
+                    }
 
                 if activity_trace_name == ">>":
-                    decorations[trans]["count_move_on_model"] = decorations[trans]["count_move_on_model"] + 1
+                    decorations[trans]["count_move_on_model"] = (
+                        decorations[trans]["count_move_on_model"] + 1
+                    )
                 else:
-                    decorations[trans]["count_fit"] = decorations[trans]["count_fit"] + 1
+                    decorations[trans]["count_fit"] = (
+                        decorations[trans]["count_fit"] + 1
+                    )
 
     for trans in decorations:
         if trans.label is not None:
-            decorations[trans]["label"] = trans.label + " (" + str(
-                decorations[trans]["count_move_on_model"]) + "," + str(decorations[trans]["count_fit"]) + ")"
-            decorations[trans]["color"] = get_transitions_color(decorations[trans]["count_move_on_model"],
-                                                                decorations[trans]["count_fit"])
+            decorations[trans]["label"] = (
+                trans.label
+                + " ("
+                + str(decorations[trans]["count_move_on_model"])
+                + ","
+                + str(decorations[trans]["count_fit"])
+                + ")"
+            )
+            decorations[trans]["color"] = get_transitions_color(
+                decorations[trans]["count_move_on_model"],
+                decorations[trans]["count_fit"],
+            )
 
     return decorations

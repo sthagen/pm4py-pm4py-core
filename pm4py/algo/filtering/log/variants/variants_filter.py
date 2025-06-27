@@ -21,8 +21,10 @@ Contact: info@processintelligence.solutions
 '''
 from enum import Enum
 
-from pm4py.statistics.variants.log.get import get_variants, \
-    get_variants_sorted_by_count
+from pm4py.statistics.variants.log.get import (
+    get_variants,
+    get_variants_sorted_by_count,
+)
 from pm4py.util import exec_utils
 from pm4py.util.constants import PARAMETER_CONSTANT_ACTIVITY_KEY
 
@@ -37,7 +39,11 @@ class Parameters(Enum):
     POSITIVE = "positive"
 
 
-def apply(log: EventLog, admitted_variants: List[List[str]], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> EventLog:
+def apply(
+    log: EventLog,
+    admitted_variants: List[List[str]],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> EventLog:
     """
     Filter log keeping/removing only provided variants
 
@@ -56,14 +62,26 @@ def apply(log: EventLog, admitted_variants: List[List[str]], parameters: Optiona
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    positive = exec_utils.get_param_value(Parameters.POSITIVE, parameters, True)
+    positive = exec_utils.get_param_value(
+        Parameters.POSITIVE, parameters, True
+    )
     variants = get_variants(log, parameters=parameters)
-    log = EventLog(list(), attributes=log.attributes, extensions=log.extensions, classifiers=log.classifiers,
-                   omni_present=log.omni_present, properties=log.properties)
+    log = EventLog(
+        list(),
+        attributes=log.attributes,
+        extensions=log.extensions,
+        classifiers=log.classifiers,
+        omni_present=log.omni_present,
+        properties=log.properties,
+    )
     for variant in variants:
-        if (positive and variant in admitted_variants) or (not positive and variant not in admitted_variants):
+        if (positive and variant in admitted_variants) or (
+            not positive and variant not in admitted_variants
+        ):
             for trace in variants[variant]:
                 log.append(trace)
     return log
@@ -90,17 +108,21 @@ def filter_variants_top_k(log, k, parameters=None):
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
     variants = get_variants(log, parameters=parameters)
     variant_count = get_variants_sorted_by_count(variants)
-    variant_count = variant_count[:min(k, len(variant_count))]
+    variant_count = variant_count[: min(k, len(variant_count))]
     variants_to_filter = [x[0] for x in variant_count]
 
     return apply(log, variants_to_filter, parameters=parameters)
 
 
-def filter_variants_by_coverage_percentage(log, min_coverage_percentage, parameters=None):
+def filter_variants_by_coverage_percentage(
+    log, min_coverage_percentage, parameters=None
+):
     """
     Filters the variants of the log by a coverage percentage
     (e.g., if min_coverage_percentage=0.4, and we have a log with 1000 cases,
@@ -124,11 +146,17 @@ def filter_variants_by_coverage_percentage(log, min_coverage_percentage, paramet
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
     variants = get_variants(log, parameters=parameters)
     variants = {x: len(y) for x, y in variants.items()}
-    allowed_variants = [x for x, y in variants.items() if y >= min_coverage_percentage * len(log)]
+    allowed_variants = [
+        x
+        for x, y in variants.items()
+        if y >= min_coverage_percentage * len(log)
+    ]
 
     return apply(log, allowed_variants, parameters=parameters)
 
@@ -187,14 +215,20 @@ def filter_log_variants_percentage(log, percentage=0.8, parameters=None):
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
     variants = get_variants(log, parameters=parameters)
 
-    return filter_variants_variants_percentage(log, variants, variants_percentage=percentage)
+    return filter_variants_variants_percentage(
+        log, variants, variants_percentage=percentage
+    )
 
 
-def filter_variants_variants_percentage(log, variants, variants_percentage=0.0):
+def filter_variants_variants_percentage(
+    log, variants, variants_percentage=0.0
+):
     """
     Filter the log by variants percentage
 
@@ -214,8 +248,14 @@ def filter_variants_variants_percentage(log, variants, variants_percentage=0.0):
     """
     log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG)
 
-    filtered_log = EventLog(list(), attributes=log.attributes, extensions=log.extensions, classifiers=log.classifiers,
-                            omni_present=log.omni_present, properties=log.properties)
+    filtered_log = EventLog(
+        list(),
+        attributes=log.attributes,
+        extensions=log.extensions,
+        classifiers=log.classifiers,
+        omni_present=log.omni_present,
+        properties=log.properties,
+    )
     no_of_traces = len(log)
     variant_count = get_variants_sorted_by_count(variants)
     already_added_sum = 0
@@ -240,7 +280,7 @@ def find_auto_threshold(log, variants, decreasing_factor):
     """
     Find automatically variants filtering threshold
     based on specified decreasing factor
-    
+
     Parameters
     ----------
     log
@@ -250,7 +290,7 @@ def find_auto_threshold(log, variants, decreasing_factor):
     decreasing_factor
         Decreasing factor (stops the algorithm when the next variant by occurrence is below this factor
         in comparison to previous)
-    
+
     Returns
     ----------
     variantsPercentage
@@ -265,7 +305,10 @@ def find_auto_threshold(log, variants, decreasing_factor):
     for i in range(len(variant_count)):
         varcount = variant_count[i][1]
         percentage_already_added = already_added_sum / no_of_traces
-        if already_added_sum == 0 or varcount > decreasing_factor * prev_var_count:
+        if (
+            already_added_sum == 0
+            or varcount > decreasing_factor * prev_var_count
+        ):
             already_added_sum = already_added_sum + varcount
         else:
             break

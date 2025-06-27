@@ -36,7 +36,9 @@ class Parameters(Enum):
     ENABLE_MULTIPLIER = "enable_multiplier"
 
 
-def form_log_from_dictio_couple(first_cases_repr, second_cases_repr, enable_multiplier=False):
+def form_log_from_dictio_couple(
+    first_cases_repr, second_cases_repr, enable_multiplier=False
+):
     """
     Form a log from a couple of dictionary, to use for
     root cause analysis
@@ -58,8 +60,16 @@ def form_log_from_dictio_couple(first_cases_repr, second_cases_repr, enable_mult
     log = EventLog()
 
     if enable_multiplier:
-        multiplier_first = int(max(float(len(second_cases_repr)) / float(len(first_cases_repr)), 1))
-        multiplier_second = int(max(float(len(first_cases_repr)) / float(len(second_cases_repr)), 1))
+        multiplier_first = int(
+            max(
+                float(len(second_cases_repr)) / float(len(first_cases_repr)), 1
+            )
+        )
+        multiplier_second = int(
+            max(
+                float(len(first_cases_repr)) / float(len(second_cases_repr)), 1
+            )
+        )
     else:
         multiplier_first = 1
         multiplier_second = 1
@@ -81,8 +91,13 @@ def form_log_from_dictio_couple(first_cases_repr, second_cases_repr, enable_mult
     return log
 
 
-def form_representation_from_dictio_couple(first_cases_repr, second_cases_repr, string_attributes, numeric_attributes,
-                                           enable_multiplier=False):
+def form_representation_from_dictio_couple(
+    first_cases_repr,
+    second_cases_repr,
+    string_attributes,
+    numeric_attributes,
+    enable_multiplier=False,
+):
     """
     Gets a log representation, useful for training the decision tree,
     from a couple of dictionaries along with the list of string attributes
@@ -108,14 +123,26 @@ def form_representation_from_dictio_couple(first_cases_repr, second_cases_repr, 
     feature_names
         Array of feature names
     """
-    from pm4py.algo.transformation.log_to_features import algorithm as log_to_features
+    from pm4py.algo.transformation.log_to_features import (
+        algorithm as log_to_features,
+    )
 
-    log = form_log_from_dictio_couple(first_cases_repr, second_cases_repr,
-                                      enable_multiplier=enable_multiplier)
+    log = form_log_from_dictio_couple(
+        first_cases_repr,
+        second_cases_repr,
+        enable_multiplier=enable_multiplier,
+    )
 
-    data, feature_names = log_to_features.apply(log, variant=log_to_features.Variants.TRACE_BASED,
-                                                parameters={"str_tr_attr": [], "str_ev_attr": string_attributes,
-                                                            "num_tr_attr": [], "num_ev_attr": numeric_attributes})
+    data, feature_names = log_to_features.apply(
+        log,
+        variant=log_to_features.Variants.TRACE_BASED,
+        parameters={
+            "str_tr_attr": [],
+            "str_ev_attr": string_attributes,
+            "num_tr_attr": [],
+            "num_ev_attr": numeric_attributes,
+        },
+    )
 
     return data, feature_names
 
@@ -150,12 +177,20 @@ def diagnose_from_trans_fitness(log, trans_fitness, parameters=None):
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
     diagnostics = {}
-    string_attributes = exec_utils.get_param_value(Parameters.STRING_ATTRIBUTES, parameters, [])
-    numeric_attributes = exec_utils.get_param_value(Parameters.NUMERIC_ATTRIBUTES, parameters, [])
-    enable_multiplier = exec_utils.get_param_value(Parameters.ENABLE_MULTIPLIER, parameters, False)
+    string_attributes = exec_utils.get_param_value(
+        Parameters.STRING_ATTRIBUTES, parameters, []
+    )
+    numeric_attributes = exec_utils.get_param_value(
+        Parameters.NUMERIC_ATTRIBUTES, parameters, []
+    )
+    enable_multiplier = exec_utils.get_param_value(
+        Parameters.ENABLE_MULTIPLIER, parameters, False
+    )
 
     for trans in trans_fitness:
         if len(trans_fitness[trans]["underfed_traces"]) > 0:
@@ -164,20 +199,40 @@ def diagnose_from_trans_fitness(log, trans_fitness, parameters=None):
 
             for trace in log:
                 if trace in trans_fitness[trans]["underfed_traces"]:
-                    underfed_cases_repr.append(trans_fitness[trans]["underfed_traces"][trace][0])
+                    underfed_cases_repr.append(
+                        trans_fitness[trans]["underfed_traces"][trace][0]
+                    )
                 elif trace in trans_fitness[trans]["fit_traces"]:
-                    fit_cases_repr.append(trans_fitness[trans]["fit_traces"][trace][0])
+                    fit_cases_repr.append(
+                        trans_fitness[trans]["fit_traces"][trace][0]
+                    )
 
             if fit_cases_repr and underfed_cases_repr:
-                data, feature_names = form_representation_from_dictio_couple(fit_cases_repr, underfed_cases_repr,
-                                                                             string_attributes, numeric_attributes,
-                                                                             enable_multiplier=enable_multiplier)
+                data, feature_names = form_representation_from_dictio_couple(
+                    fit_cases_repr,
+                    underfed_cases_repr,
+                    string_attributes,
+                    numeric_attributes,
+                    enable_multiplier=enable_multiplier,
+                )
                 target = []
                 classes = []
 
                 if enable_multiplier:
-                    multiplier_first = int(max(float(len(underfed_cases_repr)) / float(len(fit_cases_repr)), 1))
-                    multiplier_second = int(max(float(len(fit_cases_repr)) / float(len(underfed_cases_repr)), 1))
+                    multiplier_first = int(
+                        max(
+                            float(len(underfed_cases_repr))
+                            / float(len(fit_cases_repr)),
+                            1,
+                        )
+                    )
+                    multiplier_second = int(
+                        max(
+                            float(len(fit_cases_repr))
+                            / float(len(underfed_cases_repr)),
+                            1,
+                        )
+                    )
                 else:
                     multiplier_first = 1
                     multiplier_second = 1
@@ -197,15 +252,22 @@ def diagnose_from_trans_fitness(log, trans_fitness, parameters=None):
                 target = np.asarray(target)
                 clf = ml_utils.DecisionTreeClassifier(max_depth=7)
                 clf.fit(data, target)
-                diagn_dict = {"clf": clf, "data": data, "feature_names": feature_names, "target": target,
-                              "classes": classes}
+                diagn_dict = {
+                    "clf": clf,
+                    "data": data,
+                    "feature_names": feature_names,
+                    "target": target,
+                    "classes": classes,
+                }
 
                 diagnostics[trans] = diagn_dict
 
     return diagnostics
 
 
-def diagnose_from_notexisting_activities(log, notexisting_activities_in_model, parameters=None):
+def diagnose_from_notexisting_activities(
+    log, notexisting_activities_in_model, parameters=None
+):
     """
     Perform root cause analysis related to activities that are not present in the model
 
@@ -235,39 +297,67 @@ def diagnose_from_notexisting_activities(log, notexisting_activities_in_model, p
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
     diagnostics = {}
-    string_attributes = exec_utils.get_param_value(Parameters.STRING_ATTRIBUTES, parameters, [])
-    numeric_attributes = exec_utils.get_param_value(Parameters.NUMERIC_ATTRIBUTES, parameters, [])
-    enable_multiplier = exec_utils.get_param_value(Parameters.ENABLE_MULTIPLIER, parameters, False)
+    string_attributes = exec_utils.get_param_value(
+        Parameters.STRING_ATTRIBUTES, parameters, []
+    )
+    numeric_attributes = exec_utils.get_param_value(
+        Parameters.NUMERIC_ATTRIBUTES, parameters, []
+    )
+    enable_multiplier = exec_utils.get_param_value(
+        Parameters.ENABLE_MULTIPLIER, parameters, False
+    )
 
     parameters_filtering = deepcopy(parameters)
     parameters_filtering["positive"] = False
     values = list(notexisting_activities_in_model.keys())
 
-    filtered_log = basic_filter.filter_log_traces_attr(log, values, parameters=parameters_filtering)
+    filtered_log = basic_filter.filter_log_traces_attr(
+        log, values, parameters=parameters_filtering
+    )
 
     for act in notexisting_activities_in_model:
         fit_cases_repr = []
         containing_cases_repr = []
         for trace in log:
             if trace in notexisting_activities_in_model[act]:
-                containing_cases_repr.append(notexisting_activities_in_model[act][trace])
+                containing_cases_repr.append(
+                    notexisting_activities_in_model[act][trace]
+                )
             elif trace in filtered_log:
                 fit_cases_repr.append(dict(trace[-1]))
 
         if fit_cases_repr and containing_cases_repr:
-            data, feature_names = form_representation_from_dictio_couple(fit_cases_repr, containing_cases_repr,
-                                                                         string_attributes, numeric_attributes,
-                                                                         enable_multiplier=enable_multiplier)
+            data, feature_names = form_representation_from_dictio_couple(
+                fit_cases_repr,
+                containing_cases_repr,
+                string_attributes,
+                numeric_attributes,
+                enable_multiplier=enable_multiplier,
+            )
 
             target = []
             classes = []
 
             if enable_multiplier:
-                multiplier_first = int(max(float(len(containing_cases_repr)) / float(len(fit_cases_repr)), 1))
-                multiplier_second = int(max(float(len(fit_cases_repr)) / float(len(containing_cases_repr)), 1))
+                multiplier_first = int(
+                    max(
+                        float(len(containing_cases_repr))
+                        / float(len(fit_cases_repr)),
+                        1,
+                    )
+                )
+                multiplier_second = int(
+                    max(
+                        float(len(fit_cases_repr))
+                        / float(len(containing_cases_repr)),
+                        1,
+                    )
+                )
             else:
                 multiplier_first = 1
                 multiplier_second = 1
@@ -287,8 +377,13 @@ def diagnose_from_notexisting_activities(log, notexisting_activities_in_model, p
             target = np.asarray(target)
             clf = ml_utils.DecisionTreeClassifier(max_depth=7)
             clf.fit(data, target)
-            diagn_dict = {"clf": clf, "data": data, "feature_names": feature_names, "target": target,
-                          "classes": classes}
+            diagn_dict = {
+                "clf": clf,
+                "data": data,
+                "feature_names": feature_names,
+                "target": target,
+                "classes": classes,
+            }
 
             diagnostics[act] = diagn_dict
 

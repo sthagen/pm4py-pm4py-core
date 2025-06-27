@@ -26,14 +26,16 @@ from typing import Optional, Tuple, List, TypeVar, Generic, Dict, Any
 from pm4py.algo.discovery.inductive.base_case.factory import BaseCaseFactory
 from pm4py.algo.discovery.inductive.cuts.factory import CutFactory
 from pm4py.algo.discovery.inductive.dtypes.im_ds import IMDataStructure
-from pm4py.algo.discovery.inductive.fall_through.factory import FallThroughFactory
+from pm4py.algo.discovery.inductive.fall_through.factory import (
+    FallThroughFactory,
+)
 from pm4py.algo.discovery.inductive.variants.instances import IMInstance
 from pm4py.objects.process_tree.obj import ProcessTree
 from enum import Enum
 from pm4py.util import exec_utils, constants
 
 
-T = TypeVar('T', bound=IMDataStructure)
+T = TypeVar("T", bound=IMDataStructure)
 
 
 class Parameters(Enum):
@@ -54,7 +56,11 @@ class InductiveMinerFramework(ABC, Generic[T]):
         if parameters is None:
             parameters = {}
 
-        enable_multiprocessing = exec_utils.get_param_value(Parameters.MULTIPROCESSING, parameters, constants.ENABLE_MULTIPROCESSING_DEFAULT)
+        enable_multiprocessing = exec_utils.get_param_value(
+            Parameters.MULTIPROCESSING,
+            parameters,
+            constants.ENABLE_MULTIPROCESSING_DEFAULT,
+        )
 
         if enable_multiprocessing:
             from multiprocessing import Pool, Manager
@@ -66,16 +72,32 @@ class InductiveMinerFramework(ABC, Generic[T]):
             self._pool = None
             self._manager = None
 
-    def apply_base_cases(self, obj: T, parameters: Optional[Dict[str, Any]] = None) -> Optional[ProcessTree]:
-        return BaseCaseFactory.apply_base_cases(obj, self.instance(), parameters=parameters)
+    def apply_base_cases(
+        self, obj: T, parameters: Optional[Dict[str, Any]] = None
+    ) -> Optional[ProcessTree]:
+        return BaseCaseFactory.apply_base_cases(
+            obj, self.instance(), parameters=parameters
+        )
 
-    def find_cut(self, obj: T, parameters: Optional[Dict[str, Any]] = None) -> Optional[Tuple[ProcessTree, List[T]]]:
+    def find_cut(
+        self, obj: T, parameters: Optional[Dict[str, Any]] = None
+    ) -> Optional[Tuple[ProcessTree, List[T]]]:
         return CutFactory.find_cut(obj, self.instance(), parameters=parameters)
 
-    def fall_through(self, obj: T, parameters: Optional[Dict[str, Any]] = None) -> Tuple[ProcessTree, List[T]]:
-        return FallThroughFactory.fall_through(obj, self.instance(), self._pool, self._manager, parameters=parameters)
+    def fall_through(
+        self, obj: T, parameters: Optional[Dict[str, Any]] = None
+    ) -> Tuple[ProcessTree, List[T]]:
+        return FallThroughFactory.fall_through(
+            obj,
+            self.instance(),
+            self._pool,
+            self._manager,
+            parameters=parameters,
+        )
 
-    def apply(self, obj: T, parameters: Optional[Dict[str, Any]] = None) -> ProcessTree:
+    def apply(
+        self, obj: T, parameters: Optional[Dict[str, Any]] = None
+    ) -> ProcessTree:
         tree = self.apply_base_cases(obj, parameters)
         if tree is None:
             cut = self.find_cut(obj, parameters)
@@ -86,7 +108,12 @@ class InductiveMinerFramework(ABC, Generic[T]):
             tree = self._recurse(ft[0], ft[1], parameters=parameters)
         return tree
 
-    def _recurse(self, tree: ProcessTree, objs: List[T], parameters: Optional[Dict[str, Any]] = None):
+    def _recurse(
+        self,
+        tree: ProcessTree,
+        objs: List[T],
+        parameters: Optional[Dict[str, Any]] = None,
+    ):
         children = [self.apply(obj, parameters=parameters) for obj in objs]
         for c in children:
             c.parent = tree

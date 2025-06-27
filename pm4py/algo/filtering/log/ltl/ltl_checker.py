@@ -23,9 +23,16 @@ from enum import Enum
 
 from pm4py.objects.conversion.log import converter as log_converter
 from pm4py.util import exec_utils
-from pm4py.util.constants import PARAMETER_CONSTANT_ATTRIBUTE_KEY, PARAMETER_CONSTANT_RESOURCE_KEY, \
-    PARAMETER_CONSTANT_TIMESTAMP_KEY
-from pm4py.util.xes_constants import DEFAULT_NAME_KEY, DEFAULT_RESOURCE_KEY, DEFAULT_TIMESTAMP_KEY
+from pm4py.util.constants import (
+    PARAMETER_CONSTANT_ATTRIBUTE_KEY,
+    PARAMETER_CONSTANT_RESOURCE_KEY,
+    PARAMETER_CONSTANT_TIMESTAMP_KEY,
+)
+from pm4py.util.xes_constants import (
+    DEFAULT_NAME_KEY,
+    DEFAULT_RESOURCE_KEY,
+    DEFAULT_TIMESTAMP_KEY,
+)
 
 from typing import Optional, Dict, Any, Union, List
 from pm4py.objects.log.obj import EventLog
@@ -60,7 +67,11 @@ def timestamp_list_is_le(a, b):
     return True
 
 
-def eventually_follows(log: EventLog, attribute_values: List[str], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> EventLog:
+def eventually_follows(
+    log: EventLog,
+    attribute_values: List[str],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> EventLog:
     """
     Applies the eventually follows rule
 
@@ -85,36 +96,66 @@ def eventually_follows(log: EventLog, attribute_values: List[str], parameters: O
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    attribute_key = exec_utils.get_param_value(Parameters.ATTRIBUTE_KEY, parameters, DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY)
+    attribute_key = exec_utils.get_param_value(
+        Parameters.ATTRIBUTE_KEY, parameters, DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY
+    )
 
-    positive = exec_utils.get_param_value(Parameters.POSITIVE, parameters, True)
-    enable_timestamp = exec_utils.get_param_value(Parameters.ENABLE_TIMESTAMP, parameters, False)
-    timestamp_diff_boundaries = exec_utils.get_param_value(Parameters.TIMESTAMP_DIFF_BOUNDARIES, parameters, [])
+    positive = exec_utils.get_param_value(
+        Parameters.POSITIVE, parameters, True
+    )
+    enable_timestamp = exec_utils.get_param_value(
+        Parameters.ENABLE_TIMESTAMP, parameters, False
+    )
+    timestamp_diff_boundaries = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_DIFF_BOUNDARIES, parameters, []
+    )
 
-    new_log = EventLog(list(), attributes=log.attributes, extensions=log.extensions, classifiers=log.classifiers,
-                       omni_present=log.omni_present, properties=log.properties)
+    new_log = EventLog(
+        list(),
+        attributes=log.attributes,
+        extensions=log.extensions,
+        classifiers=log.classifiers,
+        omni_present=log.omni_present,
+        properties=log.properties,
+    )
 
     for trace in log:
-        occurrences = [[i for i in range(len(trace))
-                        if attribute_key in trace[i] and trace[i][attribute_key] == attribute_value] for attribute_value in attribute_values]
+        occurrences = [
+            [
+                i
+                for i in range(len(trace))
+                if attribute_key in trace[i]
+                and trace[i][attribute_key] == attribute_value
+            ]
+            for attribute_value in attribute_values
+        ]
 
         is_good = False
 
         for c in itertools.product(*occurrences):
             ok = True
-            for i in range(len(c)-1):
-                if c[i] >= c[i+1]:
+            for i in range(len(c) - 1):
+                if c[i] >= c[i + 1]:
                     ok = False
                     break
             if ok:
                 if enable_timestamp and timestamp_diff_boundaries:
-                    for i in range(len(c)-1):
+                    for i in range(len(c) - 1):
                         timest_i = trace[i][timestamp_key].timestamp()
-                        timest_j = trace[i+1][timestamp_key].timestamp()
-                        if timest_j - timest_i < timestamp_diff_boundaries[i][0] or timest_j - timest_i > timestamp_diff_boundaries[i][1]:
+                        timest_j = trace[i + 1][timestamp_key].timestamp()
+                        if (
+                            timest_j - timest_i
+                            < timestamp_diff_boundaries[i][0]
+                            or timest_j - timest_i
+                            > timestamp_diff_boundaries[i][1]
+                        ):
                             ok = False
                             break
 
@@ -131,7 +172,13 @@ def eventually_follows(log: EventLog, attribute_values: List[str], parameters: O
     return new_log
 
 
-def A_next_B_next_C(log: EventLog, A: str, B: str, C: str, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> EventLog:
+def A_next_B_next_C(
+    log: EventLog,
+    A: str,
+    B: str,
+    C: str,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> EventLog:
     """
     Applies the A next B next C rule
 
@@ -159,18 +206,42 @@ def A_next_B_next_C(log: EventLog, A: str, B: str, C: str, parameters: Optional[
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    attribute_key = exec_utils.get_param_value(Parameters.ATTRIBUTE_KEY, parameters, DEFAULT_NAME_KEY)
-    positive = exec_utils.get_param_value(Parameters.POSITIVE, parameters, True)
+    attribute_key = exec_utils.get_param_value(
+        Parameters.ATTRIBUTE_KEY, parameters, DEFAULT_NAME_KEY
+    )
+    positive = exec_utils.get_param_value(
+        Parameters.POSITIVE, parameters, True
+    )
 
-    new_log = EventLog(list(), attributes=log.attributes, extensions=log.extensions, classifiers=log.classifiers,
-                       omni_present=log.omni_present, properties=log.properties)
+    new_log = EventLog(
+        list(),
+        attributes=log.attributes,
+        extensions=log.extensions,
+        classifiers=log.classifiers,
+        omni_present=log.omni_present,
+        properties=log.properties,
+    )
 
     for trace in log:
-        occ_A = [i for i in range(len(trace)) if attribute_key in trace[i] and trace[i][attribute_key] == A]
-        occ_B = [i for i in range(len(trace)) if attribute_key in trace[i] and trace[i][attribute_key] == B]
-        occ_C = [i for i in range(len(trace)) if attribute_key in trace[i] and trace[i][attribute_key] == C]
+        occ_A = [
+            i
+            for i in range(len(trace))
+            if attribute_key in trace[i] and trace[i][attribute_key] == A
+        ]
+        occ_B = [
+            i
+            for i in range(len(trace))
+            if attribute_key in trace[i] and trace[i][attribute_key] == B
+        ]
+        occ_C = [
+            i
+            for i in range(len(trace))
+            if attribute_key in trace[i] and trace[i][attribute_key] == C
+        ]
 
         found = False
 
@@ -189,7 +260,12 @@ def A_next_B_next_C(log: EventLog, A: str, B: str, C: str, parameters: Optional[
     return new_log
 
 
-def four_eyes_principle(log: EventLog, A: str, B: str, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> EventLog:
+def four_eyes_principle(
+    log: EventLog,
+    A: str,
+    B: str,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> EventLog:
     """
     Verifies the Four Eyes Principle given A and B
 
@@ -216,20 +292,48 @@ def four_eyes_principle(log: EventLog, A: str, B: str, parameters: Optional[Dict
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    attribute_key = exec_utils.get_param_value(Parameters.ATTRIBUTE_KEY, parameters, DEFAULT_NAME_KEY)
-    resource_key = exec_utils.get_param_value(Parameters.RESOURCE_KEY, parameters, DEFAULT_RESOURCE_KEY)
-    positive = exec_utils.get_param_value(Parameters.POSITIVE, parameters, True)
+    attribute_key = exec_utils.get_param_value(
+        Parameters.ATTRIBUTE_KEY, parameters, DEFAULT_NAME_KEY
+    )
+    resource_key = exec_utils.get_param_value(
+        Parameters.RESOURCE_KEY, parameters, DEFAULT_RESOURCE_KEY
+    )
+    positive = exec_utils.get_param_value(
+        Parameters.POSITIVE, parameters, True
+    )
 
-    new_log = EventLog(list(), attributes=log.attributes, extensions=log.extensions, classifiers=log.classifiers,
-                       omni_present=log.omni_present, properties=log.properties)
+    new_log = EventLog(
+        list(),
+        attributes=log.attributes,
+        extensions=log.extensions,
+        classifiers=log.classifiers,
+        omni_present=log.omni_present,
+        properties=log.properties,
+    )
 
     for trace in log:
-        occ_A = set([trace[i][resource_key] for i in range(len(trace)) if
-                     attribute_key in trace[i] and resource_key in trace[i] and trace[i][attribute_key] == A])
-        occ_B = set([trace[i][resource_key] for i in range(len(trace)) if
-                     attribute_key in trace[i] and resource_key in trace[i] and trace[i][attribute_key] == B])
+        occ_A = set(
+            [
+                trace[i][resource_key]
+                for i in range(len(trace))
+                if attribute_key in trace[i]
+                and resource_key in trace[i]
+                and trace[i][attribute_key] == A
+            ]
+        )
+        occ_B = set(
+            [
+                trace[i][resource_key]
+                for i in range(len(trace))
+                if attribute_key in trace[i]
+                and resource_key in trace[i]
+                and trace[i][attribute_key] == B
+            ]
+        )
 
         if len(occ_A) > 0 and len(occ_B) > 0:
             inte = occ_A.intersection(occ_B)
@@ -242,7 +346,11 @@ def four_eyes_principle(log: EventLog, A: str, B: str, parameters: Optional[Dict
     return new_log
 
 
-def attr_value_different_persons(log: EventLog, A: str, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> EventLog:
+def attr_value_different_persons(
+    log: EventLog,
+    A: str,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> EventLog:
     """
     Checks whether an attribute value is assumed on events done by different resources
 
@@ -265,18 +373,39 @@ def attr_value_different_persons(log: EventLog, A: str, parameters: Optional[Dic
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    attribute_key = exec_utils.get_param_value(Parameters.ATTRIBUTE_KEY, parameters, DEFAULT_NAME_KEY)
-    resource_key = exec_utils.get_param_value(Parameters.RESOURCE_KEY, parameters, DEFAULT_RESOURCE_KEY)
-    positive = exec_utils.get_param_value(Parameters.POSITIVE, parameters, True)
+    attribute_key = exec_utils.get_param_value(
+        Parameters.ATTRIBUTE_KEY, parameters, DEFAULT_NAME_KEY
+    )
+    resource_key = exec_utils.get_param_value(
+        Parameters.RESOURCE_KEY, parameters, DEFAULT_RESOURCE_KEY
+    )
+    positive = exec_utils.get_param_value(
+        Parameters.POSITIVE, parameters, True
+    )
 
-    new_log = EventLog(list(), attributes=log.attributes, extensions=log.extensions, classifiers=log.classifiers,
-                       omni_present=log.omni_present, properties=log.properties)
+    new_log = EventLog(
+        list(),
+        attributes=log.attributes,
+        extensions=log.extensions,
+        classifiers=log.classifiers,
+        omni_present=log.omni_present,
+        properties=log.properties,
+    )
 
     for trace in log:
-        occ_A = set([trace[i][resource_key] for i in range(len(trace)) if
-                     attribute_key in trace[i] and resource_key in trace[i] and trace[i][attribute_key] == A])
+        occ_A = set(
+            [
+                trace[i][resource_key]
+                for i in range(len(trace))
+                if attribute_key in trace[i]
+                and resource_key in trace[i]
+                and trace[i][attribute_key] == A
+            ]
+        )
         if len(occ_A) > 1:
             if positive:
                 new_log.append(trace)

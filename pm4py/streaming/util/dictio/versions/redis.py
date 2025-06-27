@@ -105,10 +105,14 @@ def apply(parameters: Optional[Dict[Any, Any]] = None):
 
     import redis
 
-    hostname = exec_utils.get_param_value(Parameters.HOSTNAME, parameters, "127.0.0.1")
+    hostname = exec_utils.get_param_value(
+        Parameters.HOSTNAME, parameters, "127.0.0.1"
+    )
     port = exec_utils.get_param_value(Parameters.PORT, parameters, 6379)
     dict_id = exec_utils.get_param_value(Parameters.DICT_ID, parameters, 0)
 
-    r = redis.StrictRedis(host=hostname, port=port, db=dict_id, decode_responses=True)
+    r = redis.StrictRedis(
+        host=hostname, port=port, db=dict_id, decode_responses=True
+    )
 
     return ThreadSafeRedisDict(r)

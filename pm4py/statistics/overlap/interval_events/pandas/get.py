@@ -33,7 +33,10 @@ class Parameters(Enum):
     TIMESTAMP_KEY = constants.PARAMETER_CONSTANT_TIMESTAMP_KEY
 
 
-def apply(df: pd.DataFrame, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> List[int]:
+def apply(
+    df: pd.DataFrame,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> List[int]:
     """
     Counts the intersections of each interval event with the other interval events of the log
     (all the events are considered, not looking at the activity)
@@ -56,15 +59,26 @@ def apply(df: pd.DataFrame, parameters: Optional[Dict[Union[str, Parameters], An
     if parameters is None:
         parameters = {}
 
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters,
-                                                     xes_constants.DEFAULT_TIMESTAMP_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
 
-    df = df[list({start_timestamp_key, timestamp_key})].to_dict('records')
+    df = df[list({start_timestamp_key, timestamp_key})].to_dict("records")
     points = []
 
     for event in df:
-        points.append((event[start_timestamp_key].timestamp(), event[timestamp_key].timestamp()))
+        points.append(
+            (
+                event[start_timestamp_key].timestamp(),
+                event[timestamp_key].timestamp(),
+            )
+        )
 
     return compute.apply(points)

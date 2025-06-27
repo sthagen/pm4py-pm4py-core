@@ -121,7 +121,9 @@ def apply(file_path, parameters=None):
     if parameters is None:
         parameters = {}
 
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING)
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING
+    )
 
     F = open(file_path, "r", encoding=encoding)
     content = F.readlines()
@@ -153,9 +155,13 @@ def import_dfg_from_string(dfg_string, parameters=None):
     if parameters is None:
         parameters = {}
 
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING)
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING
+    )
 
     if type(dfg_string) is bytes:
         dfg_string = dfg_string.decode(encoding)
 
-    return import_dfg_from_rows(StringIO(dfg_string).readlines(), parameters=parameters)
+    return import_dfg_from_rows(
+        StringIO(dfg_string).readlines(), parameters=parameters
+    )

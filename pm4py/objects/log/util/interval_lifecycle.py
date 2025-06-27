@@ -60,26 +60,54 @@ def to_interval(log, parameters=None):
     if parameters is None:
         parameters = {}
 
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes.DEFAULT_TIMESTAMP_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters, xes.DEFAULT_START_TIMESTAMP_KEY)
-    transition_key = exec_utils.get_param_value(Parameters.TRANSITION_KEY, parameters, xes.DEFAULT_TRANSITION_KEY)
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes.DEFAULT_NAME_KEY)
-    lifecycle_instance_key = exec_utils.get_param_value(Parameters.LIFECYCLE_INSTANCE_KEY, parameters, xes.DEFAULT_INSTANCE_KEY)
-    business_hours = exec_utils.get_param_value(Parameters.BUSINESS_HOURS, parameters, False)
-    business_hours_slots = exec_utils.get_param_value(Parameters.BUSINESS_HOUR_SLOTS, parameters, constants.DEFAULT_BUSINESS_HOUR_SLOTS)
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY, parameters, xes.DEFAULT_TIMESTAMP_KEY
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes.DEFAULT_START_TIMESTAMP_KEY,
+    )
+    transition_key = exec_utils.get_param_value(
+        Parameters.TRANSITION_KEY, parameters, xes.DEFAULT_TRANSITION_KEY
+    )
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes.DEFAULT_NAME_KEY
+    )
+    lifecycle_instance_key = exec_utils.get_param_value(
+        Parameters.LIFECYCLE_INSTANCE_KEY, parameters, xes.DEFAULT_INSTANCE_KEY
+    )
+    business_hours = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOURS, parameters, False
+    )
+    business_hours_slots = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOUR_SLOTS,
+        parameters,
+        constants.DEFAULT_BUSINESS_HOUR_SLOTS,
+    )
 
     if log is not None and len(log) > 0:
-        if "PM4PY_TYPE" in log.attributes and log.attributes["PM4PY_TYPE"] == "interval":
+        if (
+            "PM4PY_TYPE" in log.attributes
+            and log.attributes["PM4PY_TYPE"] == "interval"
+        ):
             return log
         if log[0] is not None and len(log[0]) > 0:
             first_event = log[0][0]
             if start_timestamp_key in first_event:
                 return log
 
-        new_log = EventLog(attributes=copy(log.attributes), extensions=copy(log.extensions), classifiers=copy(log.classifiers),
-            omni_present=copy(log.omni_present), properties=copy(log.properties))
+        new_log = EventLog(
+            attributes=copy(log.attributes),
+            extensions=copy(log.extensions),
+            classifiers=copy(log.classifiers),
+            omni_present=copy(log.omni_present),
+            properties=copy(log.properties),
+        )
         new_log.attributes["PM4PY_TYPE"] = "interval"
-        new_log.properties[constants.PARAMETER_CONSTANT_START_TIMESTAMP_KEY] = xes.DEFAULT_START_TIMESTAMP_KEY
+        new_log.properties[
+            constants.PARAMETER_CONSTANT_START_TIMESTAMP_KEY
+        ] = xes.DEFAULT_START_TIMESTAMP_KEY
 
         for trace in log:
             new_trace = Trace()
@@ -88,9 +116,17 @@ def to_interval(log, parameters=None):
             activities_start = {}
             for event in trace:
                 activity = event[activity_key]
-                instance = event[lifecycle_instance_key] if lifecycle_instance_key in event else None
+                instance = (
+                    event[lifecycle_instance_key]
+                    if lifecycle_instance_key in event
+                    else None
+                )
                 activity = (activity, instance)
-                transition = event[transition_key] if transition_key in event else "complete"
+                transition = (
+                    event[transition_key]
+                    if transition_key in event
+                    else "complete"
+                )
                 timestamp = event[timestamp_key]
                 if transition.lower() == "start":
                     if activity not in activities_start:
@@ -99,28 +135,46 @@ def to_interval(log, parameters=None):
                 elif transition.lower() == "complete":
                     start_event = None
                     start_timestamp = event[timestamp_key]
-                    if activity in activities_start and len(activities_start[activity]) > 0:
+                    if (
+                        activity in activities_start
+                        and len(activities_start[activity]) > 0
+                    ):
                         start_event = activities_start[activity].pop(0)
                         start_timestamp = start_event[timestamp_key]
                     new_event = Event()
                     for attr in event:
-                        if not attr == timestamp_key and not attr == transition_key:
+                        if (
+                            not attr == timestamp_key
+                            and not attr == transition_key
+                        ):
                             new_event[attr] = event[attr]
                     if start_event is not None:
                         for attr in start_event:
-                            if not attr == timestamp_key and not attr == transition_key:
-                                new_event["@@startevent_" + attr] = start_event[attr]
+                            if (
+                                not attr == timestamp_key
+                                and not attr == transition_key
+                            ):
+                                new_event["@@startevent_" + attr] = (
+                                    start_event[attr]
+                                )
                     new_event[start_timestamp_key] = start_timestamp
                     new_event[timestamp_key] = timestamp
-                    new_event["@@duration"] = (timestamp - start_timestamp).total_seconds()
+                    new_event["@@duration"] = (
+                        timestamp - start_timestamp
+                    ).total_seconds()
 
                     if business_hours:
-                        bh = BusinessHours(start_timestamp, timestamp,
-                                           business_hour_slots=business_hours_slots)
+                        bh = BusinessHours(
+                            start_timestamp,
+                            timestamp,
+                            business_hour_slots=business_hours_slots,
+                        )
                         new_event["@@approx_bh_duration"] = bh.get_seconds()
 
                     new_trace.append(new_event)
-            new_trace = sorting.sort_timestamp_trace(new_trace, start_timestamp_key)
+            new_trace = sorting.sort_timestamp_trace(
+                new_trace, start_timestamp_key
+            )
             new_log.append(new_trace)
         return new_log
 
@@ -147,20 +201,36 @@ def to_lifecycle(log, parameters=None):
     if parameters is None:
         parameters = {}
 
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes.DEFAULT_TIMESTAMP_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters, xes.DEFAULT_START_TIMESTAMP_KEY)
-    transition_key = exec_utils.get_param_value(Parameters.TRANSITION_KEY, parameters, xes.DEFAULT_TRANSITION_KEY)
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY, parameters, xes.DEFAULT_TIMESTAMP_KEY
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes.DEFAULT_START_TIMESTAMP_KEY,
+    )
+    transition_key = exec_utils.get_param_value(
+        Parameters.TRANSITION_KEY, parameters, xes.DEFAULT_TRANSITION_KEY
+    )
 
     if log is not None and len(log) > 0:
-        if "PM4PY_TYPE" in log.attributes and log.attributes["PM4PY_TYPE"] == "lifecycle":
+        if (
+            "PM4PY_TYPE" in log.attributes
+            and log.attributes["PM4PY_TYPE"] == "lifecycle"
+        ):
             return log
         if log[0] is not None and len(log[0]) > 0:
             first_event = log[0][0]
             if transition_key in first_event:
                 return log
 
-        new_log = EventLog(attributes=copy(log.attributes), extensions=copy(log.extensions), classifiers=copy(log.classifiers),
-            omni_present=copy(log.omni_present), properties=copy(log.properties))
+        new_log = EventLog(
+            attributes=copy(log.attributes),
+            extensions=copy(log.extensions),
+            classifiers=copy(log.classifiers),
+            omni_present=copy(log.omni_present),
+            properties=copy(log.properties),
+        )
         new_log.attributes["PM4PY_TYPE"] = "lifecycle"
 
         for trace in log:
@@ -172,7 +242,10 @@ def to_lifecycle(log, parameters=None):
                 new_event_start = Event()
                 new_event_complete = Event()
                 for attr in event:
-                    if not attr == timestamp_key and not attr == start_timestamp_key:
+                    if (
+                        not attr == timestamp_key
+                        and not attr == start_timestamp_key
+                    ):
                         new_event_start[attr] = event[attr]
                         new_event_complete[attr] = event[attr]
                 new_event_start[timestamp_key] = event[start_timestamp_key]
@@ -185,8 +258,14 @@ def to_lifecycle(log, parameters=None):
                 new_event_complete["@@origin_ev_idx"] = index
                 list_events.append(new_event_start)
                 list_events.append(new_event_complete)
-            list_events = sorted(list_events,
-                                 key=lambda x: (x[timestamp_key], x["@@origin_ev_idx"], x["@@custom_lif_id"]))
+            list_events = sorted(
+                list_events,
+                key=lambda x: (
+                    x[timestamp_key],
+                    x["@@origin_ev_idx"],
+                    x["@@custom_lif_id"],
+                ),
+            )
             for ev in list_events:
                 new_trace.append(ev)
             new_log.append(new_trace)
@@ -208,9 +287,19 @@ def assign_lead_cycle_time(log, parameters=None):
     if parameters is None:
         parameters = {}
 
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes.DEFAULT_TIMESTAMP_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters, xes.DEFAULT_START_TIMESTAMP_KEY)
-    business_hours_slots = exec_utils.get_param_value(Parameters.BUSINESS_HOUR_SLOTS, parameters, constants.DEFAULT_BUSINESS_HOUR_SLOTS)
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY, parameters, xes.DEFAULT_TIMESTAMP_KEY
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes.DEFAULT_START_TIMESTAMP_KEY,
+    )
+    business_hours_slots = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOUR_SLOTS,
+        parameters,
+        constants.DEFAULT_BUSINESS_HOUR_SLOTS,
+    )
 
     interval_log = to_interval(log, parameters=parameters)
 
@@ -228,27 +317,40 @@ def assign_lead_cycle_time(log, parameters=None):
             et_seconds = et.timestamp()
 
             if max_et_seconds > 0 and st_seconds > max_et_seconds:
-                bh_unworked = BusinessHours(max_et, st,
-                                                           business_hour_slots=business_hours_slots)
+                bh_unworked = BusinessHours(
+                    max_et, st, business_hour_slots=business_hours_slots
+                )
                 unworked_sec = bh_unworked.get_seconds()
-                approx_partial_lead_time = approx_partial_lead_time + unworked_sec
+                approx_partial_lead_time = (
+                    approx_partial_lead_time + unworked_sec
+                )
                 approx_wasted_time = approx_wasted_time + unworked_sec
                 this_wasted_time = unworked_sec
 
             if st_seconds > max_et_seconds:
-                bh = BusinessHours(st, et,
-                                                  business_hour_slots=business_hours_slots)
+                bh = BusinessHours(
+                    st, et, business_hour_slots=business_hours_slots
+                )
                 approx_bh_duration = bh.get_seconds()
 
-                approx_partial_cycle_time = approx_partial_cycle_time + approx_bh_duration
-                approx_partial_lead_time = approx_partial_lead_time + approx_bh_duration
+                approx_partial_cycle_time = (
+                    approx_partial_cycle_time + approx_bh_duration
+                )
+                approx_partial_lead_time = (
+                    approx_partial_lead_time + approx_bh_duration
+                )
             elif st_seconds < max_et_seconds and et_seconds > max_et_seconds:
-                bh = BusinessHours(max_et, et,
-                                                  business_hour_slots=business_hours_slots)
+                bh = BusinessHours(
+                    max_et, et, business_hour_slots=business_hours_slots
+                )
                 approx_bh_duration = bh.get_seconds()
 
-                approx_partial_cycle_time = approx_partial_cycle_time + approx_bh_duration
-                approx_partial_lead_time = approx_partial_lead_time + approx_bh_duration
+                approx_partial_cycle_time = (
+                    approx_partial_cycle_time + approx_bh_duration
+                )
+                approx_partial_lead_time = (
+                    approx_partial_lead_time + approx_bh_duration
+                )
 
             if et_seconds > max_et_seconds:
                 max_et_seconds = et_seconds
@@ -256,12 +358,20 @@ def assign_lead_cycle_time(log, parameters=None):
 
             ratio_cycle_lead_time = 1
             if approx_partial_lead_time > 0:
-                ratio_cycle_lead_time = approx_partial_cycle_time / approx_partial_lead_time
+                ratio_cycle_lead_time = (
+                    approx_partial_cycle_time / approx_partial_lead_time
+                )
 
-            trace[i]["@@approx_bh_partial_cycle_time"] = approx_partial_cycle_time
-            trace[i]["@@approx_bh_partial_lead_time"] = approx_partial_lead_time
+            trace[i][
+                "@@approx_bh_partial_cycle_time"
+            ] = approx_partial_cycle_time
+            trace[i][
+                "@@approx_bh_partial_lead_time"
+            ] = approx_partial_lead_time
             trace[i]["@@approx_bh_overall_wasted_time"] = approx_wasted_time
             trace[i]["@@approx_bh_this_wasted_time"] = this_wasted_time
-            trace[i]["@approx_bh_ratio_cycle_lead_time"] = ratio_cycle_lead_time
+            trace[i][
+                "@approx_bh_ratio_cycle_lead_time"
+            ] = ratio_cycle_lead_time
 
     return interval_log

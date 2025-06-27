@@ -43,7 +43,10 @@ class Parameters(Enum):
     DIFF_START_END = "diff_start_end"
 
 
-def apply(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[Dict[Any, Any]] = None) -> pd.DataFrame:
+def apply(
+    log: Union[EventLog, EventStream, pd.DataFrame],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> pd.DataFrame:
     """
     Extracts temporal features with the provided granularity from the Pandas dataframe.
 
@@ -76,26 +79,74 @@ def apply(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[
     if parameters is None:
         parameters = {}
 
-    grouper_freq = exec_utils.get_param_value(Parameters.GROUPER_FREQ, parameters, "W")
-    timestamp_column = exec_utils.get_param_value(Parameters.TIMESTAMP_COLUMN, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    start_timestamp_column = exec_utils.get_param_value(Parameters.START_TIMESTAMP_COLUMN, parameters, None)
+    grouper_freq = exec_utils.get_param_value(
+        Parameters.GROUPER_FREQ, parameters, "W"
+    )
+    timestamp_column = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_COLUMN,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    start_timestamp_column = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_COLUMN, parameters, None
+    )
     if start_timestamp_column is None:
         start_timestamp_column = timestamp_column
-    case_id_column = exec_utils.get_param_value(Parameters.CASE_ID_COLUMN, parameters, constants.CASE_CONCEPT_NAME)
-    diff_start_end = exec_utils.get_param_value(Parameters.DIFF_START_END, parameters, "@@diff_start_end")
-    arrival_rate = exec_utils.get_param_value(Parameters.ARRIVAL_RATE, parameters, "@@arrival_rate")
-    finish_rate = exec_utils.get_param_value(Parameters.FINISH_RATE, parameters, "@@finish_rate")
-    service_time = exec_utils.get_param_value(Parameters.SERVICE_TIME, parameters, "@@service_time")
-    waiting_time = exec_utils.get_param_value(Parameters.WAITING_TIME, parameters, "@@waiting_time")
-    sojourn_time = exec_utils.get_param_value(Parameters.SOJOURN_TIME, parameters, "@@sojourn_time")
-    resource_column = exec_utils.get_param_value(Parameters.RESOURCE_COLUMN, parameters, xes_constants.DEFAULT_RESOURCE_KEY)
-    activity_column = exec_utils.get_param_value(Parameters.ACTIVITY_COLUMN, parameters, xes_constants.DEFAULT_NAME_KEY)
+    case_id_column = exec_utils.get_param_value(
+        Parameters.CASE_ID_COLUMN, parameters, constants.CASE_CONCEPT_NAME
+    )
+    diff_start_end = exec_utils.get_param_value(
+        Parameters.DIFF_START_END, parameters, "@@diff_start_end"
+    )
+    arrival_rate = exec_utils.get_param_value(
+        Parameters.ARRIVAL_RATE, parameters, "@@arrival_rate"
+    )
+    finish_rate = exec_utils.get_param_value(
+        Parameters.FINISH_RATE, parameters, "@@finish_rate"
+    )
+    service_time = exec_utils.get_param_value(
+        Parameters.SERVICE_TIME, parameters, "@@service_time"
+    )
+    waiting_time = exec_utils.get_param_value(
+        Parameters.WAITING_TIME, parameters, "@@waiting_time"
+    )
+    sojourn_time = exec_utils.get_param_value(
+        Parameters.SOJOURN_TIME, parameters, "@@sojourn_time"
+    )
+    resource_column = exec_utils.get_param_value(
+        Parameters.RESOURCE_COLUMN,
+        parameters,
+        xes_constants.DEFAULT_RESOURCE_KEY,
+    )
+    activity_column = exec_utils.get_param_value(
+        Parameters.ACTIVITY_COLUMN, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_DATA_FRAME, parameters=parameters)
-    log = pandas_utils.insert_case_arrival_finish_rate(log, case_id_column=case_id_column, timestamp_column=timestamp_column, arrival_rate_column=arrival_rate, finish_rate_column=finish_rate)
-    log = pandas_utils.insert_case_service_waiting_time(log, case_id_column=case_id_column, timestamp_column=timestamp_column, diff_start_end_column=diff_start_end, service_time_column=service_time, sojourn_time_column=sojourn_time, waiting_time_column=waiting_time)
+    log = log_converter.apply(
+        log,
+        variant=log_converter.Variants.TO_DATA_FRAME,
+        parameters=parameters,
+    )
+    log = pandas_utils.insert_case_arrival_finish_rate(
+        log,
+        case_id_column=case_id_column,
+        timestamp_column=timestamp_column,
+        arrival_rate_column=arrival_rate,
+        finish_rate_column=finish_rate,
+    )
+    log = pandas_utils.insert_case_service_waiting_time(
+        log,
+        case_id_column=case_id_column,
+        timestamp_column=timestamp_column,
+        diff_start_end_column=diff_start_end,
+        service_time_column=service_time,
+        sojourn_time_column=sojourn_time,
+        waiting_time_column=waiting_time,
+    )
 
-    grouped_log = log.groupby(pandas_utils.get_grouper(key=start_timestamp_column, freq=grouper_freq))
+    grouped_log = log.groupby(
+        pandas_utils.get_grouper(key=start_timestamp_column, freq=grouper_freq)
+    )
 
     final_values = []
 

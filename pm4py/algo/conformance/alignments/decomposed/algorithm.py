@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -13,13 +13,15 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see this software project's root or 
+along with this program.  If not, see this software project's root or
 visit <https://www.gnu.org/licenses/>.
 
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.algo.conformance.alignments.decomposed.variants import recompos_maximal
+from pm4py.algo.conformance.alignments.decomposed.variants import (
+    recompos_maximal,
+)
 from enum import Enum
 from pm4py.util import exec_utils
 from typing import Optional, Dict, Any, Union
@@ -36,7 +38,14 @@ class Variants(Enum):
 VERSIONS = {Variants.RECOMPOS_MAXIMAL}
 
 
-def apply(log: Union[EventLog, pd.DataFrame], net: PetriNet, im: Marking, fm: Marking, variant=Variants.RECOMPOS_MAXIMAL, parameters: Optional[Dict[Any, Any]] = None) -> typing.ListAlignments:
+def apply(
+    log: Union[EventLog, pd.DataFrame],
+    net: PetriNet,
+    im: Marking,
+    fm: Marking,
+    variant=Variants.RECOMPOS_MAXIMAL,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> typing.ListAlignments:
     """
     Apply the recomposition alignment approach
     to a log and a Petri net performing decomposition
@@ -62,4 +71,6 @@ def apply(log: Union[EventLog, pd.DataFrame], net: PetriNet, im: Marking, fm: Ma
     aligned_traces
         For each trace, return its alignment
     """
-    return exec_utils.get_variant(variant).apply(log, net, im, fm, parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        log, net, im, fm, parameters=parameters
+    )

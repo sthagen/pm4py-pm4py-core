@@ -20,4 +20,3 @@ Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
 from pm4py.statistics.passed_time import log, pandas
-

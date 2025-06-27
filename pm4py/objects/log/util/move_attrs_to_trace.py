@@ -30,7 +30,10 @@ class Parameters(Enum):
     ENABLE_DEEPCOPY = "enable_deepcopy"
 
 
-def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> EventLog:
+def apply(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> EventLog:
     """
     Moves the attributes that are constant for all the events of the trace, and they
     do not belong to a standard extension, to the trace level
@@ -51,7 +54,9 @@ def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]]
     if parameters is None:
         parameters = {}
 
-    enable_deepcopy = exec_utils.get_param_value(Parameters.ENABLE_DEEPCOPY, parameters, False)
+    enable_deepcopy = exec_utils.get_param_value(
+        Parameters.ENABLE_DEEPCOPY, parameters, False
+    )
     if enable_deepcopy:
         log = deepcopy(log)
 
@@ -70,7 +75,12 @@ def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]]
                             values_count[attr] = [eve[attr]]
                         else:
                             values_count[attr].append(eve[attr])
-        trace_candidates = set(x for x in values_count if len(values_count[x]) == len(trace) and len(set(values_count[x])) == 1)
+        trace_candidates = set(
+            x
+            for x in values_count
+            if len(values_count[x]) == len(trace)
+            and len(set(values_count[x])) == 1
+        )
         if candidates is not None:
             candidates = trace_candidates.intersection(candidates)
         else:

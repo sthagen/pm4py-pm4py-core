@@ -49,4 +49,3 @@ def save(gviz, output_file_path, parameters=None):
         shutil.copyfile(render, output_file_path)
     """elif not is_dot_installed:
         raise Exception("impossible to save formats different from HTML without the Graphviz binary")"""
-

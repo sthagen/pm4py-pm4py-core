@@ -55,16 +55,23 @@ class Parameters(Enum):
     ENABLE_TIMES_FROM_FIRST_OCCURRENCE = "enable_times_from_first_occurrence"
     ENABLE_TIMES_FROM_LAST_OCCURRENCE = "enable_times_from_last_occurrence"
     ENABLE_DIRECT_PATHS_TIMES_LAST_OCC = "enable_direct_paths_times_last_occ"
-    ENABLE_INDIRECT_PATHS_TIMES_LAST_OCC = "enable_indirect_paths_times_last_occ"
+    ENABLE_INDIRECT_PATHS_TIMES_LAST_OCC = (
+        "enable_indirect_paths_times_last_occ"
+    )
     ENABLE_WORK_IN_PROGRESS = "enable_work_in_progress"
     ENABLE_RESOURCE_WORKLOAD = "enable_resource_workload"
     ENABLE_FIRST_LAST_ACTIVITY_INDEX = "enable_first_last_activity_index"
     ENABLE_MAX_CONCURRENT_EVENTS = "enable_max_concurrent_events"
-    ENABLE_MAX_CONCURRENT_EVENTS_PER_ACTIVITY = "enable_max_concurrent_events_per_activity"
+    ENABLE_MAX_CONCURRENT_EVENTS_PER_ACTIVITY = (
+        "enable_max_concurrent_events_per_activity"
+    )
     CASE_ATTRIBUTE_PREFIX = constants.CASE_ATTRIBUTE_PREFIX
 
 
-def max_concurrent_events(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Tuple[Any, List[str]]:
+def max_concurrent_events(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Tuple[Any, List[str]]:
     """
     Counts for every trace the maximum number of events (of any activity) that happen concurrently
     (e.g., their time intervals [st1, ct1] and [st2, ct2] have non-empty intersection).
@@ -86,8 +93,16 @@ def max_concurrent_events(log: EventLog, parameters: Optional[Dict[Union[str, Pa
     if parameters is None:
         parameters = {}
 
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
 
     data = []
     feature_names = ["@@max_concurrent_activities_general"]
@@ -95,7 +110,7 @@ def max_concurrent_events(log: EventLog, parameters: Optional[Dict[Union[str, Pa
     for trace in log:
         max_conc = 0
         i = 0
-        while i < len(trace)-1:
+        while i < len(trace) - 1:
             conc = 0
             ct = trace[i][timestamp_key].timestamp()
             j = i + 1
@@ -113,7 +128,10 @@ def max_concurrent_events(log: EventLog, parameters: Optional[Dict[Union[str, Pa
     return data, feature_names
 
 
-def max_concurrent_events_per_activity(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Tuple[Any, List[str]]:
+def max_concurrent_events_per_activity(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Tuple[Any, List[str]]:
     """
     Counts for every trace and every activity the maximum number of events of the given activity that happen concurrently
     (e.g., their time intervals [st1, ct1] and [st2, ct2] have non-empty intersection).
@@ -135,19 +153,31 @@ def max_concurrent_events_per_activity(log: EventLog, parameters: Optional[Dict[
     if parameters is None:
         parameters = {}
 
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
 
     activities = list(set(y[activity_key] for x in log for y in x))
 
     data = []
-    feature_names = ["@@max_concurrent_activities_like_"+x for x in activities]
+    feature_names = [
+        "@@max_concurrent_activities_like_" + x for x in activities
+    ]
 
     for trace in log:
         max_conc_act = {act: 0 for act in activities}
         i = 0
-        while i < len(trace)-1:
+        while i < len(trace) - 1:
             conc = 0
             act = trace[i][activity_key]
             ct = trace[i][timestamp_key].timestamp()
@@ -170,7 +200,10 @@ def max_concurrent_events_per_activity(log: EventLog, parameters: Optional[Dict[
     return data, feature_names
 
 
-def resource_workload(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Tuple[Any, List[str]]:
+def resource_workload(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Tuple[Any, List[str]]:
     """
     Calculates for each case, and for each resource of the log, the workload of the resource during
     the lead time of a case. Defaults if a resource is not contained in a case.
@@ -194,11 +227,25 @@ def resource_workload(log: EventLog, parameters: Optional[Dict[Union[str, Parame
 
     from intervaltree.intervaltree import IntervalTree, Interval
 
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    resource_key = exec_utils.get_param_value(Parameters.RESOURCE_KEY, parameters, xes_constants.DEFAULT_RESOURCE_KEY)
-    epsilon = exec_utils.get_param_value(Parameters.EPSILON, parameters, 0.000001)
-    default_not_present = exec_utils.get_param_value(Parameters.DEFAULT_NOT_PRESENT, parameters, 0)
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    resource_key = exec_utils.get_param_value(
+        Parameters.RESOURCE_KEY, parameters, xes_constants.DEFAULT_RESOURCE_KEY
+    )
+    epsilon = exec_utils.get_param_value(
+        Parameters.EPSILON, parameters, 0.000001
+    )
+    default_not_present = exec_utils.get_param_value(
+        Parameters.DEFAULT_NOT_PRESENT, parameters, 0
+    )
 
     tree_dict = {}
     for case in log:
@@ -214,7 +261,7 @@ def resource_workload(log: EventLog, parameters: Optional[Dict[Union[str, Parame
     resources_list = sorted(list(tree_dict))
 
     data = []
-    feature_names = ["resource_workload@@"+r for r in resources_list]
+    feature_names = ["resource_workload@@" + r for r in resources_list]
 
     for case in log:
         data.append([])
@@ -230,7 +277,10 @@ def resource_workload(log: EventLog, parameters: Optional[Dict[Union[str, Parame
     return data, feature_names
 
 
-def work_in_progress(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Tuple[Any, List[str]]:
+def work_in_progress(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Tuple[Any, List[str]]:
     """
     Calculates for each case, and for each resource of the log, the number of cases which are open during
     the lead time of the case.
@@ -254,10 +304,22 @@ def work_in_progress(log: EventLog, parameters: Optional[Dict[Union[str, Paramet
 
     from intervaltree.intervaltree import IntervalTree, Interval
 
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    epsilon = exec_utils.get_param_value(Parameters.EPSILON, parameters, 0.000001)
-    default_not_present = exec_utils.get_param_value(Parameters.DEFAULT_NOT_PRESENT, parameters, 0)
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    epsilon = exec_utils.get_param_value(
+        Parameters.EPSILON, parameters, 0.000001
+    )
+    default_not_present = exec_utils.get_param_value(
+        Parameters.DEFAULT_NOT_PRESENT, parameters, 0
+    )
 
     tree = IntervalTree()
     for case in log:
@@ -280,7 +342,10 @@ def work_in_progress(log: EventLog, parameters: Optional[Dict[Union[str, Paramet
     return data, feature_names
 
 
-def indirect_paths_times_last_occ(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Tuple[Any, List[str]]:
+def indirect_paths_times_last_occ(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Tuple[Any, List[str]]:
     """
     Calculates for each case, and for each indirect path of the case, the difference between the start timestamp
     of the later event and the completion timestamp of the first event. Defaults if a path is not present in a case.
@@ -302,28 +367,42 @@ def indirect_paths_times_last_occ(log: EventLog, parameters: Optional[Dict[Union
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    default_not_present = exec_utils.get_param_value(Parameters.DEFAULT_NOT_PRESENT, parameters, 0)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    default_not_present = exec_utils.get_param_value(
+        Parameters.DEFAULT_NOT_PRESENT, parameters, 0
+    )
 
     all_paths = set()
     for trace in log:
-        for i in range(len(trace)-1):
-            for j in range(i+2, len(trace)):
+        for i in range(len(trace) - 1):
+            for j in range(i + 2, len(trace)):
                 all_paths.add((trace[i][activity_key], trace[j][activity_key]))
     all_paths = sorted(list(all_paths))
 
     data = []
     feature_names = []
     for p in all_paths:
-        feature_names.append("indirectPathPerformanceLastOcc@@"+p[0]+"##"+p[1])
+        feature_names.append(
+            "indirectPathPerformanceLastOcc@@" + p[0] + "##" + p[1]
+        )
 
     for trace in log:
         data.append([])
         trace_paths_perf = {}
-        for i in range(len(trace)-1):
-            for j in range(i+2, len(trace)):
+        for i in range(len(trace) - 1):
+            for j in range(i + 2, len(trace)):
                 p = (trace[i][activity_key], trace[j][activity_key])
                 tc = trace[i][timestamp_key].timestamp()
                 ts = trace[j][start_timestamp_key].timestamp()
@@ -338,7 +417,10 @@ def indirect_paths_times_last_occ(log: EventLog, parameters: Optional[Dict[Union
     return data, feature_names
 
 
-def direct_paths_times_last_occ(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Tuple[Any, List[str]]:
+def direct_paths_times_last_occ(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Tuple[Any, List[str]]:
     """
     Calculates for each case, and for each direct path of the case, the difference between the start timestamp
     of the later event and the completion timestamp of the first event. Defaults if a path is not present in a case.
@@ -360,29 +442,43 @@ def direct_paths_times_last_occ(log: EventLog, parameters: Optional[Dict[Union[s
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    default_not_present = exec_utils.get_param_value(Parameters.DEFAULT_NOT_PRESENT, parameters, 0)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    default_not_present = exec_utils.get_param_value(
+        Parameters.DEFAULT_NOT_PRESENT, parameters, 0
+    )
 
     all_paths = set()
     for trace in log:
-        for i in range(len(trace)-1):
-            all_paths.add((trace[i][activity_key], trace[i+1][activity_key]))
+        for i in range(len(trace) - 1):
+            all_paths.add((trace[i][activity_key], trace[i + 1][activity_key]))
     all_paths = sorted(list(all_paths))
 
     data = []
     feature_names = []
     for p in all_paths:
-        feature_names.append("directPathPerformanceLastOcc@@"+p[0]+"##"+p[1])
+        feature_names.append(
+            "directPathPerformanceLastOcc@@" + p[0] + "##" + p[1]
+        )
 
     for trace in log:
         data.append([])
         trace_paths_perf = {}
-        for i in range(len(trace)-1):
-            p = (trace[i][activity_key], trace[i+1][activity_key])
+        for i in range(len(trace) - 1):
+            p = (trace[i][activity_key], trace[i + 1][activity_key])
             tc = trace[i][timestamp_key].timestamp()
-            ts = trace[i+1][start_timestamp_key].timestamp()
+            ts = trace[i + 1][start_timestamp_key].timestamp()
             if ts > tc:
                 trace_paths_perf[p] = ts - tc
         for p in all_paths:
@@ -394,7 +490,10 @@ def direct_paths_times_last_occ(log: EventLog, parameters: Optional[Dict[Union[s
     return data, feature_names
 
 
-def times_from_first_occurrence_activity_case(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Tuple[Any, List[str]]:
+def times_from_first_occurrence_activity_case(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Tuple[Any, List[str]]:
     """
     Calculates for each case, and for each activity, the times from the start to the case, and to the end of the case,
     from the first occurrence of the activity in the case.
@@ -416,10 +515,22 @@ def times_from_first_occurrence_activity_case(log: EventLog, parameters: Optiona
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    default_not_present = exec_utils.get_param_value(Parameters.DEFAULT_NOT_PRESENT, parameters, 0)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    default_not_present = exec_utils.get_param_value(
+        Parameters.DEFAULT_NOT_PRESENT, parameters, 0
+    )
 
     activities_log = set()
     for trace in log:
@@ -430,8 +541,8 @@ def times_from_first_occurrence_activity_case(log: EventLog, parameters: Optiona
     data = []
     feature_names = []
     for act in activities_log:
-        feature_names.append("startToFirstOcc@@"+act)
-        feature_names.append("firstOccToEnd@@"+act)
+        feature_names.append("startToFirstOcc@@" + act)
+        feature_names.append("firstOccToEnd@@" + act)
 
     for trace in log:
         data.append([])
@@ -455,7 +566,10 @@ def times_from_first_occurrence_activity_case(log: EventLog, parameters: Optiona
     return data, feature_names
 
 
-def times_from_last_occurrence_activity_case(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Tuple[Any, List[str]]:
+def times_from_last_occurrence_activity_case(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Tuple[Any, List[str]]:
     """
     Calculates for each case, and for each activity, the times from the start to the case, and to the end of the case,
     from the last occurrence of the activity in the case.
@@ -477,10 +591,22 @@ def times_from_last_occurrence_activity_case(log: EventLog, parameters: Optional
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    default_not_present = exec_utils.get_param_value(Parameters.DEFAULT_NOT_PRESENT, parameters, 0)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    default_not_present = exec_utils.get_param_value(
+        Parameters.DEFAULT_NOT_PRESENT, parameters, 0
+    )
 
     activities_log = set()
     for trace in log:
@@ -491,8 +617,8 @@ def times_from_last_occurrence_activity_case(log: EventLog, parameters: Optional
     data = []
     feature_names = []
     for act in activities_log:
-        feature_names.append("startToLastOcc@@"+act)
-        feature_names.append("lastOccToEnd@@"+act)
+        feature_names.append("startToLastOcc@@" + act)
+        feature_names.append("lastOccToEnd@@" + act)
 
     for trace in log:
         data.append([])
@@ -515,7 +641,10 @@ def times_from_last_occurrence_activity_case(log: EventLog, parameters: Optional
     return data, feature_names
 
 
-def first_last_activity_index_trace(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Tuple[Any, List[str]]:
+def first_last_activity_index_trace(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Tuple[Any, List[str]]:
     """
     Consider as features the first and the last index of an activity inside a case
 
@@ -538,8 +667,12 @@ def first_last_activity_index_trace(log: EventLog, parameters: Optional[Dict[Uni
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    default_not_present = exec_utils.get_param_value(Parameters.DEFAULT_NOT_PRESENT, parameters, -1)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    default_not_present = exec_utils.get_param_value(
+        Parameters.DEFAULT_NOT_PRESENT, parameters, -1
+    )
 
     activities_log = set()
     for trace in log:
@@ -550,8 +683,8 @@ def first_last_activity_index_trace(log: EventLog, parameters: Optional[Dict[Uni
     data = []
     feature_names = []
     for act in activities_log:
-        feature_names.append("firstIndexAct@@"+act)
-        feature_names.append("lastIndexAct@@"+act)
+        feature_names.append("firstIndexAct@@" + act)
+        feature_names.append("lastIndexAct@@" + act)
     for trace in log:
         data.append([])
 
@@ -573,7 +706,10 @@ def first_last_activity_index_trace(log: EventLog, parameters: Optional[Dict[Uni
     return data, feature_names
 
 
-def case_duration(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Tuple[Any, List[str]]:
+def case_duration(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Tuple[Any, List[str]]:
     """
     Calculates for each case, the case duration (and adds it as a feature)
 
@@ -594,14 +730,29 @@ def case_duration(log: EventLog, parameters: Optional[Dict[Union[str, Parameters
     if parameters is None:
         parameters = {}
 
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
 
     feature_names = ["@@caseDuration"]
     data = []
     for trace in log:
         if trace:
-            data.append([float(trace[-1][timestamp_key].timestamp() - trace[0][start_timestamp_key].timestamp())])
+            data.append(
+                [
+                    float(
+                        trace[-1][timestamp_key].timestamp()
+                        - trace[0][start_timestamp_key].timestamp()
+                    )
+                ]
+            )
         else:
             data.append([0.0])
 
@@ -625,11 +776,18 @@ def get_string_trace_attribute_rep(trace: Trace, trace_attribute: str) -> str:
         Representation of the feature name associated to a string trace attribute value
     """
     if trace_attribute in trace.attributes:
-        return "trace:" + str(trace_attribute) + "@" + str(trace.attributes[trace_attribute])
+        return (
+            "trace:"
+            + str(trace_attribute)
+            + "@"
+            + str(trace.attributes[trace_attribute])
+        )
     return "trace:" + str(trace_attribute) + "@UNDEFINED"
 
 
-def get_all_string_trace_attribute_values(log: EventLog, trace_attribute: str) -> List[str]:
+def get_all_string_trace_attribute_values(
+    log: EventLog, trace_attribute: str
+) -> List[str]:
     """
     Get all string trace attribute values representations for a log
 
@@ -670,7 +828,9 @@ def get_string_event_attribute_rep(event: Event, event_attribute: str) -> str:
     return "event:" + str(event_attribute) + "@" + str(event[event_attribute])
 
 
-def get_values_event_attribute_for_trace(trace: Trace, event_attribute: str) -> Set[str]:
+def get_values_event_attribute_for_trace(
+    trace: Trace, event_attribute: str
+) -> Set[str]:
     """
     Get all the representations for the events of a trace associated to a string event attribute values
 
@@ -689,13 +849,17 @@ def get_values_event_attribute_for_trace(trace: Trace, event_attribute: str) -> 
     values_trace = set()
     for event in trace:
         if event_attribute in event:
-            values_trace.add(get_string_event_attribute_rep(event, event_attribute))
+            values_trace.add(
+                get_string_event_attribute_rep(event, event_attribute)
+            )
     if not values_trace:
         values_trace.add("event:" + str(event_attribute) + "@UNDEFINED")
     return values_trace
 
 
-def get_all_string_event_attribute_values(log: EventLog, event_attribute: str) -> List[str]:
+def get_all_string_event_attribute_values(
+    log: EventLog, event_attribute: str
+) -> List[str]:
     """
     Get all the representations for all the traces of the log associated to a string event attribute values
 
@@ -713,11 +877,15 @@ def get_all_string_event_attribute_values(log: EventLog, event_attribute: str) -
     """
     values = set()
     for trace in log:
-        values = values.union(get_values_event_attribute_for_trace(trace, event_attribute))
+        values = values.union(
+            get_values_event_attribute_for_trace(trace, event_attribute)
+        )
     return list(sorted(values))
 
 
-def get_string_event_attribute_succession_rep(event1: Event, event2: Event, event_attribute: str) -> str:
+def get_string_event_attribute_succession_rep(
+    event1: Event, event2: Event, event_attribute: str
+) -> str:
     """
     Get a representation of the feature name associated to a string event attribute value
 
@@ -735,11 +903,19 @@ def get_string_event_attribute_succession_rep(event1: Event, event2: Event, even
     rep
         Representation of the feature name associated to a string event attribute value
     """
-    return "succession:" + str(event_attribute) + "@" + str(event1[event_attribute]) + "#" + str(
-        event2[event_attribute])
+    return (
+        "succession:"
+        + str(event_attribute)
+        + "@"
+        + str(event1[event_attribute])
+        + "#"
+        + str(event2[event_attribute])
+    )
 
 
-def get_values_event_attribute_succession_for_trace(trace: Trace, event_attribute: str) -> Set[str]:
+def get_values_event_attribute_succession_for_trace(
+    trace: Trace, event_attribute: str
+) -> Set[str]:
     """
     Get all the representations for the events of a trace associated to a string event attribute succession values
 
@@ -760,13 +936,19 @@ def get_values_event_attribute_succession_for_trace(trace: Trace, event_attribut
         event1 = trace[i]
         event2 = trace[i + 1]
         if event_attribute in event1 and event_attribute in event2:
-            values_trace.add(get_string_event_attribute_succession_rep(event1, event2, event_attribute))
+            values_trace.add(
+                get_string_event_attribute_succession_rep(
+                    event1, event2, event_attribute
+                )
+            )
     if not values_trace:
         values_trace.add("succession:" + str(event_attribute) + "@UNDEFINED")
     return values_trace
 
 
-def get_all_string_event_succession_attribute_values(log: EventLog, event_attribute: str) -> List[str]:
+def get_all_string_event_succession_attribute_values(
+    log: EventLog, event_attribute: str
+) -> List[str]:
     """
     Get all the representations for all the traces of the log associated to a string event attribute succession values
 
@@ -784,7 +966,11 @@ def get_all_string_event_succession_attribute_values(log: EventLog, event_attrib
     """
     values = set()
     for trace in log:
-        values = values.union(get_values_event_attribute_succession_for_trace(trace, event_attribute))
+        values = values.union(
+            get_values_event_attribute_succession_for_trace(
+                trace, event_attribute
+            )
+        )
     return list(sorted(values))
 
 
@@ -805,7 +991,9 @@ def get_numeric_trace_attribute_rep(trace_attribute: str) -> str:
     return "trace:" + trace_attribute
 
 
-def get_numeric_trace_attribute_value(trace: Trace, trace_attribute: str) -> Union[int, float]:
+def get_numeric_trace_attribute_value(
+    trace: Trace, trace_attribute: str
+) -> Union[int, float]:
     """
     Get the value of a numeric trace attribute from a given trace
 
@@ -821,7 +1009,9 @@ def get_numeric_trace_attribute_value(trace: Trace, trace_attribute: str) -> Uni
     """
     if trace_attribute in trace.attributes:
         return float(trace.attributes[trace_attribute])
-    raise Exception("at least a trace without trace attribute: " + trace_attribute)
+    raise Exception(
+        "at least a trace without trace attribute: " + trace_attribute
+    )
 
 
 def get_numeric_event_attribute_rep(event_attribute: str) -> str:
@@ -841,7 +1031,9 @@ def get_numeric_event_attribute_rep(event_attribute: str) -> str:
     return "event:" + event_attribute
 
 
-def get_numeric_event_attribute_value(event: Event, event_attribute: str) -> Union[int, float]:
+def get_numeric_event_attribute_value(
+    event: Event, event_attribute: str
+) -> Union[int, float]:
     """
     Get the value of a numeric event attribute from a given event
 
@@ -860,7 +1052,9 @@ def get_numeric_event_attribute_value(event: Event, event_attribute: str) -> Uni
     return None
 
 
-def get_numeric_event_attribute_value_trace(trace: Trace, event_attribute: str) -> Union[int, float]:
+def get_numeric_event_attribute_value_trace(
+    trace: Trace, event_attribute: str
+) -> Union[int, float]:
     """
     Get the value of the last occurrence of a numeric event attribute given a trace
 
@@ -881,12 +1075,17 @@ def get_numeric_event_attribute_value_trace(trace: Trace, event_attribute: str) 
             non_zero_values.append(value)
     if len(non_zero_values) > 0:
         return non_zero_values[-1]
-    raise Exception("at least a trace without any event with event attribute: " + event_attribute)
+    raise Exception(
+        "at least a trace without any event with event attribute: "
+        + event_attribute
+    )
 
 
-def get_default_representation_with_attribute_names(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
-                                                    feature_names: Optional[List[str]] = None) -> Tuple[
-    Any, List[str], List[str], List[str], List[str], List[str]]:
+def get_default_representation_with_attribute_names(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+    feature_names: Optional[List[str]] = None,
+) -> Tuple[Any, List[str], List[str], List[str], List[str], List[str]]:
     """
     Gets the default data representation of an event log (for process tree building)
     returning also the attribute names
@@ -907,21 +1106,30 @@ def get_default_representation_with_attribute_names(log: EventLog, parameters: O
     feature_names
         Names of the features, in order
     """
-    from pm4py.statistics.attributes.log.select import select_attributes_from_log_for_tree
+    from pm4py.statistics.attributes.log.select import (
+        select_attributes_from_log_for_tree,
+    )
 
     if parameters is None:
         parameters = {}
 
-    enable_activity_def_representation = exec_utils.get_param_value(Parameters.ENABLE_ACTIVITY_DEF_REPRESENTATION,
-                                                                    parameters, False)
-    enable_succ_def_representation = exec_utils.get_param_value(Parameters.ENABLE_SUCC_DEF_REPRESENTATION, parameters,
-                                                                False)
+    enable_activity_def_representation = exec_utils.get_param_value(
+        Parameters.ENABLE_ACTIVITY_DEF_REPRESENTATION, parameters, False
+    )
+    enable_succ_def_representation = exec_utils.get_param_value(
+        Parameters.ENABLE_SUCC_DEF_REPRESENTATION, parameters, False
+    )
 
-    activity_key = parameters[
-        constants.PARAMETER_CONSTANT_ACTIVITY_KEY] if constants.PARAMETER_CONSTANT_ACTIVITY_KEY in parameters else xes.DEFAULT_NAME_KEY
+    activity_key = (
+        parameters[constants.PARAMETER_CONSTANT_ACTIVITY_KEY]
+        if constants.PARAMETER_CONSTANT_ACTIVITY_KEY in parameters
+        else xes.DEFAULT_NAME_KEY
+    )
     blacklist = parameters["blacklist"] if "blacklist" in parameters else []
 
-    str_tr_attr, str_ev_attr, num_tr_attr, num_ev_attr = select_attributes_from_log_for_tree(log)
+    str_tr_attr, str_ev_attr, num_tr_attr, num_ev_attr = (
+        select_attributes_from_log_for_tree(log)
+    )
     str_evsucc_attr = None
 
     if enable_succ_def_representation:
@@ -936,15 +1144,31 @@ def get_default_representation_with_attribute_names(log: EventLog, parameters: O
     if str_evsucc_attr is not None:
         str_evsucc_attr = [x for x in str_evsucc_attr if x not in blacklist]
 
-    data, feature_names = get_representation(log, str_tr_attr, str_ev_attr, num_tr_attr, num_ev_attr,
-                                             str_evsucc_attr=str_evsucc_attr,
-                                             feature_names=feature_names)
+    data, feature_names = get_representation(
+        log,
+        str_tr_attr,
+        str_ev_attr,
+        num_tr_attr,
+        num_ev_attr,
+        str_evsucc_attr=str_evsucc_attr,
+        feature_names=feature_names,
+    )
 
-    return data, feature_names, str_tr_attr, str_ev_attr, num_tr_attr, num_ev_attr
+    return (
+        data,
+        feature_names,
+        str_tr_attr,
+        str_ev_attr,
+        num_tr_attr,
+        num_ev_attr,
+    )
 
 
-def get_default_representation(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
-                               feature_names: Optional[List[str]] = None) -> Tuple[Any, List[str]]:
+def get_default_representation(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+    feature_names: Optional[List[str]] = None,
+) -> Tuple[Any, List[str]]:
     """
     Gets the default data representation of an event log (for process tree building)
 
@@ -964,21 +1188,30 @@ def get_default_representation(log: EventLog, parameters: Optional[Dict[Union[st
     feature_names
         Names of the features, in order
     """
-    from pm4py.statistics.attributes.log.select import select_attributes_from_log_for_tree
+    from pm4py.statistics.attributes.log.select import (
+        select_attributes_from_log_for_tree,
+    )
 
     if parameters is None:
         parameters = {}
 
-    enable_activity_def_representation = exec_utils.get_param_value(Parameters.ENABLE_ACTIVITY_DEF_REPRESENTATION,
-                                                                    parameters, True)
-    enable_succ_def_representation = exec_utils.get_param_value(Parameters.ENABLE_SUCC_DEF_REPRESENTATION, parameters,
-                                                                True)
+    enable_activity_def_representation = exec_utils.get_param_value(
+        Parameters.ENABLE_ACTIVITY_DEF_REPRESENTATION, parameters, True
+    )
+    enable_succ_def_representation = exec_utils.get_param_value(
+        Parameters.ENABLE_SUCC_DEF_REPRESENTATION, parameters, True
+    )
 
-    activity_key = parameters[
-        constants.PARAMETER_CONSTANT_ACTIVITY_KEY] if constants.PARAMETER_CONSTANT_ACTIVITY_KEY in parameters else xes.DEFAULT_NAME_KEY
+    activity_key = (
+        parameters[constants.PARAMETER_CONSTANT_ACTIVITY_KEY]
+        if constants.PARAMETER_CONSTANT_ACTIVITY_KEY in parameters
+        else xes.DEFAULT_NAME_KEY
+    )
     blacklist = parameters["blacklist"] if "blacklist" in parameters else []
 
-    str_tr_attr, str_ev_attr, num_tr_attr, num_ev_attr = select_attributes_from_log_for_tree(log)
+    str_tr_attr, str_ev_attr, num_tr_attr, num_ev_attr = (
+        select_attributes_from_log_for_tree(log)
+    )
     str_evsucc_attr = None
 
     if enable_succ_def_representation:
@@ -993,13 +1226,26 @@ def get_default_representation(log: EventLog, parameters: Optional[Dict[Union[st
     if str_evsucc_attr is not None:
         str_evsucc_attr = [x for x in str_evsucc_attr if x not in blacklist]
 
-    return get_representation(log, str_tr_attr, str_ev_attr, num_tr_attr, num_ev_attr, str_evsucc_attr=str_evsucc_attr,
-                              feature_names=feature_names)
+    return get_representation(
+        log,
+        str_tr_attr,
+        str_ev_attr,
+        num_tr_attr,
+        num_ev_attr,
+        str_evsucc_attr=str_evsucc_attr,
+        feature_names=feature_names,
+    )
 
 
-def get_representation(log: EventLog, str_tr_attr: List[str], str_ev_attr: List[str], num_tr_attr: List[str],
-                       num_ev_attr: List[str], str_evsucc_attr: Optional[List[str]] = None,
-                       feature_names: Optional[List[str]] = None) -> Tuple[Any, List[str]]:
+def get_representation(
+    log: EventLog,
+    str_tr_attr: List[str],
+    str_ev_attr: List[str],
+    num_tr_attr: List[str],
+    num_ev_attr: List[str],
+    str_evsucc_attr: Optional[List[str]] = None,
+    feature_names: Optional[List[str]] = None,
+) -> Tuple[Any, List[str]]:
     """
     Get a representation of the event log that is suited for the data part of the decision tree learning
 
@@ -1035,28 +1281,42 @@ def get_representation(log: EventLog, str_tr_attr: List[str], str_ev_attr: List[
     if feature_names is None:
         feature_names = []
         for trace_attribute in str_tr_attr:
-            values = get_all_string_trace_attribute_values(log, trace_attribute)
+            values = get_all_string_trace_attribute_values(
+                log, trace_attribute
+            )
             for value in values:
                 dictionary[value] = count
                 feature_names.append(value)
                 count = count + 1
         for event_attribute in str_ev_attr:
-            values = get_all_string_event_attribute_values(log, event_attribute)
+            values = get_all_string_event_attribute_values(
+                log, event_attribute
+            )
             for value in values:
                 dictionary[value] = count
                 feature_names.append(value)
                 count = count + 1
         for trace_attribute in num_tr_attr:
-            dictionary[get_numeric_trace_attribute_rep(trace_attribute)] = count
-            feature_names.append(get_numeric_trace_attribute_rep(trace_attribute))
+            dictionary[get_numeric_trace_attribute_rep(trace_attribute)] = (
+                count
+            )
+            feature_names.append(
+                get_numeric_trace_attribute_rep(trace_attribute)
+            )
             count = count + 1
         for event_attribute in num_ev_attr:
-            dictionary[get_numeric_event_attribute_rep(event_attribute)] = count
-            feature_names.append(get_numeric_event_attribute_rep(event_attribute))
+            dictionary[get_numeric_event_attribute_rep(event_attribute)] = (
+                count
+            )
+            feature_names.append(
+                get_numeric_event_attribute_rep(event_attribute)
+            )
             count = count + 1
         if str_evsucc_attr:
             for event_attribute in str_evsucc_attr:
-                values = get_all_string_event_succession_attribute_values(log, event_attribute)
+                values = get_all_string_event_succession_attribute_values(
+                    log, event_attribute
+                )
                 for value in values:
                     dictionary[value] = count
                     feature_names.append(value)
@@ -1069,27 +1329,37 @@ def get_representation(log: EventLog, str_tr_attr: List[str], str_ev_attr: List[
     for trace in log:
         trace_rep = [0.0] * count
         for trace_attribute in str_tr_attr:
-            trace_attr_rep = get_string_trace_attribute_rep(trace, trace_attribute)
+            trace_attr_rep = get_string_trace_attribute_rep(
+                trace, trace_attribute
+            )
             if trace_attr_rep in dictionary:
                 trace_rep[dictionary[trace_attr_rep]] = 1.0
         for event_attribute in str_ev_attr:
-            values = get_values_event_attribute_for_trace(trace, event_attribute)
+            values = get_values_event_attribute_for_trace(
+                trace, event_attribute
+            )
             for value in values:
                 if value in dictionary:
                     trace_rep[dictionary[value]] = 1.0
         for trace_attribute in num_tr_attr:
             this_value = get_numeric_trace_attribute_rep(trace_attribute)
             if this_value in dictionary:
-                trace_rep[dictionary[this_value]] = get_numeric_trace_attribute_value(
-                    trace, trace_attribute)
+                trace_rep[dictionary[this_value]] = (
+                    get_numeric_trace_attribute_value(trace, trace_attribute)
+                )
         for event_attribute in num_ev_attr:
             this_value = get_numeric_event_attribute_rep(event_attribute)
             if this_value in dictionary:
-                trace_rep[dictionary[this_value]] = get_numeric_event_attribute_value_trace(
-                    trace, event_attribute)
+                trace_rep[dictionary[this_value]] = (
+                    get_numeric_event_attribute_value_trace(
+                        trace, event_attribute
+                    )
+                )
         if str_evsucc_attr:
             for event_attribute in str_evsucc_attr:
-                values = get_values_event_attribute_succession_for_trace(trace, event_attribute)
+                values = get_values_event_attribute_succession_for_trace(
+                    trace, event_attribute
+                )
                 for value in values:
                     if value in dictionary:
                         trace_rep[dictionary[value]] = 1.0
@@ -1098,7 +1368,10 @@ def get_representation(log: EventLog, str_tr_attr: List[str], str_ev_attr: List[
     return data, feature_names
 
 
-def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Tuple[Any, List[str]]:
+def apply(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Tuple[Any, List[str]]:
     """
     Extract the features from an event log (a vector for each trace)
 
@@ -1141,14 +1414,31 @@ def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]]
     if parameters is None:
         parameters = {}
 
-    str_tr_attr = exec_utils.get_param_value(Parameters.STR_TRACE_ATTRIBUTES, parameters, None)
-    num_tr_attr = exec_utils.get_param_value(Parameters.NUM_TRACE_ATTRIBUTES, parameters, None)
-    str_ev_attr = exec_utils.get_param_value(Parameters.STR_EVENT_ATTRIBUTES, parameters, None)
-    num_ev_attr = exec_utils.get_param_value(Parameters.NUM_EVENT_ATTRIBUTES, parameters, None)
-    str_evsucc_attr = exec_utils.get_param_value(Parameters.STR_EVSUCC_ATTRIBUTES, parameters, None)
-    feature_names = exec_utils.get_param_value(Parameters.FEATURE_NAMES, parameters, None)
+    str_tr_attr = exec_utils.get_param_value(
+        Parameters.STR_TRACE_ATTRIBUTES, parameters, None
+    )
+    num_tr_attr = exec_utils.get_param_value(
+        Parameters.NUM_TRACE_ATTRIBUTES, parameters, None
+    )
+    str_ev_attr = exec_utils.get_param_value(
+        Parameters.STR_EVENT_ATTRIBUTES, parameters, None
+    )
+    num_ev_attr = exec_utils.get_param_value(
+        Parameters.NUM_EVENT_ATTRIBUTES, parameters, None
+    )
+    str_evsucc_attr = exec_utils.get_param_value(
+        Parameters.STR_EVSUCC_ATTRIBUTES, parameters, None
+    )
+    feature_names = exec_utils.get_param_value(
+        Parameters.FEATURE_NAMES, parameters, None
+    )
 
-    at_least_one_provided = (str_tr_attr is not None) or (num_tr_attr is not None) or (str_ev_attr is not None) or (num_ev_attr is not None)
+    at_least_one_provided = (
+        (str_tr_attr is not None)
+        or (num_tr_attr is not None)
+        or (str_ev_attr is not None)
+        or (num_ev_attr is not None)
+    )
 
     if str_tr_attr is None:
         str_tr_attr = []
@@ -1163,42 +1453,97 @@ def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]]
         num_ev_attr = []
 
     if pandas_utils.check_is_pandas_dataframe(log):
-        case_attribute_prefix = exec_utils.get_param_value(Parameters.CASE_ATTRIBUTE_PREFIX, parameters, "case:")
+        case_attribute_prefix = exec_utils.get_param_value(
+            Parameters.CASE_ATTRIBUTE_PREFIX, parameters, "case:"
+        )
 
         if str_tr_attr or num_tr_attr or str_ev_attr or num_ev_attr:
-            columns = list(set([case_attribute_prefix + x for x in str_tr_attr]).union(set([case_attribute_prefix + x for x in num_tr_attr])).union(
-                set(str_ev_attr)).union(set(num_ev_attr)))
-            fea_df = dataframe_utils.get_features_df(log, columns, parameters=parameters)
+            columns = list(
+                set([case_attribute_prefix + x for x in str_tr_attr])
+                .union(set([case_attribute_prefix + x for x in num_tr_attr]))
+                .union(set(str_ev_attr))
+                .union(set(num_ev_attr))
+            )
+            fea_df = dataframe_utils.get_features_df(
+                log, columns, parameters=parameters
+            )
             feature_names = list(fea_df.columns)
         else:
-            fea_df = dataframe_utils.automatic_feature_extraction_df(log, parameters=parameters)
+            fea_df = dataframe_utils.automatic_feature_extraction_df(
+                log, parameters=parameters
+            )
             feature_names = list(fea_df.columns)
         return fea_df, feature_names
     else:
-        enable_all = exec_utils.get_param_value(Parameters.ENABLE_ALL_EXTRA_FEATURES, parameters, False)
-        case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, xes_constants.DEFAULT_TRACEID_KEY)
-        add_case_identifier_column = exec_utils.get_param_value(Parameters.ADD_CASE_IDENTIFIER_COLUMN, parameters, False)
-        enable_case_duration = exec_utils.get_param_value(Parameters.ENABLE_CASE_DURATION, parameters, enable_all)
-        enable_times_from_first_occ = exec_utils.get_param_value(Parameters.ENABLE_TIMES_FROM_FIRST_OCCURRENCE,
-                                                                 parameters, enable_all)
-        enable_times_from_last_occ = exec_utils.get_param_value(Parameters.ENABLE_TIMES_FROM_LAST_OCCURRENCE,
-                                                                parameters, enable_all)
-        enable_direct_paths_times_last_occ = exec_utils.get_param_value(Parameters.ENABLE_DIRECT_PATHS_TIMES_LAST_OCC,
-                                                                        parameters, enable_all)
+        enable_all = exec_utils.get_param_value(
+            Parameters.ENABLE_ALL_EXTRA_FEATURES, parameters, False
+        )
+        case_id_key = exec_utils.get_param_value(
+            Parameters.CASE_ID_KEY,
+            parameters,
+            xes_constants.DEFAULT_TRACEID_KEY,
+        )
+        add_case_identifier_column = exec_utils.get_param_value(
+            Parameters.ADD_CASE_IDENTIFIER_COLUMN, parameters, False
+        )
+        enable_case_duration = exec_utils.get_param_value(
+            Parameters.ENABLE_CASE_DURATION, parameters, enable_all
+        )
+        enable_times_from_first_occ = exec_utils.get_param_value(
+            Parameters.ENABLE_TIMES_FROM_FIRST_OCCURRENCE,
+            parameters,
+            enable_all,
+        )
+        enable_times_from_last_occ = exec_utils.get_param_value(
+            Parameters.ENABLE_TIMES_FROM_LAST_OCCURRENCE,
+            parameters,
+            enable_all,
+        )
+        enable_direct_paths_times_last_occ = exec_utils.get_param_value(
+            Parameters.ENABLE_DIRECT_PATHS_TIMES_LAST_OCC,
+            parameters,
+            enable_all,
+        )
         enable_indirect_paths_times_last_occ = exec_utils.get_param_value(
-            Parameters.ENABLE_INDIRECT_PATHS_TIMES_LAST_OCC, parameters, enable_all)
-        enable_work_in_progress = exec_utils.get_param_value(Parameters.ENABLE_WORK_IN_PROGRESS, parameters, enable_all)
-        enable_resource_workload = exec_utils.get_param_value(Parameters.ENABLE_RESOURCE_WORKLOAD, parameters, enable_all)
-        enable_first_last_activity_index = exec_utils.get_param_value(Parameters.ENABLE_FIRST_LAST_ACTIVITY_INDEX, parameters, enable_all)
-        enable_max_concurrent_events = exec_utils.get_param_value(Parameters.ENABLE_MAX_CONCURRENT_EVENTS, parameters, enable_all)
-        enable_max_concurrent_events_per_activity = exec_utils.get_param_value(Parameters.ENABLE_MAX_CONCURRENT_EVENTS_PER_ACTIVITY, parameters, enable_all)
+            Parameters.ENABLE_INDIRECT_PATHS_TIMES_LAST_OCC,
+            parameters,
+            enable_all,
+        )
+        enable_work_in_progress = exec_utils.get_param_value(
+            Parameters.ENABLE_WORK_IN_PROGRESS, parameters, enable_all
+        )
+        enable_resource_workload = exec_utils.get_param_value(
+            Parameters.ENABLE_RESOURCE_WORKLOAD, parameters, enable_all
+        )
+        enable_first_last_activity_index = exec_utils.get_param_value(
+            Parameters.ENABLE_FIRST_LAST_ACTIVITY_INDEX, parameters, enable_all
+        )
+        enable_max_concurrent_events = exec_utils.get_param_value(
+            Parameters.ENABLE_MAX_CONCURRENT_EVENTS, parameters, enable_all
+        )
+        enable_max_concurrent_events_per_activity = exec_utils.get_param_value(
+            Parameters.ENABLE_MAX_CONCURRENT_EVENTS_PER_ACTIVITY,
+            parameters,
+            enable_all,
+        )
 
-        log = converter.apply(log, variant=converter.Variants.TO_EVENT_LOG, parameters=parameters)
+        log = converter.apply(
+            log, variant=converter.Variants.TO_EVENT_LOG, parameters=parameters
+        )
         if at_least_one_provided:
-            datas, features_namess = get_representation(log, str_tr_attr, str_ev_attr, num_tr_attr, num_ev_attr,
-                                      str_evsucc_attr=str_evsucc_attr, feature_names=feature_names)
+            datas, features_namess = get_representation(
+                log,
+                str_tr_attr,
+                str_ev_attr,
+                num_tr_attr,
+                num_ev_attr,
+                str_evsucc_attr=str_evsucc_attr,
+                feature_names=feature_names,
+            )
         else:
-            datas, features_namess = get_default_representation(log, parameters=parameters)
+            datas, features_namess = get_default_representation(
+                log, parameters=parameters
+            )
 
         if add_case_identifier_column:
             for i in range(len(datas)):
@@ -1214,25 +1559,33 @@ def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]]
             features_namess = features_namess + features_names
 
         if enable_times_from_first_occ:
-            data, features_names = times_from_first_occurrence_activity_case(log, parameters=parameters)
+            data, features_names = times_from_first_occurrence_activity_case(
+                log, parameters=parameters
+            )
             for i in range(len(datas)):
                 datas[i] = datas[i] + data[i]
             features_namess = features_namess + features_names
 
         if enable_times_from_last_occ:
-            data, features_names = times_from_last_occurrence_activity_case(log, parameters=parameters)
+            data, features_names = times_from_last_occurrence_activity_case(
+                log, parameters=parameters
+            )
             for i in range(len(datas)):
                 datas[i] = datas[i] + data[i]
             features_namess = features_namess + features_names
 
         if enable_direct_paths_times_last_occ:
-            data, features_names = direct_paths_times_last_occ(log, parameters=parameters)
+            data, features_names = direct_paths_times_last_occ(
+                log, parameters=parameters
+            )
             for i in range(len(datas)):
                 datas[i] = datas[i] + data[i]
             features_namess = features_namess + features_names
 
         if enable_indirect_paths_times_last_occ:
-            data, features_names = indirect_paths_times_last_occ(log, parameters=parameters)
+            data, features_names = indirect_paths_times_last_occ(
+                log, parameters=parameters
+            )
             for i in range(len(datas)):
                 datas[i] = datas[i] + data[i]
             features_namess = features_namess + features_names
@@ -1244,25 +1597,33 @@ def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]]
             features_namess = features_namess + features_names
 
         if enable_resource_workload:
-            data, features_names = resource_workload(log, parameters=parameters)
+            data, features_names = resource_workload(
+                log, parameters=parameters
+            )
             for i in range(len(datas)):
                 datas[i] = datas[i] + data[i]
             features_namess = features_namess + features_names
 
         if enable_first_last_activity_index:
-            data, features_names = first_last_activity_index_trace(log, parameters=parameters)
+            data, features_names = first_last_activity_index_trace(
+                log, parameters=parameters
+            )
             for i in range(len(datas)):
                 datas[i] = datas[i] + data[i]
             features_namess = features_namess + features_names
 
         if enable_max_concurrent_events:
-            data, features_names = max_concurrent_events(log, parameters=parameters)
+            data, features_names = max_concurrent_events(
+                log, parameters=parameters
+            )
             for i in range(len(datas)):
                 datas[i] = datas[i] + data[i]
             features_namess = features_namess + features_names
 
         if enable_max_concurrent_events_per_activity:
-            data, features_names = max_concurrent_events_per_activity(log, parameters=parameters)
+            data, features_names = max_concurrent_events_per_activity(
+                log, parameters=parameters
+            )
             for i in range(len(datas)):
                 datas[i] = datas[i] + data[i]
             features_namess = features_namess + features_names

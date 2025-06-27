@@ -19,4 +19,8 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.algo.querying.llm.injection import algorithm, db_knowledge, pm_knowledge
+from pm4py.algo.querying.llm.injection import (
+    algorithm,
+    db_knowledge,
+    pm_knowledge,
+)

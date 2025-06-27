@@ -32,8 +32,14 @@ class Variants(Enum):
     CLASSIC = classic
 
 
-def build(trace: Trace, sync_net: PetriNet, sync_im: Marking, sync_fm: Marking, variant=Variants.CLASSIC,
-          parameters: Optional[Dict[Any, Any]] = None) -> Any:
+def build(
+    trace: Trace,
+    sync_net: PetriNet,
+    sync_im: Marking,
+    sync_fm: Marking,
+    variant=Variants.CLASSIC,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Any:
     """
     Builds the extended marking equation out of a trace and a synchronous product net
 
@@ -66,10 +72,16 @@ def build(trace: Trace, sync_net: PetriNet, sync_im: Marking, sync_fm: Marking, 
         - Parameters.C => (if provided) the C numpy matrix of the consumption matrix
         - Parameters.FULL_BOOTSTRAP_REQUIRED => The preset/postset of places/transitions need to be inserted
     """
-    return exec_utils.get_variant(variant).build(trace, sync_net, sync_im, sync_fm, parameters=parameters)
+    return exec_utils.get_variant(variant).build(
+        trace, sync_net, sync_im, sync_fm, parameters=parameters
+    )
 
 
-def get_h_value(solver: Any, variant=Variants.CLASSIC, parameters: Optional[Dict[Any, Any]] = None) -> int:
+def get_h_value(
+    solver: Any,
+    variant=Variants.CLASSIC,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> int:
     """
     Gets the heuristics value from the extended marking equation
 
@@ -83,4 +95,6 @@ def get_h_value(solver: Any, variant=Variants.CLASSIC, parameters: Optional[Dict
     parameters
         Possible parameters of the algorithm
     """
-    return exec_utils.get_variant(variant).get_h_value(solver, parameters=parameters)
+    return exec_utils.get_variant(variant).get_h_value(
+        solver, parameters=parameters
+    )

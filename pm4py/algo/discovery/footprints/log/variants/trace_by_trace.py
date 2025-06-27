@@ -46,7 +46,9 @@ class Parameters(Enum):
     ACTIVITY_KEY = constants.PARAMETER_CONSTANT_ACTIVITY_KEY
 
 
-def apply(log, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[str, Any]:
+def apply(
+    log, parameters: Optional[Dict[Union[str, Parameters], Any]] = None
+) -> Dict[str, Any]:
     """
     Discovers a footprint object from an event log
     (the footprints are returned case-by-case)
@@ -67,9 +69,13 @@ def apply(log, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
 
-    log = converter.apply(log, variant=converter.TO_EVENT_LOG, parameters=parameters)
+    log = converter.apply(
+        log, variant=converter.TO_EVENT_LOG, parameters=parameters
+    )
 
     ret = []
 
@@ -87,8 +93,16 @@ def apply(log, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -
             end_activities = set()
 
         ret.append(
-            {Outputs.DFG.value: dfg, Outputs.SEQUENCE.value: sequence, Outputs.PARALLEL.value: parallel, Outputs.ACTIVITIES.value: activities,
-             Outputs.START_ACTIVITIES.value: start_activities, Outputs.END_ACTIVITIES.value: end_activities,
-             Outputs.MIN_TRACE_LENGTH.value: len(trace), Outputs.TRACE.value: trace})
+            {
+                Outputs.DFG.value: dfg,
+                Outputs.SEQUENCE.value: sequence,
+                Outputs.PARALLEL.value: parallel,
+                Outputs.ACTIVITIES.value: activities,
+                Outputs.START_ACTIVITIES.value: start_activities,
+                Outputs.END_ACTIVITIES.value: end_activities,
+                Outputs.MIN_TRACE_LENGTH.value: len(trace),
+                Outputs.TRACE.value: trace,
+            }
+        )
 
     return ret

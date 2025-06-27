@@ -38,8 +38,10 @@ def get_model_implementation():
     return implementation
 
 
-def apply(temporal_profile: Dict[Tuple[str, str], Tuple[float, float]],
-          parameters: Optional[Dict[Any, Any]] = None) -> str:
+def apply(
+    temporal_profile: Dict[Tuple[str, str], Tuple[float, float]],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> str:
     """
     Abstracts a temporal profile model to a string.
 
@@ -59,14 +61,21 @@ def apply(temporal_profile: Dict[Tuple[str, str], Tuple[float, float]],
     if parameters is None:
         parameters = {}
 
-    include_header = exec_utils.get_param_value(Parameters.INCLUDE_HEADER, parameters, True)
+    include_header = exec_utils.get_param_value(
+        Parameters.INCLUDE_HEADER, parameters, True
+    )
 
     ret = ["\n"]
 
     if include_header:
-        ret.append(get_model_description() + "For this process, the model is:\n")
+        ret.append(
+            get_model_description() + "For this process, the model is:\n"
+        )
 
     for act_couple, agg in temporal_profile.items():
-        ret.append("%s -> %s :  AVG: %.2f s  STD: %.2f s" % (act_couple[0], act_couple[1], agg[0], agg[1]))
+        ret.append(
+            "%s -> %s :  AVG: %.2f s  STD: %.2f s"
+            % (act_couple[0], act_couple[1], agg[0], agg[1])
+        )
 
     return "\n".join(ret)

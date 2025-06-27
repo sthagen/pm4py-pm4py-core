@@ -21,7 +21,12 @@ Contact: info@processintelligence.solutions
 '''
 from enum import Enum
 
-from pm4py.objects.conversion.log.variants import to_event_stream, to_event_log, to_data_frame, to_nx
+from pm4py.objects.conversion.log.variants import (
+    to_event_stream,
+    to_event_log,
+    to_data_frame,
+    to_nx,
+)
 
 
 class Variants(Enum):

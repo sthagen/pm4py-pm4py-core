@@ -25,7 +25,9 @@ from typing import Optional, Dict, Any
 
 import pandas as pd
 
-from pm4py.algo.discovery.dfg.adapters.pandas.df_statistics import get_partial_order_dataframe
+from pm4py.algo.discovery.dfg.adapters.pandas.df_statistics import (
+    get_partial_order_dataframe,
+)
 from pm4py.util import exec_utils, constants, xes_constants, pandas_utils
 from pm4py.util import typing
 
@@ -41,8 +43,11 @@ class Parameters(Enum):
     WORKCALENDAR = "workcalendar"
 
 
-def apply(df: pd.DataFrame, temporal_profile: typing.TemporalProfile,
-          parameters: Optional[Dict[Any, Any]] = None) -> typing.TemporalProfileConformanceResults:
+def apply(
+    df: pd.DataFrame,
+    temporal_profile: typing.TemporalProfile,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> typing.TemporalProfileConformanceResults:
     """
     Checks the conformance of the dataframe using the provided temporal profile.
 
@@ -78,35 +83,94 @@ def apply(df: pd.DataFrame, temporal_profile: typing.TemporalProfile,
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters, None)
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY, parameters, None
+    )
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
     zeta = exec_utils.get_param_value(Parameters.ZETA, parameters, 6.0)
 
-    business_hours = exec_utils.get_param_value(Parameters.BUSINESS_HOURS, parameters, False)
-    business_hours_slots = exec_utils.get_param_value(Parameters.BUSINESS_HOUR_SLOTS, parameters, constants.DEFAULT_BUSINESS_HOUR_SLOTS)
-    workcalendar = exec_utils.get_param_value(Parameters.WORKCALENDAR, parameters, constants.DEFAULT_BUSINESS_HOURS_WORKCALENDAR)
+    business_hours = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOURS, parameters, False
+    )
+    business_hours_slots = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOUR_SLOTS,
+        parameters,
+        constants.DEFAULT_BUSINESS_HOUR_SLOTS,
+    )
+    workcalendar = exec_utils.get_param_value(
+        Parameters.WORKCALENDAR,
+        parameters,
+        constants.DEFAULT_BUSINESS_HOURS_WORKCALENDAR,
+    )
 
-    temporal_profile = pandas_utils.instantiate_dataframe([{activity_key: x[0], activity_key + "_2": x[1], "@@min": y[0] - zeta * y[1],
-                                      "@@max": y[0] + zeta * y[1], "@@mean": y[0], "@@std": y[1]} for x, y in
-                                     temporal_profile.items()])
+    temporal_profile = pandas_utils.instantiate_dataframe(
+        [
+            {
+                activity_key: x[0],
+                activity_key + "_2": x[1],
+                "@@min": y[0] - zeta * y[1],
+                "@@max": y[0] + zeta * y[1],
+                "@@mean": y[0],
+                "@@std": y[1],
+            }
+            for x, y in temporal_profile.items()
+        ]
+    )
 
     cases = pandas_utils.format_unique(df[case_id_key].unique())
     ret = [[] for c in cases]
-    efg = get_partial_order_dataframe(df, activity_key=activity_key, timestamp_key=timestamp_key,
-                                      start_timestamp_key=start_timestamp_key, case_id_glue=case_id_key,
-                                      keep_first_following=False, business_hours=business_hours,
-                                      business_hours_slot=business_hours_slots, workcalendar=workcalendar)
+    efg = get_partial_order_dataframe(
+        df,
+        activity_key=activity_key,
+        timestamp_key=timestamp_key,
+        start_timestamp_key=start_timestamp_key,
+        case_id_glue=case_id_key,
+        keep_first_following=False,
+        business_hours=business_hours,
+        business_hours_slot=business_hours_slots,
+        workcalendar=workcalendar,
+    )
     efg = efg[[case_id_key, activity_key, activity_key + "_2", "@@flow_time"]]
     efg = efg.merge(temporal_profile, on=[activity_key, activity_key + "_2"])
-    efg = efg[(efg["@@flow_time"] < efg["@@min"]) | (efg["@@flow_time"] > efg["@@max"])][
-        [case_id_key, activity_key, activity_key + "_2", "@@flow_time", "@@mean", "@@std"]].to_dict("records")
+    efg = efg[
+        (efg["@@flow_time"] < efg["@@min"])
+        | (efg["@@flow_time"] > efg["@@max"])
+    ][
+        [
+            case_id_key,
+            activity_key,
+            activity_key + "_2",
+            "@@flow_time",
+            "@@mean",
+            "@@std",
+        ]
+    ].to_dict(
+        "records"
+    )
 
     for el in efg:
-        this_zeta = abs(el["@@flow_time"] - el["@@mean"]) / el["@@std"] if el["@@std"] > 0 else sys.maxsize
+        this_zeta = (
+            abs(el["@@flow_time"] - el["@@mean"]) / el["@@std"]
+            if el["@@std"] > 0
+            else sys.maxsize
+        )
         ret[cases.index(el[case_id_key])].append(
-            (el[activity_key], el[activity_key + "_2"], el["@@flow_time"], this_zeta))
+            (
+                el[activity_key],
+                el[activity_key + "_2"],
+                el["@@flow_time"],
+                this_zeta,
+            )
+        )
 
     return ret

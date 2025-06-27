@@ -27,4 +27,6 @@ if pm4_constants.ENABLE_INTERNAL_IMPORTS:
     import warnings
 
     if pm4_constants.SHOW_INTERNAL_WARNINGS:
-        warnings.warn("The stochastic_petri package will be removed in a future release.")
+        warnings.warn(
+            "The stochastic_petri package will be removed in a future release."
+        )

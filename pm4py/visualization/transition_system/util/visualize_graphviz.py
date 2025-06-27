@@ -43,21 +43,41 @@ def visualize(ts, parameters=None):
     if parameters is None:
         parameters = {}
 
-    image_format = exec_utils.get_param_value(Parameters.FORMAT, parameters, "png")
-    show_labels = exec_utils.get_param_value(Parameters.SHOW_LABELS, parameters, True)
-    show_names = exec_utils.get_param_value(Parameters.SHOW_NAMES, parameters, True)
-    force_names = exec_utils.get_param_value(Parameters.FORCE_NAMES, parameters, None)
-    fillcolors = exec_utils.get_param_value(Parameters.FILLCOLORS, parameters, {})
-    font_size = exec_utils.get_param_value(Parameters.FONT_SIZE, parameters, 11)
+    image_format = exec_utils.get_param_value(
+        Parameters.FORMAT, parameters, "png"
+    )
+    show_labels = exec_utils.get_param_value(
+        Parameters.SHOW_LABELS, parameters, True
+    )
+    show_names = exec_utils.get_param_value(
+        Parameters.SHOW_NAMES, parameters, True
+    )
+    force_names = exec_utils.get_param_value(
+        Parameters.FORCE_NAMES, parameters, None
+    )
+    fillcolors = exec_utils.get_param_value(
+        Parameters.FILLCOLORS, parameters, {}
+    )
+    font_size = exec_utils.get_param_value(
+        Parameters.FONT_SIZE, parameters, 11
+    )
     font_size = str(font_size)
-    bgcolor = exec_utils.get_param_value(Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR)
-    enable_graph_title = exec_utils.get_param_value(Parameters.ENABLE_GRAPH_TITLE, parameters, constants.DEFAULT_ENABLE_GRAPH_TITLES)
-    graph_title = exec_utils.get_param_value(Parameters.GRAPH_TITLE, parameters, "Transition System")
+    bgcolor = exec_utils.get_param_value(
+        Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR
+    )
+    enable_graph_title = exec_utils.get_param_value(
+        Parameters.ENABLE_GRAPH_TITLE,
+        parameters,
+        constants.DEFAULT_ENABLE_GRAPH_TITLES,
+    )
+    graph_title = exec_utils.get_param_value(
+        Parameters.GRAPH_TITLE, parameters, "Transition System"
+    )
 
     for state in ts.states:
         state.label = state.name
 
-    perc_char = '%'
+    perc_char = "%"
 
     if force_names:
         nts = copy(ts)
@@ -67,35 +87,64 @@ def visualize(ts, parameters=None):
             state.label = state.label + perc_char
         ts = nts
 
-    filename = tempfile.NamedTemporaryFile(suffix='.gv')
+    filename = tempfile.NamedTemporaryFile(suffix=".gv")
     filename.close()
 
-    viz = Digraph(ts.name, filename=filename.name, engine='dot', graph_attr={'bgcolor': bgcolor})
+    viz = Digraph(
+        ts.name,
+        filename=filename.name,
+        engine="dot",
+        graph_attr={"bgcolor": bgcolor},
+    )
 
     if enable_graph_title:
-        viz.attr(label='<<FONT POINT-SIZE="'+str(2*int(font_size))+'">'+graph_title+'</FONT>>', labelloc="top")
+        viz.attr(
+            label='<<FONT POINT-SIZE="'
+            + str(2 * int(font_size))
+            + '">'
+            + graph_title
+            + "</FONT>>",
+            labelloc="top",
+        )
 
     # states
-    viz.attr('node')
+    viz.attr("node")
     for s in ts.states:
         if show_names:
             if s in fillcolors:
-                viz.node(str(id(s)), str(s.label), style="filled", fillcolor=fillcolors[s], fontsize=font_size)
+                viz.node(
+                    str(id(s)),
+                    str(s.label),
+                    style="filled",
+                    fillcolor=fillcolors[s],
+                    fontsize=font_size,
+                )
             else:
                 viz.node(str(id(s)), str(s.label), fontsize=font_size)
         else:
             if s in fillcolors:
-                viz.node(str(id(s)), "", style="filled", fillcolor=fillcolors[s], fontsize=font_size)
+                viz.node(
+                    str(id(s)),
+                    "",
+                    style="filled",
+                    fillcolor=fillcolors[s],
+                    fontsize=font_size,
+                )
             else:
                 viz.node(str(id(s)), "", fontsize=font_size)
     # arcs
     for t in ts.transitions:
         if show_labels:
-            viz.edge(str(id(t.from_state)), str(id(t.to_state)), label=t.name, fontsize=font_size)
+            viz.edge(
+                str(id(t.from_state)),
+                str(id(t.to_state)),
+                label=t.name,
+                fontsize=font_size,
+            )
         else:
             viz.edge(str(id(t.from_state)), str(id(t.to_state)))
 
-    viz.attr(overlap='false')
+    viz.attr(overlap="false")
 
     viz.format = image_format
 

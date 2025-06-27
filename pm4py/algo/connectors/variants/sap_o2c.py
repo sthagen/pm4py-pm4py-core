@@ -54,17 +54,21 @@ def apply(conn, parameters: Optional[Dict[Any, Any]] = None) -> pd.DataFrame:
 
     import pm4py
 
-    connection_string = exec_utils.get_param_value(Parameters.CONNECTION_STRING, parameters, None)
+    connection_string = exec_utils.get_param_value(
+        Parameters.CONNECTION_STRING, parameters, None
+    )
 
     if conn is None:
         import pyodbc
+
         conn = pyodbc.connect(connection_string)
 
     prefix = exec_utils.get_param_value(Parameters.PREFIX, parameters, "")
 
     curs = conn.cursor()
 
-    query = """
+    query = (
+        """
 SELECT * FROM
 (SELECT
     T1.VBELN AS "case:concept:name",
@@ -79,7 +83,9 @@ FROM
             VBAK.ERDAT || ' ' || VBAK.ERZET AS TIMESTAMP,
             VBAK.ERNAM AS USERNAME
         FROM
-            """+prefix+"""VBAK
+            """
+        + prefix
+        + """VBAK
         UNION ALL
         SELECT
             'D' AS TYPE,
@@ -87,8 +93,12 @@ FROM
             LIKP.ERDAT || ' ' || LIKP.ERZET AS TIMESTAMP,
             LIKP.ERNAM AS USERNAME
         FROM
-            """+prefix+"""LIKP
-        JOIN """+prefix+"""VBFA ON LIKP.VBELN = VBFA.VBELN
+            """
+        + prefix
+        + """LIKP
+        JOIN """
+        + prefix
+        + """VBFA ON LIKP.VBELN = VBFA.VBELN
         WHERE
             VBFA.VBTYP_N = 'J'
     ) T1 )
@@ -100,11 +110,21 @@ FROM
     CDHDR.UDATE || ' ' || CDHDR.UTIME AS "time:timestamp",
     CDHDR.USERNAME AS "org:resource"
 FROM
-    """+prefix+"""VBFA VBFA
-    JOIN """+prefix+"""VBAK VBAK ON VBFA.VBELN = VBAK.VBELN
-    JOIN """+prefix+"""VBAP VBAP ON VBAK.VBELN = VBAP.VBELN
-    JOIN """+prefix+"""CDHDR CDHDR ON VBFA.VBELN = CDHDR.OBJECTID
-    JOIN """+prefix+"""TSTCT TSTCT ON CDHDR.TCODE = TSTCT.TCODE
+    """
+        + prefix
+        + """VBFA VBFA
+    JOIN """
+        + prefix
+        + """VBAK VBAK ON VBFA.VBELN = VBAK.VBELN
+    JOIN """
+        + prefix
+        + """VBAP VBAP ON VBAK.VBELN = VBAP.VBELN
+    JOIN """
+        + prefix
+        + """CDHDR CDHDR ON VBFA.VBELN = CDHDR.OBJECTID
+    JOIN """
+        + prefix
+        + """TSTCT TSTCT ON CDHDR.TCODE = TSTCT.TCODE
 WHERE
     VBFA.VBTYP_N = 'C'
     AND TSTCT.SPRSL = 'E'
@@ -117,16 +137,28 @@ WHERE
         C.FKDAT AS "time:timestamp",
         C.ERNAM AS "org:resource"
     FROM
-        """+prefix+"""VBRK C
+        """
+        + prefix
+        + """VBRK C
     JOIN
-        """+prefix+"""VBAK A ON A.VBELN = C.VBELN
+        """
+        + prefix
+        + """VBAK A ON A.VBELN = C.VBELN
     )
     """
-    columns = ["case:concept:name", "concept:name", "time:timestamp", "org:resource"]
+    )
+    columns = [
+        "case:concept:name",
+        "concept:name",
+        "time:timestamp",
+        "org:resource",
+    ]
 
     curs.execute(query)
     dataframe = curs.fetchall()
-    dataframe = pandas_utils.instantiate_dataframe_from_records(dataframe, columns=columns)
+    dataframe = pandas_utils.instantiate_dataframe_from_records(
+        dataframe, columns=columns
+    )
     dataframe = pm4py.format_dataframe(dataframe)
 
     curs.close()

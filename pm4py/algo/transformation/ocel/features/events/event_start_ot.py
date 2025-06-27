@@ -46,11 +46,22 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     if parameters is None:
         parameters = {}
 
-    ordered_events = parameters["ordered_events"] if "ordered_events" in parameters else ocel.events[
-        ocel.event_id_column].to_numpy()
+    ordered_events = (
+        parameters["ordered_events"]
+        if "ordered_events" in parameters
+        else ocel.events[ocel.event_id_column].to_numpy()
+    )
 
-    object_types = ocel.objects.groupby(ocel.object_type_column)[ocel.object_id_column].agg(list).to_dict()
-    endpoints = ocel.relations.groupby(ocel.object_id_column)[ocel.event_id_column].first().to_dict()
+    object_types = (
+        ocel.objects.groupby(ocel.object_type_column)[ocel.object_id_column]
+        .agg(list)
+        .to_dict()
+    )
+    endpoints = (
+        ocel.relations.groupby(ocel.object_id_column)[ocel.event_id_column]
+        .first()
+        .to_dict()
+    )
 
     map_endpoints = {ot: set() for ot in object_types}
     for ot in object_types:
@@ -58,7 +69,7 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
             for ev in endpoints[obj]:
                 map_endpoints[ot].add(ev)
 
-    feature_names = ["@@event_start_"+ot for ot in object_types]
+    feature_names = ["@@event_start_" + ot for ot in object_types]
     data = []
 
     for ev in ordered_events:

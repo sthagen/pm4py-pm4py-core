@@ -27,95 +27,94 @@ from pm4py.util import constants
 from pm4py.util.dt_parsing.variants import strpfromiso
 
 
-def soj_time_business_hours_diff(st: datetime, et: datetime, business_hour_slots: List[Tuple[int]],
-                                 work_calendar=constants.DEFAULT_BUSINESS_HOURS_WORKCALENDAR) -> float:
-    """
-    Calculates the difference between the provided timestamps based on the business hours
-
-    Parameters
-    -----------------
-    st
-        Start timestamp
-    et
-        Complete timestamp
-    business_hour_slots
-        work schedule of the company, provided as a list of tuples where each tuple represents one time slot of business
-        hours. One slot i.e. one tuple consists of one start and one end time given in seconds since week start, e.g.
-        [
-            (7 * 60 * 60, 17 * 60 * 60),
-            ((24 + 7) * 60 * 60, (24 + 12) * 60 * 60),
-            ((24 + 13) * 60 * 60, (24 + 17) * 60 * 60),
-        ]
-        meaning that business hours are Mondays 07:00 - 17:00 and Tuesdays 07:00 - 12:00 and 13:00 - 17:00
-    work_calendar
-        work calendar (it permits querying if a given day is a working day in a given culture)
-
-    Returns
-    -----------------
-    diff
-        Difference in business hours
-    """
-    bh = BusinessHours(st, et,
-                       business_hour_slots=business_hour_slots, work_calendar=work_calendar)
-    return bh.get_seconds()
-
-
-def get_overlapping_time(timespan1_begin: datetime, timespan1_end: datetime,
-                         timespan2_begin: datetime, timespan2_end: datetime) -> float:
-    latest_start = max(timespan1_begin, timespan2_begin)
-    earliest_end = min(timespan1_end, timespan2_end)
-    delta = (earliest_end - latest_start).total_seconds()
-    overlap = max(0.0, delta)
-    return overlap
-
-
 class BusinessHours:
     def __init__(self, datetime1, datetime2, **kwargs):
+        # Remove timezone info for simplicity (assumes same timezone)
         self.datetime1 = datetime1.replace(tzinfo=None)
         self.datetime2 = datetime2.replace(tzinfo=None)
-
-        self.business_hour_slots = kwargs[
-            "business_hour_slots"] if "business_hour_slots" in kwargs else constants.DEFAULT_BUSINESS_HOUR_SLOTS
-
-        # union of business hour slots in order to avoid overlapping business hours
+        # Use provided business hour slots or default
+        self.business_hour_slots = (
+            kwargs["business_hour_slots"]
+            if "business_hour_slots" in kwargs
+            else constants.DEFAULT_BUSINESS_HOUR_SLOTS
+        )
+        # Unify slots to avoid overlaps
         self.business_hour_slots_unified = []
         for begin, end in sorted(self.business_hour_slots):
             if self.business_hour_slots_unified and self.business_hour_slots_unified[-1][1] >= begin - 1:
                 self.business_hour_slots_unified[-1][1] = max(self.business_hour_slots_unified[-1][1], end)
             else:
                 self.business_hour_slots_unified.append([begin, end])
+        # Work calendar (unused in this implementation)
+        self.work_calendar = (
+            kwargs["work_calendar"]
+            if "work_calendar" in kwargs
+            else constants.DEFAULT_BUSINESS_HOURS_WORKCALENDAR
+        )
 
-        # work calendar (it permits querying if a given day is a working day in a given culture) - not used yet
-        self.work_calendar = kwargs[
-            "work_calendar"] if "work_calendar" in kwargs else constants.DEFAULT_BUSINESS_HOURS_WORKCALENDAR
+    def business_seconds_from_week_start(self, dt):
+        """Calculate business seconds from the start of the week to the given datetime."""
+        week_start = dt.date() - timedelta(days=dt.weekday())  # Monday 00:00
+        seconds_since_week_start = (dt - datetime.combine(week_start, time.min)).total_seconds()
+        sum_overlap = 0
+        for start, end in self.business_hour_slots_unified:
+            # Overlap is max(0, min(end, seconds) - start)
+            sum_overlap += max(0, min(seconds_since_week_start, end) - start)
+        return sum_overlap
 
     def get_seconds(self):
-        sum = 0
-        week_start = self.datetime1.date() - timedelta(days=self.datetime1.weekday())
+        """Calculate total business seconds between datetime1 and datetime2."""
+        if self.datetime2 <= self.datetime1:
+            return 0.0
 
-        for bhs, bhe in self.business_hour_slots_unified:
-            begin_day_of_week = math.floor(bhs / 60 / 60 / 24)
-            begin_seconds_of_day = bhs - 24 * 60 * 60 * begin_day_of_week
-            bh_start = datetime.combine(week_start, time.min) + timedelta(days=begin_day_of_week) + timedelta(
-                seconds=begin_seconds_of_day)
+        # Total business seconds in a full week
+        total_business_seconds_per_week = sum(end - start for start, end in self.business_hour_slots_unified)
 
-            end_day_of_week = math.floor(bhe / 60 / 60 / 24)
-            end_seconds_of_day = bhe - 24 * 60 * 60 * end_day_of_week
-            bh_end = datetime.combine(week_start, time.min) + timedelta(days=end_day_of_week) + timedelta(
-                seconds=end_seconds_of_day)
+        # Week starts (Monday 00:00)
+        week_start1 = self.datetime1.date() - timedelta(days=self.datetime1.weekday())
+        week_start2 = self.datetime2.date() - timedelta(days=self.datetime2.weekday())
 
-            overlapping_time = get_overlapping_time(self.datetime1, self.datetime2, bh_start, bh_end)
-            sum += overlapping_time
+        # Number of weeks between week starts
+        number_of_weeks = (week_start2 - week_start1).days // 7
 
-            while True:
-                bh_start += timedelta(days=7)
-                bh_end += timedelta(days=7)
+        # Business seconds from week start to each datetime
+        s1 = self.business_seconds_from_week_start(self.datetime1)
+        s2 = self.business_seconds_from_week_start(self.datetime2)
 
-                overlapping_time = get_overlapping_time(self.datetime1, self.datetime2, bh_start, bh_end)
+        # Total = full weeks + partial week at end - partial week at start
+        total = total_business_seconds_per_week * number_of_weeks + s2 - s1
+        return total
 
-                if overlapping_time <= 0:
-                    break
 
-                sum += overlapping_time
+def soj_time_business_hours_diff(
+    st: datetime,
+    et: datetime,
+    business_hour_slots: List[Tuple[int]],
+    work_calendar=constants.DEFAULT_BUSINESS_HOURS_WORKCALENDAR,
+) -> float:
+    """
+    Calculates the difference between the provided timestamps based on business hours.
 
-        return sum
+    Parameters
+    ----------
+    st : datetime
+        Start timestamp
+    et : datetime
+        End timestamp
+    business_hour_slots : List[Tuple[int]]
+        Work schedule as list of tuples (start, end) in seconds since week start
+    work_calendar
+        Work calendar (unused in this implementation)
+
+    Returns
+    -------
+    float
+        Difference in business hours (seconds)
+    """
+    bh = BusinessHours(
+        st,
+        et,
+        business_hour_slots=business_hour_slots,
+        work_calendar=work_calendar,
+    )
+    return bh.get_seconds()

@@ -49,7 +49,10 @@ class Parameters(Enum):
     ACTIVITY_KEY = constants.PARAMETER_CONSTANT_ACTIVITY_KEY
 
 
-def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[str, Any]:
+def apply(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[str, Any]:
     """
     Discovers a footprint object from an event log
     (the footprints of the event log are returned)
@@ -70,19 +73,36 @@ def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]]
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
 
-    log = converter.apply(log, variant=converter.TO_EVENT_LOG, parameters=parameters)
+    log = converter.apply(
+        log, variant=converter.TO_EVENT_LOG, parameters=parameters
+    )
 
     dfg = dfg_discovery.apply(log, parameters=parameters)
     parallel = {(x, y) for (x, y) in dfg if (y, x) in dfg}
-    sequence = set(causal_discovery.apply(dfg, causal_discovery.Variants.CAUSAL_ALPHA))
+    sequence = set(
+        causal_discovery.apply(dfg, causal_discovery.Variants.CAUSAL_ALPHA)
+    )
 
-    start_activities = set(get_start_activities.get_start_activities(log, parameters=parameters))
-    end_activities = set(get_end_activities.get_end_activities(log, parameters=parameters))
+    start_activities = set(
+        get_start_activities.get_start_activities(log, parameters=parameters)
+    )
+    end_activities = set(
+        get_end_activities.get_end_activities(log, parameters=parameters)
+    )
     activities = set(y[activity_key] for x in log for y in x)
 
-    return {Outputs.DFG.value: dfg, Outputs.SEQUENCE.value: sequence, Outputs.PARALLEL.value: parallel,
-            Outputs.START_ACTIVITIES.value: start_activities, Outputs.END_ACTIVITIES.value: end_activities,
-            Outputs.ACTIVITIES.value: activities,
-            Outputs.MIN_TRACE_LENGTH.value: min(len(x) for x in log) if len(log) > 0 else 0}
+    return {
+        Outputs.DFG.value: dfg,
+        Outputs.SEQUENCE.value: sequence,
+        Outputs.PARALLEL.value: parallel,
+        Outputs.START_ACTIVITIES.value: start_activities,
+        Outputs.END_ACTIVITIES.value: end_activities,
+        Outputs.ACTIVITIES.value: activities,
+        Outputs.MIN_TRACE_LENGTH.value: (
+            min(len(x) for x in log) if len(log) > 0 else 0
+        ),
+    }

@@ -48,7 +48,9 @@ class ConsumptionMatrix(object):
         self.__transition_indices = {}
         self.__C = None
         places = sorted([x for x in net.places], key=lambda x: (x.name, id(x)))
-        transitions = sorted([x for x in net.transitions], key=lambda x: (x.name, id(x)))
+        transitions = sorted(
+            [x for x in net.transitions], key=lambda x: (x.name, id(x))
+        )
 
         for p in places:
             self.__place_indices[p] = len(self.__place_indices)
@@ -67,11 +69,16 @@ class ConsumptionMatrix(object):
         """
         inv_indices = {y: x for x, y in self.__transition_indices.items()}
         inv_indices = [inv_indices[i] for i in range(len(inv_indices))]
-        self.__C = [[0 for i in range(len(self.__transition_indices))] for j in range(len(self.__place_indices))]
+        self.__C = [
+            [0 for i in range(len(self.__transition_indices))]
+            for j in range(len(self.__place_indices))
+        ]
         for p in net.places:
             outgoing_trans = [a.target for a in p.out_arcs]
-            self.__C[self.__place_indices[p]] = [-1 if inv_indices[i] in outgoing_trans else 0 for i in
-                                                 range(len(inv_indices))]
+            self.__C[self.__place_indices[p]] = [
+                -1 if inv_indices[i] in outgoing_trans else 0
+                for i in range(len(inv_indices))
+            ]
 
     def __get_transition_indices(self) -> Dict[PetriNet.Transition, int]:
         """

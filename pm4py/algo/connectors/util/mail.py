@@ -43,11 +43,14 @@ def connect(email_user: Optional[str], mailbox_id: int):
         Mailbox object
     """
     import pythoncom
+
     pythoncom.CoInitialize()
 
     import win32com.client
 
-    outlook = win32com.client.Dispatch('Outlook.Application').GetNamespace('MAPI')
+    outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace(
+        "MAPI"
+    )
     mailbox_id = int(mailbox_id)
 
     if email_user is not None:

@@ -45,15 +45,26 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     if parameters is None:
         parameters = {}
 
-    ordered_events = parameters["ordered_events"] if "ordered_events" in parameters else ocel.events[ocel.event_id_column].to_numpy()
+    ordered_events = (
+        parameters["ordered_events"]
+        if "ordered_events" in parameters
+        else ocel.events[ocel.event_id_column].to_numpy()
+    )
 
-    activities = pandas_utils.format_unique(ocel.events[ocel.event_activity].unique())
+    activities = pandas_utils.format_unique(
+        ocel.events[ocel.event_activity].unique()
+    )
 
     data = []
-    feature_names = ["@@event_act_"+act for act in activities]
+    feature_names = ["@@event_act_" + act for act in activities]
 
-    events_activities = ocel.events[[ocel.event_id_column, ocel.event_activity]].to_dict("records")
-    events_activities = {x[ocel.event_id_column]: x[ocel.event_activity] for x in events_activities}
+    events_activities = ocel.events[
+        [ocel.event_id_column, ocel.event_activity]
+    ].to_dict("records")
+    events_activities = {
+        x[ocel.event_id_column]: x[ocel.event_activity]
+        for x in events_activities
+    }
 
     for ev in ordered_events:
         data.append([0.0] * len(activities))

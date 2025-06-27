@@ -52,4 +52,6 @@ def apply(bpmn_graph, variant=DEFAULT_VARIANT, parameters=None):
     bpmn_graph
         BPMN graph with layout information
     """
-    return exec_utils.get_variant(variant).apply(bpmn_graph, parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        bpmn_graph, parameters=parameters
+    )

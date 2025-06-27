@@ -41,7 +41,9 @@ def apply(filename, parameters=None):
     return import_log(filename, parameters)
 
 
-def import_log_from_file_object(F, encoding, file_size=sys.maxsize, parameters=None):
+def import_log_from_file_object(
+    F, encoding, file_size=sys.maxsize, parameters=None
+):
     """
     Import a log object from a (XML) file object
 
@@ -61,7 +63,7 @@ def import_log_from_file_object(F, encoding, file_size=sys.maxsize, parameters=N
     log
         Log file
     """
-    nb = 2 ** 12 # bytes per chunk
+    nb = 2**12  # bytes per chunk
     rex = re.compile(r"(<|>)")
     parser = dt_parser.get()
     cont = F.read(nb)
@@ -74,9 +76,9 @@ def import_log_from_file_object(F, encoding, file_size=sys.maxsize, parameters=N
         while lst:
             el = lst.popleft()
             if len(el.rstrip()) > 0:
-                if el == '<':
+                if el == "<":
                     continue
-                elif el == '>':
+                elif el == ">":
                     continue
                 while len(lst) == 0:
                     # need to read more
@@ -87,60 +89,81 @@ def import_log_from_file_object(F, encoding, file_size=sys.maxsize, parameters=N
                         lst = deque(lst2[1:])
                     else:
                         break
-                if el[0] == '/':
+                if el[0] == "/":
                     if len(curr_els_attrs) > 1:
                         curr_els_attrs.pop()
                     else:
                         return log
                     continue
-                idx = el.find(' ')
+                idx = el.find(" ")
                 if idx > -1:
                     tag = el[:idx]
-                    el = el.split('\"')
+                    el = el.split('"')
                     el[-1] = el[-1].strip()
                     if tag == "string":
                         curr_els_attrs[-1][el[1]] = el[3]
-                        if el[-1] != '/':
+                        if el[-1] != "/":
                             curr_els_attrs.append(fk_dict)
                         continue
                     elif tag == "date":
                         curr_els_attrs[-1][el[1]] = parser.apply(el[3])
-                        if el[-1] != '/':
+                        if el[-1] != "/":
                             curr_els_attrs.append(fk_dict)
                         continue
                     elif tag == "int":
                         curr_els_attrs[-1][el[1]] = int(el[3])
-                        if el[-1] != '/':
+                        if el[-1] != "/":
                             curr_els_attrs.append(fk_dict)
                         continue
                     elif tag == "float":
                         curr_els_attrs[-1][el[1]] = float(el[3])
-                        if el[-1] != '/':
+                        if el[-1] != "/":
                             curr_els_attrs.append(fk_dict)
                         continue
                     elif tag == "boolean":
-                        curr_els_attrs[-1][el[1]] = True if el[3] == "true" else False
-                        if el[-1] != '/':
+                        curr_els_attrs[-1][el[1]] = (
+                            True if el[3] == "true" else False
+                        )
+                        if el[-1] != "/":
                             curr_els_attrs.append(fk_dict)
                         continue
                     elif tag == "extension":
                         ext = log.extensions
-                        name = el[[i for i in range(len(el)) if "name=" in el[i]][0] + 1]
-                        prefix = el[[i for i in range(len(el)) if "prefix=" in el[i]][0] + 1]
-                        uri = el[[i for i in range(len(el)) if "uri=" in el[i]][0] + 1]
+                        name = el[
+                            [i for i in range(len(el)) if "name=" in el[i]][0]
+                            + 1
+                        ]
+                        prefix = el[
+                            [i for i in range(len(el)) if "prefix=" in el[i]][
+                                0
+                            ]
+                            + 1
+                        ]
+                        uri = el[
+                            [i for i in range(len(el)) if "uri=" in el[i]][0]
+                            + 1
+                        ]
                         ext[name] = {"prefix": prefix, "uri": uri}
-                        if el[-1] != '/':
+                        if el[-1] != "/":
                             curr_els_attrs.append(ext)
                         continue
                     elif tag == "classifier":
                         classif = log.classifiers
-                        name = el[[i for i in range(len(el)) if "name=" in el[i]][0] + 1]
-                        keys = el[[i for i in range(len(el)) if "keys=" in el[i]][0] + 1]
+                        name = el[
+                            [i for i in range(len(el)) if "name=" in el[i]][0]
+                            + 1
+                        ]
+                        keys = el[
+                            [i for i in range(len(el)) if "keys=" in el[i]][0]
+                            + 1
+                        ]
                         if "'" in keys:
-                            classif[name] = [x for x in keys.split("'") if x.strip()]
+                            classif[name] = [
+                                x for x in keys.split("'") if x.strip()
+                            ]
                         else:
                             classif[name] = keys.split()
-                        if el[-1] != '/':
+                        if el[-1] != "/":
                             curr_els_attrs.append(classif)
                         continue
                     elif tag == "global":
@@ -148,7 +171,7 @@ def import_log_from_file_object(F, encoding, file_size=sys.maxsize, parameters=N
                         scope = el[1]
                         dct = {}
                         glob[scope] = dct
-                        if el[-1] != '/':
+                        if el[-1] != "/":
                             curr_els_attrs.append(dct)
                         continue
                     elif tag == "log":
@@ -209,7 +232,9 @@ def import_log(filename, parameters=None):
     if parameters is None:
         parameters = {}
 
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING)
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING
+    )
 
     is_compressed = filename.endswith(".gz")
     file_size = os.stat(filename).st_size
@@ -219,7 +244,9 @@ def import_log(filename, parameters=None):
     else:
         f = open(filename, "rb")
 
-    log = import_log_from_file_object(f, encoding, file_size=file_size, parameters=parameters)
+    log = import_log_from_file_object(
+        f, encoding, file_size=file_size, parameters=parameters
+    )
 
     f.close()
 
@@ -245,9 +272,13 @@ def import_from_string(log_string, parameters=None):
     if parameters is None:
         parameters = {}
 
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING)
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING
+    )
 
-    decompress_serialization = exec_utils.get_param_value(Parameters.DECOMPRESS_SERIALIZATION, parameters, False)
+    decompress_serialization = exec_utils.get_param_value(
+        Parameters.DECOMPRESS_SERIALIZATION, parameters, False
+    )
 
     if type(log_string) is str:
         log_string = log_string.encode(constants.DEFAULT_ENCODING)

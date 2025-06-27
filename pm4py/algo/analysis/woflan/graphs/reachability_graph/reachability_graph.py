@@ -32,8 +32,12 @@ def apply(net, initial_marking, original_net=None):
     :param original_net: Petri Net without short-circuited transition
     :return: Networkx Graph that represents the reachability graph of the Petri Net
     """
-    initial_marking = helper.convert_marking(net, initial_marking, original_net)
-    firing_dict = helper.split_incidence_matrix(helper.compute_incidence_matrix(net), net)
+    initial_marking = helper.convert_marking(
+        net, initial_marking, original_net
+    )
+    firing_dict = helper.split_incidence_matrix(
+        helper.compute_incidence_matrix(net), net
+    )
     req_dict = helper.compute_firing_requirement(net)
     look_up_indices = {}
     j = 0
@@ -48,7 +52,9 @@ def apply(net, initial_marking, original_net=None):
     j += 1
     while len(working_set) > 0:
         m = working_set.pop()
-        possible_markings = helper.enabled_markings(firing_dict, req_dict, reachability_graph.nodes[m]['marking'])
+        possible_markings = helper.enabled_markings(
+            firing_dict, req_dict, reachability_graph.nodes[m]["marking"]
+        )
         for marking in possible_markings:
             if np.array2string(marking[0]) not in look_up_indices:
                 look_up_indices[np.array2string(marking[0])] = j
@@ -57,5 +63,9 @@ def apply(net, initial_marking, original_net=None):
                 reachability_graph.add_edge(m, j, transition=marking[1])
                 j += 1
             else:
-                reachability_graph.add_edge(m, look_up_indices[np.array2string(marking[0])], transition=marking[1])
+                reachability_graph.add_edge(
+                    m,
+                    look_up_indices[np.array2string(marking[0])],
+                    transition=marking[1],
+                )
     return reachability_graph

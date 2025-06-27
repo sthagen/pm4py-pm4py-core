@@ -26,7 +26,11 @@ import pandas as pd
 
 from pm4py.objects.log.obj import EventLog, EventStream
 from pm4py.util import exec_utils
-from pm4py.algo.transformation.log_to_features.variants import event_based, trace_based, temporal
+from pm4py.algo.transformation.log_to_features.variants import (
+    event_based,
+    trace_based,
+    temporal,
+)
 
 
 class Variants(Enum):
@@ -35,8 +39,11 @@ class Variants(Enum):
     TEMPORAL = temporal
 
 
-def apply(log: Union[EventLog, pd.DataFrame, EventStream], variant: Any = Variants.TRACE_BASED,
-          parameters: Optional[Dict[Any, Any]] = None) -> Tuple[Any, List[str]]:
+def apply(
+    log: Union[EventLog, pd.DataFrame, EventStream],
+    variant: Any = Variants.TRACE_BASED,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Tuple[Any, List[str]]:
     """
     Extracts the features from a log object
 

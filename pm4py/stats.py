@@ -186,6 +186,7 @@ def get_trace_attributes(log: Union[EventLog, pd.DataFrame]) -> List[str]:
     __event_log_deprecation_warning(log)
 
     from pm4py.util import constants
+
     if check_is_pandas_dataframe(log):
         check_pandas_dataframe_columns(log)
         return [
@@ -226,14 +227,10 @@ def get_event_attribute_values(
     """
     __event_log_deprecation_warning(log)
 
-    parameters = get_properties(
-        log, case_id_key=case_id_key
-    )
+    parameters = get_properties(log, case_id_key=case_id_key)
     parameters["keep_once_per_case"] = count_once_per_case
     if check_is_pandas_dataframe(log):
-        check_pandas_dataframe_columns(
-            log, case_id_key=case_id_key
-        )
+        check_pandas_dataframe_columns(log, case_id_key=case_id_key)
         from pm4py.statistics.attributes.pandas import get
 
         return get.get_attribute_values(log, attribute, parameters=parameters)
@@ -268,32 +265,38 @@ def get_trace_attribute_values(
     """
     __event_log_deprecation_warning(log)
 
-    parameters = get_properties(
-        log, case_id_key=case_id_key
-    )
+    parameters = get_properties(log, case_id_key=case_id_key)
 
     if check_is_pandas_dataframe(log):
-        check_pandas_dataframe_columns(
-            log, case_id_key=case_id_key
-        )
+        check_pandas_dataframe_columns(log, case_id_key=case_id_key)
         from pm4py.statistics.attributes.pandas import get
 
-        if attribute not in log and constants.CASE_ATTRIBUTE_PREFIX + attribute in log:
-            # If "attribute" does not exist as a column, but "case:attribute" exists, then use that.
+        if (
+            attribute not in log
+            and constants.CASE_ATTRIBUTE_PREFIX + attribute in log
+        ):
+            # If "attribute" does not exist as a column, but "case:attribute"
+            # exists, then use that.
             attribute = constants.CASE_ATTRIBUTE_PREFIX + attribute
         ret = get.get_attribute_values(log, attribute, parameters=parameters)
         return ret
     else:
         from pm4py.statistics.attributes.log import get
 
-        ret = get.get_trace_attribute_values(log, attribute, parameters=parameters)
+        ret = get.get_trace_attribute_values(
+            log, attribute, parameters=parameters
+        )
 
         if not ret:
             # If the provided attribute does not exist, but starts with "case:", try to get the attribute values
             # by removing the "case:" prefix.
             if attribute.startswith(constants.CASE_ATTRIBUTE_PREFIX):
-                attribute = attribute.split(constants.CASE_ATTRIBUTE_PREFIX)[-1]
-            ret = get.get_trace_attribute_values(log, attribute, parameters=parameters)
+                attribute = attribute.split(constants.CASE_ATTRIBUTE_PREFIX)[
+                    -1
+                ]
+            ret = get.get_trace_attribute_values(
+                log, attribute, parameters=parameters
+            )
 
         return ret
 
@@ -456,7 +459,9 @@ def split_by_process_variant(
 
     from pm4py.objects.log.util import pandas_numpy_variants
 
-    variants_dict, case_variant = pandas_numpy_variants.apply(log, parameters=properties)
+    variants_dict, case_variant = pandas_numpy_variants.apply(
+        log, parameters=properties
+    )
 
     log[variant_column] = log[case_id_key].map(case_variant)
 
@@ -524,7 +529,9 @@ def get_variants_paths_duration(
         variant_column=variant_column,
         index_in_trace_column=index_in_trace_column,
     ):
-        from pm4py.statistics.eventually_follows.pandas import get as eventually_follows
+        from pm4py.statistics.eventually_follows.pandas import (
+            get as eventually_follows,
+        )
 
         dir_follo_dataframe = eventually_follows.get_partial_order_dataframe(
             filtered_log.copy(),
@@ -535,24 +542,40 @@ def get_variants_paths_duration(
             sort_timestamp_along_case_id=False,
             reduce_dataframe=False,
         )
-        dir_follo_dataframe[cumulative_occ_path_column] = dir_follo_dataframe.groupby(
-            [case_id_key, activity_key, activity_key + "_2"]
-        ).cumcount()
-        dir_follo_dataframe = dir_follo_dataframe[
-            [index_in_trace_column, constants.DEFAULT_FLOW_TIME, cumulative_occ_path_column]
-        ].groupby(index_in_trace_column).agg(
-            {constants.DEFAULT_FLOW_TIME: times_agg, cumulative_occ_path_column: "min"}
-        ).reset_index()
-        dir_follo_dataframe[activity_key] = dir_follo_dataframe[index_in_trace_column].apply(
-            lambda x: variant[x]
+        dir_follo_dataframe[cumulative_occ_path_column] = (
+            dir_follo_dataframe.groupby(
+                [case_id_key, activity_key, activity_key + "_2"]
+            ).cumcount()
         )
-        dir_follo_dataframe[activity_key + "_2"] = dir_follo_dataframe[index_in_trace_column].apply(
-            lambda x: variant[x + 1]
+        dir_follo_dataframe = (
+            dir_follo_dataframe[
+                [
+                    index_in_trace_column,
+                    constants.DEFAULT_FLOW_TIME,
+                    cumulative_occ_path_column,
+                ]
+            ]
+            .groupby(index_in_trace_column)
+            .agg(
+                {
+                    constants.DEFAULT_FLOW_TIME: times_agg,
+                    cumulative_occ_path_column: "min",
+                }
+            )
+            .reset_index()
         )
-        dir_follo_dataframe[variant_column] = dir_follo_dataframe[index_in_trace_column].apply(
-            lambda x: variant
-        )
-        dir_follo_dataframe[variant_count] = filtered_log[case_id_key].nunique()
+        dir_follo_dataframe[activity_key] = dir_follo_dataframe[
+            index_in_trace_column
+        ].apply(lambda x: variant[x])
+        dir_follo_dataframe[activity_key + "_2"] = dir_follo_dataframe[
+            index_in_trace_column
+        ].apply(lambda x: variant[x + 1])
+        dir_follo_dataframe[variant_column] = dir_follo_dataframe[
+            index_in_trace_column
+        ].apply(lambda x: variant)
+        dir_follo_dataframe[variant_count] = filtered_log[
+            case_id_key
+        ].nunique()
 
         list_to_concat.append(dir_follo_dataframe)
 
@@ -592,18 +615,28 @@ def get_stochastic_language(*args, **kwargs) -> Dict[List[str], float]:
     """
     from pm4py.statistics.variants.log import get
 
-    if isinstance(args[0], EventLog) or isinstance(args[0], EventStream) or pandas_utils.check_is_pandas_dataframe(args[0]):
+    if (
+        isinstance(args[0], EventLog)
+        or isinstance(args[0], EventStream)
+        or pandas_utils.check_is_pandas_dataframe(args[0])
+    ):
         from pm4py.objects.conversion.log import converter as log_converter
 
         log = log_converter.apply(args[0])
         return get.get_language(log)
-    elif isinstance(args[0], PetriNet) or isinstance(args[0], ProcessTree) or isinstance(args[0], dict):
+    elif (
+        isinstance(args[0], PetriNet)
+        or isinstance(args[0], ProcessTree)
+        or isinstance(args[0], dict)
+    ):
         import pm4py
 
         log = pm4py.play_out(*args, **kwargs)
         return get.get_language(log)
     else:
-        raise Exception("Unsupported input type for stochastic language extraction.")
+        raise Exception(
+            "Unsupported input type for stochastic language extraction."
+        )
 
 
 def get_minimum_self_distances(
@@ -657,7 +690,9 @@ def get_minimum_self_distances(
         case_id_key=case_id_key,
     )
 
-    from pm4py.algo.discovery.minimum_self_distance import algorithm as msd_algo
+    from pm4py.algo.discovery.minimum_self_distance import (
+        algorithm as msd_algo,
+    )
 
     return msd_algo.apply(log, parameters=properties)
 
@@ -702,7 +737,9 @@ def get_minimum_self_distance_witnesses(
             case_id_key=case_id_key,
         )
 
-    from pm4py.algo.discovery.minimum_self_distance import algorithm as msd_algo
+    from pm4py.algo.discovery.minimum_self_distance import (
+        algorithm as msd_algo,
+    )
     from pm4py.algo.discovery.minimum_self_distance import utils as msdw_algo
 
     return msdw_algo.derive_msd_witnesses(
@@ -1076,7 +1113,9 @@ def get_all_case_durations(
     else:
         from pm4py.statistics.traces.generic.log import case_statistics
 
-        return case_statistics.get_all_case_durations(log, parameters=properties)
+        return case_statistics.get_all_case_durations(
+            log, parameters=properties
+        )
 
 
 def get_case_duration(
@@ -1250,10 +1289,12 @@ def get_activity_position_summary(
             timestamp_key=timestamp_key,
             case_id_key=case_id_key,
         )
-        log = insert_ev_in_tr_index(
-            log, case_id_key, "@@index_in_trace"
+        log = insert_ev_in_tr_index(log, case_id_key, "@@index_in_trace")
+        ret = (
+            log[log[activity_key] == activity]["@@index_in_trace"]
+            .value_counts()
+            .to_dict()
         )
-        ret = log[log[activity_key] == activity]["@@index_in_trace"].value_counts().to_dict()
         return ret
     else:
         ret = Counter()

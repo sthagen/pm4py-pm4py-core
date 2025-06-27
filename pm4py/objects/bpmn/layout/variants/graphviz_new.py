@@ -26,7 +26,9 @@ from copy import copy
 import tempfile
 
 
-def apply(bpmn_graph: BPMN, parameters: Optional[Dict[Any, Any]] = None) -> BPMN:
+def apply(
+    bpmn_graph: BPMN, parameters: Optional[Dict[Any, Any]] = None
+) -> BPMN:
     """
     Layouts the BPMN graphviz using directly the information about node positioning
     and edges waypoints provided in the SVG obtained from Graphviz.
@@ -51,7 +53,7 @@ def apply(bpmn_graph: BPMN, parameters: Optional[Dict[Any, Any]] = None) -> BPMN
 
     layout = bpmn_graph.get_layout()
 
-    filename_svg = tempfile.NamedTemporaryFile(suffix='.svg')
+    filename_svg = tempfile.NamedTemporaryFile(suffix=".svg")
     filename_svg.close()
 
     vis_parameters = copy(parameters)
@@ -62,7 +64,7 @@ def apply(bpmn_graph: BPMN, parameters: Optional[Dict[Any, Any]] = None) -> BPMN
     gviz = bpmn_visualizer.apply(bpmn_graph, parameters=vis_parameters)
     bpmn_visualizer.save(gviz, filename_svg.name)
 
-    #print(filename_svg.name)
+    # print(filename_svg.name)
 
     nodes_p, edges_p = svg_pos_parser.apply(filename_svg.name)
 

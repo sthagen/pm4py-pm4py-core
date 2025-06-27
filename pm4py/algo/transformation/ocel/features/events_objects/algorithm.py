@@ -22,8 +22,12 @@ Contact: info@processintelligence.solutions
 
 from pm4py.objects.ocel.obj import OCEL
 from typing import Optional, Dict, Any
-from pm4py.algo.transformation.ocel.features.events import algorithm as event_feature_extraction
-from pm4py.algo.transformation.ocel.features.events_objects import prefix_features
+from pm4py.algo.transformation.ocel.features.events import (
+    algorithm as event_feature_extraction,
+)
+from pm4py.algo.transformation.ocel.features.events_objects import (
+    prefix_features,
+)
 from pm4py.objects.ocel.util import explode
 from copy import copy
 from enum import Enum
@@ -60,12 +64,20 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     if parameters is None:
         parameters = {}
 
-    enable_all = exec_utils.get_param_value(Parameters.ENABLE_ALL_EO_FEATURES, parameters, True)
-    enable_event_pointwise_features = exec_utils.get_param_value(Parameters.ENABLE_EVENT_POINTWISE_FEATURES, parameters, enable_all)
-    enable_prefix_features = exec_utils.get_param_value(Parameters.ENABLE_PREFIX_FEATURES, parameters, enable_all)
+    enable_all = exec_utils.get_param_value(
+        Parameters.ENABLE_ALL_EO_FEATURES, parameters, True
+    )
+    enable_event_pointwise_features = exec_utils.get_param_value(
+        Parameters.ENABLE_EVENT_POINTWISE_FEATURES, parameters, enable_all
+    )
+    enable_prefix_features = exec_utils.get_param_value(
+        Parameters.ENABLE_PREFIX_FEATURES, parameters, enable_all
+    )
 
     exploded_ocel = explode.apply(ocel)
-    ordered_events = exploded_ocel.events[exploded_ocel.event_id_column].to_numpy()
+    ordered_events = exploded_ocel.events[
+        exploded_ocel.event_id_column
+    ].to_numpy()
     parameters["ordered_events"] = ordered_events
 
     datas = []
@@ -83,13 +95,17 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
         parameters_efe["enable_event_str_attributes"] = True
         parameters_efe["enable_event_num_attributes"] = True
         parameters_efe["enable_event_start_ot"] = True
-        data, feature_names = event_feature_extraction.apply(exploded_ocel, parameters=parameters_efe)
+        data, feature_names = event_feature_extraction.apply(
+            exploded_ocel, parameters=parameters_efe
+        )
         for i in range(len(data)):
             datas[i] = datas[i] + data[i]
         features_namess = features_namess + feature_names
 
     if enable_prefix_features:
-        data, feature_names = prefix_features.apply(exploded_ocel, parameters=parameters)
+        data, feature_names = prefix_features.apply(
+            exploded_ocel, parameters=parameters
+        )
         for i in range(len(data)):
             datas[i] = datas[i] + data[i]
         features_namess = features_namess + feature_names

@@ -26,7 +26,13 @@ import pandas as pd
 
 from pm4py.algo.conformance.temporal_profile.variants import log, dataframe
 from pm4py.objects.log.obj import EventLog
-from pm4py.util import typing, exec_utils, constants, xes_constants, pandas_utils
+from pm4py.util import (
+    typing,
+    exec_utils,
+    constants,
+    xes_constants,
+    pandas_utils,
+)
 from pm4py.objects.conversion.log import converter as log_converter
 from enum import Enum
 
@@ -35,8 +41,11 @@ class Parameters(Enum):
     CASE_ID_KEY = constants.PARAMETER_CONSTANT_CASEID_KEY
 
 
-def apply(elog: Union[EventLog, pd.DataFrame], temporal_profile: typing.TemporalProfile,
-          parameters: Optional[Dict[Any, Any]] = None) -> typing.TemporalProfileConformanceResults:
+def apply(
+    elog: Union[EventLog, pd.DataFrame],
+    temporal_profile: typing.TemporalProfile,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> typing.TemporalProfileConformanceResults:
     """
     Checks the conformance of the log using the provided temporal profile.
 
@@ -70,11 +79,19 @@ def apply(elog: Union[EventLog, pd.DataFrame], temporal_profile: typing.Temporal
     if pandas_utils.check_is_pandas_dataframe(elog):
         return dataframe.apply(elog, temporal_profile, parameters=parameters)
     else:
-        elog = log_converter.apply(elog, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+        elog = log_converter.apply(
+            elog,
+            variant=log_converter.Variants.TO_EVENT_LOG,
+            parameters=parameters,
+        )
         return log.apply(elog, temporal_profile, parameters=parameters)
 
 
-def get_diagnostics_dataframe(elog: Union[EventLog, pd.DataFrame], conf_result: typing.TemporalProfileConformanceResults, parameters: Optional[Dict[Any, Any]] = None) -> pd.DataFrame:
+def get_diagnostics_dataframe(
+    elog: Union[EventLog, pd.DataFrame],
+    conf_result: typing.TemporalProfileConformanceResults,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> pd.DataFrame:
     """
     Gets the diagnostics dataframe from a log and the results
     of temporal profle-based conformance checking
@@ -95,11 +112,21 @@ def get_diagnostics_dataframe(elog: Union[EventLog, pd.DataFrame], conf_result: 
         parameters = {}
 
     if pandas_utils.check_is_pandas_dataframe(elog):
-        case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
+        case_id_key = exec_utils.get_param_value(
+            Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+        )
         cases = pandas_utils.format_unique(elog[case_id_key].unique())
     else:
-        elog = log_converter.apply(elog, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
-        case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, xes_constants.DEFAULT_TRACEID_KEY)
+        elog = log_converter.apply(
+            elog,
+            variant=log_converter.Variants.TO_EVENT_LOG,
+            parameters=parameters,
+        )
+        case_id_key = exec_utils.get_param_value(
+            Parameters.CASE_ID_KEY,
+            parameters,
+            xes_constants.DEFAULT_TRACEID_KEY,
+        )
         cases = [x.attributes[case_id_key] for x in elog]
 
     case = []
@@ -116,6 +143,14 @@ def get_diagnostics_dataframe(elog: Union[EventLog, pd.DataFrame], conf_result: 
             throughput.append(el[2])
             num_st_devs.append(el[3])
 
-    dataframe = pandas_utils.instantiate_dataframe({"case": case, "source_activity": source_activities, "target_activity": target_activities, "throughput": throughput, "num_st_devs": num_st_devs})
+    dataframe = pandas_utils.instantiate_dataframe(
+        {
+            "case": case,
+            "source_activity": source_activities,
+            "target_activity": target_activities,
+            "throughput": throughput,
+            "num_st_devs": num_st_devs,
+        }
+    )
 
     return dataframe

@@ -30,13 +30,16 @@ from pm4py.util import exec_utils, constants
 
 
 class Parameters(Enum):
-    START_ACTIVITIES = 'start_activities'
-    END_ACTIVITIES = 'end_activities'
+    START_ACTIVITIES = "start_activities"
+    END_ACTIVITIES = "end_activities"
     PARAM_ARTIFICIAL_START_ACTIVITY = constants.PARAM_ARTIFICIAL_START_ACTIVITY
     PARAM_ARTIFICIAL_END_ACTIVITY = constants.PARAM_ARTIFICIAL_END_ACTIVITY
 
 
-def apply(dfg: Dict[Tuple[str, str], int], parameters: Optional[Dict[Any, Any]] = None):
+def apply(
+    dfg: Dict[Tuple[str, str], int],
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     """
     Applies the DFG mining on a given object (if it is a Pandas dataframe or a log, the DFG is calculated)
 
@@ -61,20 +64,35 @@ def apply(dfg: Dict[Tuple[str, str], int], parameters: Optional[Dict[Any, Any]] 
     if parameters is None:
         parameters = {}
 
-    start_activities = exec_utils.get_param_value(Parameters.START_ACTIVITIES, parameters,
-                                                  {x: 1 for x in dfg_utils.infer_start_activities(
-                                                      dfg)})
-    end_activities = exec_utils.get_param_value(Parameters.END_ACTIVITIES, parameters,
-                                                {x: 1 for x in dfg_utils.infer_end_activities(dfg)})
-    artificial_start_activity = exec_utils.get_param_value(Parameters.PARAM_ARTIFICIAL_START_ACTIVITY, parameters, constants.DEFAULT_ARTIFICIAL_START_ACTIVITY)
-    artificial_end_activity = exec_utils.get_param_value(Parameters.PARAM_ARTIFICIAL_END_ACTIVITY, parameters, constants.DEFAULT_ARTIFICIAL_END_ACTIVITY)
+    start_activities = exec_utils.get_param_value(
+        Parameters.START_ACTIVITIES,
+        parameters,
+        {x: 1 for x in dfg_utils.infer_start_activities(dfg)},
+    )
+    end_activities = exec_utils.get_param_value(
+        Parameters.END_ACTIVITIES,
+        parameters,
+        {x: 1 for x in dfg_utils.infer_end_activities(dfg)},
+    )
+    artificial_start_activity = exec_utils.get_param_value(
+        Parameters.PARAM_ARTIFICIAL_START_ACTIVITY,
+        parameters,
+        constants.DEFAULT_ARTIFICIAL_START_ACTIVITY,
+    )
+    artificial_end_activity = exec_utils.get_param_value(
+        Parameters.PARAM_ARTIFICIAL_END_ACTIVITY,
+        parameters,
+        constants.DEFAULT_ARTIFICIAL_END_ACTIVITY,
+    )
 
     enriched_dfg = copy(dfg)
     for act in start_activities:
         enriched_dfg[(artificial_start_activity, act)] = start_activities[act]
     for act in end_activities:
         enriched_dfg[(act, artificial_end_activity)] = end_activities[act]
-    activities = set(x[1] for x in enriched_dfg).union(set(x[0] for x in enriched_dfg))
+    activities = set(x[1] for x in enriched_dfg).union(
+        set(x[0] for x in enriched_dfg)
+    )
     net = PetriNet("")
     im = Marking()
     fm = Marking()

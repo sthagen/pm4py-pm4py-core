@@ -36,7 +36,9 @@ class Parameters(Enum):
     PREFILTERING = "prefiltering"
 
 
-def aggregate_events(associations: Dict[str, Set[Tuple[str, str]]]) -> Dict[str, Set[str]]:
+def aggregate_events(
+    associations: Dict[str, Set[Tuple[str, str]]]
+) -> Dict[str, Set[str]]:
     """
     Utility method to calculate the "events" metric from the associations.
     """
@@ -48,7 +50,9 @@ def aggregate_events(associations: Dict[str, Set[Tuple[str, str]]]) -> Dict[str,
     return ret
 
 
-def aggregate_unique_objects(associations: Dict[str, Set[Tuple[str, str]]]) -> Dict[str, Set[str]]:
+def aggregate_unique_objects(
+    associations: Dict[str, Set[Tuple[str, str]]]
+) -> Dict[str, Set[str]]:
     """
     Utility method to calculate the "unique objects" metric from the associations.
     """
@@ -60,16 +64,18 @@ def aggregate_unique_objects(associations: Dict[str, Set[Tuple[str, str]]]) -> D
     return ret
 
 
-def aggregate_total_objects(associations: Dict[str, Set[Tuple[str, str]]]) -> Dict[str, Set[Tuple[str, str]]]:
+def aggregate_total_objects(
+    associations: Dict[str, Set[Tuple[str, str]]]
+) -> Dict[str, Set[Tuple[str, str]]]:
     """
     Utility method to calculate the "total objects" metric from the associations.
     """
     return associations
 
 
-def find_associations_from_relations_df(relations_df: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None) -> \
-Dict[
-    str, List[Tuple[str, str]]]:
+def find_associations_from_relations_df(
+    relations_df: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None
+) -> Dict[str, List[Tuple[str, str]]]:
     """
     Associates each activity in the relationship dataframe with the combinations
     of event identifiers and objects that are associated to the activity.
@@ -92,17 +98,30 @@ Dict[
     if parameters is None:
         parameters = {}
 
-    event_id = exec_utils.get_param_value(Parameters.EVENT_ID, parameters, ocel_constants.DEFAULT_EVENT_ID)
-    object_id = exec_utils.get_param_value(Parameters.OBJECT_ID, parameters, ocel_constants.DEFAULT_OBJECT_ID)
-    event_activity = exec_utils.get_param_value(Parameters.EVENT_ACTIVITY, parameters,
-                                                ocel_constants.DEFAULT_EVENT_ACTIVITY)
-    prefiltering = exec_utils.get_param_value(Parameters.PREFILTERING, parameters, "none")
+    event_id = exec_utils.get_param_value(
+        Parameters.EVENT_ID, parameters, ocel_constants.DEFAULT_EVENT_ID
+    )
+    object_id = exec_utils.get_param_value(
+        Parameters.OBJECT_ID, parameters, ocel_constants.DEFAULT_OBJECT_ID
+    )
+    event_activity = exec_utils.get_param_value(
+        Parameters.EVENT_ACTIVITY,
+        parameters,
+        ocel_constants.DEFAULT_EVENT_ACTIVITY,
+    )
+    prefiltering = exec_utils.get_param_value(
+        Parameters.PREFILTERING, parameters, "none"
+    )
 
     if prefiltering == "start":
         relations_df = relations_df.groupby(object_id).first().reset_index()
     elif prefiltering == "end":
         relations_df = relations_df.groupby(object_id).last().reset_index()
-    associations1 = relations_df.groupby(event_activity)[[event_id, object_id]].agg(list).to_dict()
+    associations1 = (
+        relations_df.groupby(event_activity)[[event_id, object_id]]
+        .agg(list)
+        .to_dict()
+    )
 
     associations = {}
     for act, evs in associations1[event_id].items():
@@ -114,7 +133,9 @@ Dict[
     return associations
 
 
-def find_associations_from_ocel(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, Set[Any]]:
+def find_associations_from_ocel(
+    ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None
+) -> Dict[str, Set[Any]]:
     """
     Associates each activity in the OCEL with the combinations
     of event identifiers and objects that are associated to the activity.
@@ -137,14 +158,21 @@ def find_associations_from_ocel(ocel: OCEL, parameters: Optional[Dict[Any, Any]]
     if parameters is None:
         parameters = {}
 
-    event_id = exec_utils.get_param_value(Parameters.EVENT_ID, parameters, ocel.event_id_column)
-    object_id = exec_utils.get_param_value(Parameters.OBJECT_ID, parameters, ocel.object_id_column)
-    event_activity = exec_utils.get_param_value(Parameters.EVENT_ACTIVITY, parameters,
-                                                ocel.event_activity)
+    event_id = exec_utils.get_param_value(
+        Parameters.EVENT_ID, parameters, ocel.event_id_column
+    )
+    object_id = exec_utils.get_param_value(
+        Parameters.OBJECT_ID, parameters, ocel.object_id_column
+    )
+    event_activity = exec_utils.get_param_value(
+        Parameters.EVENT_ACTIVITY, parameters, ocel.event_activity
+    )
 
     new_parameters = copy(parameters)
     new_parameters[Parameters.EVENT_ID] = event_id
     new_parameters[Parameters.OBJECT_ID] = object_id
     new_parameters[Parameters.EVENT_ACTIVITY] = event_activity
 
-    return find_associations_from_relations_df(ocel.relations, parameters=new_parameters)
+    return find_associations_from_relations_df(
+        ocel.relations, parameters=new_parameters
+    )

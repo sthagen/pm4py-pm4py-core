@@ -20,7 +20,9 @@ Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
 from pm4py.algo.conformance.alignments.petri_net import algorithm as alignments
-from pm4py.algo.conformance.alignments.decomposed import algorithm as decomp_alignments
+from pm4py.algo.conformance.alignments.decomposed import (
+    algorithm as decomp_alignments,
+)
 from pm4py.util import exec_utils
 from enum import Enum
 from pm4py.util import constants
@@ -38,7 +40,10 @@ class Parameters(Enum):
     MULTIPROCESSING = "multiprocessing"
 
 
-def evaluate(aligned_traces: typing.ListAlignments, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[str, float]:
+def evaluate(
+    aligned_traces: typing.ListAlignments,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[str, float]:
     """
     Transforms the alignment result to a simple dictionary
     including the percentage of fit traces and the average fitness
@@ -83,12 +88,23 @@ def evaluate(aligned_traces: typing.ListAlignments, parameters: Optional[Dict[Un
         log_fitness = float(sum_cost) / float(sum_bwc) if sum_bwc > 0 else 0
         log_fitness = 1.0 - log_fitness
 
-    return {"percFitTraces": perc_fit_traces, "averageFitness": average_fitness,
-            "percentage_of_fitting_traces": perc_fit_traces,
-            "average_trace_fitness": average_fitness, "log_fitness": log_fitness}
+    return {
+        "percFitTraces": perc_fit_traces,
+        "averageFitness": average_fitness,
+        "percentage_of_fitting_traces": perc_fit_traces,
+        "average_trace_fitness": average_fitness,
+        "log_fitness": log_fitness,
+    }
 
 
-def apply(log: EventLog, petri_net: PetriNet, initial_marking: Marking, final_marking: Marking, align_variant=alignments.DEFAULT_VARIANT, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[str, float]:
+def apply(
+    log: EventLog,
+    petri_net: PetriNet,
+    initial_marking: Marking,
+    final_marking: Marking,
+    align_variant=alignments.DEFAULT_VARIANT,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[str, float]:
     """
     Evaluate fitness based on alignments
 
@@ -115,22 +131,51 @@ def apply(log: EventLog, petri_net: PetriNet, initial_marking: Marking, final_ma
     if parameters is None:
         parameters = {}
 
-    multiprocessing = exec_utils.get_param_value(Parameters.MULTIPROCESSING, parameters, constants.ENABLE_MULTIPROCESSING_DEFAULT)
+    multiprocessing = exec_utils.get_param_value(
+        Parameters.MULTIPROCESSING,
+        parameters,
+        constants.ENABLE_MULTIPROCESSING_DEFAULT,
+    )
 
     if align_variant == decomp_alignments.Variants.RECOMPOS_MAXIMAL.value:
-        alignment_result = decomp_alignments.apply(log, petri_net, initial_marking, final_marking,
-                                                   variant=align_variant, parameters=parameters)
+        alignment_result = decomp_alignments.apply(
+            log,
+            petri_net,
+            initial_marking,
+            final_marking,
+            variant=align_variant,
+            parameters=parameters,
+        )
     else:
         if multiprocessing:
-            alignment_result = alignments.apply_multiprocessing(log, petri_net, initial_marking, final_marking, variant=align_variant,
-                                                parameters=parameters)
+            alignment_result = alignments.apply_multiprocessing(
+                log,
+                petri_net,
+                initial_marking,
+                final_marking,
+                variant=align_variant,
+                parameters=parameters,
+            )
         else:
-            alignment_result = alignments.apply(log, petri_net, initial_marking, final_marking, variant=align_variant,
-                                                parameters=parameters)
+            alignment_result = alignments.apply(
+                log,
+                petri_net,
+                initial_marking,
+                final_marking,
+                variant=align_variant,
+                parameters=parameters,
+            )
     return evaluate(alignment_result)
 
 
-def apply_trace(trace: Trace, petri_net: PetriNet, initial_marking: Marking, final_marking: Marking, best_worst: Any, activity_key: str) -> typing.AlignmentResult:
+def apply_trace(
+    trace: Trace,
+    petri_net: PetriNet,
+    initial_marking: Marking,
+    final_marking: Marking,
+    best_worst: Any,
+    activity_key: str,
+) -> typing.AlignmentResult:
     """
     Performs the basic alignment search, given a trace, a net and the costs of the \"best of the worst\".
     The costs of the best of the worst allows us to deduce the fitness of the trace.
@@ -150,13 +195,24 @@ def apply_trace(trace: Trace, petri_net: PetriNet, initial_marking: Marking, fin
     -------
     dictionary: `dict` with keys **alignment**, **cost**, **visited_states**, **queued_states** and **traversed_arcs**
     """
-    alignment = alignments.apply_trace(trace, petri_net, initial_marking, final_marking,
-                                       {Parameters.ACTIVITY_KEY: activity_key})
-    fixed_costs = alignment['cost'] // alignments.utils.STD_MODEL_LOG_MOVE_COST
+    alignment = alignments.apply_trace(
+        trace,
+        petri_net,
+        initial_marking,
+        final_marking,
+        {Parameters.ACTIVITY_KEY: activity_key},
+    )
+    fixed_costs = alignment["cost"] // alignments.utils.STD_MODEL_LOG_MOVE_COST
     if best_worst > 0:
         fitness = 1 - (fixed_costs / best_worst)
     else:
         fitness = 1
-    return {'trace': trace, 'alignment': alignment['alignment'], 'cost': fixed_costs, 'fitness': fitness,
-            'visited_states': alignment['visited_states'], 'queued_states': alignment['queued_states'],
-            'traversed_arcs': alignment['traversed_arcs']}
+    return {
+        "trace": trace,
+        "alignment": alignment["alignment"],
+        "cost": fixed_costs,
+        "fitness": fitness,
+        "visited_states": alignment["visited_states"],
+        "queued_states": alignment["queued_states"],
+        "traversed_arcs": alignment["traversed_arcs"],
+    }

@@ -39,7 +39,14 @@ DEFAULT_VARIANT = Variants.PETRI_SEMAPH_FIFO
 VERSIONS = {Variants.PETRI_SEMAPH_FIFO}
 
 
-def apply(log: Union[EventLog, pd.DataFrame], net: PetriNet, im: Marking, fm: Marking, variant=DEFAULT_VARIANT, parameters: Optional[Dict[Any, Any]] = None) -> Tuple[EventLog, Dict[str, Any]]:
+def apply(
+    log: Union[EventLog, pd.DataFrame],
+    net: PetriNet,
+    im: Marking,
+    fm: Marking,
+    variant=DEFAULT_VARIANT,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Tuple[EventLog, Dict[str, Any]]:
     """
     Performs a Monte Carlo simulation of an accepting Petri net without duplicate transitions and where the preset is always
     distinct from the postset
@@ -88,5 +95,9 @@ def apply(log: Union[EventLog, pd.DataFrame], net: PetriNet, im: Marking, fm: Ma
             Outputs.OUTPUT_CASE_ARRIVAL_RATIO => Case arrival ratio that was specified in the simulation
             Outputs.OUTPUT_TOTAL_CASES_TIME => Total time occupied by cases of the simulated log
     """
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
-    return exec_utils.get_variant(variant).apply(log, net, im, fm, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
+    return exec_utils.get_variant(variant).apply(
+        log, net, im, fm, parameters=parameters
+    )

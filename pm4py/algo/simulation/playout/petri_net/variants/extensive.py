@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -50,8 +50,12 @@ POSITION_TRACE = 1
 POSITION_ELEMENTS = 2
 
 
-def apply(net: PetriNet, initial_marking: Marking, final_marking: Marking = None,
-          parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> EventLog:
+def apply(
+    net: PetriNet,
+    initial_marking: Marking,
+    final_marking: Marking = None,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> EventLog:
     """
     Do the playout of a Petrinet generating a log (extensive search; stop at the maximum
     trace length specified
@@ -72,14 +76,31 @@ def apply(net: PetriNet, initial_marking: Marking, final_marking: Marking = None
     if parameters is None:
         parameters = {}
 
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, xes_constants.DEFAULT_TRACEID_KEY)
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    max_trace_length = exec_utils.get_param_value(Parameters.MAX_TRACE_LENGTH, parameters, 10)
-    return_elements = exec_utils.get_param_value(Parameters.RETURN_ELEMENTS, parameters, False)
-    max_marking_occ = exec_utils.get_param_value(Parameters.MAX_MARKING_OCC, parameters, sys.maxsize)
-    semantics = exec_utils.get_param_value(Parameters.PETRI_SEMANTICS, parameters, petri_net.semantics.ClassicSemantics())
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, xes_constants.DEFAULT_TRACEID_KEY
+    )
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    max_trace_length = exec_utils.get_param_value(
+        Parameters.MAX_TRACE_LENGTH, parameters, 10
+    )
+    return_elements = exec_utils.get_param_value(
+        Parameters.RETURN_ELEMENTS, parameters, False
+    )
+    max_marking_occ = exec_utils.get_param_value(
+        Parameters.MAX_MARKING_OCC, parameters, sys.maxsize
+    )
+    semantics = exec_utils.get_param_value(
+        Parameters.PETRI_SEMANTICS,
+        parameters,
+        petri_net.semantics.ClassicSemantics(),
+    )
 
     # assigns to each event an increased timestamp from 1970
     curr_timestamp = 10000000
@@ -102,7 +123,9 @@ def apply(net: PetriNet, initial_marking: Marking, final_marking: Marking = None
 
         en_t = semantics.enabled_transitions(net, m)
 
-        if (final_marking is not None and m == final_marking) or (final_marking is None and len(en_t) == 0):
+        if (final_marking is not None and m == final_marking) or (
+            final_marking is None and len(en_t) == 0
+        ):
             if len(trace) <= max_trace_length:
                 feasible_elements.append(elements)
 
@@ -134,11 +157,23 @@ def apply(net: PetriNet, initial_marking: Marking, final_marking: Marking = None
     for elements in feasible_elements:
         log_trace = log_instance.Trace()
         log_trace.attributes[case_id_key] = str(len(log))
-        activities = [x.label for x in elements if type(x) is PetriNet.Transition and x.label is not None]
+        activities = [
+            x.label
+            for x in elements
+            if type(x) is PetriNet.Transition and x.label is not None
+        ]
         for act in activities:
             curr_timestamp = curr_timestamp + 1
             log_trace.append(
-                log_instance.Event({activity_key: act, timestamp_key: strpfromiso.fix_naivety(datetime.datetime.fromtimestamp(curr_timestamp))}))
+                log_instance.Event(
+                    {
+                        activity_key: act,
+                        timestamp_key: strpfromiso.fix_naivety(
+                            datetime.datetime.fromtimestamp(curr_timestamp)
+                        ),
+                    }
+                )
+            )
         log.append(log_trace)
 
     return log

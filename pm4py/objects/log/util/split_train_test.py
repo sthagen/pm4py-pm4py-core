@@ -25,7 +25,9 @@ import random
 import math
 
 
-def split(log: EventLog, train_percentage: float = 0.8) -> Tuple[EventLog, EventLog]:
+def split(
+    log: EventLog, train_percentage: float = 0.8
+) -> Tuple[EventLog, EventLog]:
     """
     Split an event log in a training log and a test log (for machine learning purposes)
 
@@ -48,10 +50,22 @@ def split(log: EventLog, train_percentage: float = 0.8) -> Tuple[EventLog, Event
     stop_idx = math.floor(len(idxs) * train_percentage) + 1
     idxs_train = idxs[:stop_idx]
     idxs_test = idxs[stop_idx:]
-    train_log = EventLog(list(), attributes=log.attributes, extensions=log.extensions, classifiers=log.classifiers,
-                            omni_present=log.omni_present, properties=log.properties)
-    test_log = EventLog(list(), attributes=log.attributes, extensions=log.extensions, classifiers=log.classifiers,
-                            omni_present=log.omni_present, properties=log.properties)
+    train_log = EventLog(
+        list(),
+        attributes=log.attributes,
+        extensions=log.extensions,
+        classifiers=log.classifiers,
+        omni_present=log.omni_present,
+        properties=log.properties,
+    )
+    test_log = EventLog(
+        list(),
+        attributes=log.attributes,
+        extensions=log.extensions,
+        classifiers=log.classifiers,
+        omni_present=log.omni_present,
+        properties=log.properties,
+    )
     for idx in idxs_train:
         train_log.append(log[idx])
     for idx in idxs_test:

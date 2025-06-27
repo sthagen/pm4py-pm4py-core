@@ -21,10 +21,18 @@ Contact: info@processintelligence.solutions
 '''
 
 from pm4py.algo.conformance.tokenreplay.variants import token_replay
-from pm4py.algo.evaluation.generalization.variants import token_based as generalization_token_based
-from pm4py.algo.evaluation.precision.variants import etconformance_token as precision_token_based
-from pm4py.algo.evaluation.replay_fitness.variants import token_replay as fitness_token_based
-from pm4py.algo.evaluation.simplicity.variants import arc_degree as simplicity_arc_degree
+from pm4py.algo.evaluation.generalization.variants import (
+    token_based as generalization_token_based,
+)
+from pm4py.algo.evaluation.precision.variants import (
+    etconformance_token as precision_token_based,
+)
+from pm4py.algo.evaluation.replay_fitness.variants import (
+    token_replay as fitness_token_based,
+)
+from pm4py.algo.evaluation.simplicity.variants import (
+    arc_degree as simplicity_arc_degree,
+)
 from pm4py.objects import log as log_lib
 from pm4py.objects.conversion.log import converter as log_conversion
 from pm4py.util import constants
@@ -38,13 +46,19 @@ import pandas as pd
 
 class Parameters(Enum):
     ACTIVITY_KEY = constants.PARAMETER_CONSTANT_ACTIVITY_KEY
-    PARAM_FITNESS_WEIGHT = 'fitness_weight'
-    PARAM_PRECISION_WEIGHT = 'precision_weight'
-    PARAM_SIMPLICITY_WEIGHT = 'simplicity_weight'
-    PARAM_GENERALIZATION_WEIGHT = 'generalization_weight'
+    PARAM_FITNESS_WEIGHT = "fitness_weight"
+    PARAM_PRECISION_WEIGHT = "precision_weight"
+    PARAM_SIMPLICITY_WEIGHT = "simplicity_weight"
+    PARAM_GENERALIZATION_WEIGHT = "generalization_weight"
 
 
-def apply(log: Union[EventLog, pd.DataFrame], net: PetriNet, initial_marking: Marking, final_marking: Marking, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[str, float]:
+def apply(
+    log: Union[EventLog, pd.DataFrame],
+    net: PetriNet,
+    initial_marking: Marking,
+    final_marking: Marking,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[str, float]:
     """
     Calculates all metrics based on token-based replay and returns a unified dictionary
 
@@ -71,13 +85,28 @@ def apply(log: Union[EventLog, pd.DataFrame], net: PetriNet, initial_marking: Ma
         parameters = {}
     log = log_conversion.apply(log, parameters, log_conversion.TO_EVENT_LOG)
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, log_lib.util.xes.DEFAULT_NAME_KEY)
-    fitness_weight = exec_utils.get_param_value(Parameters.PARAM_FITNESS_WEIGHT, parameters, 0.25)
-    precision_weight = exec_utils.get_param_value(Parameters.PARAM_PRECISION_WEIGHT, parameters, 0.25)
-    simplicity_weight = exec_utils.get_param_value(Parameters.PARAM_SIMPLICITY_WEIGHT, parameters, 0.25)
-    generalization_weight = exec_utils.get_param_value(Parameters.PARAM_GENERALIZATION_WEIGHT, parameters, 0.25)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, log_lib.util.xes.DEFAULT_NAME_KEY
+    )
+    fitness_weight = exec_utils.get_param_value(
+        Parameters.PARAM_FITNESS_WEIGHT, parameters, 0.25
+    )
+    precision_weight = exec_utils.get_param_value(
+        Parameters.PARAM_PRECISION_WEIGHT, parameters, 0.25
+    )
+    simplicity_weight = exec_utils.get_param_value(
+        Parameters.PARAM_SIMPLICITY_WEIGHT, parameters, 0.25
+    )
+    generalization_weight = exec_utils.get_param_value(
+        Parameters.PARAM_GENERALIZATION_WEIGHT, parameters, 0.25
+    )
 
-    sum_of_weights = (fitness_weight + precision_weight + simplicity_weight + generalization_weight)
+    sum_of_weights = (
+        fitness_weight
+        + precision_weight
+        + simplicity_weight
+        + generalization_weight
+    )
     fitness_weight = fitness_weight / sum_of_weights
     precision_weight = precision_weight / sum_of_weights
     simplicity_weight = simplicity_weight / sum_of_weights
@@ -85,31 +114,40 @@ def apply(log: Union[EventLog, pd.DataFrame], net: PetriNet, initial_marking: Ma
 
     parameters_tr = {token_replay.Parameters.ACTIVITY_KEY: activity_key}
 
-    aligned_traces = token_replay.apply(log, net, initial_marking, final_marking, parameters=parameters_tr)
+    aligned_traces = token_replay.apply(
+        log, net, initial_marking, final_marking, parameters=parameters_tr
+    )
 
-    parameters = {
-        token_replay.Parameters.ACTIVITY_KEY: activity_key
-    }
+    parameters = {token_replay.Parameters.ACTIVITY_KEY: activity_key}
 
     fitness = fitness_token_based.evaluate(aligned_traces)
-    precision = precision_token_based.apply(log, net, initial_marking, final_marking, parameters=parameters)
-    generalization = generalization_token_based.get_generalization(net, aligned_traces)
+    precision = precision_token_based.apply(
+        log, net, initial_marking, final_marking, parameters=parameters
+    )
+    generalization = generalization_token_based.get_generalization(
+        net, aligned_traces
+    )
     simplicity = simplicity_arc_degree.apply(net)
 
-    metrics_average_weight = fitness_weight * fitness["log_fitness"] + precision_weight * precision \
-                             + generalization_weight * generalization + simplicity_weight * simplicity
+    metrics_average_weight = (
+        fitness_weight * fitness["log_fitness"]
+        + precision_weight * precision
+        + generalization_weight * generalization
+        + simplicity_weight * simplicity
+    )
 
     fscore = 0.0
-    if (fitness['log_fitness'] + precision) > 0:
-        fscore = (2*fitness['log_fitness']*precision)/(fitness['log_fitness']+precision)
+    if (fitness["log_fitness"] + precision) > 0:
+        fscore = (2 * fitness["log_fitness"] * precision) / (
+            fitness["log_fitness"] + precision
+        )
     dictionary = {
         "fitness": fitness,
         "precision": precision,
         "generalization": generalization,
         "simplicity": simplicity,
         "metricsAverageWeight": metrics_average_weight,
-        "fscore": fscore
+        "fscore": fscore,
     }
 
     return dictionary
-

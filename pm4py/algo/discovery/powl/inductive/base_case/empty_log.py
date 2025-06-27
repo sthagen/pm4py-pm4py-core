@@ -31,13 +31,18 @@ from pm4py.objects.powl.obj import SilentTransition
 class EmptyLogBaseCase(BaseCase[T], ABC, Generic[T]):
 
     @classmethod
-    def leaf(cls, obj=T, parameters: Optional[Dict[str, Any]] = None) -> SilentTransition:
+    def leaf(
+        cls, obj=T, parameters: Optional[Dict[str, Any]] = None
+    ) -> SilentTransition:
         return SilentTransition()
 
 
 class EmptyLogBaseCaseUVCL(EmptyLogBaseCase[IMDataStructureUVCL]):
 
     @classmethod
-    def holds(cls, obj=IMDataStructureUVCL, parameters: Optional[Dict[str, Any]] = None) -> bool:
+    def holds(
+        cls,
+        obj=IMDataStructureUVCL,
+        parameters: Optional[Dict[str, Any]] = None,
+    ) -> bool:
         return len(obj.data_structure) == 0
-

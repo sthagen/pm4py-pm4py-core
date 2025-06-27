@@ -51,7 +51,9 @@ def apply(path, parameters=None):
     if parameters is None:
         parameters = {}
 
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, None)
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, None
+    )
 
     parser = etree.XMLParser(remove_comments=True, encoding=encoding)
 
@@ -83,7 +85,9 @@ def import_tree_from_string(tree_string, parameters=None):
     if parameters is None:
         parameters = {}
 
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING)
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING
+    )
 
     if type(tree_string) is str:
         tree_string = tree_string.encode(encoding)
@@ -159,9 +163,14 @@ def import_tree_from_xml_object(root, parameters=None):
     # we want loops to have two children
     for node in nodes.values():
         if node.operator == Operator.LOOP and len(node.children) == 3:
-            if not (node.children[2].operator is None and node.children[2].label is None):
+            if not (
+                node.children[2].operator is None
+                and node.children[2].label is None
+            ):
                 parent_node = node.parent
-                new_parent_node = ProcessTree(operator=Operator.SEQUENCE, label=None)
+                new_parent_node = ProcessTree(
+                    operator=Operator.SEQUENCE, label=None
+                )
                 node.parent = new_parent_node
                 new_parent_node.children.append(node)
                 node.children[2].parent = new_parent_node

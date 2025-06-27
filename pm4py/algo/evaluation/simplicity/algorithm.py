@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,8 +19,11 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-
-from pm4py.algo.evaluation.simplicity.variants import arc_degree, extended_cardoso, extended_cyclomatic
+from pm4py.algo.evaluation.simplicity.variants import (
+    arc_degree,
+    extended_cardoso,
+    extended_cyclomatic,
+)
 from enum import Enum
 from pm4py.util import exec_utils
 from typing import Optional, Dict, Any
@@ -40,5 +43,11 @@ EXTENDED_CYCLOMATIC = Variants.EXTENDED_CYCLOMATIC
 VERSIONS = {SIMPLICITY_ARC_DEGREE, EXTENDED_CARDOSO, EXTENDED_CYCLOMATIC}
 
 
-def apply(petri_net: PetriNet, parameters: Optional[Dict[Any, Any]] = None, variant=SIMPLICITY_ARC_DEGREE) -> float:
-    return exec_utils.get_variant(variant).apply(petri_net, parameters=parameters)
+def apply(
+    petri_net: PetriNet,
+    parameters: Optional[Dict[Any, Any]] = None,
+    variant=SIMPLICITY_ARC_DEGREE,
+) -> float:
+    return exec_utils.get_variant(variant).apply(
+        petri_net, parameters=parameters
+    )

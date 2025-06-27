@@ -34,7 +34,7 @@ def get_temp_file_name(format):
     format
         Format of the target image
     """
-    filename = tempfile.NamedTemporaryFile(suffix='.' + format)
+    filename = tempfile.NamedTemporaryFile(suffix="." + format)
 
     name = filename.name
 
@@ -71,8 +71,9 @@ def view(temp_file_name):
         if constants.DEFAULT_GVIZ_VIEW == "matplotlib_view":
             import matplotlib.pyplot as plt
             import matplotlib.image as mpimg
+
             img = mpimg.imread(temp_file_name)
-            plt.axis('off')
+            plt.axis("off")
             plt.tight_layout(pad=0, w_pad=0, h_pad=0)
             plt.imshow(img)
             plt.show()

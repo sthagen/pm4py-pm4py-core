@@ -29,7 +29,11 @@ from pm4py.objects.powl.obj import Transition
 
 class SingleActivityBaseCaseUVCL(BaseCase[IMDataStructureUVCL]):
     @classmethod
-    def holds(cls, obj=IMDataStructureUVCL, parameters: Optional[Dict[str, Any]] = None) -> bool:
+    def holds(
+        cls,
+        obj=IMDataStructureUVCL,
+        parameters: Optional[Dict[str, Any]] = None,
+    ) -> bool:
         if len(obj.data_structure.keys()) != 1:
             return False
         if len(list(obj.data_structure.keys())[0]) > 1:
@@ -37,7 +41,10 @@ class SingleActivityBaseCaseUVCL(BaseCase[IMDataStructureUVCL]):
         return True
 
     @classmethod
-    def leaf(cls, obj=IMDataStructureUVCL, parameters: Optional[Dict[str, Any]] = None) -> Transition:
+    def leaf(
+        cls,
+        obj=IMDataStructureUVCL,
+        parameters: Optional[Dict[str, Any]] = None,
+    ) -> Transition:
         for t in obj.data_structure:
             return Transition(label=t[0])
-

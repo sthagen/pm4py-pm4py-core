@@ -27,10 +27,10 @@ def fix_dataframe_column(serie):
     if constants.ENABLE_DATETIME_COLUMNS_AWARE:
         # Convert to UTC if the datetime is naive
         if serie.dt.tz is None:
-            serie = serie.dt.tz_localize('UTC')
+            serie = serie.dt.tz_localize("UTC")
         else:
             # Convert to UTC if it's not already in UTC
-            serie = serie.dt.tz_convert('UTC')
+            serie = serie.dt.tz_convert("UTC")
     else:
         serie = serie.dt.tz_localize(None)
 

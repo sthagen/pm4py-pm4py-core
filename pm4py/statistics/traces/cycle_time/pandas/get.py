@@ -34,7 +34,10 @@ class Parameters(Enum):
     CASE_ID_KEY = constants.PARAMETER_CONSTANT_CASEID_KEY
 
 
-def apply(df: pd.DataFrame, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> float:
+def apply(
+    df: pd.DataFrame,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> float:
     """
     Computes the cycle time starting from a Pandas dataframe
 
@@ -48,7 +51,7 @@ def apply(df: pd.DataFrame, parameters: Optional[Dict[Union[str, Parameters], An
     Consider a manufacturing facility, which is producing 100 units of product per 40 hour week.
     The average throughput rate is 1 unit per 0.4 hours, which is one unit every 24 minutes.
     Therefore the cycle time is 24 minutes on average.
-    
+
     Parameters
     ------------------
     df
@@ -67,13 +70,23 @@ def apply(df: pd.DataFrame, parameters: Optional[Dict[Union[str, Parameters], An
     if parameters is None:
         parameters = {}
 
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters,
-                                                     timestamp_key)
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY, parameters, timestamp_key
+    )
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
 
-    events = [(x[start_timestamp_key].timestamp(), x[timestamp_key].timestamp()) for x in
-              df[list({start_timestamp_key, timestamp_key})].to_dict("records")]
+    events = [
+        (x[start_timestamp_key].timestamp(), x[timestamp_key].timestamp())
+        for x in df[list({start_timestamp_key, timestamp_key})].to_dict(
+            "records"
+        )
+    ]
 
     return compute.cycle_time(events, df[case_id_key].nunique())

@@ -38,15 +38,28 @@ class Parameters(Enum):
 
 
 class PandasDataframeAsIterable(object):
-    def __init__(self, dataframe: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None):
+    def __init__(
+        self,
+        dataframe: pd.DataFrame,
+        parameters: Optional[Dict[Any, Any]] = None,
+    ):
         if parameters is None:
             parameters = {}
 
-        case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-        activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-        timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                                   xes_constants.DEFAULT_TIMESTAMP_KEY)
-        index_key = exec_utils.get_param_value(Parameters.INDEX_KEY, parameters, constants.DEFAULT_INDEX_KEY)
+        case_id_key = exec_utils.get_param_value(
+            Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+        )
+        activity_key = exec_utils.get_param_value(
+            Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+        )
+        timestamp_key = exec_utils.get_param_value(
+            Parameters.TIMESTAMP_KEY,
+            parameters,
+            xes_constants.DEFAULT_TIMESTAMP_KEY,
+        )
+        index_key = exec_utils.get_param_value(
+            Parameters.INDEX_KEY, parameters, constants.DEFAULT_INDEX_KEY
+        )
 
         if not (hasattr(dataframe, "attrs") and dataframe.attrs):
             # dataframe has not been initialized through format_dataframe
@@ -57,7 +70,9 @@ class PandasDataframeAsIterable(object):
 
         self.activities = dataframe[activity_key].to_numpy()
         self.timestamps = dataframe[timestamp_key].to_numpy()
-        self.c_unq, self.c_ind, self.c_counts = np.unique(cases, return_index=True, return_counts=True)
+        self.c_unq, self.c_ind, self.c_counts = np.unique(
+            cases, return_index=True, return_counts=True
+        )
         self.no_traces = len(self.c_ind)
         self.i = 0
 
@@ -66,10 +81,18 @@ class PandasDataframeAsIterable(object):
             case_id = self.c_unq[self.i]
             si = self.c_ind[self.i]
             ei = si + self.c_counts[self.i]
-            trace = Trace(attributes={xes_constants.DEFAULT_TRACEID_KEY: case_id})
+            trace = Trace(
+                attributes={xes_constants.DEFAULT_TRACEID_KEY: case_id}
+            )
             for j in range(si, ei):
-                event = Event({xes_constants.DEFAULT_NAME_KEY: self.activities[j],
-                               xes_constants.DEFAULT_TIMESTAMP_KEY: self.timestamps[j]})
+                event = Event(
+                    {
+                        xes_constants.DEFAULT_NAME_KEY: self.activities[j],
+                        xes_constants.DEFAULT_TIMESTAMP_KEY: self.timestamps[
+                            j
+                        ],
+                    }
+                )
                 trace.append(event)
             self.i = self.i + 1
             return trace

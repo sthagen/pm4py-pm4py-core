@@ -43,8 +43,8 @@ def compress(file):
     extension = file.split(".")[-1] + ".gz"
     fp = tempfile.NamedTemporaryFile(suffix=extension)
     fp.close()
-    with open(file, 'rb') as f_in:
-        with gzip.open(fp.name, 'wb') as f_out:
+    with open(file, "rb") as f_in:
+        with gzip.open(fp.name, "wb") as f_out:
             shutil.copyfileobj(f_in, f_out)
     shutil.move(fp.name, file + ".gz")
     os.remove(file)

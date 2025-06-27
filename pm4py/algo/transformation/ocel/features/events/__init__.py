@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,5 +19,16 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-
-from pm4py.algo.transformation.ocel.features.events import algorithm, event_activity, event_timestamp, event_num_rel_objs_type, event_num_rel_objs, event_str_attributes, event_num_attributes, event_start_ot, event_end_ot, related_objects_features, new_interactions
+from pm4py.algo.transformation.ocel.features.events import (
+    algorithm,
+    event_activity,
+    event_timestamp,
+    event_num_rel_objs_type,
+    event_num_rel_objs,
+    event_str_attributes,
+    event_num_attributes,
+    event_start_ot,
+    event_end_ot,
+    related_objects_features,
+    new_interactions,
+)

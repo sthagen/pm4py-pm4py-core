@@ -55,19 +55,31 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     data = []
     feature_names = []
 
-    ordered_objects = parameters["ordered_objects"] if "ordered_objects" in parameters else ocel.objects[
-        ocel.object_id_column].to_numpy()
+    ordered_objects = (
+        parameters["ordered_objects"]
+        if "ordered_objects" in parameters
+        else ocel.objects[ocel.object_id_column].to_numpy()
+    )
 
-    object_str_attributes = exec_utils.get_param_value(Parameters.OBJECT_STR_ATTRIBUTES, parameters, None)
+    object_str_attributes = exec_utils.get_param_value(
+        Parameters.OBJECT_STR_ATTRIBUTES, parameters, None
+    )
 
     if object_str_attributes is not None:
         dct_corr = {}
         dct_corr_values = {}
 
         for attr in object_str_attributes:
-            objects_attr_not_na = ocel.objects[[ocel.object_id_column, attr]].dropna(subset=[attr]).to_dict("records")
+            objects_attr_not_na = (
+                ocel.objects[[ocel.object_id_column, attr]]
+                .dropna(subset=[attr])
+                .to_dict("records")
+            )
             if objects_attr_not_na:
-                objects_attr_not_na = {x[ocel.object_id_column]: x[attr] for x in objects_attr_not_na}
+                objects_attr_not_na = {
+                    x[ocel.object_id_column]: x[attr]
+                    for x in objects_attr_not_na
+                }
                 dct_corr[attr] = objects_attr_not_na
                 dct_corr_values[attr] = list(set(objects_attr_not_na.values()))
 
@@ -75,7 +87,9 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
 
         for attr in dct_corr_list:
             for value in dct_corr_values[attr]:
-                feature_names.append("@@object_attr_value_"+attr+"_"+value)
+                feature_names.append(
+                    "@@object_attr_value_" + attr + "_" + value
+                )
 
         for ev in ordered_objects:
             data.append([0] * len(feature_names))

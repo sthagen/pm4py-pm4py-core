@@ -31,7 +31,11 @@ class Variants(Enum):
     NEATO = neato
 
 
-def apply(perf_spectrum: Dict[str, Any], variant=Variants.NEATO, parameters: Optional[Dict[Any, Any]] = None) -> str:
+def apply(
+    perf_spectrum: Dict[str, Any],
+    variant=Variants.NEATO,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> str:
     """
     Construct the performance spectrum visualization
 
@@ -50,7 +54,9 @@ def apply(perf_spectrum: Dict[str, Any], variant=Variants.NEATO, parameters: Opt
     file_path
         Path containing the visualization
     """
-    return exec_utils.get_variant(variant).apply(perf_spectrum, parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        perf_spectrum, parameters=parameters
+    )
 
 
 def view(figure: str):
@@ -66,8 +72,9 @@ def view(figure: str):
         if constants.DEFAULT_GVIZ_VIEW == "matplotlib_view":
             import matplotlib.pyplot as plt
             import matplotlib.image as mpimg
+
             img = mpimg.imread(figure)
-            plt.axis('off')
+            plt.axis("off")
             plt.tight_layout(pad=0, w_pad=0, h_pad=0)
             plt.imshow(img)
             plt.show()

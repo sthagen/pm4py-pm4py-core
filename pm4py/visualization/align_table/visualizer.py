@@ -32,6 +32,7 @@ import graphviz
 from pm4py.objects.conversion.log import converter as log_converter
 import pandas as pd
 
+
 class Variants(Enum):
     CLASSIC = classic
 
@@ -39,7 +40,12 @@ class Variants(Enum):
 DEFAULT_VARIANT = Variants.CLASSIC
 
 
-def apply(log: Union[EventLog, pd.DataFrame], aligned_traces: typing.ListAlignments, variant=DEFAULT_VARIANT, parameters: Optional[Dict[Any, Any]] = None) -> graphviz.Source:
+def apply(
+    log: Union[EventLog, pd.DataFrame],
+    aligned_traces: typing.ListAlignments,
+    variant=DEFAULT_VARIANT,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> graphviz.Source:
     """
     Gets the alignment table visualization from the alignments output
 
@@ -60,8 +66,12 @@ def apply(log: Union[EventLog, pd.DataFrame], aligned_traces: typing.ListAlignme
     gviz
         Graphviz object
     """
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
-    return exec_utils.get_variant(variant).apply(log, aligned_traces, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
+    return exec_utils.get_variant(variant).apply(
+        log, aligned_traces, parameters=parameters
+    )
 
 
 def save(gviz: graphviz.Digraph, output_file_path: str, parameters=None):

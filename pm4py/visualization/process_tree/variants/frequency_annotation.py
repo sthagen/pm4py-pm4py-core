@@ -46,45 +46,96 @@ class Parameters(Enum):
 
 
 # maps the operators to the ProM strings
-operators_mapping = {"->": "seq", "X": "xor", "+": "and", "*": "xor loop", "O": "or", "<>": "interleaving"}
+operators_mapping = {
+    "->": "seq",
+    "X": "xor",
+    "+": "and",
+    "*": "xor loop",
+    "O": "or",
+    "<>": "interleaving",
+}
 
 # root node parameter
 ROOT_NODE_PARAMETER = "@@root_node"
 
 
 def repr_tree_2(tree, viz, parameters):
-    num_events_property = exec_utils.get_param_value(Parameters.NUM_EVENTS_PROPERTY, parameters, "num_events")
-    num_cases_property = exec_utils.get_param_value(Parameters.NUM_CASES_PROPERTY, parameters, "num_cases")
+    num_events_property = exec_utils.get_param_value(
+        Parameters.NUM_EVENTS_PROPERTY, parameters, "num_events"
+    )
+    num_cases_property = exec_utils.get_param_value(
+        Parameters.NUM_CASES_PROPERTY, parameters, "num_cases"
+    )
     root_node = parameters[ROOT_NODE_PARAMETER]
 
     root_node_num_cases = root_node._properties[num_cases_property]
-    this_node_num_cases = tree._properties[num_cases_property] if num_cases_property in tree._properties else 0
-    this_node_num_events = tree._properties[num_events_property] if num_events_property in tree._properties else 0
+    this_node_num_cases = (
+        tree._properties[num_cases_property]
+        if num_cases_property in tree._properties
+        else 0
+    )
+    this_node_num_events = (
+        tree._properties[num_events_property]
+        if num_events_property in tree._properties
+        else 0
+    )
 
-    font_size = exec_utils.get_param_value(Parameters.FONT_SIZE, parameters, 15)
+    font_size = exec_utils.get_param_value(
+        Parameters.FONT_SIZE, parameters, 15
+    )
     font_size = str(font_size)
 
     this_node_id = str(id(tree))
 
     if tree.operator is None:
         if tree.label is None:
-            viz.node(this_node_id, "tau", style='filled', fillcolor='black', shape='point', width="0.075", fontsize=font_size)
+            viz.node(
+                this_node_id,
+                "tau",
+                style="filled",
+                fillcolor="black",
+                shape="point",
+                width="0.075",
+                fontsize=font_size,
+            )
         else:
-            node_color = vis_utils.get_trans_freq_color(this_node_num_cases, 0, root_node_num_cases)
-            node_label = str(tree) + "\nC=%d E=%d" % (this_node_num_cases, this_node_num_events)
-            viz.node(this_node_id, node_label, fontsize=font_size, style="filled", fillcolor=node_color)
+            node_color = vis_utils.get_trans_freq_color(
+                this_node_num_cases, 0, root_node_num_cases
+            )
+            node_label = str(tree) + "\nC=%d E=%d" % (
+                this_node_num_cases,
+                this_node_num_events,
+            )
+            viz.node(
+                this_node_id,
+                node_label,
+                fontsize=font_size,
+                style="filled",
+                fillcolor=node_color,
+            )
     else:
-        node_color = vis_utils.get_trans_freq_color(this_node_num_cases, 0, root_node_num_cases)
-        viz.node(this_node_id, operators_mapping[str(tree.operator)], fontsize=font_size, style="filled", fillcolor=node_color)
+        node_color = vis_utils.get_trans_freq_color(
+            this_node_num_cases, 0, root_node_num_cases
+        )
+        viz.node(
+            this_node_id,
+            operators_mapping[str(tree.operator)],
+            fontsize=font_size,
+            style="filled",
+            fillcolor=node_color,
+        )
 
         for child in tree.children:
             repr_tree_2(child, viz, parameters)
 
     if tree.parent is not None:
-        viz.edge(str(id(tree.parent)), this_node_id, dirType='none')
+        viz.edge(str(id(tree.parent)), this_node_id, dirType="none")
 
 
-def apply(tree: ProcessTree, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> graphviz.Graph:
+def apply(
+    tree: ProcessTree,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> graphviz.Graph:
     """
     Obtain a Process Tree representation through GraphViz
 
@@ -106,25 +157,53 @@ def apply(tree: ProcessTree, parameters: Optional[Dict[Union[str, Parameters], A
     parameters = copy(parameters)
     parameters[ROOT_NODE_PARAMETER] = tree
 
-    filename = tempfile.NamedTemporaryFile(suffix='.gv')
+    filename = tempfile.NamedTemporaryFile(suffix=".gv")
     filename.close()
 
-    bgcolor = exec_utils.get_param_value(Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR)
-    rankdir = exec_utils.get_param_value(Parameters.RANKDIR, parameters, constants.DEFAULT_RANKDIR_GVIZ)
-    enable_graph_title = exec_utils.get_param_value(Parameters.ENABLE_GRAPH_TITLE, parameters, constants.DEFAULT_ENABLE_GRAPH_TITLES)
-    graph_title = exec_utils.get_param_value(Parameters.GRAPH_TITLE, parameters, "Process Tree")
-    font_size = exec_utils.get_param_value(Parameters.FONT_SIZE, parameters, 15)
+    bgcolor = exec_utils.get_param_value(
+        Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR
+    )
+    rankdir = exec_utils.get_param_value(
+        Parameters.RANKDIR, parameters, constants.DEFAULT_RANKDIR_GVIZ
+    )
+    enable_graph_title = exec_utils.get_param_value(
+        Parameters.ENABLE_GRAPH_TITLE,
+        parameters,
+        constants.DEFAULT_ENABLE_GRAPH_TITLES,
+    )
+    graph_title = exec_utils.get_param_value(
+        Parameters.GRAPH_TITLE, parameters, "Process Tree"
+    )
+    font_size = exec_utils.get_param_value(
+        Parameters.FONT_SIZE, parameters, 15
+    )
     font_size = str(font_size)
 
-    viz = Graph("pt", filename=filename.name, engine='dot', graph_attr={'bgcolor': bgcolor, "rankdir": rankdir})
-    viz.attr('node', shape='ellipse', fixedsize='false')
+    viz = Graph(
+        "pt",
+        filename=filename.name,
+        engine="dot",
+        graph_attr={"bgcolor": bgcolor, "rankdir": rankdir},
+    )
+    viz.attr("node", shape="ellipse", fixedsize="false")
 
     if enable_graph_title:
-        viz.attr(label='<<FONT POINT-SIZE="'+str(2*int(font_size))+'">'+graph_title+'</FONT>>', labelloc="top")
+        viz.attr(
+            label='<<FONT POINT-SIZE="'
+            + str(2 * int(font_size))
+            + '">'
+            + graph_title
+            + "</FONT>>",
+            labelloc="top",
+        )
 
-    image_format = exec_utils.get_param_value(Parameters.FORMAT, parameters, "png")
+    image_format = exec_utils.get_param_value(
+        Parameters.FORMAT, parameters, "png"
+    )
 
-    enable_deepcopy = exec_utils.get_param_value(Parameters.ENABLE_DEEPCOPY, parameters, False)
+    enable_deepcopy = exec_utils.get_param_value(
+        Parameters.ENABLE_DEEPCOPY, parameters, False
+    )
 
     if enable_deepcopy:
         # since the process tree object needs to be sorted in the visualization, make a deepcopy of it before
@@ -134,8 +213,8 @@ def apply(tree: ProcessTree, parameters: Optional[Dict[Union[str, Parameters], A
 
     repr_tree_2(tree, viz, parameters)
 
-    viz.attr(overlap='false')
-    viz.attr(splines='false')
+    viz.attr(overlap="false")
+    viz.attr(splines="false")
     viz.format = image_format.replace("html", "plain-ext")
 
     return viz

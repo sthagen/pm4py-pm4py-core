@@ -33,40 +33,106 @@ class Parameters(Enum):
 def get_model_description():
     ret = []
     ret.append(
-        "I have a DECLARE declarative process model containing the following constraints (here we provide a short explanation):\n")
+        "I have a DECLARE declarative process model containing the following constraints (here we provide a short explanation):\n"
+    )
     ret.append("Existence: the activity is executed at least once.\n")
     ret.append("Absence: the activity is not executed.\n")
     ret.append("Exactly 1: the activity is executed exactly one time.\n")
-    ret.append("Initialization: the trace starts with one of the given activities.\n")
-    ret.append("Responded existence: given a couple of activities (A, B), if A occurs then B also occurs.\n")
-    ret.append("Co-Existence: given a couple of activities (A, B), if A occurs then B also occurs.\n")
     ret.append(
-        "Response: given a couple of activities (A, B), if A occurs then B also occurs in the future of the trace.\n")
+        "Initialization: the trace starts with one of the given activities.\n"
+    )
     ret.append(
-        "Precedence: given a couple of activities (A, B), if B occurs then also A occurs in the past of the trace.\n")
+        "Responded existence: given a couple of activities (A, B), if A occurs then B also occurs.\n"
+    )
     ret.append(
-        "Succession: given a couple of activities (A, B), both the response and precedence constraints are satisfied.\n")
+        "Co-Existence: given a couple of activities (A, B), if A occurs then B also occurs.\n"
+    )
     ret.append(
-        "Alternate response, alternate precedence, alternate succession: as the constraints mentioned above, but strenghtened by specifying that the events must alternate without repetitions.\n")
+        "Response: given a couple of activities (A, B), if A occurs then B also occurs in the future of the trace.\n"
+    )
     ret.append(
-        "Chain response, chain precedence, chain succession: as the constraints mentioned above, strenghtened by imposing the directly-follows relation.\n")
-    ret.append("Non Co-Existence: given a couple of activities (A, B), if A occurs then B should not occur.\n")
+        "Precedence: given a couple of activities (A, B), if B occurs then also A occurs in the past of the trace.\n"
+    )
     ret.append(
-        "Non Succession and non Chain succession: given a couple of activities (A, B), B should not follow A.\n")
+        "Succession: given a couple of activities (A, B), both the response and precedence constraints are satisfied.\n"
+    )
+    ret.append(
+        "Alternate response, alternate precedence, alternate succession: as the constraints mentioned above, but strenghtened by specifying that the events must alternate without repetitions.\n"
+    )
+    ret.append(
+        "Chain response, chain precedence, chain succession: as the constraints mentioned above, strenghtened by imposing the directly-follows relation.\n"
+    )
+    ret.append(
+        "Non Co-Existence: given a couple of activities (A, B), if A occurs then B should not occur.\n"
+    )
+    ret.append(
+        "Non Succession and non Chain succession: given a couple of activities (A, B), B should not follow A.\n"
+    )
     ret.append("\n\n")
     return "".join(ret)
 
 
 def get_model_implementation():
     implementation = "A DECLARE model in pm4py is expressed as a Python dictionary containing the following keys:\n"
-    implementation += "'" + "', '".join([EXISTENCE, ABSENCE, EXACTLY_ONE, INIT, RESPONDED_EXISTENCE, COEXISTENCE, RESPONSE, PRECEDENCE, SUCCESSION, ALTRESPONSE, ALTPRECEDENCE, ALTSUCCESSION, CHAINRESPONSE, CHAINPRECEDENCE, CHAINSUCCESSION, NONCOEXISTENCE, NONSUCCESSION, NONCHAINSUCCESSION]) + "'\n"
-    implementation += "For the keys {'"+"', '".join([EXISTENCE, ABSENCE, EXACTLY_ONE, INIT])+"'}, the value is a dictionary containing as keys the activities and as corresponding value the support (please set it to 1.0) and confidence of the declarative rule.\n"
-    implementation += "For the keys {'"+"', '".join([RESPONDED_EXISTENCE, COEXISTENCE, RESPONSE, PRECEDENCE, SUCCESSION, ALTRESPONSE, ALTPRECEDENCE, ALTSUCCESSION, CHAINRESPONSE, CHAINPRECEDENCE, CHAINSUCCESSION, NONCOEXISTENCE, NONSUCCESSION, NONCHAINSUCCESSION])+"'}, the value is a dictionary containing as keys the activities and as corresponding value the support (please set it to 1.0) and confidence of the declarative rule.\n"
+    implementation += (
+        "'"
+        + "', '".join(
+            [
+                EXISTENCE,
+                ABSENCE,
+                EXACTLY_ONE,
+                INIT,
+                RESPONDED_EXISTENCE,
+                COEXISTENCE,
+                RESPONSE,
+                PRECEDENCE,
+                SUCCESSION,
+                ALTRESPONSE,
+                ALTPRECEDENCE,
+                ALTSUCCESSION,
+                CHAINRESPONSE,
+                CHAINPRECEDENCE,
+                CHAINSUCCESSION,
+                NONCOEXISTENCE,
+                NONSUCCESSION,
+                NONCHAINSUCCESSION,
+            ]
+        )
+        + "'\n"
+    )
+    implementation += ("For the keys {'" +
+                       "', '".join([EXISTENCE, ABSENCE, EXACTLY_ONE, INIT]) +
+                       "'}, the value is a dictionary containing as keys the activities and as corresponding value the support (please set it to 1.0) and confidence of the declarative rule.\n")
+    implementation += (
+        "For the keys {'"
+        + "', '".join(
+            [
+                RESPONDED_EXISTENCE,
+                COEXISTENCE,
+                RESPONSE,
+                PRECEDENCE,
+                SUCCESSION,
+                ALTRESPONSE,
+                ALTPRECEDENCE,
+                ALTSUCCESSION,
+                CHAINRESPONSE,
+                CHAINPRECEDENCE,
+                CHAINSUCCESSION,
+                NONCOEXISTENCE,
+                NONSUCCESSION,
+                NONCHAINSUCCESSION,
+            ]
+        )
+        + "'}, the value is a dictionary containing as keys the activities and as corresponding value the support (please set it to 1.0) and confidence of the declarative rule.\n"
+    )
 
     return implementation
 
 
-def apply(declare: Dict[str, Dict[Any, Dict[str, int]]], parameters: Optional[Dict[Any, Any]] = None) -> str:
+def apply(
+    declare: Dict[str, Dict[Any, Dict[str, int]]],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> str:
     """
     Gets a textual abstraction of a DECLARE model
 
@@ -86,7 +152,9 @@ def apply(declare: Dict[str, Dict[Any, Dict[str, int]]], parameters: Optional[Di
     if parameters is None:
         parameters = {}
 
-    include_header = exec_utils.get_param_value(Parameters.INCLUDE_HEADER, parameters, True)
+    include_header = exec_utils.get_param_value(
+        Parameters.INCLUDE_HEADER, parameters, True
+    )
 
     ret = ["\n"]
 
@@ -94,15 +162,33 @@ def apply(declare: Dict[str, Dict[Any, Dict[str, int]]], parameters: Optional[Di
         ret.append(get_model_description())
 
     ret.append("These are the constraints of the model:\n")
-    mapping = {EXISTENCE: "Existence", ABSENCE: "Absence", EXACTLY_ONE: "Exactly 1", INIT: "Initialization",
-               RESPONDED_EXISTENCE: "Responded Existence", COEXISTENCE: "Co-Existence", RESPONSE: "Response",
-               PRECEDENCE: "Precedence", SUCCESSION: "Succession", ALTRESPONSE: "Alternate response",
-               ALTPRECEDENCE: "Alternate precedence", ALTSUCCESSION: "Alternate succession",
-               CHAINRESPONSE: "Chain response", CHAINPRECEDENCE: "Chain precedence",
-               CHAINSUCCESSION: "Chain succession", NONCOEXISTENCE: "Non Co-Existence", NONSUCCESSION: "Non Succession",
-               NONCHAINSUCCESSION: "Non Chain succession"}
+    mapping = {
+        EXISTENCE: "Existence",
+        ABSENCE: "Absence",
+        EXACTLY_ONE: "Exactly 1",
+        INIT: "Initialization",
+        RESPONDED_EXISTENCE: "Responded Existence",
+        COEXISTENCE: "Co-Existence",
+        RESPONSE: "Response",
+        PRECEDENCE: "Precedence",
+        SUCCESSION: "Succession",
+        ALTRESPONSE: "Alternate response",
+        ALTPRECEDENCE: "Alternate precedence",
+        ALTSUCCESSION: "Alternate succession",
+        CHAINRESPONSE: "Chain response",
+        CHAINPRECEDENCE: "Chain precedence",
+        CHAINSUCCESSION: "Chain succession",
+        NONCOEXISTENCE: "Non Co-Existence",
+        NONSUCCESSION: "Non Succession",
+        NONCHAINSUCCESSION: "Non Chain succession",
+    }
 
     for temp in declare:
-        ret.append(mapping[temp] + ": " + ", ".join([str(x) for x in declare[temp]]) + "\n")
+        ret.append(
+            mapping[temp]
+            + ": "
+            + ", ".join([str(x) for x in declare[temp]])
+            + "\n"
+        )
 
     return "".join(ret)

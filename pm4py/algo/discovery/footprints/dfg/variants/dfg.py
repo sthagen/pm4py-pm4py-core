@@ -37,7 +37,10 @@ class Outputs(Enum):
     TRACE = "trace"
 
 
-def apply(dfg: Dict[Tuple[str, str], int], parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, Any]:
+def apply(
+    dfg: Dict[Tuple[str, str], int],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Dict[str, Any]:
     """
     Discovers a footprint object from a DFG
 
@@ -64,5 +67,10 @@ def apply(dfg: Dict[Tuple[str, str], int], parameters: Optional[Dict[Any, Any]] 
     end_activities = set(utils.dfg_utils.infer_end_activities(dfg))
     activities = set(utils.dfg_utils.get_activities_from_dfg(dfg))
 
-    return {Outputs.SEQUENCE.value: sequence, Outputs.PARALLEL.value: parallel,
-            Outputs.START_ACTIVITIES.value: start_activities, Outputs.END_ACTIVITIES.value: end_activities, Outputs.ACTIVITIES.value: activities}
+    return {
+        Outputs.SEQUENCE.value: sequence,
+        Outputs.PARALLEL.value: parallel,
+        Outputs.START_ACTIVITIES.value: start_activities,
+        Outputs.END_ACTIVITIES.value: end_activities,
+        Outputs.ACTIVITIES.value: activities,
+    }

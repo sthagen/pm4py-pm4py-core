@@ -31,8 +31,8 @@ class Parameters(Enum):
     ACCEPTANCE_CONDITION = "acceptance_condition"
 
 
-_EVENT_END = 'end'
-_EVENT_START = 'start'
+_EVENT_END = "end"
+_EVENT_START = "start"
 
 
 def parse_attribute(elem, store, key, value, tree):
@@ -45,11 +45,17 @@ def parse_attribute(elem, store, key, value, tree):
             store[key] = value
     else:
         if elem.getchildren()[0].tag.endswith(xes_constants.TAG_VALUES):
-            store[key] = {xes_constants.KEY_VALUE: value, xes_constants.KEY_CHILDREN: list()}
+            store[key] = {
+                xes_constants.KEY_VALUE: value,
+                xes_constants.KEY_CHILDREN: list(),
+            }
             tree[elem] = store[key][xes_constants.KEY_CHILDREN]
             tree[elem.getchildren()[0]] = tree[elem]
         else:
-            store[key] = {xes_constants.KEY_VALUE: value, xes_constants.KEY_CHILDREN: dict()}
+            store[key] = {
+                xes_constants.KEY_VALUE: value,
+                xes_constants.KEY_CHILDREN: dict(),
+            }
             tree[elem] = store[key][xes_constants.KEY_CHILDREN]
     return tree
 
@@ -67,8 +73,9 @@ class StreamingEventXesReader:
         if parameters is None:
             parameters = {}
         self.path = path
-        self.acceptance_condition = exec_utils.get_param_value(Parameters.ACCEPTANCE_CONDITION, parameters,
-                                                               lambda x: True)
+        self.acceptance_condition = exec_utils.get_param_value(
+            Parameters.ACCEPTANCE_CONDITION, parameters, lambda x: True
+        )
         self.date_parser = dt_parser.get()
         self.reset()
 
@@ -111,7 +118,9 @@ class StreamingEventXesReader:
         self.context = None
         self.tree = None
         # initialize the variables
-        self.context = etree.iterparse(self.path, events=[_EVENT_START, _EVENT_END])
+        self.context = etree.iterparse(
+            self.path, events=[_EVENT_START, _EVENT_END]
+        )
         self.event = None
         self.reading_log = True
         self.reading_event = False
@@ -132,7 +141,11 @@ class StreamingEventXesReader:
             tree_event, elem = next(self.context)
 
             if tree_event == _EVENT_START:
-                parent = tree[elem.getparent()] if elem.getparent() in tree else None
+                parent = (
+                    tree[elem.getparent()]
+                    if elem.getparent() in tree
+                    else None
+                )
 
                 if elem.tag.endswith(xes_constants.TAG_TRACE):
                     self.trace = Trace()
@@ -149,36 +162,73 @@ class StreamingEventXesReader:
                 if self.reading_event or self.reading_trace:
                     if elem.tag.endswith(xes_constants.TAG_STRING):
                         if parent is not None:
-                            tree = parse_attribute(elem, parent, elem.get(xes_constants.KEY_KEY),
-                                                   elem.get(xes_constants.KEY_VALUE), tree)
+                            tree = parse_attribute(
+                                elem,
+                                parent,
+                                elem.get(xes_constants.KEY_KEY),
+                                elem.get(xes_constants.KEY_VALUE),
+                                tree,
+                            )
                         continue
 
                     elif elem.tag.endswith(xes_constants.TAG_DATE):
                         try:
-                            dt = self.date_parser.apply(elem.get(xes_constants.KEY_VALUE))
-                            tree = parse_attribute(elem, parent, elem.get(xes_constants.KEY_KEY), dt, tree)
+                            dt = self.date_parser.apply(
+                                elem.get(xes_constants.KEY_VALUE)
+                            )
+                            tree = parse_attribute(
+                                elem,
+                                parent,
+                                elem.get(xes_constants.KEY_KEY),
+                                dt,
+                                tree,
+                            )
                         except TypeError:
-                            logging.info("failed to parse date: " + str(elem.get(xes_constants.KEY_VALUE)))
+                            logging.info(
+                                "failed to parse date: "
+                                + str(elem.get(xes_constants.KEY_VALUE))
+                            )
                         except ValueError:
-                            logging.info("failed to parse date: " + str(elem.get(xes_constants.KEY_VALUE)))
+                            logging.info(
+                                "failed to parse date: "
+                                + str(elem.get(xes_constants.KEY_VALUE))
+                            )
                         continue
 
                     elif elem.tag.endswith(xes_constants.TAG_FLOAT):
                         if parent is not None:
                             try:
                                 val = float(elem.get(xes_constants.KEY_VALUE))
-                                tree = parse_attribute(elem, parent, elem.get(xes_constants.KEY_KEY), val, tree)
+                                tree = parse_attribute(
+                                    elem,
+                                    parent,
+                                    elem.get(xes_constants.KEY_KEY),
+                                    val,
+                                    tree,
+                                )
                             except ValueError:
-                                logging.info("failed to parse float: " + str(elem.get(xes_constants.KEY_VALUE)))
+                                logging.info(
+                                    "failed to parse float: "
+                                    + str(elem.get(xes_constants.KEY_VALUE))
+                                )
                         continue
 
                     elif elem.tag.endswith(xes_constants.TAG_INT):
                         if parent is not None:
                             try:
                                 val = int(elem.get(xes_constants.KEY_VALUE))
-                                tree = parse_attribute(elem, parent, elem.get(xes_constants.KEY_KEY), val, tree)
+                                tree = parse_attribute(
+                                    elem,
+                                    parent,
+                                    elem.get(xes_constants.KEY_KEY),
+                                    val,
+                                    tree,
+                                )
                             except ValueError:
-                                logging.info("failed to parse int: " + str(elem.get(xes_constants.KEY_VALUE)))
+                                logging.info(
+                                    "failed to parse int: "
+                                    + str(elem.get(xes_constants.KEY_VALUE))
+                                )
                         continue
 
                     elif elem.tag.endswith(xes_constants.TAG_BOOLEAN):
@@ -188,21 +238,41 @@ class StreamingEventXesReader:
                                 val = False
                                 if str(val0).lower() == "true":
                                     val = True
-                                tree = parse_attribute(elem, parent, elem.get(xes_constants.KEY_KEY), val, tree)
+                                tree = parse_attribute(
+                                    elem,
+                                    parent,
+                                    elem.get(xes_constants.KEY_KEY),
+                                    val,
+                                    tree,
+                                )
                             except ValueError:
-                                logging.info("failed to parse boolean: " + str(elem.get(xes_constants.KEY_VALUE)))
+                                logging.info(
+                                    "failed to parse boolean: "
+                                    + str(elem.get(xes_constants.KEY_VALUE))
+                                )
                         continue
 
                     elif elem.tag.endswith(xes_constants.TAG_LIST):
                         if parent is not None:
                             # lists have no value, hence we put None as a value
-                            tree = parse_attribute(elem, parent, elem.get(xes_constants.KEY_KEY), None, tree)
+                            tree = parse_attribute(
+                                elem,
+                                parent,
+                                elem.get(xes_constants.KEY_KEY),
+                                None,
+                                tree,
+                            )
                         continue
 
                     elif elem.tag.endswith(xes_constants.TAG_ID):
                         if parent is not None:
-                            tree = parse_attribute(elem, parent, elem.get(xes_constants.KEY_KEY),
-                                                   elem.get(xes_constants.KEY_VALUE), tree)
+                            tree = parse_attribute(
+                                elem,
+                                parent,
+                                elem.get(xes_constants.KEY_KEY),
+                                elem.get(xes_constants.KEY_VALUE),
+                                tree,
+                            )
                         continue
 
             elif tree_event == _EVENT_END:
@@ -219,7 +289,9 @@ class StreamingEventXesReader:
                     self.reading_event = False
                     if self.acceptance_condition(self.event):
                         for attr in self.trace.attributes:
-                            self.event[constants.CASE_ATTRIBUTE_PREFIX + attr] = self.trace.attributes[attr]
+                            self.event[
+                                constants.CASE_ATTRIBUTE_PREFIX + attr
+                            ] = self.trace.attributes[attr]
                         return self.event
                     continue
 

@@ -23,7 +23,9 @@ import sys
 
 import numpy as np
 
-from pm4py.objects.random_variables.basic_structure import BasicStructureRandomVariable
+from pm4py.objects.random_variables.basic_structure import (
+    BasicStructureRandomVariable,
+)
 
 
 class LogNormal(BasicStructureRandomVariable):
@@ -94,7 +96,9 @@ class LogNormal(BasicStructureRandomVariable):
         if len(values) > 1:
             somma = 0
             for value in values:
-                somma = somma + np.log(lognorm.pdf(value, self.s, self.loc, self.scale))
+                somma = somma + np.log(
+                    lognorm.pdf(value, self.s, self.loc, self.scale)
+                )
             return somma
         return -sys.float_info.max
 

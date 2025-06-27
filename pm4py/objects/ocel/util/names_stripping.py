@@ -23,7 +23,7 @@ Contact: info@processintelligence.solutions
 import re
 
 
-match = re.compile(r'[^0-9a-zA-Z]+')
+match = re.compile(r"[^0-9a-zA-Z]+")
 
 
 def apply(X: str, max_len: int = 100) -> str:
@@ -33,7 +33,7 @@ def apply(X: str, max_len: int = 100) -> str:
         X[i] = X[i].capitalize()
         i = i + 1
     X = "".join(X)
-    stru = match.sub('', X).strip()
+    stru = match.sub("", X).strip()
     if len(stru) > max_len:
         stru = stru[:100]
     return stru

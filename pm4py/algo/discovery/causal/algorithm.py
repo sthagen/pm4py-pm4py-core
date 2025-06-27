@@ -36,7 +36,9 @@ CAUSAL_HEURISTIC = Variants.CAUSAL_HEURISTIC
 VERSIONS = {CAUSAL_ALPHA, CAUSAL_HEURISTIC}
 
 
-def apply(dfg: Dict[Tuple[str, str], int], variant=CAUSAL_ALPHA) -> Dict[Tuple[str, str], int]:
+def apply(
+    dfg: Dict[Tuple[str, str], int], variant=CAUSAL_ALPHA
+) -> Dict[Tuple[str, str], int]:
     """
     Computes the causal relation on the basis of a given directly follows graph.
 

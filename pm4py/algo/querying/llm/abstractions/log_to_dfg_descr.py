@@ -44,7 +44,11 @@ class Parameters(Enum):
     CASE_ID_KEY = constants.PARAMETER_CONSTANT_CASEID_KEY
 
 
-def abstraction_from_frequency_performance_dfg(freq_dfg: Dict[Tuple[str, str], int], perf_dfg: Dict[Tuple[str, str], Dict[str, float]], parameters: Optional[Dict[Any, Any]] = None) -> str:
+def abstraction_from_frequency_performance_dfg(
+    freq_dfg: Dict[Tuple[str, str], int],
+    perf_dfg: Dict[Tuple[str, str], Dict[str, float]],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> str:
     """
     Obtains the abstraction starting from the knowledge of the frequency of the paths, and their performance.
 
@@ -85,15 +89,33 @@ def abstraction_from_frequency_performance_dfg(freq_dfg: Dict[Tuple[str, str], i
     if parameters is None:
         parameters = {}
 
-    relative_frequency = exec_utils.get_param_value(Parameters.RELATIVE_FREQUENCY, parameters, False)
-    include_frequency = exec_utils.get_param_value(Parameters.INCLUDE_FREQUENCY, parameters, True)
-    include_performance = exec_utils.get_param_value(Parameters.INCLUDE_PERFORMANCE, parameters, True)
-    max_len = exec_utils.get_param_value(Parameters.MAX_LEN, parameters, constants.OPENAI_MAX_LEN)
-    response_header = exec_utils.get_param_value(Parameters.RESPONSE_HEADER, parameters, True)
-    primary_performance_aggregation = exec_utils.get_param_value(Parameters.PRIMARY_PERFORMANCE_AGGREGATION, parameters, "mean")
-    secondary_performance_aggregation = exec_utils.get_param_value(Parameters.SECONDARY_PERFORMANCE_AGGREGATION, parameters, None)
+    relative_frequency = exec_utils.get_param_value(
+        Parameters.RELATIVE_FREQUENCY, parameters, False
+    )
+    include_frequency = exec_utils.get_param_value(
+        Parameters.INCLUDE_FREQUENCY, parameters, True
+    )
+    include_performance = exec_utils.get_param_value(
+        Parameters.INCLUDE_PERFORMANCE, parameters, True
+    )
+    max_len = exec_utils.get_param_value(
+        Parameters.MAX_LEN, parameters, constants.OPENAI_MAX_LEN
+    )
+    response_header = exec_utils.get_param_value(
+        Parameters.RESPONSE_HEADER, parameters, True
+    )
+    primary_performance_aggregation = exec_utils.get_param_value(
+        Parameters.PRIMARY_PERFORMANCE_AGGREGATION, parameters, "mean"
+    )
+    secondary_performance_aggregation = exec_utils.get_param_value(
+        Parameters.SECONDARY_PERFORMANCE_AGGREGATION, parameters, None
+    )
 
-    paths = sorted([(x, y) for x, y in freq_dfg.items()], key=lambda z: (z[1], z[0]), reverse=True)
+    paths = sorted(
+        [(x, y) for x, y in freq_dfg.items()],
+        key=lambda z: (z[1], z[0]),
+        reverse=True,
+    )
     paths = [x[0] for x in paths]
 
     ret = "If I have a process with flow:\n\n" if response_header else "\n\n"
@@ -107,15 +129,32 @@ def abstraction_from_frequency_performance_dfg(freq_dfg: Dict[Tuple[str, str], i
                 stru = stru + " frequency = "
                 stru = stru + str(freq_dfg[p])
                 if relative_frequency:
-                    stru = stru + "\%"
+                    stru = stru + "\\%"
                 stru = stru + " "
             if include_performance:
                 stru = stru + " performance = "
-                stru = stru + "%.3f" % perf_dfg[p][primary_performance_aggregation]
+                stru = (
+                    stru
+                    + "%.3f" % perf_dfg[p][primary_performance_aggregation]
+                )
                 stru = stru + " "
-                if secondary_performance_aggregation is not None and secondary_performance_aggregation in perf_dfg[p] and perf_dfg[p][secondary_performance_aggregation] is not None and not np.isnan(perf_dfg[p][secondary_performance_aggregation]):
-                    stru = stru + " " + secondary_performance_aggregation + " = "
-                    stru = stru + "%.3f" % perf_dfg[p][secondary_performance_aggregation]
+                if (
+                    secondary_performance_aggregation is not None
+                    and secondary_performance_aggregation in perf_dfg[p]
+                    and perf_dfg[p][secondary_performance_aggregation]
+                    is not None
+                    and not np.isnan(
+                        perf_dfg[p][secondary_performance_aggregation]
+                    )
+                ):
+                    stru = (
+                        stru + " " + secondary_performance_aggregation + " = "
+                    )
+                    stru = (
+                        stru
+                        + "%.3f"
+                        % perf_dfg[p][secondary_performance_aggregation]
+                    )
                     stru = stru + " "
             stru = stru + ")\n"
         ret = ret + stru
@@ -123,7 +162,10 @@ def abstraction_from_frequency_performance_dfg(freq_dfg: Dict[Tuple[str, str], i
     return ret
 
 
-def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[Dict[Any, Any]] = None) -> str:
+def apply(
+    log_obj: Union[EventLog, EventStream, pd.DataFrame],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> str:
     """
     Gets the textual abstraction of the directly-follows graph computed on the provided log object.
 
@@ -160,17 +202,49 @@ def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame], parameters: Optio
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    relative_frequency = exec_utils.get_param_value(Parameters.RELATIVE_FREQUENCY, parameters, False)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    relative_frequency = exec_utils.get_param_value(
+        Parameters.RELATIVE_FREQUENCY, parameters, False
+    )
 
-    log_obj = log_converter.apply(log_obj, variant=log_converter.Variants.TO_DATA_FRAME, parameters=parameters)
-    freq_dfg, perf_dfg = df_statistics.get_dfg_graph(log_obj, measure="both", perf_aggregation_key="all", activity_key=activity_key, case_id_glue=case_id_key, timestamp_key=timestamp_key)
+    log_obj = log_converter.apply(
+        log_obj,
+        variant=log_converter.Variants.TO_DATA_FRAME,
+        parameters=parameters,
+    )
+    freq_dfg, perf_dfg = df_statistics.get_dfg_graph(
+        log_obj,
+        measure="both",
+        perf_aggregation_key="all",
+        activity_key=activity_key,
+        case_id_glue=case_id_key,
+        timestamp_key=timestamp_key,
+    )
     if relative_frequency:
-        freq_dfg = df_statistics.get_dfg_graph(log_obj, measure="frequency", activity_key=activity_key, case_id_glue=case_id_key, timestamp_key=timestamp_key, keep_once_per_case=True)
+        freq_dfg = df_statistics.get_dfg_graph(
+            log_obj,
+            measure="frequency",
+            activity_key=activity_key,
+            case_id_glue=case_id_key,
+            timestamp_key=timestamp_key,
+            keep_once_per_case=True,
+        )
         num_cases = log_obj[case_id_key].nunique()
-        freq_dfg = {x: max(1, math.floor((y*100.0)/num_cases)) for x, y in freq_dfg.items()}
+        freq_dfg = {
+            x: max(1, math.floor((y * 100.0) / num_cases))
+            for x, y in freq_dfg.items()
+        }
 
-    return abstraction_from_frequency_performance_dfg(freq_dfg, perf_dfg, parameters=parameters)
+    return abstraction_from_frequency_performance_dfg(
+        freq_dfg, perf_dfg, parameters=parameters
+    )

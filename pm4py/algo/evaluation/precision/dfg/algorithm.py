@@ -40,7 +40,10 @@ def __is_allowed_prefix(exiting_activities, sa, prefix):
     prev_act = prefix[0]
     for i in range(1, len(prefix)):
         curr_act = prefix[i]
-        if prev_act not in exiting_activities or curr_act not in exiting_activities[prev_act]:
+        if (
+            prev_act not in exiting_activities
+            or curr_act not in exiting_activities[prev_act]
+        ):
             return False
         prev_act = curr_act
     if not prefix[-1] in exiting_activities:
@@ -48,9 +51,13 @@ def __is_allowed_prefix(exiting_activities, sa, prefix):
     return True
 
 
-def apply(log: Union[EventLog, EventStream], dfg: Dict[Tuple[str, str], int],
-                            start_activities: Dict[str, int], end_activities: Dict[str, int],
-                            parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> float:
+def apply(
+    log: Union[EventLog, EventStream],
+    dfg: Dict[Tuple[str, str], int],
+    start_activities: Dict[str, int],
+    end_activities: Dict[str, int],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> float:
     """
     Computes the precision of a directly-follows graph using the ETConformance approach
 
@@ -75,9 +82,13 @@ def apply(log: Union[EventLog, EventStream], dfg: Dict[Tuple[str, str], int],
     """
     if parameters is None:
         parameters = {}
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
     precision = 1.0
     sum_ee = 0
@@ -101,7 +112,11 @@ def apply(log: Union[EventLog, EventStream], dfg: Dict[Tuple[str, str], int],
     for prefix in prefixes:
         if __is_allowed_prefix(exiting_activities, start_activities, prefix):
             log_transitions = prefixes[prefix]
-            activated_transitions = set(start_activities.keys()) if not prefix else exiting_activities[prefix[-1]]
+            activated_transitions = (
+                set(start_activities.keys())
+                if not prefix
+                else exiting_activities[prefix[-1]]
+            )
             escaping_edges = activated_transitions.difference(log_transitions)
             sum_ee += len(escaping_edges) * prefixes_count[prefix]
             sum_at += len(activated_transitions) * prefixes_count[prefix]

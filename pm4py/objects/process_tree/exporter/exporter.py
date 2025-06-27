@@ -47,7 +47,9 @@ def apply(tree, output_path, variant=DEFAULT_VARIANT, parameters=None):
     parameters
         Parameters
     """
-    return exec_utils.get_variant(variant).apply(tree, output_path, parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        tree, output_path, parameters=parameters
+    )
 
 
 def serialize(tree, variant=DEFAULT_VARIANT, parameters=None):
@@ -69,4 +71,6 @@ def serialize(tree, variant=DEFAULT_VARIANT, parameters=None):
     serialization
         Serialized string
     """
-    return exec_utils.get_variant(variant).export_tree_as_string(tree, parameters=parameters)
+    return exec_utils.get_variant(variant).export_tree_as_string(
+        tree, parameters=parameters
+    )

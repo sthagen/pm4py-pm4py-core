@@ -39,7 +39,7 @@ class PetriNetSemantics(Generic[N]):
         Parameters
         ----------
         :param pn: Petri net
-        :param transition: transition to check        
+        :param transition: transition to check
         :param marking: marking to check
 
         Returns
@@ -58,17 +58,17 @@ class PetriNetSemantics(Generic[N]):
     def fire(cls, pn: N, transition: T, marking: Counter[P]) -> Counter[P]:
         """
         Execute a transition
-        For performance reasons, the algorithm method not check if the transition is enabled, i.e., this should be performed by the invoking algorithm (if needed). Hence, markings can become negative. 
+        For performance reasons, the algorithm method not check if the transition is enabled, i.e., this should be performed by the invoking algorithm (if needed). Hence, markings can become negative.
 
         Parameters
         ----------
         :param pn: Petri net
-        :param transition: transition to execute        
+        :param transition: transition to execute
         :param marking: marking to use
 
         Returns
         -------
-        :return: newly reached marking 
+        :return: newly reached marking
         """
         m_out = copy.copy(marking)
         for a in transition.in_arcs:
@@ -76,6 +76,7 @@ class PetriNetSemantics(Generic[N]):
         for a in transition.out_arcs:
             m_out[a.target] += a.weight
         return m_out
+
 
 class ClassicSemantics(Semantics):
     def is_enabled(self, t, pn, m, **kwargs):
@@ -126,20 +127,19 @@ class ClassicSemantics(Semantics):
         """
         return weak_execute(t, m)
 
-
     def enabled_transitions(self, pn, m, **kwargs):
         """
-            Returns a set of enabled transitions in a Petri net and given marking
+        Returns a set of enabled transitions in a Petri net and given marking
 
-            Parameters
-            ----------
-            :param pn: Petri net
-            :param m: marking of the pn
+        Parameters
+        ----------
+        :param pn: Petri net
+        :param m: marking of the pn
 
-            Returns
-            -------
-            :return: set of enabled transitions
-            """
+        Returns
+        -------
+        :return: set of enabled transitions
+        """
         return enabled_transitions(pn, m)
 
 

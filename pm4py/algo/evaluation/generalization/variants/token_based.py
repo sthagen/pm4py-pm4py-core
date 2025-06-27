@@ -49,14 +49,24 @@ def get_generalization(petri_net, aligned_traces):
             inv_sq_occ_sum = inv_sq_occ_sum + 1
     generalization = 1.0
     if len(petri_net.transitions) > 0:
-        generalization = 1.0 - inv_sq_occ_sum / float(len(petri_net.transitions))
+        generalization = 1.0 - inv_sq_occ_sum / float(
+            len(petri_net.transitions)
+        )
     return generalization
 
 
-def apply(log: Union[EventLog, pd.DataFrame], petri_net: PetriNet, initial_marking: Marking, final_marking: Marking, parameters: Optional[Dict[Union[str, Parameters], Any]] = None):
+def apply(
+    log: Union[EventLog, pd.DataFrame],
+    petri_net: PetriNet,
+    initial_marking: Marking,
+    final_marking: Marking,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+):
     if parameters is None:
         parameters = {}
 
-    aligned_traces = token_replay.apply(log, petri_net, initial_marking, final_marking, parameters=parameters)
+    aligned_traces = token_replay.apply(
+        log, petri_net, initial_marking, final_marking, parameters=parameters
+    )
 
     return get_generalization(petri_net, aligned_traces)

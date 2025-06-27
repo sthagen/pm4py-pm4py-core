@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,7 +19,9 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.algo.discovery.ocel.interleavings.utils import merge_dataframe_rel_cases
+from pm4py.algo.discovery.ocel.interleavings.utils import (
+    merge_dataframe_rel_cases,
+)
 import pandas as pd
 from typing import Optional, Dict, Any
 from pm4py.util import exec_utils, constants, xes_constants, pandas_utils
@@ -43,7 +45,12 @@ class Parameters(Enum):
     TIMESTAMP_DIFF = "timestamp_diff"
 
 
-def apply(left_df: pd.DataFrame, right_df: pd.DataFrame, case_relations: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None):
+def apply(
+    left_df: pd.DataFrame,
+    right_df: pd.DataFrame,
+    case_relations: pd.DataFrame,
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     """
     Calculates the timestamp-based interleavings ongoing from the left/right to the right/left dataframe.
 
@@ -81,46 +88,94 @@ def apply(left_df: pd.DataFrame, right_df: pd.DataFrame, case_relations: pd.Data
     if parameters is None:
         parameters = {}
 
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    index_key = exec_utils.get_param_value(Parameters.INDEX_KEY, parameters, constants.DEFAULT_INDEX_KEY)
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    left_suffix = exec_utils.get_param_value(Parameters.LEFT_SUFFIX, parameters, "_LEFT")
-    right_suffix = exec_utils.get_param_value(Parameters.RIGHT_SUFFIX, parameters, "_RIGHT")
-    source_activity = exec_utils.get_param_value(Parameters.SOURCE_ACTIVITY, parameters, "@@source_activity")
-    target_activity = exec_utils.get_param_value(Parameters.TARGET_ACTIVITY, parameters, "@@target_activity")
-    source_timestamp = exec_utils.get_param_value(Parameters.SOURCE_TIMESTAMP, parameters, "@@source_timestamp")
-    target_timestamp = exec_utils.get_param_value(Parameters.TARGET_TIMESTAMP, parameters, "@@target_timestamp")
-    direction = exec_utils.get_param_value(Parameters.DIRECTION, parameters, "@@direction")
-    timestamp_diff = exec_utils.get_param_value(Parameters.TIMESTAMP_DIFF, parameters, "@@timestamp_diff")
-    left_index = exec_utils.get_param_value(Parameters.LEFT_INDEX, parameters, "@@left_index")
-    right_index = exec_utils.get_param_value(Parameters.RIGHT_INDEX, parameters, "@@right_index")
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    index_key = exec_utils.get_param_value(
+        Parameters.INDEX_KEY, parameters, constants.DEFAULT_INDEX_KEY
+    )
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    left_suffix = exec_utils.get_param_value(
+        Parameters.LEFT_SUFFIX, parameters, "_LEFT"
+    )
+    right_suffix = exec_utils.get_param_value(
+        Parameters.RIGHT_SUFFIX, parameters, "_RIGHT"
+    )
+    source_activity = exec_utils.get_param_value(
+        Parameters.SOURCE_ACTIVITY, parameters, "@@source_activity"
+    )
+    target_activity = exec_utils.get_param_value(
+        Parameters.TARGET_ACTIVITY, parameters, "@@target_activity"
+    )
+    source_timestamp = exec_utils.get_param_value(
+        Parameters.SOURCE_TIMESTAMP, parameters, "@@source_timestamp"
+    )
+    target_timestamp = exec_utils.get_param_value(
+        Parameters.TARGET_TIMESTAMP, parameters, "@@target_timestamp"
+    )
+    direction = exec_utils.get_param_value(
+        Parameters.DIRECTION, parameters, "@@direction"
+    )
+    timestamp_diff = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_DIFF, parameters, "@@timestamp_diff"
+    )
+    left_index = exec_utils.get_param_value(
+        Parameters.LEFT_INDEX, parameters, "@@left_index"
+    )
+    right_index = exec_utils.get_param_value(
+        Parameters.RIGHT_INDEX, parameters, "@@right_index"
+    )
 
-    md = merge_dataframe_rel_cases.merge_dataframes(left_df, right_df, case_relations, parameters=parameters)
+    md = merge_dataframe_rel_cases.merge_dataframes(
+        left_df, right_df, case_relations, parameters=parameters
+    )
 
-    df1 = md[md[timestamp_key+left_suffix] < md[timestamp_key+right_suffix]]
-    df1 = df1[df1[timestamp_key+right_suffix] < df1[timestamp_key+"_2"+left_suffix]]
-    df1 = df1[df1[timestamp_key+"_2"+left_suffix] < df1[timestamp_key+"_2"+right_suffix]]
-    df1[source_activity] = df1[activity_key+left_suffix]
-    df1[target_activity] = df1[activity_key+right_suffix]
-    df1[source_timestamp] = df1[timestamp_key+left_suffix]
-    df1[target_timestamp] = df1[timestamp_key+right_suffix]
-    df1[left_index] = df1[index_key+left_suffix]
-    df1[right_index] = df1[index_key+right_suffix]
+    df1 = md[
+        md[timestamp_key + left_suffix] < md[timestamp_key + right_suffix]
+    ]
+    df1 = df1[
+        df1[timestamp_key + right_suffix]
+        < df1[timestamp_key + "_2" + left_suffix]
+    ]
+    df1 = df1[
+        df1[timestamp_key + "_2" + left_suffix]
+        < df1[timestamp_key + "_2" + right_suffix]
+    ]
+    df1[source_activity] = df1[activity_key + left_suffix]
+    df1[target_activity] = df1[activity_key + right_suffix]
+    df1[source_timestamp] = df1[timestamp_key + left_suffix]
+    df1[target_timestamp] = df1[timestamp_key + right_suffix]
+    df1[left_index] = df1[index_key + left_suffix]
+    df1[right_index] = df1[index_key + right_suffix]
     df1[direction] = "LR"
 
-    df2 = md[md[timestamp_key+right_suffix] < md[timestamp_key+left_suffix]]
-    df2 = df2[df2[timestamp_key+left_suffix] < df2[timestamp_key+"_2"+right_suffix]]
-    df2 = df2[df2[timestamp_key+"_2"+right_suffix] < df2[timestamp_key+"_2"+left_suffix]]
-    df2[source_activity] = df2[activity_key+"_2"+right_suffix]
-    df2[target_activity] = df2[activity_key+"_2"+left_suffix]
-    df2[source_timestamp] = df2[timestamp_key+"_2"+right_suffix]
-    df2[target_timestamp] = df2[timestamp_key+"_2"+left_suffix]
-    df2[left_index] = df2[index_key+"_2"+left_suffix]
-    df2[right_index] = df2[index_key+"_2"+right_suffix]
+    df2 = md[
+        md[timestamp_key + right_suffix] < md[timestamp_key + left_suffix]
+    ]
+    df2 = df2[
+        df2[timestamp_key + left_suffix]
+        < df2[timestamp_key + "_2" + right_suffix]
+    ]
+    df2 = df2[
+        df2[timestamp_key + "_2" + right_suffix]
+        < df2[timestamp_key + "_2" + left_suffix]
+    ]
+    df2[source_activity] = df2[activity_key + "_2" + right_suffix]
+    df2[target_activity] = df2[activity_key + "_2" + left_suffix]
+    df2[source_timestamp] = df2[timestamp_key + "_2" + right_suffix]
+    df2[target_timestamp] = df2[timestamp_key + "_2" + left_suffix]
+    df2[left_index] = df2[index_key + "_2" + left_suffix]
+    df2[right_index] = df2[index_key + "_2" + right_suffix]
     df2[direction] = "RL"
 
     md = pandas_utils.concat([df1, df2])
-    md = md.sort_values([index_key+left_suffix, index_key+right_suffix])
-    md[timestamp_diff] = pandas_utils.get_total_seconds(md[target_timestamp] - md[source_timestamp])
+    md = md.sort_values([index_key + left_suffix, index_key + right_suffix])
+    md[timestamp_diff] = pandas_utils.get_total_seconds(
+        md[target_timestamp] - md[source_timestamp]
+    )
 
     return md

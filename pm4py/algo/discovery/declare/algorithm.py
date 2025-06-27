@@ -32,7 +32,11 @@ class Variants(Enum):
     CLASSIC = classic
 
 
-def apply(log: Union[EventLog, pd.DataFrame], variant=Variants.CLASSIC, parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, Dict[Any, Dict[str, int]]]:
+def apply(
+    log: Union[EventLog, pd.DataFrame],
+    variant=Variants.CLASSIC,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Dict[str, Dict[Any, Dict[str, int]]]:
     """
     Discovers a DECLARE model from the provided event log
 

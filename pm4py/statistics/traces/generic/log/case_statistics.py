@@ -22,7 +22,9 @@ Contact: info@processintelligence.solutions
 from pm4py.statistics.variants.log import get as variants_get
 from pm4py.util.xes_constants import DEFAULT_TIMESTAMP_KEY
 from pm4py.util.xes_constants import DEFAULT_TRACEID_KEY
-from pm4py.statistics.traces.generic.common import case_duration as case_duration_commons
+from pm4py.statistics.traces.generic.common import (
+    case_duration as case_duration_commons,
+)
 from pm4py.util.business_hours import BusinessHours
 import numpy as np
 from enum import Enum
@@ -54,7 +56,10 @@ class Parameters(Enum):
     INDEXED_LOG = "indexed_log"
 
 
-def get_variant_statistics(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Union[List[Dict[str, int]], List[Dict[List[str], int]]]:
+def get_variant_statistics(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Union[List[Dict[str, int]], List[Dict[List[str], int]]]:
     """
     Gets a dictionary whose key is the variant and as value there
     is the list of traces that share the variant
@@ -78,12 +83,21 @@ def get_variant_statistics(log: EventLog, parameters: Optional[Dict[Union[str, P
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    max_variants_to_return = exec_utils.get_param_value(Parameters.MAX_VARIANTS_TO_RETURN, parameters, None)
-    varnt = exec_utils.get_param_value(Parameters.VARIANTS, parameters, variants_get.get_variants(log,
-                                                                                              parameters=parameters))
-    var_durations = exec_utils.get_param_value(Parameters.VAR_DURATIONS, parameters, None)
+    max_variants_to_return = exec_utils.get_param_value(
+        Parameters.MAX_VARIANTS_TO_RETURN, parameters, None
+    )
+    varnt = exec_utils.get_param_value(
+        Parameters.VARIANTS,
+        parameters,
+        variants_get.get_variants(log, parameters=parameters),
+    )
+    var_durations = exec_utils.get_param_value(
+        Parameters.VAR_DURATIONS, parameters, None
+    )
     if var_durations is None:
         var_durations = {}
     variants_list = []
@@ -93,13 +107,20 @@ def get_variant_statistics(log: EventLog, parameters: Optional[Dict[Union[str, P
             average = np.mean(var_durations[var])
             var_el["caseDuration"] = average
         variants_list.append(var_el)
-    variants_list = sorted(variants_list, key=lambda x: (x["count"], x["variant"]), reverse=True)
+    variants_list = sorted(
+        variants_list, key=lambda x: (x["count"], x["variant"]), reverse=True
+    )
     if max_variants_to_return:
-        variants_list = variants_list[:min(len(variants_list), max_variants_to_return)]
+        variants_list = variants_list[
+            : min(len(variants_list), max_variants_to_return)
+        ]
     return variants_list
 
 
-def get_cases_description(log: EventLog,  parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[str, Dict[str, Any]]:
+def get_cases_description(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[str, Dict[str, Any]]:
     """
     Get a description of traces present in the log
 
@@ -130,29 +151,61 @@ def get_cases_description(log: EventLog,  parameters: Optional[Dict[Union[str, P
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, DEFAULT_TRACEID_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY)
-    enable_sort = exec_utils.get_param_value(Parameters.ENABLE_SORT, parameters, True)
-    sort_by_index = exec_utils.get_param_value(Parameters.SORT_BY_INDEX, parameters, 0)
-    sort_ascending = exec_utils.get_param_value(Parameters.SORT_ASCENDING, parameters, True)
-    max_ret_cases = exec_utils.get_param_value(Parameters.MAX_RET_CASES, parameters, None)
-    business_hours = exec_utils.get_param_value(Parameters.BUSINESS_HOURS, parameters, False)
-    business_hours_slots = exec_utils.get_param_value(Parameters.BUSINESS_HOUR_SLOTS, parameters, constants.DEFAULT_BUSINESS_HOUR_SLOTS)
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, DEFAULT_TRACEID_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY
+    )
+    enable_sort = exec_utils.get_param_value(
+        Parameters.ENABLE_SORT, parameters, True
+    )
+    sort_by_index = exec_utils.get_param_value(
+        Parameters.SORT_BY_INDEX, parameters, 0
+    )
+    sort_ascending = exec_utils.get_param_value(
+        Parameters.SORT_ASCENDING, parameters, True
+    )
+    max_ret_cases = exec_utils.get_param_value(
+        Parameters.MAX_RET_CASES, parameters, None
+    )
+    business_hours = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOURS, parameters, False
+    )
+    business_hours_slots = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOUR_SLOTS,
+        parameters,
+        constants.DEFAULT_BUSINESS_HOUR_SLOTS,
+    )
 
-    workcalendar = exec_utils.get_param_value(Parameters.WORKCALENDAR, parameters, constants.DEFAULT_BUSINESS_HOURS_WORKCALENDAR)
+    workcalendar = exec_utils.get_param_value(
+        Parameters.WORKCALENDAR,
+        parameters,
+        constants.DEFAULT_BUSINESS_HOURS_WORKCALENDAR,
+    )
 
     statistics_list = []
 
     for index, trace in enumerate(log):
         if trace:
-            ci = trace.attributes[case_id_key] if case_id_key in trace.attributes else "EMPTY" + str(index)
+            ci = (
+                trace.attributes[case_id_key]
+                if case_id_key in trace.attributes
+                else "EMPTY" + str(index)
+            )
             st = trace[0][timestamp_key]
             et = trace[-1][timestamp_key]
             if business_hours:
-                bh = BusinessHours(st, et,
-                                   business_hour_slots=business_hours_slots, workcalendar=workcalendar)
+                bh = BusinessHours(
+                    st,
+                    et,
+                    business_hour_slots=business_hours_slots,
+                    workcalendar=workcalendar,
+                )
                 diff = bh.get_seconds()
             else:
                 diff = et.timestamp() - st.timestamp()
@@ -161,15 +214,25 @@ def get_cases_description(log: EventLog,  parameters: Optional[Dict[Union[str, P
             statistics_list.append([ci, st, et, diff])
 
     if enable_sort:
-        statistics_list = sorted(statistics_list, key=lambda x: x[sort_by_index], reverse=not sort_ascending)
+        statistics_list = sorted(
+            statistics_list,
+            key=lambda x: x[sort_by_index],
+            reverse=not sort_ascending,
+        )
 
     if max_ret_cases is not None:
-        statistics_list = statistics_list[:min(len(statistics_list), max_ret_cases)]
+        statistics_list = statistics_list[
+            : min(len(statistics_list), max_ret_cases)
+        ]
 
     statistics_dict = {}
 
     for el in statistics_list:
-        statistics_dict[str(el[0])] = {"startTime": el[1], "endTime": el[2], "caseDuration": el[3]}
+        statistics_dict[str(el[0])] = {
+            "startTime": el[1],
+            "endTime": el[2],
+            "caseDuration": el[3],
+        }
 
     return statistics_dict
 
@@ -195,9 +258,13 @@ def index_log_caseid(log, parameters=None):
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, DEFAULT_TRACEID_KEY)
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, DEFAULT_TRACEID_KEY
+    )
     indexed_log = {}
 
     for trace in log:
@@ -207,7 +274,11 @@ def index_log_caseid(log, parameters=None):
     return indexed_log
 
 
-def get_events(log: EventLog, case_id: str, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> List[Dict[str, Any]]:
+def get_events(
+    log: EventLog,
+    case_id: str,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> List[Dict[str, Any]]:
     """
     Get events belonging to the specified case
 
@@ -230,10 +301,13 @@ def get_events(log: EventLog, case_id: str, parameters: Optional[Dict[Union[str,
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    indexed_log = exec_utils.get_param_value(Parameters.INDEXED_LOG, parameters, index_log_caseid(log,
-                                                                                                 parameters))
+    indexed_log = exec_utils.get_param_value(
+        Parameters.INDEXED_LOG, parameters, index_log_caseid(log, parameters)
+    )
 
     list_eve = []
     for event in indexed_log[case_id]:
@@ -241,7 +315,10 @@ def get_events(log: EventLog, case_id: str, parameters: Optional[Dict[Union[str,
     return list_eve
 
 
-def get_all_case_durations(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> List[float]:
+def get_all_case_durations(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> List[float]:
     """
     Gets all the case durations out of the log
 
@@ -257,7 +334,9 @@ def get_all_case_durations(log: EventLog, parameters: Optional[Dict[Union[str, P
     duration_values
         List of all duration values
     """
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
     cases = get_cases_description(log, parameters=parameters)
     duration_values = [x["caseDuration"] for x in cases.values()]
@@ -265,7 +344,10 @@ def get_all_case_durations(log: EventLog, parameters: Optional[Dict[Union[str, P
     return sorted(duration_values)
 
 
-def get_first_quartile_case_duration(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> float:
+def get_first_quartile_case_duration(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> float:
     """
     Gets the first quartile out of the log
 
@@ -284,7 +366,9 @@ def get_first_quartile_case_duration(log: EventLog, parameters: Optional[Dict[Un
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
     duration_values = get_all_case_durations(log, parameters=parameters)
     if duration_values:
@@ -292,7 +376,10 @@ def get_first_quartile_case_duration(log: EventLog, parameters: Optional[Dict[Un
     return 0
 
 
-def get_median_case_duration(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None):
+def get_median_case_duration(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+):
     """
     Gets the median case duration out of the log
 
@@ -311,7 +398,9 @@ def get_median_case_duration(log: EventLog, parameters: Optional[Dict[Union[str,
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
     duration_values = get_all_case_durations(log, parameters=parameters)
     if duration_values:
@@ -338,10 +427,14 @@ def get_kde_caseduration(log, parameters=None):
     y
         Y-axis values to represent
     """
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    return case_duration_commons.get_kde_caseduration(get_all_case_durations(log, parameters=parameters),
-                                                      parameters=parameters)
+    return case_duration_commons.get_kde_caseduration(
+        get_all_case_durations(log, parameters=parameters),
+        parameters=parameters,
+    )
 
 
 def get_kde_caseduration_json(log, parameters=None):
@@ -363,9 +456,13 @@ def get_kde_caseduration_json(log, parameters=None):
     json
         JSON representing the graph points
     """
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
     cases = get_cases_description(log, parameters=parameters)
     duration_values = [x["caseDuration"] for x in cases.values()]
 
-    return case_duration_commons.get_kde_caseduration_json(duration_values, parameters=parameters)
+    return case_duration_commons.get_kde_caseduration_json(
+        duration_values, parameters=parameters
+    )

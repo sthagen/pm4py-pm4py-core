@@ -33,7 +33,11 @@ class Variants(Enum):
     CLASSIC = classic
 
 
-def apply(log: Union[EventLog, EventStream, pd.DataFrame], variant=Variants.CLASSIC, parameters: Optional[Dict[Any, Any]] = None) -> pd.DataFrame:
+def apply(
+    log: Union[EventLog, EventStream, pd.DataFrame],
+    variant=Variants.CLASSIC,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> pd.DataFrame:
     """
     Applies a link analysis algorithm on the provided log object.
 
@@ -54,4 +58,11 @@ def apply(log: Union[EventLog, EventStream, pd.DataFrame], variant=Variants.CLAS
     if parameters is None:
         parameters = {}
 
-    return exec_utils.get_variant(variant).apply(converter.apply(log, variant=converter.Variants.TO_DATA_FRAME, parameters=parameters), parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        converter.apply(
+            log,
+            variant=converter.Variants.TO_DATA_FRAME,
+            parameters=parameters,
+        ),
+        parameters=parameters,
+    )

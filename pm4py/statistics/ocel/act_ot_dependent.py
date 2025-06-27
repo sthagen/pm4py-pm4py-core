@@ -32,8 +32,9 @@ class Parameters(Enum):
     OBJECT_TYPE = ocel_constants.PARAM_OBJECT_TYPE
 
 
-def aggregate_events(associations: Dict[str, Dict[str, Set[Tuple[str, str]]]]) -> Dict[
-    str, Dict[str, Set[Tuple[str, str]]]]:
+def aggregate_events(
+    associations: Dict[str, Dict[str, Set[Tuple[str, str]]]]
+) -> Dict[str, Dict[str, Set[Tuple[str, str]]]]:
     """
     Utility method to calculate the "events" metric from the object-type specific associations.
     """
@@ -49,8 +50,9 @@ def aggregate_events(associations: Dict[str, Dict[str, Set[Tuple[str, str]]]]) -
     return ret
 
 
-def aggregate_unique_objects(associations: Dict[str, Dict[str, Set[Tuple[str, str]]]]) -> Dict[
-    str, Dict[str, Set[Tuple[str, str]]]]:
+def aggregate_unique_objects(
+    associations: Dict[str, Dict[str, Set[Tuple[str, str]]]]
+) -> Dict[str, Dict[str, Set[Tuple[str, str]]]]:
     """
     Utility method to calculate the "unique objects" metric from the object-type specific associations.
     """
@@ -66,16 +68,18 @@ def aggregate_unique_objects(associations: Dict[str, Dict[str, Set[Tuple[str, st
     return ret
 
 
-def aggregate_total_objects(associations: Dict[str, Dict[str, Set[Tuple[str, str]]]]) -> Dict[
-    str, Dict[str, Set[Tuple[str, str]]]]:
+def aggregate_total_objects(
+    associations: Dict[str, Dict[str, Set[Tuple[str, str]]]]
+) -> Dict[str, Dict[str, Set[Tuple[str, str]]]]:
     """
     Utility method to calculate the "total objects" metric from the object-type specific associations.
     """
     return associations
 
 
-def find_associations_from_ocel(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Dict[
-    str, Dict[str, List[Tuple[str, str]]]]:
+def find_associations_from_ocel(
+    ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None
+) -> Dict[str, Dict[str, List[Tuple[str, str]]]]:
     """
     Associates each object type and activity in the object-centric event log with the combinations
     of event identifiers and objects that are associated to them.
@@ -99,11 +103,15 @@ def find_associations_from_ocel(ocel: OCEL, parameters: Optional[Dict[Any, Any]]
     if parameters is None:
         parameters = {}
 
-    object_type = exec_utils.get_param_value(Parameters.OBJECT_TYPE, parameters, ocel.object_type_column)
+    object_type = exec_utils.get_param_value(
+        Parameters.OBJECT_TYPE, parameters, ocel.object_type_column
+    )
 
     ret = {}
 
     for ot, relations in ocel.relations.groupby(object_type):
-        ret[ot] = find_associations_from_relations_df(relations, parameters=parameters)
+        ret[ot] = find_associations_from_relations_df(
+            relations, parameters=parameters
+        )
 
     return ret

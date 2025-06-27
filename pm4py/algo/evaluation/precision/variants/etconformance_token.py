@@ -25,7 +25,9 @@ from pm4py.algo.conformance.tokenreplay import algorithm as executor
 from pm4py.objects import log as log_lib
 from pm4py.algo.evaluation.precision import utils as precision_utils
 from pm4py.statistics.start_activities.log.get import get_start_activities
-from pm4py.objects.petri_net.utils.align_utils import get_visible_transitions_eventually_enabled_by_marking
+from pm4py.objects.petri_net.utils.align_utils import (
+    get_visible_transitions_eventually_enabled_by_marking,
+)
 from pm4py.util import exec_utils
 from enum import Enum
 from pm4py.util import constants
@@ -44,6 +46,7 @@ class Parameters(Enum):
     SHOW_PROGRESS_BAR = "show_progress_bar"
     MULTIPROCESSING = "multiprocessing"
     CORES = "cores"
+
 
 """
 Implementation of the approach described in paper
@@ -64,7 +67,13 @@ although the implementation seems to follow the paper concept
 """
 
 
-def apply(log: EventLog, net: PetriNet, marking: Marking, final_marking: Marking, parameters: Optional[Dict[Union[str, Parameters], Any]] = None):
+def apply(
+    log: EventLog,
+    net: PetriNet,
+    marking: Marking,
+    final_marking: Marking,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+):
     """
     Get ET Conformance precision
 
@@ -86,14 +95,26 @@ def apply(log: EventLog, net: PetriNet, marking: Marking, final_marking: Marking
     if parameters is None:
         parameters = {}
 
-    cleaning_token_flood = exec_utils.get_param_value(Parameters.CLEANING_TOKEN_FLOOD, parameters, False)
-    token_replay_variant = exec_utils.get_param_value(Parameters.TOKEN_REPLAY_VARIANT, parameters,
-                                                      executor.Variants.TOKEN_REPLAY)
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, log_lib.util.xes.DEFAULT_NAME_KEY)
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    show_progress_bar = exec_utils.get_param_value(Parameters.SHOW_PROGRESS_BAR, parameters, constants.SHOW_PROGRESS_BAR)
+    cleaning_token_flood = exec_utils.get_param_value(
+        Parameters.CLEANING_TOKEN_FLOOD, parameters, False
+    )
+    token_replay_variant = exec_utils.get_param_value(
+        Parameters.TOKEN_REPLAY_VARIANT,
+        parameters,
+        executor.Variants.TOKEN_REPLAY,
+    )
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, log_lib.util.xes.DEFAULT_NAME_KEY
+    )
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    show_progress_bar = exec_utils.get_param_value(
+        Parameters.SHOW_PROGRESS_BAR, parameters, constants.SHOW_PROGRESS_BAR
+    )
 
-    # default value for precision, when no activated transitions (not even by looking at the initial marking) are found
+    # default value for precision, when no activated transitions (not even by
+    # looking at the initial marking) are found
     precision = 1.0
     sum_ee = 0
     sum_at = 0
@@ -105,22 +126,43 @@ def apply(log: EventLog, net: PetriNet, marking: Marking, final_marking: Marking
         token_replay.Parameters.STOP_IMMEDIATELY_UNFIT: True,
         token_replay.Parameters.WALK_THROUGH_HIDDEN_TRANS: True,
         token_replay.Parameters.CLEANING_TOKEN_FLOOD: cleaning_token_flood,
-        token_replay.Parameters.ACTIVITY_KEY: activity_key
+        token_replay.Parameters.ACTIVITY_KEY: activity_key,
     }
 
     if type(log) is not pd.DataFrame:
-        log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+        log = log_converter.apply(
+            log,
+            variant=log_converter.Variants.TO_EVENT_LOG,
+            parameters=parameters,
+        )
 
-    prefixes, prefix_count = precision_utils.get_log_prefixes(log, activity_key=activity_key, case_id_key=case_id_key)
+    prefixes, prefix_count = precision_utils.get_log_prefixes(
+        log, activity_key=activity_key, case_id_key=case_id_key
+    )
     prefixes_keys = list(prefixes.keys())
-    fake_log = precision_utils.form_fake_log(prefixes_keys, activity_key=activity_key)
+    fake_log = precision_utils.form_fake_log(
+        prefixes_keys, activity_key=activity_key
+    )
 
-    aligned_traces = executor.apply(fake_log, net, marking, final_marking, variant=token_replay_variant,
-                                        parameters=parameters_tr)
+    aligned_traces = executor.apply(
+        fake_log,
+        net,
+        marking,
+        final_marking,
+        variant=token_replay_variant,
+        parameters=parameters_tr,
+    )
 
     # fix: also the empty prefix should be counted!
     start_activities = set(get_start_activities(log, parameters=parameters))
-    trans_en_ini_marking = set([x.label for x in get_visible_transitions_eventually_enabled_by_marking(net, marking)])
+    trans_en_ini_marking = set(
+        [
+            x.label
+            for x in get_visible_transitions_eventually_enabled_by_marking(
+                net, marking
+            )
+        ]
+    )
     diff = trans_en_ini_marking.difference(start_activities)
     if type(log) is EventLog:
         sum_at += len(log) * len(trans_en_ini_marking)
@@ -134,9 +176,21 @@ def apply(log: EventLog, net: PetriNet, marking: Marking, final_marking: Marking
         if aligned_traces[i]["trace_is_fit"]:
             log_transitions = set(prefixes[prefixes_keys[i]])
             activated_transitions_labels = set(
-                [x.label for x in aligned_traces[i]["enabled_transitions_in_marking"] if x.label is not None])
-            sum_at += len(activated_transitions_labels) * prefix_count[prefixes_keys[i]]
-            escaping_edges = activated_transitions_labels.difference(log_transitions)
+                [
+                    x.label
+                    for x in aligned_traces[i][
+                        "enabled_transitions_in_marking"
+                    ]
+                    if x.label is not None
+                ]
+            )
+            sum_at += (
+                len(activated_transitions_labels)
+                * prefix_count[prefixes_keys[i]]
+            )
+            escaping_edges = activated_transitions_labels.difference(
+                log_transitions
+            )
             sum_ee += len(escaping_edges) * prefix_count[prefixes_keys[i]]
 
     if sum_at > 0:

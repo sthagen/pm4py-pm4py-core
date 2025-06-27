@@ -33,9 +33,14 @@ def variant_to_trace(variant, parameters=None):
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    variant_delimiter = exec_utils.get_param_value(Parameters.PARAMETER_VARIANT_DELIMITER, parameters,
-                                                   constants.DEFAULT_VARIANT_SEP)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    variant_delimiter = exec_utils.get_param_value(
+        Parameters.PARAMETER_VARIANT_DELIMITER,
+        parameters,
+        constants.DEFAULT_VARIANT_SEP,
+    )
 
     from pm4py.objects.log.obj import Trace, Event
 
@@ -64,12 +69,16 @@ def get_variant_from_trace(trace, parameters=None):
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
 
     return tuple([x[activity_key] for x in trace])
 
 
-def __aggregate_variant(variant: Collection[str], max_repetitions: int = 1) -> Collection[str]:
+def __aggregate_variant(
+    variant: Collection[str], max_repetitions: int = 1
+) -> Collection[str]:
     """
     Internal method
     """
@@ -89,7 +98,9 @@ def __aggregate_variant(variant: Collection[str], max_repetitions: int = 1) -> C
     return tuple(aggregated_variant)
 
 
-def aggregate_consecutive_activities_in_variants(variants: Dict[Collection[str], Union[int, List]], max_repetitions: int = 1) -> Dict[Collection[str], Union[int, List]]:
+def aggregate_consecutive_activities_in_variants(
+    variants: Dict[Collection[str], Union[int, List]], max_repetitions: int = 1
+) -> Dict[Collection[str], Union[int, List]]:
     """
     Aggregate the consecutive activities in the variant.
 

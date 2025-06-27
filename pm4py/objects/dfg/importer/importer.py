@@ -55,7 +55,9 @@ def apply(file_path, variant=DEFAULT_VARIANT, parameters=None):
     end_activities
         End activities
     """
-    return exec_utils.get_variant(variant).apply(file_path, parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        file_path, parameters=parameters
+    )
 
 
 def deserialize(dfg_string, variant=DEFAULT_VARIANT, parameters=None):
@@ -81,4 +83,6 @@ def deserialize(dfg_string, variant=DEFAULT_VARIANT, parameters=None):
     end_activities
         End activities
     """
-    return exec_utils.get_variant(variant).import_dfg_from_string(dfg_string, parameters=parameters)
+    return exec_utils.get_variant(variant).import_dfg_from_string(
+        dfg_string, parameters=parameters
+    )

@@ -42,7 +42,10 @@ class Parameters(Enum):
 DEFAULT_INDEX_KEY = "@@@index"
 
 
-def apply(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Tuple[Dict[Tuple[str, str], int], Dict[Tuple[str, str], float]]:
+def apply(
+    log: Union[EventLog, EventStream, pd.DataFrame],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Tuple[Dict[Tuple[str, str], int], Dict[Tuple[str, str], float]]:
     """
     Apply the correlation miner to an event stream
     (other types of logs are converted to that)
@@ -69,15 +72,23 @@ def apply(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[
     if parameters is None:
         parameters = {}
 
-    transf_stream, activities_grouped, activities = preprocess_log(log, parameters=parameters)
+    transf_stream, activities_grouped, activities = preprocess_log(
+        log, parameters=parameters
+    )
 
-    PS_matrix, duration_matrix = get_PS_dur_matrix(activities_grouped, activities, parameters=parameters)
+    PS_matrix, duration_matrix = get_PS_dur_matrix(
+        activities_grouped, activities, parameters=parameters
+    )
     activities_counter = {x: len(y) for x, y in activities_grouped.items()}
 
-    return resolve_lp_get_dfg(PS_matrix, duration_matrix, activities, activities_counter)
+    return resolve_lp_get_dfg(
+        PS_matrix, duration_matrix, activities, activities_counter
+    )
 
 
-def resolve_lp_get_dfg(PS_matrix, duration_matrix, activities, activities_counter):
+def resolve_lp_get_dfg(
+    PS_matrix, duration_matrix, activities, activities_counter
+):
     """
     Resolves a LP problem to get a DFG
 
@@ -99,8 +110,12 @@ def resolve_lp_get_dfg(PS_matrix, duration_matrix, activities, activities_counte
     performance_dfg
         Performance DFG (containing the estimated performance for the arcs)
     """
-    C_matrix = cm_util.get_c_matrix(PS_matrix, duration_matrix, activities, activities_counter)
-    dfg, performance_dfg = cm_util.resolve_LP(C_matrix, duration_matrix, activities, activities_counter)
+    C_matrix = cm_util.get_c_matrix(
+        PS_matrix, duration_matrix, activities, activities_counter
+    )
+    dfg, performance_dfg = cm_util.resolve_LP(
+        C_matrix, duration_matrix, activities, activities_counter
+    )
     return dfg, performance_dfg
 
 
@@ -127,15 +142,30 @@ def get_PS_dur_matrix(activities_grouped, activities, parameters=None):
     if parameters is None:
         parameters = {}
 
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters,
-                                                     xes_constants.DEFAULT_TIMESTAMP_KEY)
-    exact_time_matching = exec_utils.get_param_value(Parameters.EXACT_TIME_MATCHING, parameters, False)
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    exact_time_matching = exec_utils.get_param_value(
+        Parameters.EXACT_TIME_MATCHING, parameters, False
+    )
 
-    PS_matrix = get_precede_succeed_matrix(activities, activities_grouped, timestamp_key, start_timestamp_key)
-    duration_matrix = get_duration_matrix(activities, activities_grouped, timestamp_key, start_timestamp_key,
-                                          exact=exact_time_matching)
+    PS_matrix = get_precede_succeed_matrix(
+        activities, activities_grouped, timestamp_key, start_timestamp_key
+    )
+    duration_matrix = get_duration_matrix(
+        activities,
+        activities_grouped,
+        timestamp_key,
+        start_timestamp_key,
+        exact=exact_time_matching,
+    )
 
     return PS_matrix, duration_matrix
 
@@ -165,36 +195,65 @@ def preprocess_log(log, activities=None, parameters=None):
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters,
-                                                     xes_constants.DEFAULT_TIMESTAMP_KEY)
-    index_key = exec_utils.get_param_value(Parameters.INDEX_KEY, parameters, DEFAULT_INDEX_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    index_key = exec_utils.get_param_value(
+        Parameters.INDEX_KEY, parameters, DEFAULT_INDEX_KEY
+    )
 
     if pandas_utils.check_is_pandas_dataframe(log):
         # keep only the two columns before conversion
-        log = log[list(set([activity_key, timestamp_key, start_timestamp_key]))]
+        log = log[
+            list(set([activity_key, timestamp_key, start_timestamp_key]))
+        ]
 
     parameters["deepcopy"] = False
     parameters["include_case_attributes"] = False
-    log = converter.apply(log, variant=converter.TO_EVENT_STREAM, parameters=parameters)
+    log = converter.apply(
+        log, variant=converter.TO_EVENT_STREAM, parameters=parameters
+    )
     transf_stream = EventStream()
     for idx, ev in enumerate(log):
         transf_stream.append(
-            Event({activity_key: ev[activity_key], timestamp_key: ev[timestamp_key].timestamp(),
-                   start_timestamp_key: ev[start_timestamp_key].timestamp(), index_key: idx}))
-    transf_stream = sorted(transf_stream, key=lambda x: (x[start_timestamp_key], x[timestamp_key], x[index_key]))
+            Event(
+                {
+                    activity_key: ev[activity_key],
+                    timestamp_key: ev[timestamp_key].timestamp(),
+                    start_timestamp_key: ev[start_timestamp_key].timestamp(),
+                    index_key: idx,
+                }
+            )
+        )
+    transf_stream = sorted(
+        transf_stream,
+        key=lambda x: (x[start_timestamp_key], x[timestamp_key], x[index_key]),
+    )
 
     if activities is None:
         activities = sorted(list(set(x[activity_key] for x in transf_stream)))
 
-    activities_grouped = {x: [y for y in transf_stream if y[activity_key] == x] for x in activities}
+    activities_grouped = {
+        x: [y for y in transf_stream if y[activity_key] == x]
+        for x in activities
+    }
 
     return transf_stream, activities_grouped, activities
 
 
-def get_precede_succeed_matrix(activities, activities_grouped, timestamp_key, start_timestamp_key):
+def get_precede_succeed_matrix(
+    activities, activities_grouped, timestamp_key, start_timestamp_key
+):
     """
     Calculates the precede succeed matrix
 
@@ -220,7 +279,10 @@ def get_precede_succeed_matrix(activities, activities_grouped, timestamp_key, st
         if ai:
             for j in range(len(activities)):
                 if not i == j:
-                    aj = [x[start_timestamp_key] for x in activities_grouped[activities[j]]]
+                    aj = [
+                        x[start_timestamp_key]
+                        for x in activities_grouped[activities[j]]
+                    ]
                     if aj:
                         k = 0
                         z = 0
@@ -237,7 +299,13 @@ def get_precede_succeed_matrix(activities, activities_grouped, timestamp_key, st
     return ret
 
 
-def get_duration_matrix(activities, activities_grouped, timestamp_key, start_timestamp_key, exact=False):
+def get_duration_matrix(
+    activities,
+    activities_grouped,
+    timestamp_key,
+    start_timestamp_key,
+    exact=False,
+):
     """
     Calculates the duration matrix
 
@@ -266,7 +334,12 @@ def get_duration_matrix(activities, activities_grouped, timestamp_key, start_tim
         if ai:
             for j in range(len(activities)):
                 if not i == j:
-                    aj = [x[start_timestamp_key] for x in activities_grouped[activities[j]]]
+                    aj = [
+                        x[start_timestamp_key]
+                        for x in activities_grouped[activities[j]]
+                    ]
                     if aj:
-                        ret[i, j] = cm_util.match_return_avg_time(ai, aj, exact=exact)
+                        ret[i, j] = cm_util.match_return_avg_time(
+                            ai, aj, exact=exact
+                        )
     return ret

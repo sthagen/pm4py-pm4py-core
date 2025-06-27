@@ -63,8 +63,12 @@ def create_networkx_undirected_graph(net, unique_source, unique_sink):
         graph.add_node(dictionary[transition])
     for arc in net.arcs:
         graph.add_edge(dictionary[arc.source], dictionary[arc.target])
-    unique_source_corr = dictionary[unique_source] if unique_source in dictionary else None
-    unique_sink_corr = dictionary[unique_sink] if unique_sink in dictionary else None
+    unique_source_corr = (
+        dictionary[unique_source] if unique_source in dictionary else None
+    )
+    unique_sink_corr = (
+        dictionary[unique_sink] if unique_sink in dictionary else None
+    )
 
     return graph, unique_source_corr, unique_sink_corr, inv_dictionary
 
@@ -86,8 +90,9 @@ def create_networkx_directed_graph(net, weight=None):
         Correspondence between NetworkX nodes and Petri net entities
     """
     # forward to new function
-    G, d, id = create_networkx_directed_graph_ret_dict_both_ways(net,weight)
-    return G,id
+    G, d, id = create_networkx_directed_graph_ret_dict_both_ways(net, weight)
+    return G, id
+
 
 def create_networkx_directed_graph_ret_dict_both_ways(net, weight=None):
     """
@@ -126,7 +131,11 @@ def create_networkx_directed_graph_ret_dict_both_ways(net, weight=None):
         graph.add_edge(source, target)
         if weight is not None:
             if type(inv_dictionary[source]) is PetriNet.Transition:
-                graph.edges[source, target]["weight"] = weight[inv_dictionary[source]]
+                graph.edges[source, target]["weight"] = weight[
+                    inv_dictionary[source]
+                ]
             else:
-                graph.edges[source, target]["weight"] = weight[inv_dictionary[target]]
+                graph.edges[source, target]["weight"] = weight[
+                    inv_dictionary[target]
+                ]
     return graph, dictionary, inv_dictionary

@@ -46,7 +46,11 @@ class Parameters(Enum):
 
 
 class TemporalProfileStreamingConformance(StreamingAlgorithm):
-    def __init__(self, temporal_profile: typing.TemporalProfile, parameters: Optional[Dict[Any, Any]] = None):
+    def __init__(
+        self,
+        temporal_profile: typing.TemporalProfile,
+        parameters: Optional[Dict[Any, Any]] = None,
+    ):
         """
         Initialize the streaming conformance checking.
 
@@ -72,23 +76,44 @@ class TemporalProfileStreamingConformance(StreamingAlgorithm):
             parameters = {}
 
         self.temporal_profile = temporal_profile
-        self.activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters,
-                                                       xes_constants.DEFAULT_NAME_KEY)
-        self.timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                                        xes_constants.DEFAULT_TIMESTAMP_KEY)
-        self.start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters,
-                                                              xes_constants.DEFAULT_TIMESTAMP_KEY)
-        self.case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-        self.zeta = exec_utils.get_param_value(Parameters.ZETA, parameters, 6.0)
+        self.activity_key = exec_utils.get_param_value(
+            Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+        )
+        self.timestamp_key = exec_utils.get_param_value(
+            Parameters.TIMESTAMP_KEY,
+            parameters,
+            xes_constants.DEFAULT_TIMESTAMP_KEY,
+        )
+        self.start_timestamp_key = exec_utils.get_param_value(
+            Parameters.START_TIMESTAMP_KEY,
+            parameters,
+            xes_constants.DEFAULT_TIMESTAMP_KEY,
+        )
+        self.case_id_key = exec_utils.get_param_value(
+            Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+        )
+        self.zeta = exec_utils.get_param_value(
+            Parameters.ZETA, parameters, 6.0
+        )
         parameters_gen = copy(parameters)
-        dict_variant = exec_utils.get_param_value(Parameters.DICT_VARIANT, parameters, generator.Variants.THREAD_SAFE)
-        case_dict_id = exec_utils.get_param_value(Parameters.CASE_DICT_ID, parameters, 0)
+        dict_variant = exec_utils.get_param_value(
+            Parameters.DICT_VARIANT, parameters, generator.Variants.THREAD_SAFE
+        )
+        case_dict_id = exec_utils.get_param_value(
+            Parameters.CASE_DICT_ID, parameters, 0
+        )
         parameters_gen[Parameters.DICT_ID] = case_dict_id
-        self.case_dictionary = generator.apply(variant=dict_variant, parameters=parameters_gen)
+        self.case_dictionary = generator.apply(
+            variant=dict_variant, parameters=parameters_gen
+        )
         parameters_dev = copy(parameters)
-        dev_dict_id = exec_utils.get_param_value(Parameters.DEV_DICT_ID, parameters, 1)
+        dev_dict_id = exec_utils.get_param_value(
+            Parameters.DEV_DICT_ID, parameters, 1
+        )
         parameters_dev[Parameters.DICT_ID] = dev_dict_id
-        self.deviations_dict = generator.apply(variant=dict_variant, parameters=parameters_dev)
+        self.deviations_dict = generator.apply(
+            variant=dict_variant, parameters=parameters_dev
+        )
         StreamingAlgorithm.__init__(self)
 
     def _process(self, event: Event):
@@ -100,7 +125,12 @@ class TemporalProfileStreamingConformance(StreamingAlgorithm):
         event
             Event
         """
-        if self.case_id_key not in event or self.start_timestamp_key not in event or self.timestamp_key not in event or self.activity_key not in event:
+        if (
+            self.case_id_key not in event
+            or self.start_timestamp_key not in event
+            or self.timestamp_key not in event
+            or self.activity_key not in event
+        ):
             self.message_event_is_not_complete(event)
         else:
             case = str(event[self.case_id_key])
@@ -128,15 +158,31 @@ class TemporalProfileStreamingConformance(StreamingAlgorithm):
         case, start_timestamp, end_timestamp, activity = event
         prev_events = json.loads(self.case_dictionary[case])
         for i in range(len(prev_events)):
-            prev_case, prev_start_timestamp, prev_end_timestamp, prev_activity = prev_events[i]
+            (
+                prev_case,
+                prev_start_timestamp,
+                prev_end_timestamp,
+                prev_activity,
+            ) = prev_events[i]
             if start_timestamp >= prev_end_timestamp:
                 if (prev_activity, activity) in self.temporal_profile:
                     diff = start_timestamp - prev_end_timestamp
                     mean = self.temporal_profile[(prev_activity, activity)][0]
                     std = self.temporal_profile[(prev_activity, activity)][1]
-                    if diff < mean - self.zeta * std or diff > mean + self.zeta * std:
-                        this_zeta = abs(diff - mean) / std if std > 0 else sys.maxsize
-                        dev_descr = (case, prev_activity, activity, diff, this_zeta)
+                    if (
+                        diff < mean - self.zeta * std
+                        or diff > mean + self.zeta * std
+                    ):
+                        this_zeta = (
+                            abs(diff - mean) / std if std > 0 else sys.maxsize
+                        )
+                        dev_descr = (
+                            case,
+                            prev_activity,
+                            activity,
+                            diff,
+                            this_zeta,
+                        )
                         this_dev = json.loads(self.deviations_dict[case])
                         this_dev.append(dev_descr)
                         self.deviations_dict[case] = json.dumps(this_dev)
@@ -151,7 +197,9 @@ class TemporalProfileStreamingConformance(StreamingAlgorithm):
         event
             Incoming event
         """
-        logging.error("case or activities or timestamp are none! " + str(event))
+        logging.error(
+            "case or activities or timestamp are none! " + str(event)
+        )
 
     def message_deviation(self, dev_descr: Tuple[str, str, str, float, float]):
         """
@@ -162,7 +210,10 @@ class TemporalProfileStreamingConformance(StreamingAlgorithm):
         dev_descr
             Description of the deviation to be printed
         """
-        logging.error("the temporal profile is broken in the following setting: " + str(dev_descr))
+        logging.error(
+            "the temporal profile is broken in the following setting: "
+            + str(dev_descr)
+        )
 
     def _current_result(self) -> typing.TemporalProfileStreamingConfResults:
         """
@@ -181,7 +232,10 @@ class TemporalProfileStreamingConformance(StreamingAlgorithm):
         return dev_dict
 
 
-def apply(temporal_profile: typing.TemporalProfile, parameters: Optional[Dict[Any, Any]] = None):
+def apply(
+    temporal_profile: typing.TemporalProfile,
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     """
     Initialize the streaming conformance checking.
 
@@ -206,4 +260,6 @@ def apply(temporal_profile: typing.TemporalProfile, parameters: Optional[Dict[An
     if parameters is None:
         parameters = {}
 
-    return TemporalProfileStreamingConformance(temporal_profile, parameters=parameters)
+    return TemporalProfileStreamingConformance(
+        temporal_profile, parameters=parameters
+    )

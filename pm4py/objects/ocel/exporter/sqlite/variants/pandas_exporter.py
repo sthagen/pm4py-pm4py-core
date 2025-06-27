@@ -27,7 +27,9 @@ from pm4py.objects.ocel.util import filtering_utils
 import os
 
 
-def apply(ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = None):
+def apply(
+    ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = None
+):
     """
     Exports an OCEL to a SQLite database using Pandas
 
@@ -49,7 +51,9 @@ def apply(ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = N
         os.remove(target_path)
 
     ocel = ocel_consistency.apply(ocel, parameters=parameters)
-    ocel = filtering_utils.propagate_relations_filtering(ocel, parameters=parameters)
+    ocel = filtering_utils.propagate_relations_filtering(
+        ocel, parameters=parameters
+    )
 
     conn = sqlite3.connect(target_path)
 

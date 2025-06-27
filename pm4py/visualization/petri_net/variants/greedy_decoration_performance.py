@@ -23,11 +23,18 @@ from pm4py.algo.discovery.dfg.variants import native, performance
 from pm4py.statistics.attributes.log import get as attr_get
 from pm4py.util import xes_constants as xes
 from pm4py.visualization.petri_net.common import visualize
-from pm4py.visualization.petri_net.util.vis_trans_shortest_paths import get_decorations_from_dfg_spaths_acticount
-from pm4py.visualization.petri_net.util.vis_trans_shortest_paths import get_shortest_paths
+from pm4py.visualization.petri_net.util.vis_trans_shortest_paths import (
+    get_decorations_from_dfg_spaths_acticount,
+)
+from pm4py.visualization.petri_net.util.vis_trans_shortest_paths import (
+    get_shortest_paths,
+)
 from pm4py.util import exec_utils
 from enum import Enum
-from pm4py.util.constants import PARAMETER_CONSTANT_ACTIVITY_KEY, PARAMETER_CONSTANT_TIMESTAMP_KEY
+from pm4py.util.constants import (
+    PARAMETER_CONSTANT_ACTIVITY_KEY,
+    PARAMETER_CONSTANT_TIMESTAMP_KEY,
+)
 from pm4py.objects.petri_net.obj import PetriNet, Marking
 from typing import Optional, Dict, Any, Union
 from pm4py.objects.log.obj import EventLog
@@ -45,7 +52,14 @@ class Parameters(Enum):
     STAT_LOCALE = "stat_locale"
 
 
-def get_decorated_net(net, initial_marking, final_marking, log, parameters=None, variant="frequency"):
+def get_decorated_net(
+    net,
+    initial_marking,
+    final_marking,
+    log,
+    parameters=None,
+    variant="frequency",
+):
     """
     Get a decorated net according to the specified variant (decorate Petri net based on DFG)
 
@@ -72,11 +86,15 @@ def get_decorated_net(net, initial_marking, final_marking, log, parameters=None,
     if parameters is None:
         parameters = {}
 
-    aggregation_measure = exec_utils.get_param_value(Parameters.AGGREGATION_MEASURE, parameters,
-                                                     "sum" if "frequency" in variant else "mean")
+    aggregation_measure = exec_utils.get_param_value(
+        Parameters.AGGREGATION_MEASURE,
+        parameters,
+        "sum" if "frequency" in variant else "mean",
+    )
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes.DEFAULT_NAME_KEY)
-    stat_locale = exec_utils.get_param_value(Parameters.STAT_LOCALE, parameters, {})
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes.DEFAULT_NAME_KEY
+    )
 
     # we find the DFG
     if variant == "performance":
@@ -86,18 +104,35 @@ def get_decorated_net(net, initial_marking, final_marking, log, parameters=None,
     # we find shortest paths
     spaths = get_shortest_paths(net)
     # we find the number of activities occurrences in the log
-    activities_count = attr_get.get_attribute_values(log, activity_key, parameters=parameters)
-    aggregated_statistics = get_decorations_from_dfg_spaths_acticount(net, dfg, spaths,
-                                                                      activities_count,
-                                                                      variant=variant,
-                                                                      aggregation_measure=aggregation_measure,
-                                                                      stat_locale=stat_locale)
+    activities_count = attr_get.get_attribute_values(
+        log, activity_key, parameters=parameters
+    )
+    aggregated_statistics = get_decorations_from_dfg_spaths_acticount(
+        net,
+        dfg,
+        spaths,
+        activities_count,
+        variant=variant,
+        aggregation_measure=aggregation_measure,
+    )
 
-    return visualize.apply(net, initial_marking, final_marking, parameters=parameters,
-                           decorations=aggregated_statistics)
+    return visualize.apply(
+        net,
+        initial_marking,
+        final_marking,
+        parameters=parameters,
+        decorations=aggregated_statistics,
+    )
 
 
-def apply(net: PetriNet, initial_marking: Marking, final_marking: Marking, log: EventLog = None, aggregated_statistics=None, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> graphviz.Digraph:
+def apply(
+    net: PetriNet,
+    initial_marking: Marking,
+    final_marking: Marking,
+    log: EventLog = None,
+    aggregated_statistics=None,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> graphviz.Digraph:
     """
     Apply performance decoration through greedy algorithm (decorate Petri net based on DFG)
 
@@ -122,4 +157,11 @@ def apply(net: PetriNet, initial_marking: Marking, final_marking: Marking, log: 
         GraphViz object
     """
     del aggregated_statistics
-    return get_decorated_net(net, initial_marking, final_marking, log, parameters=parameters, variant="performance")
+    return get_decorated_net(
+        net,
+        initial_marking,
+        final_marking,
+        log,
+        parameters=parameters,
+        variant="performance",
+    )

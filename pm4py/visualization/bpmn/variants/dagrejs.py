@@ -37,12 +37,16 @@ class Parameters(Enum):
 
 
 def get_html_file_contents():
-    with importlib.resources.path("pm4py.visualization.bpmn.util", "dagrejs_base.html") as p:
-        with open(str(p), 'r') as html_file:
+    with importlib.resources.path(
+        "pm4py.visualization.bpmn.util", "dagrejs_base.html"
+    ) as p:
+        with open(str(p), "r") as html_file:
             return html_file.read()
 
 
-def apply(bpmn_graph: BPMN, parameters: Optional[Dict[Any, Any]] = None) -> str:
+def apply(
+    bpmn_graph: BPMN, parameters: Optional[Dict[Any, Any]] = None
+) -> str:
     """
     Visualizes a BPMN graph by rendering it inside a HTML/Javascript file
 
@@ -62,12 +66,22 @@ def apply(bpmn_graph: BPMN, parameters: Optional[Dict[Any, Any]] = None) -> str:
     if parameters is None:
         parameters = {}
 
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING)
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING
+    )
 
     from pm4py.objects.bpmn.exporter.variants import etree as bpmn_xml_exporter
+
     export_parameters = copy(parameters)
-    xml_stri = bpmn_xml_exporter.get_xml_string(bpmn_graph, parameters=export_parameters)
-    xml_stri = xml_stri.decode(encoding).replace("\t", "").replace("\r", "").replace("\n", "")
+    xml_stri = bpmn_xml_exporter.get_xml_string(
+        bpmn_graph, parameters=export_parameters
+    )
+    xml_stri = (
+        xml_stri.decode(encoding)
+        .replace("\t", "")
+        .replace("\r", "")
+        .replace("\n", "")
+    )
 
     F = tempfile.NamedTemporaryFile(suffix=".html")
     F.close()
@@ -94,15 +108,29 @@ def view(temp_file_name, parameters=None):
         parameters = {}
 
     if constants.DEFAULT_ENABLE_VISUALIZATIONS_VIEW:
-        iframe_width = exec_utils.get_param_value(Parameters.IFRAME_WIDTH, parameters, 900)
-        iframe_height = exec_utils.get_param_value(Parameters.IFRAME_HEIGHT, parameters, 600)
-        local_jupyter_file_name = exec_utils.get_param_value(Parameters.LOCAL_JUPYTER_FILE_NAME, parameters, "jupyter_bpmn_vis.html")
+        iframe_width = exec_utils.get_param_value(
+            Parameters.IFRAME_WIDTH, parameters, 900
+        )
+        iframe_height = exec_utils.get_param_value(
+            Parameters.IFRAME_HEIGHT, parameters, 600
+        )
+        local_jupyter_file_name = exec_utils.get_param_value(
+            Parameters.LOCAL_JUPYTER_FILE_NAME,
+            parameters,
+            "jupyter_bpmn_vis.html",
+        )
 
         if vis_utils.check_visualization_inside_jupyter():
             from IPython.display import IFrame
+
             shutil.copyfile(temp_file_name, local_jupyter_file_name)
-            iframe = IFrame(local_jupyter_file_name, width=iframe_width, height=iframe_height)
+            iframe = IFrame(
+                local_jupyter_file_name,
+                width=iframe_width,
+                height=iframe_height,
+            )
             from IPython.display import display
+
             return display(iframe)
         else:
             vis_utils.open_opsystem_image_viewer(temp_file_name)

@@ -49,7 +49,9 @@ def ocel_get_object_types(ocel: OCEL) -> List[str]:
 
         object_types = pm4py.ocel_get_object_types(ocel)
     """
-    return pandas_utils.format_unique(ocel.objects[ocel.object_type_column].unique())
+    return pandas_utils.format_unique(
+        ocel.objects[ocel.object_type_column].unique()
+    )
 
 
 def ocel_get_attribute_names(ocel: OCEL) -> List[str]:
@@ -69,6 +71,7 @@ def ocel_get_attribute_names(ocel: OCEL) -> List[str]:
         attribute_names = pm4py.ocel_get_attribute_names(ocel)
     """
     from pm4py.objects.ocel.util import attributes_names
+
     return attributes_names.get_attribute_names(ocel)
 
 
@@ -96,6 +99,7 @@ def ocel_flattening(ocel: OCEL, object_type: str) -> pd.DataFrame:
         event_log = pm4py.ocel_flattening(ocel, 'items')
     """
     from pm4py.objects.ocel.util import flattening
+
     return flattening.flatten(ocel, object_type)
 
 
@@ -203,8 +207,14 @@ def ocel_objects_summary(ocel: OCEL) -> pd.DataFrame:
     objects_summary["lifecycle_duration"] = pandas_utils.get_total_seconds(
         objects_summary["lifecycle_end"] - objects_summary["lifecycle_start"]
     )
-    ev_rel_obj = ocel.relations.groupby(ocel.event_id_column)[ocel.object_id_column].agg(list).to_dict()
-    objects_ids = pandas_utils.format_unique(ocel.objects[ocel.object_id_column].unique())
+    ev_rel_obj = (
+        ocel.relations.groupby(ocel.event_id_column)[ocel.object_id_column]
+        .agg(list)
+        .to_dict()
+    )
+    objects_ids = pandas_utils.format_unique(
+        ocel.objects[ocel.object_id_column].unique()
+    )
     graph = {o: set() for o in objects_ids}
     for ev in ev_rel_obj:
         rel_obj = ev_rel_obj[ev]
@@ -212,7 +222,9 @@ def ocel_objects_summary(ocel: OCEL) -> pd.DataFrame:
             for o2 in rel_obj:
                 if o1 != o2:
                     graph[o1].add(o2)
-    objects_summary["interacting_objects"] = objects_summary[ocel.object_id_column].map(graph)
+    objects_summary["interacting_objects"] = objects_summary[
+        ocel.object_id_column
+    ].map(graph)
     return objects_summary
 
 
@@ -233,9 +245,21 @@ def ocel_objects_interactions_summary(ocel: OCEL) -> pd.DataFrame:
 
         interactions_summary = pm4py.ocel_objects_interactions_summary(ocel)
     """
-    obj_types = ocel.objects.groupby(ocel.object_id_column)[ocel.object_type_column].first().to_dict()
-    eve_activities = ocel.events.groupby(ocel.event_id_column)[ocel.event_activity].first().to_dict()
-    ev_rel_obj = ocel.relations.groupby(ocel.event_id_column)[ocel.object_id_column].agg(list).to_dict()
+    obj_types = (
+        ocel.objects.groupby(ocel.object_id_column)[ocel.object_type_column]
+        .first()
+        .to_dict()
+    )
+    eve_activities = (
+        ocel.events.groupby(ocel.event_id_column)[ocel.event_activity]
+        .first()
+        .to_dict()
+    )
+    ev_rel_obj = (
+        ocel.relations.groupby(ocel.event_id_column)[ocel.object_id_column]
+        .agg(list)
+        .to_dict()
+    )
     stream = []
     for ev in ev_rel_obj:
         rel_obj = ev_rel_obj[ev]
@@ -256,7 +280,13 @@ def ocel_objects_interactions_summary(ocel: OCEL) -> pd.DataFrame:
     return pandas_utils.instantiate_dataframe(stream)
 
 
-def discover_ocdfg(ocel: OCEL, business_hours: bool = False, business_hour_slots: Optional[List[Tuple[int, int]]] = constants.DEFAULT_BUSINESS_HOUR_SLOTS) -> Dict[str, Any]:
+def discover_ocdfg(
+    ocel: OCEL,
+    business_hours: bool = False,
+    business_hour_slots: Optional[
+        List[Tuple[int, int]]
+    ] = constants.DEFAULT_BUSINESS_HOUR_SLOTS,
+) -> Dict[str, Any]:
     """
     Discovers an Object-Centric Directly-Follows Graph (OC-DFG) from an object-centric event log.
 
@@ -265,17 +295,17 @@ def discover_ocdfg(ocel: OCEL, business_hours: bool = False, business_hour_slots
     (i.e., events, unique objects, total objects).
 
     Reference paper:
-    Berti, Alessandro, and Wil van der Aalst. "Extracting multiple viewpoint models from relational databases." 
+    Berti, Alessandro, and Wil van der Aalst. "Extracting multiple viewpoint models from relational databases."
     Data-Driven Process Discovery and Analysis. Springer, Cham, 2018. 24-51.
 
     :param ocel: Object-centric event log.
     :type ocel: OCEL
     :param business_hours: Enable the usage of business hours if set to True.
     :type business_hours: bool
-    :param business_hour_slots: Work schedule of the company, provided as a list of tuples where each tuple 
-                                 represents one time slot of business hours. Each tuple consists of a start 
-                                 and an end time given in seconds since week start, e.g., 
-                                 [(25200, 61200), (9072, 43200), (46800, 61200)] meaning that business hours 
+    :param business_hour_slots: Work schedule of the company, provided as a list of tuples where each tuple
+                                 represents one time slot of business hours. Each tuple consists of a start
+                                 and an end time given in seconds since week start, e.g.,
+                                 [(25200, 61200), (9072, 43200), (46800, 61200)] meaning that business hours
                                  are Mondays 07:00 - 17:00, Tuesdays 02:32 - 12:00, and Wednesdays 13:00 - 17:00.
     :type business_hour_slots: Optional[List[Tuple[int, int]]]
     :return: OC-DFG discovery result.
@@ -292,14 +322,19 @@ def discover_ocdfg(ocel: OCEL, business_hours: bool = False, business_hour_slots
         "business_hour_slots": business_hour_slots,
     }
     from pm4py.algo.discovery.ocel.ocdfg import algorithm as ocdfg_discovery
+
     return ocdfg_discovery.apply(ocel, parameters=parameters)
 
 
-def discover_oc_petri_net(ocel: OCEL, inductive_miner_variant: str = "im", diagnostics_with_tbr: bool = False) -> Dict[str, Any]:
+def discover_oc_petri_net(
+    ocel: OCEL,
+    inductive_miner_variant: str = "im",
+    diagnostics_with_tbr: bool = False,
+) -> Dict[str, Any]:
     """
     Discovers an object-centric Petri net from the provided object-centric event log.
 
-    Reference paper: van der Aalst, Wil MP, and Alessandro Berti. 
+    Reference paper: van der Aalst, Wil MP, and Alessandro Berti.
     "Discovering object-centric Petri nets." Fundamenta Informaticae 175.1-4 (2020): 1-40.
 
     :param ocel: Object-centric event log.
@@ -318,6 +353,7 @@ def discover_oc_petri_net(ocel: OCEL, inductive_miner_variant: str = "im", diagn
         ocpn = pm4py.discover_oc_petri_net(ocel)
     """
     from pm4py.algo.discovery.ocel.ocpn import algorithm as ocpn_discovery
+
     parameters = {
         "inductive_miner_variant": inductive_miner_variant,
         "diagnostics_with_token_based_replay": diagnostics_with_tbr,
@@ -326,7 +362,9 @@ def discover_oc_petri_net(ocel: OCEL, inductive_miner_variant: str = "im", diagn
     return ocpn_discovery.apply(ocel, parameters=parameters)
 
 
-def discover_objects_graph(ocel: OCEL, graph_type: str = "object_interaction") -> Set[Tuple[str, str]]:
+def discover_objects_graph(
+    ocel: OCEL, graph_type: str = "object_interaction"
+) -> Set[Tuple[str, str]]:
     """
     Discovers an object graph from the provided object-centric event log.
 
@@ -340,7 +378,7 @@ def discover_objects_graph(ocel: OCEL, graph_type: str = "object_interaction") -
     :param ocel: Object-centric event log.
     :type ocel: OCEL
     :param graph_type: Type of graph to consider.
-                       Options include "object_interaction", "object_descendants", 
+                       Options include "object_interaction", "object_descendants",
                        "object_inheritance", "object_cobirth", "object_codeath".
     :type graph_type: str
     :return: Discovered object graph as a set of tuples.
@@ -354,32 +392,45 @@ def discover_objects_graph(ocel: OCEL, graph_type: str = "object_interaction") -
         obj_graph = pm4py.discover_objects_graph(ocel, graph_type='object_interaction')
     """
     if graph_type == "object_interaction":
-        from pm4py.algo.transformation.ocel.graphs import object_interaction_graph
+        from pm4py.algo.transformation.ocel.graphs import (
+            object_interaction_graph,
+        )
+
         return object_interaction_graph.apply(ocel)
     elif graph_type == "object_descendants":
-        from pm4py.algo.transformation.ocel.graphs import object_descendants_graph
+        from pm4py.algo.transformation.ocel.graphs import (
+            object_descendants_graph,
+        )
+
         return object_descendants_graph.apply(ocel)
     elif graph_type == "object_inheritance":
-        from pm4py.algo.transformation.ocel.graphs import object_inheritance_graph
+        from pm4py.algo.transformation.ocel.graphs import (
+            object_inheritance_graph,
+        )
+
         return object_inheritance_graph.apply(ocel)
     elif graph_type == "object_cobirth":
         from pm4py.algo.transformation.ocel.graphs import object_cobirth_graph
+
         return object_cobirth_graph.apply(ocel)
     elif graph_type == "object_codeath":
         from pm4py.algo.transformation.ocel.graphs import object_codeath_graph
+
         return object_codeath_graph.apply(ocel)
     else:
         raise ValueError(f"Unsupported graph_type: {graph_type}")
 
 
-def ocel_o2o_enrichment(ocel: OCEL, included_graphs: Optional[Collection[str]] = None) -> OCEL:
+def ocel_o2o_enrichment(
+    ocel: OCEL, included_graphs: Optional[Collection[str]] = None
+) -> OCEL:
     """
     Enriches the OCEL with information inferred from graph computations by inserting them into the O2O relations.
 
     :param ocel: Object-centric event log.
     :type ocel: OCEL
-    :param included_graphs: Types of graphs to include, provided as a list or set of strings. 
-                            Options include "object_interaction_graph", "object_descendants_graph", 
+    :param included_graphs: Types of graphs to include, provided as a list or set of strings.
+                            Options include "object_interaction_graph", "object_descendants_graph",
                             "object_inheritance_graph", "object_cobirth_graph", "object_codeath_graph".
     :type included_graphs: Optional[Collection[str]]
     :return: Enriched object-centric event log.
@@ -394,12 +445,15 @@ def ocel_o2o_enrichment(ocel: OCEL, included_graphs: Optional[Collection[str]] =
         print(ocel.o2o)
     """
     from pm4py.algo.transformation.ocel.graphs import ocel20_computation
-    return ocel20_computation.apply(ocel, parameters={"included_graphs": included_graphs})
+
+    return ocel20_computation.apply(
+        ocel, parameters={"included_graphs": included_graphs}
+    )
 
 
 def ocel_e2o_lifecycle_enrichment(ocel: OCEL) -> OCEL:
     """
-    Enriches the OCEL with lifecycle-based information, indicating when an object is created, terminated, 
+    Enriches the OCEL with lifecycle-based information, indicating when an object is created, terminated,
     or has other types of relations, by updating the E2O relations.
 
     :param ocel: Object-centric event log.
@@ -416,6 +470,7 @@ def ocel_e2o_lifecycle_enrichment(ocel: OCEL) -> OCEL:
         print(ocel.relations)
     """
     from pm4py.objects.ocel.util import e2o_qualification
+
     ocel = e2o_qualification.apply(ocel, "termination")
     ocel = e2o_qualification.apply(ocel, "creation")
     ocel = e2o_qualification.apply(ocel, "other")
@@ -443,7 +498,10 @@ def sample_ocel_objects(ocel: OCEL, num_objects: int) -> OCEL:
         sampled_ocel = pm4py.sample_ocel_objects(ocel, 50)  # Keeps only 50 random objects
     """
     from pm4py.objects.ocel.util import sampling
-    return sampling.sample_ocel_objects(ocel, parameters={"num_entities": num_objects})
+
+    return sampling.sample_ocel_objects(
+        ocel, parameters={"num_entities": num_objects}
+    )
 
 
 def sample_ocel_connected_components(
@@ -451,14 +509,14 @@ def sample_ocel_connected_components(
     connected_components: int = 1,
     max_num_events_per_cc: int = sys.maxsize,
     max_num_objects_per_cc: int = sys.maxsize,
-    max_num_e2o_relations_per_cc: int = sys.maxsize
+    max_num_e2o_relations_per_cc: int = sys.maxsize,
 ) -> OCEL:
     """
     Returns a sampled object-centric event log containing a specified number of connected components.
     Users can also set maximum limits on the number of events, objects, and E2O relations per connected component.
 
     Reference paper:
-    Adams, Jan Niklas, et al. "Defining cases and variants for object-centric event data." 
+    Adams, Jan Niklas, et al. "Defining cases and variants for object-centric event data."
     2022 4th International Conference on Process Mining (ICPM). IEEE, 2022.
 
     :param ocel: Object-centric event log.
@@ -482,19 +540,25 @@ def sample_ocel_connected_components(
         sampled_ocel = pm4py.sample_ocel_connected_components(ocel, 5)  # Keeps only 5 connected components
     """
     from pm4py.algo.transformation.ocel.split_ocel import algorithm
-    ocel_splits = algorithm.apply(ocel, variant=algorithm.Variants.CONNECTED_COMPONENTS)
+
+    ocel_splits = algorithm.apply(
+        ocel, variant=algorithm.Variants.CONNECTED_COMPONENTS
+    )
     events = None
     objects = None
     relations = None
     ocel_splits = [
-        x for x in ocel_splits
+        x
+        for x in ocel_splits
         if len(x.events) <= max_num_events_per_cc
         and len(x.objects) <= max_num_objects_per_cc
         and len(x.relations) <= max_num_e2o_relations_per_cc
     ]
 
     if len(ocel_splits) > 0:
-        ocel_splits = random.sample(ocel_splits, min(connected_components, len(ocel_splits)))
+        ocel_splits = random.sample(
+            ocel_splits, min(connected_components, len(ocel_splits))
+        )
 
     for cc in ocel_splits:
         if events is None:
@@ -528,14 +592,21 @@ def ocel_drop_duplicates(ocel: OCEL) -> OCEL:
         ocel = pm4py.ocel_drop_duplicates(ocel)
     """
     from pm4py.objects.ocel.util import filtering_utils
+
     ocel.relations = ocel.relations.drop_duplicates(
-        subset=[ocel.event_activity, ocel.event_timestamp, ocel.object_id_column]
+        subset=[
+            ocel.event_activity,
+            ocel.event_timestamp,
+            ocel.object_id_column,
+        ]
     )
     ocel = filtering_utils.propagate_relations_filtering(ocel)
     return ocel
 
 
-def ocel_merge_duplicates(ocel: OCEL, have_common_object: Optional[bool] = False) -> OCEL:
+def ocel_merge_duplicates(
+    ocel: OCEL, have_common_object: Optional[bool] = False
+) -> OCEL:
     """
     Merges events in the OCEL that have the same activity and timestamp. Optionally, ensures that
     the events being merged share a common object.
@@ -556,6 +627,7 @@ def ocel_merge_duplicates(ocel: OCEL, have_common_object: Optional[bool] = False
     """
     import copy
     import uuid
+
     relations = copy.copy(ocel.relations)
     if have_common_object:
         relations["@@groupn"] = relations.groupby(
@@ -568,18 +640,29 @@ def ocel_merge_duplicates(ocel: OCEL, have_common_object: Optional[bool] = False
 
     group_size = relations["@@groupn"].value_counts().to_dict()
     relations["@@groupsize"] = relations["@@groupn"].map(group_size)
-    relations = relations.sort_values(["@@groupsize", "@@groupn"], ascending=False)
+    relations = relations.sort_values(
+        ["@@groupsize", "@@groupn"], ascending=False
+    )
     val_corr = {
-        x: str(uuid.uuid4()) for x in pandas_utils.format_unique(relations["@@groupn"].unique())
+        x: str(uuid.uuid4())
+        for x in pandas_utils.format_unique(relations["@@groupn"].unique())
     }
-    relations = relations.groupby(ocel.event_id_column).first()["@@groupn"].to_dict()
+    relations = (
+        relations.groupby(ocel.event_id_column).first()["@@groupn"].to_dict()
+    )
     relations = {x: val_corr[y] for x, y in relations.items()}
 
-    ocel.events[ocel.event_id_column] = ocel.events[ocel.event_id_column].map(relations)
-    ocel.relations[ocel.event_id_column] = ocel.relations[ocel.event_id_column].map(relations)
+    ocel.events[ocel.event_id_column] = ocel.events[ocel.event_id_column].map(
+        relations
+    )
+    ocel.relations[ocel.event_id_column] = ocel.relations[
+        ocel.event_id_column
+    ].map(relations)
 
     ocel.events = ocel.events.drop_duplicates(subset=[ocel.event_id_column])
-    ocel.relations = ocel.relations.drop_duplicates(subset=[ocel.event_id_column, ocel.object_id_column])
+    ocel.relations = ocel.relations.drop_duplicates(
+        subset=[ocel.event_id_column, ocel.object_id_column]
+    )
 
     return ocel
 
@@ -595,7 +678,7 @@ def ocel_sort_by_additional_column(
     :type ocel: OCEL
     :param additional_column: Additional column to use for sorting.
     :type additional_column: str
-    :param primary_column: Primary column to use for sorting (default: "ocel:timestamp"). 
+    :param primary_column: Primary column to use for sorting (default: "ocel:timestamp").
                            Typically the timestamp column.
     :type primary_column: str
     :return: Sorted object-centric event log.
@@ -608,8 +691,12 @@ def ocel_sort_by_additional_column(
         ocel = pm4py.read_ocel('trial.ocel')
         ocel = pm4py.ocel_sort_by_additional_column(ocel, 'ordering')
     """
-    ocel.events = pandas_utils.insert_index(ocel.events, "@@index", reset_index=False, copy_dataframe=False)
-    ocel.events = ocel.events.sort_values([primary_column, additional_column, "@@index"])
+    ocel.events = pandas_utils.insert_index(
+        ocel.events, "@@index", reset_index=False, copy_dataframe=False
+    )
+    ocel.events = ocel.events.sort_values(
+        [primary_column, additional_column, "@@index"]
+    )
     del ocel.events["@@index"]
     ocel.events = ocel.events.reset_index(drop=True)
     return ocel
@@ -633,12 +720,19 @@ def ocel_add_index_based_timedelta(ocel: OCEL) -> OCEL:
         ocel = pm4py.ocel_add_index_based_timedelta(ocel)
     """
     from datetime import timedelta
+
     eids = ocel.events[ocel.event_id_column].to_numpy().tolist()
     eids = {eids[i]: timedelta(milliseconds=i) for i in range(len(eids))}
     ocel.events["@@timedelta"] = ocel.events[ocel.event_id_column].map(eids)
-    ocel.relations["@@timedelta"] = ocel.relations[ocel.event_id_column].map(eids)
-    ocel.events[ocel.event_timestamp] = ocel.events[ocel.event_timestamp] + ocel.events["@@timedelta"]
-    ocel.relations[ocel.event_timestamp] = ocel.relations[ocel.event_timestamp] + ocel.relations["@@timedelta"]
+    ocel.relations["@@timedelta"] = ocel.relations[ocel.event_id_column].map(
+        eids
+    )
+    ocel.events[ocel.event_timestamp] = (
+        ocel.events[ocel.event_timestamp] + ocel.events["@@timedelta"]
+    )
+    ocel.relations[ocel.event_timestamp] = (
+        ocel.relations[ocel.event_timestamp] + ocel.relations["@@timedelta"]
+    )
     del ocel.events["@@timedelta"]
     del ocel.relations["@@timedelta"]
     return ocel
@@ -668,9 +762,13 @@ def cluster_equivalent_ocel(
         ocel = pm4py.read_ocel('trial.ocel')
         clusters = pm4py.cluster_equivalent_ocel(ocel, "order")
     """
-    from pm4py.algo.transformation.ocel.split_ocel import algorithm as split_ocel_algorithm
+    from pm4py.algo.transformation.ocel.split_ocel import (
+        algorithm as split_ocel_algorithm,
+    )
     from pm4py.objects.ocel.util import rename_objs_ot_tim_lex
-    from pm4py.algo.transformation.ocel.description import algorithm as ocel_description
+    from pm4py.algo.transformation.ocel.description import (
+        algorithm as ocel_description,
+    )
 
     lst_ocels = split_ocel_algorithm.apply(
         ocel,
@@ -680,7 +778,9 @@ def cluster_equivalent_ocel(
     ret = {}
     for index, oc in enumerate(lst_ocels):
         oc_ren = rename_objs_ot_tim_lex.apply(oc)
-        descr = ocel_description.apply(oc_ren, parameters={"include_timestamps": False})
+        descr = ocel_description.apply(
+            oc_ren, parameters={"include_timestamps": False}
+        )
         if descr not in ret:
             ret[descr] = []
         ret[descr].append(oc)

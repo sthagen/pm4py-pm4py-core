@@ -34,7 +34,12 @@ class Parameters(Enum):
     GRAPH_TITLE = "graph_title"
 
 
-def apply(clf: DecisionTreeClassifier, feature_names: List[str], classes: List[str], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> graphviz.Source:
+def apply(
+    clf: DecisionTreeClassifier,
+    feature_names: List[str],
+    classes: List[str],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> graphviz.Source:
     """
     Apply the visualization of the decision tree
 
@@ -58,22 +63,34 @@ def apply(clf: DecisionTreeClassifier, feature_names: List[str], classes: List[s
     if parameters is None:
         parameters = {}
 
-    enable_graph_title = exec_utils.get_param_value(Parameters.ENABLE_GRAPH_TITLE, parameters, constants.DEFAULT_ENABLE_GRAPH_TITLES)
-    graph_title = exec_utils.get_param_value(Parameters.GRAPH_TITLE, parameters, "Decision Tree")
+    enable_graph_title = exec_utils.get_param_value(
+        Parameters.ENABLE_GRAPH_TITLE,
+        parameters,
+        constants.DEFAULT_ENABLE_GRAPH_TITLES,
+    )
+    graph_title = exec_utils.get_param_value(
+        Parameters.GRAPH_TITLE, parameters, "Decision Tree"
+    )
 
     format = exec_utils.get_param_value(Parameters.FORMAT, parameters, "png")
-    filename = tempfile.NamedTemporaryFile(suffix='.gv')
+    filename = tempfile.NamedTemporaryFile(suffix=".gv")
     filename.close()
 
-    dot_data = export_graphviz(clf, out_file=None,
-                                    feature_names=feature_names,
-                                    class_names=classes,
-                                    filled=True, rounded=True,
-                                    special_characters=True)
+    dot_data = export_graphviz(
+        clf,
+        out_file=None,
+        feature_names=feature_names,
+        class_names=classes,
+        filled=True,
+        rounded=True,
+        special_characters=True,
+    )
 
     if enable_graph_title:
-        dot_data = dot_data.replace('digraph Tree {',
-                                               f'digraph Tree {{\ngraph [label="{graph_title}", labelloc=t, fontsize=20];')
+        dot_data = dot_data.replace(
+            "digraph Tree {",
+            f'digraph Tree {{\ngraph [label="{graph_title}", labelloc=t, fontsize=20];',
+        )
 
     gviz = graphviz.Source(dot_data)
     gviz.format = format

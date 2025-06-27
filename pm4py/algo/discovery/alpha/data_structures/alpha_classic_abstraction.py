@@ -30,13 +30,24 @@ class ClassicAlphaAbstraction:
     relation.
     """
 
-    def __init__(self, start_activities, end_activities, dfg, activity_key="concept:name"):
+    def __init__(
+        self,
+        start_activities,
+        end_activities,
+        dfg,
+        activity_key="concept:name",
+    ):
         self.__activity_key = activity_key
         self.__start_activities = start_activities
         self.__end_activities = end_activities
         self.__dfg = dfg
-        self.__causal_relations = {k: v for k, v in causal_algorithm.apply(self.dfg, variant=CAUSAL_ALPHA).items() if
-                                   v > 0}.keys()
+        self.__causal_relations = {
+            k: v
+            for k, v in causal_algorithm.apply(
+                self.dfg, variant=CAUSAL_ALPHA
+            ).items()
+            if v > 0
+        }.keys()
         self.__parallel = {(f, t) for (f, t) in self.dfg if (t, f) in self.dfg}
 
     def __get_causal_relation(self):

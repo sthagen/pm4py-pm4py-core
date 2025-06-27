@@ -39,7 +39,7 @@ correspondence = {
     "56": "Meeting Acceptance",
     "57": "Meeting Tentatively Accepted",
     "181": "Meeting Forward Notification",
-    "46": "Delivery Report"
+    "46": "Delivery Report",
 }
 
 
@@ -67,22 +67,35 @@ def get_events(box, prefix, progress) -> List[Dict[str, Any]]:
             if cla in correspondence:
                 cla = prefix + correspondence[cla]
                 subject = str(it.Subject)
-                timestamp = strpfromiso.fix_naivety(datetime.fromtimestamp(it.CreationTime.timestamp()))
+                timestamp = strpfromiso.fix_naivety(
+                    datetime.fromtimestamp(it.CreationTime.timestamp())
+                )
                 sender = "EMPTY"
                 try:
                     sender = str(it.Sender.Name)
-                except:
+                except BaseException:
                     pass
                 recipients = "EMPTY"
                 try:
-                    recipients = " AND ".join([str(x.Name) for x in it.Recipients])
-                except:
+                    recipients = " AND ".join(
+                        [str(x.Name) for x in it.Recipients]
+                    )
+                except BaseException:
                     pass
                 conversationid = str(it.ConversationID)
                 conversationtopic = str(it.ConversationTopic)
-                events.append({"case:concept:name": conversationid, "concept:name": cla, "time:timestamp": timestamp,
-                               "org:resource": sender, "recipients": recipients, "topic": conversationtopic, "subject": subject})
-        except:
+                events.append(
+                    {
+                        "case:concept:name": conversationid,
+                        "concept:name": cla,
+                        "time:timestamp": timestamp,
+                        "org:resource": sender,
+                        "recipients": recipients,
+                        "topic": conversationtopic,
+                        "subject": subject,
+                    }
+                )
+        except BaseException:
             traceback.print_exc()
             pass
         if progress is not None:
@@ -114,8 +127,11 @@ def apply(parameters: Optional[Dict[str, Any]] = None) -> pd.DataFrame:
     progress = None
     if importlib.util.find_spec("tqdm"):
         from tqdm.auto import tqdm
-        progress = tqdm(total=len(outbox.Items)+len(inbox.Items),
-                        desc="extracting mailbox items, progress :: ")
+
+        progress = tqdm(
+            total=len(outbox.Items) + len(inbox.Items),
+            desc="extracting mailbox items, progress :: ",
+        )
 
     events = get_events(outbox, "Sent ", progress)
     events = events + get_events(inbox, "Received ", progress)
@@ -124,9 +140,15 @@ def apply(parameters: Optional[Dict[str, Any]] = None) -> pd.DataFrame:
         progress.close()
 
     dataframe = pandas_utils.instantiate_dataframe(events)
-    dataframe = pandas_utils.insert_index(dataframe, "@@index", copy_dataframe=False, reset_index=False)
+    dataframe = pandas_utils.insert_index(
+        dataframe, "@@index", copy_dataframe=False, reset_index=False
+    )
     dataframe = dataframe.sort_values(["time:timestamp", "@@index"])
-    dataframe["@@case_index"] = dataframe.groupby("case:concept:name", sort=False).ngroup()
-    dataframe = dataframe.sort_values(["@@case_index", "time:timestamp", "@@index"])
+    dataframe["@@case_index"] = dataframe.groupby(
+        "case:concept:name", sort=False
+    ).ngroup()
+    dataframe = dataframe.sort_values(
+        ["@@case_index", "time:timestamp", "@@index"]
+    )
 
     return dataframe

@@ -44,10 +44,17 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     if parameters is None:
         parameters = {}
 
-    ordered_objects = parameters["ordered_objects"] if "ordered_objects" in parameters else ocel.objects[
-        ocel.object_id_column].to_numpy()
+    ordered_objects = (
+        parameters["ordered_objects"]
+        if "ordered_objects" in parameters
+        else ocel.objects[ocel.object_id_column].to_numpy()
+    )
 
-    lifecycle = ocel.relations.groupby(ocel.object_id_column)[ocel.event_activity].agg(list).to_dict()
+    lifecycle = (
+        ocel.relations.groupby(ocel.object_id_column)[ocel.event_activity]
+        .agg(list)
+        .to_dict()
+    )
 
     data = []
     paths = {}
@@ -55,13 +62,13 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     for obj in lifecycle:
         paths[obj] = []
         lobj = lifecycle[obj]
-        for i in range(len(lobj)-1):
-            path = lobj[i]+"##"+lobj[i+1]
+        for i in range(len(lobj) - 1):
+            path = lobj[i] + "##" + lobj[i + 1]
             paths[obj].append(path)
             all_paths.add(path)
 
     all_paths = sorted(list(all_paths))
-    feature_names = ["@@ocel_lif_path_"+str(x) for x in all_paths]
+    feature_names = ["@@ocel_lif_path_" + str(x) for x in all_paths]
 
     for obj in ordered_objects:
         lif = paths[obj] if obj in paths else []
@@ -70,4 +77,3 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
             data[-1].append(float(len(list(x for x in lif if x == p))))
 
     return data, feature_names
-

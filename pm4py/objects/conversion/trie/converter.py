@@ -31,8 +31,11 @@ class Variants(Enum):
     TO_PETRI_NET = to_petri_net
 
 
-def apply(prefix_tree: Trie, variant=Variants.TO_PETRI_NET, parameters: Optional[Dict[Any, Any]] = None) -> Tuple[
-    PetriNet, Marking, Marking]:
+def apply(
+    prefix_tree: Trie,
+    variant=Variants.TO_PETRI_NET,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Tuple[PetriNet, Marking, Marking]:
     """
     Converts the prefix tree objects using the specified variant
 

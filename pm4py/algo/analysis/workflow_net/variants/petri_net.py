@@ -55,9 +55,17 @@ def _short_circuit_petri_net(net):
         if len(place.out_arcs) == 0:
             sink = place
             no_sink_places += 1
-    if (sink is not None) and (source is not None) and no_source_places == 1 and no_sink_places == 1:
-        # If there is one unique source and sink place, short circuit Petri Net is constructed
-        t_1 = PetriNet.Transition("short_circuited_transition", "short_circuited_transition")
+    if (
+        (sink is not None)
+        and (source is not None)
+        and no_source_places == 1
+        and no_sink_places == 1
+    ):
+        # If there is one unique source and sink place, short circuit Petri Net
+        # is constructed
+        t_1 = PetriNet.Transition(
+            "short_circuited_transition", "short_circuited_transition"
+        )
         s_c_net.transitions.add(t_1)
         # add arcs in short-circuited net
         pn_utils.add_arc_from_to(sink, t_1, s_c_net)

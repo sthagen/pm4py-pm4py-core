@@ -31,7 +31,11 @@ class Variants(Enum):
     VARIANT1 = variant1
 
 
-def apply(ocel: OCEL, variant=Variants.VARIANT1, parameters: Optional[Dict[Any, Any]] = None) -> str:
+def apply(
+    ocel: OCEL,
+    variant=Variants.VARIANT1,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> str:
     """
     Gets a textual representation from an object-centric event log
 

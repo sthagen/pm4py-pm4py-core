@@ -21,7 +21,9 @@ Contact: info@processintelligence.solutions
 '''
 class Trie(object):
 
-    def __init__(self, label=None, parent=None, children=None, final=False, depth=0):
+    def __init__(
+        self, label=None, parent=None, children=None, final=False, depth=0
+    ):
         self._label = label
         self._parent = parent
         self._children = children if children is not None else list()
@@ -68,12 +70,12 @@ class Trie(object):
         stri = []
 
         if self.label:
-            stri.append("\t"*indent_level + self.label)
+            stri.append("\t" * indent_level + self.label)
             indent_level += 1
         for child in self.children:
             stri.append(child.repr_trie(indent_level=indent_level))
         if self.final:
-            stri.append("\t"*indent_level + "-- END --")
+            stri.append("\t" * indent_level + "-- END --")
 
         return "\n".join(stri)
 
@@ -100,4 +102,10 @@ class Trie(object):
         return True
 
     def __hash__(self):
-        return hash((self._label, self._final, tuple(sorted(self._children, key=lambda x: x._label))))
+        return hash(
+            (
+                self._label,
+                self._final,
+                tuple(sorted(self._children, key=lambda x: x._label)),
+            )
+        )

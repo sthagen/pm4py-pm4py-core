@@ -35,18 +35,35 @@ class Parameters(Enum):
     KEEP_FIRST_FOLLOWING = "keep_first_following"
 
 
-def apply(interval_log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[Tuple[str, str], int]:
+def apply(
+    interval_log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[Tuple[str, str], int]:
     if parameters is None:
         parameters = {}
 
-    interval_log = converter.apply(interval_log, variant=converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    interval_log = converter.apply(
+        interval_log,
+        variant=converter.Variants.TO_EVENT_LOG,
+        parameters=parameters,
+    )
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters,
-                                                     xes_constants.DEFAULT_TIMESTAMP_KEY)
-    keep_first_following = exec_utils.get_param_value(Parameters.KEEP_FIRST_FOLLOWING, parameters, False)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    keep_first_following = exec_utils.get_param_value(
+        Parameters.KEEP_FIRST_FOLLOWING, parameters, False
+    )
 
     ret_dict = {}
     for trace in interval_log:

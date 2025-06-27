@@ -20,4 +20,3 @@ Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
 from pm4py.algo.discovery.inductive import algorithm, variants
-

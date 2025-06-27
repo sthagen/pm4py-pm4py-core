@@ -35,8 +35,10 @@ class Parameters(Enum):
     GROUP_KEY = constants.PARAMETER_CONSTANT_GROUP_KEY
 
 
-def get_groups_from_log(log_obj: Union[pd.DataFrame, EventLog], parameters: Optional[Dict[Any, str]] = None) -> Dict[
-    str, Dict[str, int]]:
+def get_groups_from_log(
+    log_obj: Union[pd.DataFrame, EventLog],
+    parameters: Optional[Dict[Any, str]] = None,
+) -> Dict[str, Dict[str, int]]:
     """
     From the log object, where events have a group, a resource and an activity attribute,
     gets a dictionary where the first key is a group, the second key is a resource and the value is the number
@@ -60,23 +62,41 @@ def get_groups_from_log(log_obj: Union[pd.DataFrame, EventLog], parameters: Opti
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    resource_key = exec_utils.get_param_value(Parameters.RESOURCE_KEY, parameters, xes_constants.DEFAULT_RESOURCE_KEY)
-    group_key = exec_utils.get_param_value(Parameters.GROUP_KEY, parameters, xes_constants.DEFAULT_GROUP_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    resource_key = exec_utils.get_param_value(
+        Parameters.RESOURCE_KEY, parameters, xes_constants.DEFAULT_RESOURCE_KEY
+    )
+    group_key = exec_utils.get_param_value(
+        Parameters.GROUP_KEY, parameters, xes_constants.DEFAULT_GROUP_KEY
+    )
 
     groups = {}
 
     if pandas_utils.check_is_pandas_dataframe(log_obj):
-        group_res = log_obj.groupby([resource_key, group_key]).count().to_dict()[activity_key]
+        group_res = (
+            log_obj.groupby([resource_key, group_key])
+            .count()
+            .to_dict()[activity_key]
+        )
         for el in group_res:
             if not el[1] in groups:
                 groups[el[1]] = {}
             groups[el[1]][el[0]] = group_res[el]
     else:
-        log_obj = log_converter.apply(log_obj, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+        log_obj = log_converter.apply(
+            log_obj,
+            variant=log_converter.Variants.TO_EVENT_LOG,
+            parameters=parameters,
+        )
         for trace in log_obj:
             for event in trace:
-                if activity_key in event and resource_key in event and group_key in event:
+                if (
+                    activity_key in event
+                    and resource_key in event
+                    and group_key in event
+                ):
                     group = event[group_key]
                     resource = event[resource_key]
                     if group not in groups:
@@ -88,8 +108,10 @@ def get_groups_from_log(log_obj: Union[pd.DataFrame, EventLog], parameters: Opti
     return groups
 
 
-def get_res_act_from_log(log_obj: Union[pd.DataFrame, EventLog], parameters: Optional[Dict[Any, str]] = None) -> Tuple[
-    Dict[str, Dict[str, int]], Dict[str, Dict[str, int]]]:
+def get_res_act_from_log(
+    log_obj: Union[pd.DataFrame, EventLog],
+    parameters: Optional[Dict[Any, str]] = None,
+) -> Tuple[Dict[str, Dict[str, int]], Dict[str, Dict[str, int]]]:
     """
     From the log object, where events have a group, a resource and an activity attribute,
     gets two dictionaries:
@@ -118,15 +140,25 @@ def get_res_act_from_log(log_obj: Union[pd.DataFrame, EventLog], parameters: Opt
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    resource_key = exec_utils.get_param_value(Parameters.RESOURCE_KEY, parameters, xes_constants.DEFAULT_RESOURCE_KEY)
-    group_key = exec_utils.get_param_value(Parameters.GROUP_KEY, parameters, xes_constants.DEFAULT_GROUP_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    resource_key = exec_utils.get_param_value(
+        Parameters.RESOURCE_KEY, parameters, xes_constants.DEFAULT_RESOURCE_KEY
+    )
+    group_key = exec_utils.get_param_value(
+        Parameters.GROUP_KEY, parameters, xes_constants.DEFAULT_GROUP_KEY
+    )
 
     res_act = {}
     act_res = {}
 
     if pandas_utils.check_is_pandas_dataframe(log_obj):
-        aggr = log_obj.groupby([activity_key, resource_key]).count().to_dict()[group_key]
+        aggr = (
+            log_obj.groupby([activity_key, resource_key])
+            .count()
+            .to_dict()[group_key]
+        )
         for el in aggr:
             if not el[1] in res_act:
                 res_act[el[1]] = {}
@@ -135,7 +167,11 @@ def get_res_act_from_log(log_obj: Union[pd.DataFrame, EventLog], parameters: Opt
             res_act[el[1]][el[0]] = aggr[el]
             act_res[el[0]][el[1]] = aggr[el]
     else:
-        log_obj = log_converter.apply(log_obj, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+        log_obj = log_converter.apply(
+            log_obj,
+            variant=log_converter.Variants.TO_EVENT_LOG,
+            parameters=parameters,
+        )
         for trace in log_obj:
             for event in trace:
                 if activity_key in event and resource_key in event:
@@ -155,8 +191,10 @@ def get_res_act_from_log(log_obj: Union[pd.DataFrame, EventLog], parameters: Opt
     return res_act, act_res
 
 
-def get_resources_from_log(log_obj: Union[pd.DataFrame, EventLog], parameters: Optional[Dict[Any, str]] = None) -> Dict[
-    str, int]:
+def get_resources_from_log(
+    log_obj: Union[pd.DataFrame, EventLog],
+    parameters: Optional[Dict[Any, str]] = None,
+) -> Dict[str, int]:
     """
     Gets the resources, along with the respective number of events, from the log object
 
@@ -178,7 +216,9 @@ def get_resources_from_log(log_obj: Union[pd.DataFrame, EventLog], parameters: O
     if parameters is None:
         parameters = {}
 
-    resource_key = exec_utils.get_param_value(Parameters.RESOURCE_KEY, parameters, xes_constants.DEFAULT_RESOURCE_KEY)
+    resource_key = exec_utils.get_param_value(
+        Parameters.RESOURCE_KEY, parameters, xes_constants.DEFAULT_RESOURCE_KEY
+    )
 
     resources = {}
 

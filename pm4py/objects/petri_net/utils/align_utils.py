@@ -30,15 +30,19 @@ from pm4py.objects.petri_net import semantics, properties
 from pm4py.objects.petri_net.obj import Marking, PetriNet
 from pm4py.util.lp import solver as lp_solver
 
-SKIP = '>>'
+SKIP = ">>"
 STD_MODEL_LOG_MOVE_COST = 10000
 STD_TAU_COST = 1
 STD_SYNC_COST = 0
 
 
-def search_path_among_sol(sync_net: PetriNet, ini: Marking, fin: Marking,
-                          activated_transitions: List[PetriNet.Transition], skip=SKIP) -> Tuple[
-    List[PetriNet.Transition], bool, int]:
+def search_path_among_sol(
+    sync_net: PetriNet,
+    ini: Marking,
+    fin: Marking,
+    activated_transitions: List[PetriNet.Transition],
+    skip=SKIP,
+) -> Tuple[List[PetriNet.Transition], bool, int]:
     """
     (Efficient method) Searches a firing sequence among the X vector that is the solution of the
     (extended) marking equation
@@ -66,12 +70,16 @@ def search_path_among_sol(sync_net: PetriNet, ini: Marking, fin: Marking,
         Number of explained events
     """
     reach_fm = False
-    trans_empty_preset = set(t for t in sync_net.transitions if len(t.in_arcs) == 0)
+    trans_empty_preset = set(
+        t for t in sync_net.transitions if len(t.in_arcs) == 0
+    )
     trans_with_index = {}
     trans_wo_index = set()
     for t in activated_transitions:
         if properties.TRACE_NET_TRANS_INDEX in t.properties:
-            trans_with_index[t.properties[properties.TRACE_NET_TRANS_INDEX]] = t
+            trans_with_index[
+                t.properties[properties.TRACE_NET_TRANS_INDEX]
+            ] = t
         else:
             trans_wo_index.add(t)
     keys = sorted(list(trans_with_index.keys()))
@@ -100,7 +108,10 @@ def search_path_among_sol(sync_net: PetriNet, ini: Marking, fin: Marking,
         if corr_trans.sub_marking <= marking:
             visited += 1
             new_marking = semantics.weak_execute(corr_trans, marking)
-            heapq.heappush(open_set, (-index-1, visited, new_marking, curr[3]+[corr_trans]))
+            heapq.heappush(
+                open_set,
+                (-index - 1, visited, new_marking, curr[3] + [corr_trans]),
+            )
         else:
             enabled = copy(trans_empty_preset)
             for p in marking:
@@ -110,7 +121,10 @@ def search_path_among_sol(sync_net: PetriNet, ini: Marking, fin: Marking,
             for new_trans in enabled:
                 visited += 1
                 new_marking = semantics.weak_execute(new_trans, marking)
-                heapq.heappush(open_set, (-index, visited, new_marking, curr[3]+[new_trans]))
+                heapq.heappush(
+                    open_set,
+                    (-index, visited, new_marking, curr[3] + [new_trans]),
+                )
     return best_tuple[-1], reach_fm, -best_tuple[0]
 
 
@@ -127,7 +141,9 @@ def construct_standard_cost_function(synchronous_product_net, skip):
     """
     costs = {}
     for t in synchronous_product_net.transitions:
-        if (skip == t.label[0] or skip == t.label[1]) and (t.label[0] is not None and t.label[1] is not None):
+        if (skip == t.label[0] or skip == t.label[1]) and (
+            t.label[0] is not None and t.label[1] is not None
+        ):
             costs[t] = STD_MODEL_LOG_MOVE_COST
         else:
             if skip == t.label[0] and t.label[1] is None:
@@ -173,12 +189,12 @@ def __print_single_alignment(step_list):
                     trace_steps[i] = trace_steps[i] + " "
                 else:
                     trace_steps[i] = " " + trace_steps[i]
-        print(trace_steps[i], end='|')
+        print(trace_steps[i], end="|")
     divider = ""
     length_divider = len(trace_steps) * (max_label_length + 3)
     for i in range(length_divider):
         divider += "-"
-    print('\n' + divider)
+    print("\n" + divider)
     for i in range(len(model_steps)):
         if len(model_steps[i]) - 2 < max_label_length:
             step_length = len(model_steps[i]) - 2
@@ -189,8 +205,8 @@ def __print_single_alignment(step_list):
                 else:
                     model_steps[i] = " " + model_steps[i]
 
-        print(model_steps[i], end='|')
-    print('\n\n')
+        print(model_steps[i], end="|")
+    print("\n\n")
 
 
 def add_markings(curr, add):
@@ -210,7 +226,14 @@ def __get_alt(open_set, new_marking):
             return item
 
 
-def __reconstruct_alignment(state, visited, queued, traversed, ret_tuple_as_trans_desc=False, lp_solved=0):
+def __reconstruct_alignment(
+    state,
+    visited,
+    queued,
+    traversed,
+    ret_tuple_as_trans_desc=False,
+    lp_solved=0,
+):
     alignment = list()
     if state.p is not None and state.t is not None:
         parent = state.p
@@ -224,8 +247,14 @@ def __reconstruct_alignment(state, visited, queued, traversed, ret_tuple_as_tran
             while parent.p is not None:
                 alignment = [parent.t.label] + alignment
                 parent = parent.p
-    return {'alignment': alignment, 'cost': state.g, 'visited_states': visited, 'queued_states': queued,
-            'traversed_arcs': traversed, 'lp_solved': lp_solved}
+    return {
+        "alignment": alignment,
+        "cost": state.g,
+        "visited_states": visited,
+        "queued_states": queued,
+        "traversed_arcs": traversed,
+        "lp_solved": lp_solved,
+    }
 
 
 def __derive_heuristic(incidence_matrix, cost_vec, x, t, h):
@@ -249,8 +278,19 @@ def __trust_solution(x):
     return True
 
 
-def __compute_exact_heuristic_new_version(sync_net, a_matrix, h_cvx, g_matrix, cost_vec, incidence_matrix,
-                                          marking, fin_vec, variant, use_cvxopt=False, strict=True):
+def __compute_exact_heuristic_new_version(
+    sync_net,
+    a_matrix,
+    h_cvx,
+    g_matrix,
+    cost_vec,
+    incidence_matrix,
+    marking,
+    fin_vec,
+    variant,
+    use_cvxopt=False,
+    strict=True,
+):
     m_vec = incidence_matrix.encode_marking(marking)
     b_term = [i - j for i, j in zip(fin_vec, m_vec)]
     b_term = np.matrix([x * 1.0 for x in b_term]).transpose()
@@ -269,13 +309,22 @@ def __compute_exact_heuristic_new_version(sync_net, a_matrix, h_cvx, g_matrix, c
 
     parameters_solving = {"solver": "glpk"}
 
-    sol = lp_solver.apply(cost_vec, g_matrix, h_cvx, a_matrix, b_term, parameters=parameters_solving,
-                          variant=variant)
+    sol = lp_solver.apply(
+        cost_vec,
+        g_matrix,
+        h_cvx,
+        a_matrix,
+        b_term,
+        parameters=parameters_solving,
+        variant=variant,
+    )
     prim_obj = lp_solver.get_prim_obj_from_sol(sol, variant=variant)
     points = lp_solver.get_points_from_sol(sol, variant=variant)
 
     prim_obj = prim_obj if prim_obj is not None else sys.maxsize
-    points = points if points is not None else [0.0] * len(sync_net.transitions)
+    points = (
+        points if points is not None else [0.0] * len(sync_net.transitions)
+    )
 
     return prim_obj, points
 
@@ -335,8 +384,13 @@ class SearchTuple:
         return ret
 
     def __repr__(self):
-        string_build = ["\nm=" + str(self.m), " f=" + str(self.f), ' g=' + str(self.g), " h=" + str(self.h),
-                        " path=" + str(self.__get_firing_sequence()) + "\n\n"]
+        string_build = [
+            "\nm=" + str(self.m),
+            " f=" + str(self.f),
+            " g=" + str(self.g),
+            " h=" + str(self.h),
+            " path=" + str(self.__get_firing_sequence()) + "\n\n",
+        ]
         return " ".join(string_build)
 
 
@@ -365,8 +419,11 @@ class DijkstraSearchTuple:
         return ret
 
     def __repr__(self):
-        string_build = ["\nm=" + str(self.m), " g=" + str(self.g),
-                        " path=" + str(self.__get_firing_sequence()) + "\n\n"]
+        string_build = [
+            "\nm=" + str(self.m),
+            " g=" + str(self.g),
+            " path=" + str(self.__get_firing_sequence()) + "\n\n",
+        ]
         return " ".join(string_build)
 
 class DijkstraSearchTupleForAntiAndMulti:
@@ -427,8 +484,13 @@ class TweakedSearchTuple:
         return ret
 
     def __repr__(self):
-        string_build = ["\nm=" + str(self.m), " f=" + str(self.f), ' g=' + str(self.g), " h=" + str(self.h),
-                        " path=" + str(self.__get_firing_sequence()) + "\n\n"]
+        string_build = [
+            "\nm=" + str(self.m),
+            " f=" + str(self.f),
+            " g=" + str(self.g),
+            " h=" + str(self.h),
+            " path=" + str(self.__get_firing_sequence()) + "\n\n",
+        ]
         return " ".join(string_build)
 
 
@@ -442,8 +504,10 @@ def get_visible_transitions_eventually_enabled_by_marking(net, marking):
     marking
         Current marking
     """
-    all_enabled_transitions = sorted(list(semantics.enabled_transitions(net, marking)),
-                                     key=lambda x: (str(x.name), id(x)))
+    all_enabled_transitions = sorted(
+        list(semantics.enabled_transitions(net, marking)),
+        key=lambda x: (str(x.name), id(x)),
+    )
     initial_all_enabled_transitions_marking_dictio = {}
     all_enabled_transitions_marking_dictio = {}
     for trans in all_enabled_transitions:
@@ -463,11 +527,15 @@ def get_visible_transitions_eventually_enabled_by_marking(net, marking):
             else:
                 if semantics.is_enabled(t, net, marking_copy):
                     new_marking = semantics.execute(t, net, marking_copy)
-                    new_enabled_transitions = sorted(list(semantics.enabled_transitions(net, new_marking)),
-                                                     key=lambda x: (str(x.name), id(x)))
+                    new_enabled_transitions = sorted(
+                        list(semantics.enabled_transitions(net, new_marking)),
+                        key=lambda x: (str(x.name), id(x)),
+                    )
                     for t2 in new_enabled_transitions:
                         all_enabled_transitions.append(t2)
-                        all_enabled_transitions_marking_dictio[t2] = new_marking
+                        all_enabled_transitions_marking_dictio[t2] = (
+                            new_marking
+                        )
             visited_transitions.add(repr([t, marking_copy]))
         i = i + 1
 

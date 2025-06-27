@@ -79,4 +79,6 @@ def deserialize(bpmn_string, variant=DEFAULT_VARIANT, parameters=None):
     if parameters is None:
         parameters = {}
 
-    return exec_utils.get_variant(variant).import_from_string(bpmn_string, parameters=parameters)
+    return exec_utils.get_variant(variant).import_from_string(
+        bpmn_string, parameters=parameters
+    )

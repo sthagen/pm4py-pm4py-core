@@ -41,7 +41,11 @@ class Parameters(Enum):
     POSITIVE = "positive"
 
 
-def apply(df: pd.DataFrame, values: List[str], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> pd.DataFrame:
+def apply(
+    df: pd.DataFrame,
+    values: List[str],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> pd.DataFrame:
     """
     Filter dataframe on start activities
 
@@ -66,17 +70,37 @@ def apply(df: pd.DataFrame, values: List[str], parameters: Optional[Dict[Union[s
     if parameters is None:
         parameters = {}
 
-    case_id_glue = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME)
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, DEFAULT_NAME_KEY)
-    grouped_df = exec_utils.get_param_value(Parameters.GROUP_DATAFRAME, parameters, None)
-    positive = exec_utils.get_param_value(Parameters.POSITIVE, parameters, True)
+    case_id_glue = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME
+    )
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, DEFAULT_NAME_KEY
+    )
+    grouped_df = exec_utils.get_param_value(
+        Parameters.GROUP_DATAFRAME, parameters, None
+    )
+    positive = exec_utils.get_param_value(
+        Parameters.POSITIVE, parameters, True
+    )
 
-    return filter_df_on_start_activities(df, values, case_id_glue=case_id_glue, activity_key=activity_key,
-                                         positive=positive, grouped_df=grouped_df)
+    return filter_df_on_start_activities(
+        df,
+        values,
+        case_id_glue=case_id_glue,
+        activity_key=activity_key,
+        positive=positive,
+        grouped_df=grouped_df,
+    )
 
 
-def filter_df_on_start_activities(df, values, case_id_glue=CASE_CONCEPT_NAME,
-                                  activity_key=xes.DEFAULT_NAME_KEY, grouped_df=None, positive=True):
+def filter_df_on_start_activities(
+    df,
+    values,
+    case_id_glue=CASE_CONCEPT_NAME,
+    activity_key=xes.DEFAULT_NAME_KEY,
+    grouped_df=None,
+    positive=True,
+):
     """
     Filter dataframe on start activities
 
@@ -112,12 +136,18 @@ def filter_df_on_start_activities(df, values, case_id_glue=CASE_CONCEPT_NAME,
     else:
         ret = df[~i1.isin(i2)]
 
-    ret.attrs = copy(df.attrs) if hasattr(df, 'attrs') else {}
+    ret.attrs = copy(df.attrs) if hasattr(df, "attrs") else {}
     return ret
 
 
-def filter_df_on_start_activities_nocc(df, nocc, sa_count0=None, case_id_glue=CASE_CONCEPT_NAME,
-                                       activity_key=DEFAULT_NAME_KEY, grouped_df=None):
+def filter_df_on_start_activities_nocc(
+    df,
+    nocc,
+    sa_count0=None,
+    case_id_glue=CASE_CONCEPT_NAME,
+    activity_key=DEFAULT_NAME_KEY,
+    grouped_df=None,
+):
     """
     Filter dataframe on start activities number of occurrences
 
@@ -148,7 +178,7 @@ def filter_df_on_start_activities_nocc(df, nocc, sa_count0=None, case_id_glue=CA
         parameters = {
             Parameters.CASE_ID_KEY: case_id_glue,
             Parameters.ACTIVITY_KEY: activity_key,
-            Parameters.GROUP_DATAFRAME: grouped_df
+            Parameters.GROUP_DATAFRAME: grouped_df,
         }
         sa_count0 = get_start_activities(df, parameters=parameters)
     sa_count = [k for k, v in sa_count0.items() if v >= nocc]
@@ -160,5 +190,5 @@ def filter_df_on_start_activities_nocc(df, nocc, sa_count0=None, case_id_glue=CA
     else:
         ret = df
 
-    ret.attrs = copy(df.attrs) if hasattr(df, 'attrs') else {}
+    ret.attrs = copy(df.attrs) if hasattr(df, "attrs") else {}
     return ret

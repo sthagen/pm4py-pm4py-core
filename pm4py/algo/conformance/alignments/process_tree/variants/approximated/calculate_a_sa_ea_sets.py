@@ -36,7 +36,9 @@ def __get_activity_set(pt: ProcessTree, a_set=None) -> Set[str]:
     return a_set
 
 
-def __get_start_activity_set_binary_tree(pt: ProcessTree, sa_set=None) -> Set[str]:
+def __get_start_activity_set_binary_tree(
+    pt: ProcessTree, sa_set=None
+) -> Set[str]:
     assert pt.children is None or len(pt.children) <= 2
     if sa_set is None:
         sa_set = set()
@@ -44,27 +46,39 @@ def __get_start_activity_set_binary_tree(pt: ProcessTree, sa_set=None) -> Set[st
         sa_set.add(pt.label)
     elif not is_tau_leaf(pt):
         assert len(pt.children) == 2
-        tau_in_language_sub_pt_1 = __check_empty_sequence_accepted(pt.children[0])
+        tau_in_language_sub_pt_1 = __check_empty_sequence_accepted(
+            pt.children[0]
+        )
 
         if pt.operator == Operator.SEQUENCE:
             if not tau_in_language_sub_pt_1:
-                return __get_start_activity_set_binary_tree(pt.children[0], sa_set)
+                return __get_start_activity_set_binary_tree(
+                    pt.children[0], sa_set
+                )
             else:
                 for c in pt.children:
-                    sa_set.union(__get_start_activity_set_binary_tree(c, sa_set))
+                    sa_set.union(
+                        __get_start_activity_set_binary_tree(c, sa_set)
+                    )
         elif pt.operator == Operator.PARALLEL or pt.operator == Operator.XOR:
             for c in pt.children:
                 sa_set.union(__get_start_activity_set_binary_tree(c, sa_set))
         elif pt.operator == Operator.LOOP:
             if not tau_in_language_sub_pt_1:
-                return __get_start_activity_set_binary_tree(pt.children[0], sa_set)
+                return __get_start_activity_set_binary_tree(
+                    pt.children[0], sa_set
+                )
             else:
                 for c in pt.children:
-                    sa_set.union(__get_start_activity_set_binary_tree(c, sa_set))
+                    sa_set.union(
+                        __get_start_activity_set_binary_tree(c, sa_set)
+                    )
     return sa_set
 
 
-def __get_end_activity_set_binary_tree(pt: ProcessTree, ea_set=None) -> Set[str]:
+def __get_end_activity_set_binary_tree(
+    pt: ProcessTree, ea_set=None
+) -> Set[str]:
     assert pt.children is None or len(pt.children) <= 2
     if ea_set is None:
         ea_set = set()
@@ -72,12 +86,18 @@ def __get_end_activity_set_binary_tree(pt: ProcessTree, ea_set=None) -> Set[str]
         ea_set.add(pt.label)
     elif not is_tau_leaf(pt):
         assert len(pt.children) == 2
-        tau_in_language_sub_pt_1 = __check_empty_sequence_accepted(pt.children[0])
-        tau_in_language_sub_pt_2 = __check_empty_sequence_accepted(pt.children[1])
+        tau_in_language_sub_pt_1 = __check_empty_sequence_accepted(
+            pt.children[0]
+        )
+        tau_in_language_sub_pt_2 = __check_empty_sequence_accepted(
+            pt.children[1]
+        )
 
         if pt.operator == Operator.SEQUENCE:
             if not tau_in_language_sub_pt_2:
-                return __get_end_activity_set_binary_tree(pt.children[1], ea_set)
+                return __get_end_activity_set_binary_tree(
+                    pt.children[1], ea_set
+                )
             else:
                 for c in pt.children:
                     ea_set.union(__get_end_activity_set_binary_tree(c, ea_set))
@@ -86,7 +106,9 @@ def __get_end_activity_set_binary_tree(pt: ProcessTree, ea_set=None) -> Set[str]
                 ea_set.union(__get_end_activity_set_binary_tree(c, ea_set))
         elif pt.operator == Operator.LOOP:
             if not tau_in_language_sub_pt_1:
-                return __get_end_activity_set_binary_tree(pt.children[0], ea_set)
+                return __get_end_activity_set_binary_tree(
+                    pt.children[0], ea_set
+                )
             else:
                 for c in pt.children:
                     ea_set.union(__get_end_activity_set_binary_tree(c, ea_set))
@@ -101,16 +123,25 @@ def __check_empty_sequence_accepted(pt: ProcessTree) -> bool:
             return False
     else:
         assert len(pt.children) == 2
-        if pt.operator == Operator.SEQUENCE or pt.operator == Operator.PARALLEL:
-            return __check_empty_sequence_accepted(pt.children[0]) and __check_empty_sequence_accepted(pt.children[1])
+        if (
+            pt.operator == Operator.SEQUENCE
+            or pt.operator == Operator.PARALLEL
+        ):
+            return __check_empty_sequence_accepted(
+                pt.children[0]
+            ) and __check_empty_sequence_accepted(pt.children[1])
         elif pt.operator == Operator.XOR:
-            return __check_empty_sequence_accepted(pt.children[0]) or __check_empty_sequence_accepted(pt.children[1])
+            return __check_empty_sequence_accepted(
+                pt.children[0]
+            ) or __check_empty_sequence_accepted(pt.children[1])
         else:
             assert pt.operator == Operator.LOOP
             return __check_empty_sequence_accepted(pt.children[0])
 
 
-def initialize_a_sa_ea_tau_sets(pt: ProcessTree, a_sets=None, sa_sets=None, ea_sets=None, tau_sets=None):
+def initialize_a_sa_ea_tau_sets(
+    pt: ProcessTree, a_sets=None, sa_sets=None, ea_sets=None, tau_sets=None
+):
     if a_sets is None:
         a_sets = {}
     if sa_sets is None:
@@ -126,6 +157,11 @@ def initialize_a_sa_ea_tau_sets(pt: ProcessTree, a_sets=None, sa_sets=None, ea_s
     tau_sets[pt] = __check_empty_sequence_accepted(pt)
 
     for c in pt.children:
-        a_sets, sa_sets, ea_sets, tau_sets = initialize_a_sa_ea_tau_sets(c, a_sets=a_sets, sa_sets=sa_sets,
-                                                                         ea_sets=ea_sets, tau_sets=tau_sets)
+        a_sets, sa_sets, ea_sets, tau_sets = initialize_a_sa_ea_tau_sets(
+            c,
+            a_sets=a_sets,
+            sa_sets=sa_sets,
+            ea_sets=ea_sets,
+            tau_sets=tau_sets,
+        )
     return a_sets, sa_sets, ea_sets, tau_sets

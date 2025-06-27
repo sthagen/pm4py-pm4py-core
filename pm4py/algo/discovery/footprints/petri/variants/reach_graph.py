@@ -43,7 +43,9 @@ def findsubsets(s, n):
     return list(itertools.combinations(s, n))
 
 
-def apply(net: PetriNet, im: Marking, parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, Any]:
+def apply(
+    net: PetriNet, im: Marking, parameters: Optional[Dict[Any, Any]] = None
+) -> Dict[str, Any]:
     """
     Discovers a footprint object from a Petri net
 
@@ -64,9 +66,11 @@ def apply(net: PetriNet, im: Marking, parameters: Optional[Dict[Any, Any]] = Non
     if parameters is None:
         parameters = {}
 
-    incoming_transitions, outgoing_transitions, eventually_enabled = reachability_graph.marking_flow_petri(net, im,
-                                                                                                           return_eventually_enabled=True,
-                                                                                                           parameters=parameters)
+    incoming_transitions, outgoing_transitions, eventually_enabled = (
+        reachability_graph.marking_flow_petri(
+            net, im, return_eventually_enabled=True, parameters=parameters
+        )
+    )
 
     sequence = set()
 
@@ -74,12 +78,16 @@ def apply(net: PetriNet, im: Marking, parameters: Optional[Dict[Any, Any]] = Non
     s2 = set()
 
     for m in outgoing_transitions:
-        input_trans = set(x for x in incoming_transitions[m] if x.label is not None)
-        output_trans = set(x for x in outgoing_transitions[m].keys() if x.label is not None)
+        input_trans = set(
+            x for x in incoming_transitions[m] if x.label is not None
+        )
+        output_trans = set(
+            x for x in outgoing_transitions[m].keys() if x.label is not None
+        )
         ev_en = set(x for x in eventually_enabled[m])
         two_sets = findsubsets(output_trans, 2)
 
-        for (x, y) in two_sets:
+        for x, y in two_sets:
             s1.add((x, y))
             s1.add((y, x))
 
@@ -103,4 +111,9 @@ def apply(net: PetriNet, im: Marking, parameters: Optional[Dict[Any, Any]] = Non
     activities = set(x.label for x in net.transitions if x.label is not None)
     start_activities = set(x.label for x in eventually_enabled[im])
 
-    return {Outputs.SEQUENCE.value: sequence, Outputs.PARALLEL.value: parallel, Outputs.ACTIVITIES.value: activities, Outputs.START_ACTIVITIES.value: start_activities}
+    return {
+        Outputs.SEQUENCE.value: sequence,
+        Outputs.PARALLEL.value: parallel,
+        Outputs.ACTIVITIES.value: activities,
+        Outputs.START_ACTIVITIES.value: start_activities,
+    }

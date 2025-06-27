@@ -31,7 +31,11 @@ class Variants(Enum):
     CONTEXTUAL = contextual
 
 
-def apply(log: Union[EventLog, EventStream, pd.DataFrame], variant=Variants.CONTEXTUAL, parameters: Optional[Dict[Any, Any]] = None) -> pd.DataFrame:
+def apply(
+    log: Union[EventLog, EventStream, pd.DataFrame],
+    variant=Variants.CONTEXTUAL,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> pd.DataFrame:
     """
     Applies a technique of label-splitting, to distinguish between different meanings of the same
     activity. The result is a Pandas dataframe where the label-splitting has been applied.

@@ -34,7 +34,11 @@ class Variants(Enum):
     OPEN_PATHS = open_paths
 
 
-def apply(log: EventLog, variant=Variants.OPEN_PATHS, parameters: Optional[Dict[Any, Any]] = None) -> IntervalTree:
+def apply(
+    log: EventLog,
+    variant=Variants.OPEN_PATHS,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> IntervalTree:
     """
     Transforms the event log to an interval tree using one of the available variants
 
@@ -54,5 +58,7 @@ def apply(log: EventLog, variant=Variants.OPEN_PATHS, parameters: Optional[Dict[
     tree
         Interval tree object (which can be queried at a given timestamp, or range of timestamps)
     """
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
     return exec_utils.get_variant(variant).apply(log, parameters=parameters)

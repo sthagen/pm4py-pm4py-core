@@ -23,7 +23,9 @@ from collections import Counter
 
 import numpy as np
 
-from pm4py.objects.petri_net.utils.reachability_graph import construct_reachability_graph
+from pm4py.objects.petri_net.utils.reachability_graph import (
+    construct_reachability_graph,
+)
 from pm4py.objects.stochastic_petri import tangible_reachability
 from pm4py.objects.conversion.dfg import converter as dfg_converter
 from pm4py.objects.random_variables import exponential, random_variable
@@ -88,7 +90,9 @@ def get_color_from_probabilities(prob_dictionary):
     return color_dictionary
 
 
-def get_tangible_reachability_and_q_matrix_from_dfg_performance(dfg_performance, invisible_firing_rate=1000.0, parameters=None):
+def get_tangible_reachability_and_q_matrix_from_dfg_performance(
+    dfg_performance, invisible_firing_rate=1000.0, parameters=None
+):
     """
     Get the tangible reachability graph and the Q matrix from the performance DFG
 
@@ -120,7 +124,7 @@ def get_tangible_reachability_and_q_matrix_from_dfg_performance(dfg_performance,
         if tr.label is None:
             rv = random_variable.RandomVariable()
             exp = exponential.Exponential()
-            exp.scale = 1/invisible_firing_rate
+            exp.scale = 1 / invisible_firing_rate
             rv.random_variable = exp
             stochastic_map[tr] = rv
         else:
@@ -132,17 +136,23 @@ def get_tangible_reachability_and_q_matrix_from_dfg_performance(dfg_performance,
             if el in dfg_performance:
                 scale = dfg_performance[el]
             if scale == 0:
-                scale = 1/invisible_firing_rate
+                scale = 1 / invisible_firing_rate
             exp = exponential.Exponential()
             exp.scale = scale
             rv.random_variable = exp
             stochastic_map[tr] = rv
-    tang_reach_graph = construct_reachability_graph(net, im, use_trans_name=True)
-    q_matrix = get_q_matrix_from_tangible_exponential(tang_reach_graph, stochastic_map)
+    tang_reach_graph = construct_reachability_graph(
+        net, im, use_trans_name=True
+    )
+    q_matrix = get_q_matrix_from_tangible_exponential(
+        tang_reach_graph, stochastic_map
+    )
     return tang_reach_graph, tang_reach_graph, stochastic_map, q_matrix
 
 
-def get_tangible_reachability_and_q_matrix_from_log_net(log, net, im, fm, parameters=None):
+def get_tangible_reachability_and_q_matrix_from_log_net(
+    log, net, im, fm, parameters=None
+):
     """
     Gets the tangible reachability graph from a log and an accepting Petri net
 
@@ -170,14 +180,26 @@ def get_tangible_reachability_and_q_matrix_from_log_net(log, net, im, fm, parame
     """
     if parameters is None:
         parameters = {}
-    reachability_graph, tangible_reachability_graph, stochastic_info = tangible_reachability.get_tangible_reachability_from_log_net_im_fm(
-        log, net, im, fm, parameters=parameters)
+    reachability_graph, tangible_reachability_graph, stochastic_info = (
+        tangible_reachability.get_tangible_reachability_from_log_net_im_fm(
+            log, net, im, fm, parameters=parameters
+        )
+    )
     # gets the Q matrix assuming exponential distributions
-    q_matrix = get_q_matrix_from_tangible_exponential(tangible_reachability_graph, stochastic_info)
-    return reachability_graph, tangible_reachability_graph, stochastic_info, q_matrix
+    q_matrix = get_q_matrix_from_tangible_exponential(
+        tangible_reachability_graph, stochastic_info
+    )
+    return (
+        reachability_graph,
+        tangible_reachability_graph,
+        stochastic_info,
+        q_matrix,
+    )
 
 
-def transient_analysis_from_petri_net_and_smap(net, im, s_map, delay, parameters=None):
+def transient_analysis_from_petri_net_and_smap(
+    net, im, s_map, delay, parameters=None
+):
     """
     Gets the transient analysis from a Petri net, a stochastic map and a delay
 
@@ -203,25 +225,37 @@ def transient_analysis_from_petri_net_and_smap(net, im, s_map, delay, parameters
     for trans in reachab_graph.transitions:
         if str(trans.from_state) == "start1":
             states_reachable_from_start.add(trans.to_state)
-    # get the tangible reachability graph from the reachability graph and the stochastic map
-    tang_reach_graph = tangible_reachability.get_tangible_reachability_from_reachability(reachab_graph, s_map)
+    # get the tangible reachability graph from the reachability graph and the
+    # stochastic map
+    tang_reach_graph = (
+        tangible_reachability.get_tangible_reachability_from_reachability(
+            reachab_graph, s_map
+        )
+    )
     # gets the Q matrix assuming exponential distributions
     q_matrix = get_q_matrix_from_tangible_exponential(tang_reach_graph, s_map)
     states = sorted(list(tang_reach_graph.states), key=lambda x: x.name)
     states_vector = np.zeros((1, len(states)))
 
     for state in states_reachable_from_start:
-        states_vector[0, states.index(state)] = 1.0 / len(states_reachable_from_start)
+        states_vector[0, states.index(state)] = 1.0 / len(
+            states_reachable_from_start
+        )
 
-    probabilities = transient_analysis_from_tangible_q_matrix_and_states_vector(tang_reach_graph, q_matrix,
-                                                                                states_vector, delay)
+    probabilities = (
+        transient_analysis_from_tangible_q_matrix_and_states_vector(
+            tang_reach_graph, q_matrix, states_vector, delay
+        )
+    )
 
     color_dictionary = get_color_from_probabilities(probabilities)
 
     return tang_reach_graph, probabilities, color_dictionary
 
 
-def get_q_matrix_from_tangible_exponential(tangible_reach_graph, stochastic_info):
+def get_q_matrix_from_tangible_exponential(
+    tangible_reach_graph, stochastic_info
+):
     """
     Gets Q matrix from tangible reachability graph and stochastic map where the
     distribution type has been forced to be exponential
@@ -255,13 +289,17 @@ def get_q_matrix_from_tangible_exponential(tangible_reach_graph, stochastic_info
                 sinfo = stochastic_info_name[trans.name]
                 lambda_value = 1.0 / float(sinfo.random_variable.scale)
                 sum_lambda = sum_lambda + lambda_value
-                q_matrix[i, target_state_index] = q_matrix[i, target_state_index] + lambda_value
+                q_matrix[i, target_state_index] = (
+                    q_matrix[i, target_state_index] + lambda_value
+                )
         q_matrix[i, i] = -sum_lambda
 
     return q_matrix
 
 
-def transient_analysis_from_tangible_q_matrix_and_single_state(tangible_reach_graph, q_matrix, source_state, time_diff):
+def transient_analysis_from_tangible_q_matrix_and_single_state(
+    tangible_reach_graph, q_matrix, source_state, time_diff
+):
     """
     Do transient analysis from tangible reachability graph, Q matrix and a single state to start from
 
@@ -287,12 +325,14 @@ def transient_analysis_from_tangible_q_matrix_and_single_state(tangible_reach_gr
     states_vector = np.zeros((1, len(states)))
     states_vector[0, state_index] = 1
 
-    return transient_analysis_from_tangible_q_matrix_and_states_vector(tangible_reach_graph, q_matrix, states_vector,
-                                                                       time_diff)
+    return transient_analysis_from_tangible_q_matrix_and_states_vector(
+        tangible_reach_graph, q_matrix, states_vector, time_diff
+    )
 
 
-def transient_analysis_from_tangible_q_matrix_and_states_vector(tangible_reach_graph, q_matrix, states_vector,
-                                                                time_diff):
+def transient_analysis_from_tangible_q_matrix_and_states_vector(
+    tangible_reach_graph, q_matrix, states_vector, time_diff
+):
     """
     Do transient analysis from tangible reachability graph, Q matrix and a vector of probability of states
 
@@ -362,6 +402,7 @@ def nullspace(a_matrix, atol=1e-13, rtol=0):
         zero.
     """
     from numpy.linalg import svd
+
     a_matrix = np.atleast_2d(a_matrix)
     u, s, vh = svd(a_matrix)
     tol = max(atol, rtol * s[0])

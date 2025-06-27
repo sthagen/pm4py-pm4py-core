@@ -43,7 +43,10 @@ class Parameters(Enum):
     CASE_ID_KEY = constants.PARAMETER_CONSTANT_CASEID_KEY
 
 
-def abstraction_from_variants_freq_perf_list(vars_list: List[Tuple[List[str], int, float, float]], parameters: Optional[Dict[Any, Any]] = None) -> str:
+def abstraction_from_variants_freq_perf_list(
+    vars_list: List[Tuple[List[str], int, float, float]],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> str:
     """
     Obtains a textual abstraction from a list of variants provided along their frequency and performance values.
     Each variant of the list is expressed in the form:
@@ -82,33 +85,56 @@ def abstraction_from_variants_freq_perf_list(vars_list: List[Tuple[List[str], in
     if parameters is None:
         parameters = {}
 
-    relative_frequency = exec_utils.get_param_value(Parameters.RELATIVE_FREQUENCY, parameters, False)
-    max_len = exec_utils.get_param_value(Parameters.MAX_LEN, parameters, constants.OPENAI_MAX_LEN)
-    response_header = exec_utils.get_param_value(Parameters.RESPONSE_HEADER, parameters, True)
-    include_frequency = exec_utils.get_param_value(Parameters.INCLUDE_FREQUENCY, parameters, True)
-    include_performance = exec_utils.get_param_value(Parameters.INCLUDE_PERFORMANCE, parameters, True)
-    primary_performance_aggregation = exec_utils.get_param_value(Parameters.PRIMARY_PERFORMANCE_AGGREGATION, parameters, "mean")
-    secondary_performance_aggregation = exec_utils.get_param_value(Parameters.SECONDARY_PERFORMANCE_AGGREGATION, parameters, None)
+    relative_frequency = exec_utils.get_param_value(
+        Parameters.RELATIVE_FREQUENCY, parameters, False
+    )
+    max_len = exec_utils.get_param_value(
+        Parameters.MAX_LEN, parameters, constants.OPENAI_MAX_LEN
+    )
+    response_header = exec_utils.get_param_value(
+        Parameters.RESPONSE_HEADER, parameters, True
+    )
+    include_frequency = exec_utils.get_param_value(
+        Parameters.INCLUDE_FREQUENCY, parameters, True
+    )
+    include_performance = exec_utils.get_param_value(
+        Parameters.INCLUDE_PERFORMANCE, parameters, True
+    )
+    primary_performance_aggregation = exec_utils.get_param_value(
+        Parameters.PRIMARY_PERFORMANCE_AGGREGATION, parameters, "mean"
+    )
+    secondary_performance_aggregation = exec_utils.get_param_value(
+        Parameters.SECONDARY_PERFORMANCE_AGGREGATION, parameters, None
+    )
 
-    ret = "If I have a process with the following process variants:\n\n" if response_header else "\n\n"
+    ret = (
+        "If I have a process with the following process variants:\n\n"
+        if response_header
+        else "\n\n"
+    )
     for v in vars_list:
         if len(ret) > max_len:
             break
-        stru = " " + " -> " .join(v[0]) + " "
+        stru = " " + " -> ".join(v[0]) + " "
         if include_frequency or include_performance:
             stru = stru + "("
             if include_frequency:
                 stru = stru + " frequency = "
                 stru = stru + str(v[1])
                 if relative_frequency:
-                    stru = stru + "\%"
+                    stru = stru + "\\%"
                 stru = stru + " "
             if include_performance:
                 stru = stru + " performance = "
                 stru = stru + "%.3f" % (v[2])
                 stru = stru + " "
-                if secondary_performance_aggregation is not None and v[3] is not None:
-                    stru = stru + " " + secondary_performance_aggregation + " = "
+                if (
+                    secondary_performance_aggregation is not None
+                    and v[3] is not None
+                ):
+                    stru = (
+                        stru + " " + secondary_performance_aggregation + " = "
+                    )
                     stru = stru + "%.3f" % (v[3])
                     stru = stru + " "
             stru = stru + ")\n"
@@ -150,7 +176,10 @@ def compute_perf_aggregation(perf_values: List[float], perf_agg: str) -> float:
         return float(np.max(perf_values))
 
 
-def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[Dict[Any, Any]] = None) -> str:
+def apply(
+    log_obj: Union[EventLog, EventStream, pd.DataFrame],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> str:
     """
     Gets the textual abstraction of the variants of a specified log object.
 
@@ -184,15 +213,32 @@ def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame], parameters: Optio
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    relative_frequency = exec_utils.get_param_value(Parameters.RELATIVE_FREQUENCY, parameters, False)
-    primary_performance_aggregation = exec_utils.get_param_value(Parameters.PRIMARY_PERFORMANCE_AGGREGATION, parameters, "mean")
-    secondary_performance_aggregation = exec_utils.get_param_value(Parameters.SECONDARY_PERFORMANCE_AGGREGATION, parameters, None)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    relative_frequency = exec_utils.get_param_value(
+        Parameters.RELATIVE_FREQUENCY, parameters, False
+    )
+    primary_performance_aggregation = exec_utils.get_param_value(
+        Parameters.PRIMARY_PERFORMANCE_AGGREGATION, parameters, "mean"
+    )
+    secondary_performance_aggregation = exec_utils.get_param_value(
+        Parameters.SECONDARY_PERFORMANCE_AGGREGATION, parameters, None
+    )
 
-    log_obj = log_converter.apply(log_obj, variant=log_converter.Variants.TO_DATA_FRAME, parameters=parameters)
+    log_obj = log_converter.apply(
+        log_obj,
+        variant=log_converter.Variants.TO_DATA_FRAME,
+        parameters=parameters,
+    )
     gdf = log_obj.groupby(case_id_key)
     variants = gdf[activity_key].agg(list).to_dict()
     variants = {c: tuple(v) for c, v in variants.items()}
@@ -201,7 +247,7 @@ def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame], parameters: Optio
     start_time = {x: y.timestamp() for x, y in start_time.items()}
     end_time = gdf.max().to_dict()
     end_time = {x: y.timestamp() for x, y in end_time.items()}
-    diff = {x: end_time[x]-start_time[x] for x in start_time}
+    diff = {x: end_time[x] - start_time[x] for x in start_time}
     vars_list = {}
     num_cases = log_obj[case_id_key].nunique()
 
@@ -211,13 +257,25 @@ def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame], parameters: Optio
         vars_list[v].append(diff[c])
 
     for k, v in vars_list.items():
-        freq = max(1, math.floor((len(v)*100.0)/num_cases)) if relative_frequency else len(v)
-        primary_perf = compute_perf_aggregation(v, primary_performance_aggregation)
-        secondary_perf = compute_perf_aggregation(v, secondary_performance_aggregation)
+        freq = (
+            max(1, math.floor((len(v) * 100.0) / num_cases))
+            if relative_frequency
+            else len(v)
+        )
+        primary_perf = compute_perf_aggregation(
+            v, primary_performance_aggregation
+        )
+        secondary_perf = compute_perf_aggregation(
+            v, secondary_performance_aggregation
+        )
         tup = (freq, primary_perf, secondary_perf)
         vars_list[k] = tup
 
     vars_list = [(x, y[0], y[1], y[2]) for x, y in vars_list.items()]
-    vars_list = sorted(vars_list, key=lambda x: (x[1], x[2], x[0]), reverse=True)
+    vars_list = sorted(
+        vars_list, key=lambda x: (x[1], x[2], x[0]), reverse=True
+    )
 
-    return abstraction_from_variants_freq_perf_list(vars_list, parameters=parameters)
+    return abstraction_from_variants_freq_perf_list(
+        vars_list, parameters=parameters
+    )

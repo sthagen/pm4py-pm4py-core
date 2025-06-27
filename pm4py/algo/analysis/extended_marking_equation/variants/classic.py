@@ -26,7 +26,10 @@ from typing import Tuple, List, Any
 import numpy as np
 
 from pm4py.objects.log.obj import Trace
-from pm4py.objects.petri_net.utils import align_utils, petri_utils as petri_utils
+from pm4py.objects.petri_net.utils import (
+    align_utils,
+    petri_utils as petri_utils,
+)
 from pm4py.objects.petri_net.utils.consumption_matrix import ConsumptionMatrix
 from pm4py.objects.petri_net.utils.incidence_matrix import IncidenceMatrix
 from pm4py.objects.petri_net.obj import PetriNet, Marking
@@ -57,8 +60,14 @@ https://link.springer.com/chapter/10.1007/978-3-319-98648-7_12
 
 
 class ExtendedMarkingEquationSolver(object):
-    def __init__(self, trace: Trace, sync_net: PetriNet, sync_im: Marking, sync_fm: Marking,
-                 parameters: Optional[Dict[Any, Any]] = None):
+    def __init__(
+        self,
+        trace: Trace,
+        sync_net: PetriNet,
+        sync_im: Marking,
+        sync_fm: Marking,
+        parameters: Optional[Dict[Any, Any]] = None,
+    ):
         """
         Constructor
 
@@ -91,31 +100,57 @@ class ExtendedMarkingEquationSolver(object):
         if parameters is None:
             parameters = {}
 
-        activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-        max_k_value = exec_utils.get_param_value(Parameters.MAX_K_VALUE, parameters, 5)
+        activity_key = exec_utils.get_param_value(
+            Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+        )
+        max_k_value = exec_utils.get_param_value(
+            Parameters.MAX_K_VALUE, parameters, 5
+        )
         costs = exec_utils.get_param_value(Parameters.COSTS, parameters, None)
-        split_idx = exec_utils.get_param_value(Parameters.SPLIT_IDX, parameters, None)
-        self.full_bootstrap_required = exec_utils.get_param_value(Parameters.FULL_BOOTSTRAP_REQUIRED, parameters, True)
+        split_idx = exec_utils.get_param_value(
+            Parameters.SPLIT_IDX, parameters, None
+        )
+        self.full_bootstrap_required = exec_utils.get_param_value(
+            Parameters.FULL_BOOTSTRAP_REQUIRED, parameters, True
+        )
 
         self.trace = [x[activity_key] for x in trace]
         if costs is None:
-            costs = align_utils.construct_standard_cost_function(sync_net, align_utils.SKIP)
+            costs = align_utils.construct_standard_cost_function(
+                sync_net, align_utils.SKIP
+            )
         if split_idx is None:
             split_idx = [i for i in range(1, len(trace))]
         self.split_idx = split_idx
         if len(self.split_idx) > max_k_value:
-            self.split_idx = points_subset.pick_chosen_points_list(max_k_value, self.split_idx)
+            self.split_idx = points_subset.pick_chosen_points_list(
+                max_k_value, self.split_idx
+            )
         self.k = len(self.split_idx) if len(self.split_idx) > 1 else 2
         self.sync_net = sync_net
         self.ini = sync_im
         self.fin = sync_fm
         self.costs = costs
-        self.incidence_matrix = exec_utils.get_param_value(Parameters.INCIDENCE_MATRIX, parameters,
-                                                           IncidenceMatrix(self.sync_net))
-        self.consumption_matrix = exec_utils.get_param_value(Parameters.CONSUMPTION_MATRIX, parameters,
-                                                             ConsumptionMatrix(self.sync_net))
-        self.A = exec_utils.get_param_value(Parameters.A, parameters, np.asmatrix(self.incidence_matrix.a_matrix))
-        self.C = exec_utils.get_param_value(Parameters.C, parameters, np.asmatrix(self.consumption_matrix.c_matrix))
+        self.incidence_matrix = exec_utils.get_param_value(
+            Parameters.INCIDENCE_MATRIX,
+            parameters,
+            IncidenceMatrix(self.sync_net),
+        )
+        self.consumption_matrix = exec_utils.get_param_value(
+            Parameters.CONSUMPTION_MATRIX,
+            parameters,
+            ConsumptionMatrix(self.sync_net),
+        )
+        self.A = exec_utils.get_param_value(
+            Parameters.A,
+            parameters,
+            np.asmatrix(self.incidence_matrix.a_matrix),
+        )
+        self.C = exec_utils.get_param_value(
+            Parameters.C,
+            parameters,
+            np.asmatrix(self.consumption_matrix.c_matrix),
+        )
 
         self.__build_entities()
 
@@ -134,11 +169,17 @@ class ExtendedMarkingEquationSolver(object):
         Encodes the aforementioned objects in Numpy matrixes
         """
         self.zeros = np.zeros((self.A.shape[0], self.A.shape[1]))
-        self.ini_vec = np.matrix(self.incidence_matrix.encode_marking(self.ini)).transpose()
-        self.fin_vec = np.matrix(self.incidence_matrix.encode_marking(self.fin)).transpose()
+        self.ini_vec = np.matrix(
+            self.incidence_matrix.encode_marking(self.ini)
+        ).transpose()
+        self.fin_vec = np.matrix(
+            self.incidence_matrix.encode_marking(self.fin)
+        ).transpose()
         transitions = self.incidence_matrix.transitions
         self.inv_indices = {y: x for x, y in transitions.items()}
-        self.inv_indices = [self.inv_indices[i] for i in range(len(self.inv_indices))]
+        self.inv_indices = [
+            self.inv_indices[i] for i in range(len(self.inv_indices))
+        ]
         self.c = self.__build_cost_vector()
         self.__build_variable_corr()
         self.__build_h_value_cost_vector()
@@ -149,8 +190,14 @@ class ExtendedMarkingEquationSolver(object):
         """
         Builds the complete cost vector of the integer problem
         """
-        c1 = [self.costs[self.inv_indices[i]] for i in range(len(self.inv_indices))] * self.k
-        c2 = [self.costs[self.inv_indices[i]] for i in range(len(self.inv_indices))] * (self.k - 1)
+        c1 = [
+            self.costs[self.inv_indices[i]]
+            for i in range(len(self.inv_indices))
+        ] * self.k
+        c2 = [
+            self.costs[self.inv_indices[i]]
+            for i in range(len(self.inv_indices))
+        ] * (self.k - 1)
         c3 = [0 for i in range(len(self.inv_indices))] * (self.k - 1)
         c = c1 + c2 + c3
         return c
@@ -193,7 +240,11 @@ class ExtendedMarkingEquationSolver(object):
         """
         Builds point (1) of the extended marking equation paper
         """
-        Aeq1 = np.hstack([self.A] + (2 * self.k - 2) * [self.zeros] + (self.k - 1) * [self.A])
+        Aeq1 = np.hstack(
+            [self.A]
+            + (2 * self.k - 2) * [self.zeros]
+            + (self.k - 1) * [self.A]
+        )
         return Aeq1
 
     def __build_Aeq2(self) -> np.ndarray:
@@ -304,7 +355,10 @@ class ExtendedMarkingEquationSolver(object):
         Aub2 = self.__build_Aub2()
         self.Aub = np.vstack([Aub1, Aub2])
 
-        if solver.DEFAULT_LP_SOLVER_VARIANT == solver.CVXOPT_SOLVER_CUSTOM_ALIGN:
+        if (
+            solver.DEFAULT_LP_SOLVER_VARIANT
+            == solver.CVXOPT_SOLVER_CUSTOM_ALIGN
+        ):
             from cvxopt import matrix
 
             self.Aeq_transf = matrix(self.Aeq.astype(np.float64))
@@ -357,7 +411,10 @@ class ExtendedMarkingEquationSolver(object):
 
         self.beq, self.bub = self.__calculate_vectors()
 
-        if solver.DEFAULT_LP_SOLVER_VARIANT == solver.CVXOPT_SOLVER_CUSTOM_ALIGN:
+        if (
+            solver.DEFAULT_LP_SOLVER_VARIANT
+            == solver.CVXOPT_SOLVER_CUSTOM_ALIGN
+        ):
             from cvxopt import matrix
 
             self.beq_transf = matrix(self.beq.astype(np.float64))
@@ -366,7 +423,13 @@ class ExtendedMarkingEquationSolver(object):
             self.beq_transf = self.beq
             self.bub_transf = self.bub
 
-        return self.c, self.Aub_transf, self.bub_transf, self.Aeq_transf, self.beq_transf
+        return (
+            self.c,
+            self.Aub_transf,
+            self.bub_transf,
+            self.Aeq_transf,
+            self.beq_transf,
+        )
 
     def change_ini_vec(self, ini: Marking):
         """
@@ -378,7 +441,9 @@ class ExtendedMarkingEquationSolver(object):
             Initial marking
         """
         self.ini = ini
-        self.ini_vec = np.matrix(self.incidence_matrix.encode_marking(ini)).transpose()
+        self.ini_vec = np.matrix(
+            self.incidence_matrix.encode_marking(ini)
+        ).transpose()
 
     def get_x_vector(self, sol_points: List[int]) -> List[int]:
         """
@@ -422,7 +487,9 @@ class ExtendedMarkingEquationSolver(object):
             h += sol_points[i] * self.c1[i]
         return int(h)
 
-    def get_activated_transitions(self, sol_points: List[int]) -> List[PetriNet.Transition]:
+    def get_activated_transitions(
+        self, sol_points: List[int]
+    ) -> List[PetriNet.Transition]:
         """
         Gets the transitions of the synchronous product net that are non-zero
         in the solution of the marking equation
@@ -467,7 +534,15 @@ class ExtendedMarkingEquationSolver(object):
         c, Aub, bub, Aeq, beq = self.get_components()
         parameters_solver = {}
         parameters_solver["use_ilp"] = True
-        sol = solver.apply(c, Aub, bub, Aeq, beq, variant=variant, parameters=parameters_solver)
+        sol = solver.apply(
+            c,
+            Aub,
+            bub,
+            Aeq,
+            beq,
+            variant=variant,
+            parameters=parameters_solver,
+        )
         sol_points = solver.get_points_from_sol(sol, variant=variant)
         if sol_points is not None:
             x = self.get_x_vector(sol_points)
@@ -476,7 +551,9 @@ class ExtendedMarkingEquationSolver(object):
             return h, x
         return None, None
 
-    def get_firing_sequence(self, x: List[int]) -> Tuple[List[PetriNet.Transition], bool, int]:
+    def get_firing_sequence(
+        self, x: List[int]
+    ) -> Tuple[List[PetriNet.Transition], bool, int]:
         """
         Gets a firing sequence from the X vector
 
@@ -495,14 +572,21 @@ class ExtendedMarkingEquationSolver(object):
             Number of explaned events by the firing sequence
         """
         activated_transitions = self.get_activated_transitions(x)
-        firing_sequence, reach_fm, explained_events = align_utils.search_path_among_sol(self.sync_net, self.ini,
-                                                                                        self.fin,
-                                                                                        activated_transitions)
+        firing_sequence, reach_fm, explained_events = (
+            align_utils.search_path_among_sol(
+                self.sync_net, self.ini, self.fin, activated_transitions
+            )
+        )
         return firing_sequence, reach_fm, explained_events
 
 
-def build(trace: Trace, sync_net: PetriNet, sync_im: Marking, sync_fm: Marking,
-          parameters: Optional[Dict[Any, Any]] = None) -> ExtendedMarkingEquationSolver:
+def build(
+    trace: Trace,
+    sync_net: PetriNet,
+    sync_im: Marking,
+    sync_fm: Marking,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> ExtendedMarkingEquationSolver:
     """
     Builds the extended marking equation out of a trace and a synchronous product net
 
@@ -535,10 +619,15 @@ def build(trace: Trace, sync_net: PetriNet, sync_im: Marking, sync_fm: Marking,
     if parameters is None:
         parameters = {}
 
-    return ExtendedMarkingEquationSolver(trace, sync_net, sync_im, sync_fm, parameters=parameters)
+    return ExtendedMarkingEquationSolver(
+        trace, sync_net, sync_im, sync_fm, parameters=parameters
+    )
 
 
-def get_h_value(solver: ExtendedMarkingEquationSolver, parameters: Optional[Dict[Any, Any]] = None) -> int:
+def get_h_value(
+    solver: ExtendedMarkingEquationSolver,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> int:
     """
     Gets the heuristics value from the extended marking equation
 

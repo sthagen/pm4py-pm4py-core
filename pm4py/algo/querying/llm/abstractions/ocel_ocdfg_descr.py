@@ -35,8 +35,9 @@ class Parameters(Enum):
 
 
 def __get_descr(curr, include_performance):
-    stru = "  \"%s\" -> \"%s\" (frequency (number of events) = %d, frequency (number of objects) = %d" % (
-    curr[1][0], curr[1][1], curr[2], curr[3])
+    stru = (
+        '  "%s" -> "%s" (frequency (number of events) = %d, frequency (number of objects) = %d' %
+        (curr[1][0], curr[1][1], curr[2], curr[3]))
     if include_performance:
         stru += ", duration = %.2f" % curr[5]
     stru += ")\n"
@@ -47,9 +48,15 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> str:
     if parameters is None:
         parameters = {}
 
-    max_len = exec_utils.get_param_value(Parameters.MAX_LEN, parameters, constants.OPENAI_MAX_LEN)
-    include_header = exec_utils.get_param_value(Parameters.INCLUDE_HEADER, parameters, True)
-    include_performance = exec_utils.get_param_value(Parameters.INCLUDE_PERFORMANCE, parameters, True)
+    max_len = exec_utils.get_param_value(
+        Parameters.MAX_LEN, parameters, constants.OPENAI_MAX_LEN
+    )
+    include_header = exec_utils.get_param_value(
+        Parameters.INCLUDE_HEADER, parameters, True
+    )
+    include_performance = exec_utils.get_param_value(
+        Parameters.INCLUDE_PERFORMANCE, parameters, True
+    )
 
     ocdfg = ocdfg_disc.apply(ocel, parameters=parameters)
 
@@ -63,15 +70,29 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> str:
     for obj in edges:
         ot = obj[0]
         e = obj[1]
-        edges_values.append([obj[0], obj[1],
-                             len(ocdfg["edges"]["event_couples"][ot][e]),
-                             len(ocdfg["edges"]["unique_objects"][ot][e]),
-                             len(ocdfg["edges"]["total_objects"][ot][e]),
-                             float(np.average(ocdfg["edges_performance"]["event_couples"][ot][e])),
-                             float(np.average(ocdfg["edges_performance"]["total_objects"][ot][e]))
-        ])
+        edges_values.append(
+            [
+                obj[0],
+                obj[1],
+                len(ocdfg["edges"]["event_couples"][ot][e]),
+                len(ocdfg["edges"]["unique_objects"][ot][e]),
+                len(ocdfg["edges"]["total_objects"][ot][e]),
+                float(
+                    np.average(
+                        ocdfg["edges_performance"]["event_couples"][ot][e]
+                    )
+                ),
+                float(
+                    np.average(
+                        ocdfg["edges_performance"]["total_objects"][ot][e]
+                    )
+                ),
+            ]
+        )
 
-    edges_values = sorted(edges_values, key=lambda x: (x[2], x[5], x[0], x[1]), reverse=True)
+    edges_values = sorted(
+        edges_values, key=lambda x: (x[2], x[5], x[0], x[1]), reverse=True
+    )
 
     i = 0
     curr_len = 0
@@ -95,7 +116,9 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> str:
 
     ret = ["\n"]
     if include_header:
-        ret.append("If I have an object-centric event log with the following directly follows graph (split between the different object types):\n")
+        ret.append(
+            "If I have an object-centric event log with the following directly follows graph (split between the different object types):\n"
+        )
 
         for ot in ot_edges:
             ret.append("\nObject type: %s\n" % (ot))

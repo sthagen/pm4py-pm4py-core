@@ -26,7 +26,9 @@ from pm4py.objects.petri_net.obj import PetriNet, Marking
 from pm4py.objects.trie.obj import Trie
 
 
-def __add_prefix_tree_node_to_petri(node: Trie, net: PetriNet, prev: PetriNet.Place, sink: PetriNet.Place):
+def __add_prefix_tree_node_to_petri(
+    node: Trie, net: PetriNet, prev: PetriNet.Place, sink: PetriNet.Place
+):
     """
     Internal method to add a prefix tree node to a Petri net.
     """
@@ -48,7 +50,9 @@ def __add_prefix_tree_node_to_petri(node: Trie, net: PetriNet, prev: PetriNet.Pl
         petri_utils.add_arc_from_to(trans, sink, net)
 
 
-def apply(prefix_tree: Trie, parameters: Optional[Dict[Any, Any]] = None) -> Tuple[PetriNet, Marking, Marking]:
+def apply(
+    prefix_tree: Trie, parameters: Optional[Dict[Any, Any]] = None
+) -> Tuple[PetriNet, Marking, Marking]:
     """
     Transforms a prefix tree to an accepting Petri net.
 
@@ -82,6 +86,8 @@ def apply(prefix_tree: Trie, parameters: Optional[Dict[Any, Any]] = None) -> Tup
     im[source] = 1
     fm[sink] = 1
 
-    __add_prefix_tree_node_to_petri(list(prefix_tree.children)[0], net, source, sink)
+    __add_prefix_tree_node_to_petri(
+        list(prefix_tree.children)[0], net, source, sink
+    )
 
     return net, im, fm

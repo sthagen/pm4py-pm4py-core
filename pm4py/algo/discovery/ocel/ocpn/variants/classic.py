@@ -43,7 +43,9 @@ class Parameters(Enum):
     DIAGNOSTICS_WITH_TBR = "diagnostics_with_token_based_replay"
 
 
-def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, Any]:
+def apply(
+    ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None
+) -> Dict[str, Any]:
     """
     Discovers an object-centric Petri net (without annotation) from the given object-centric event log,
     using the Inductive Miner as process discovery algorithm.
@@ -99,9 +101,15 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, 
     if parameters is None:
         parameters = {}
 
-    double_arc_threshold = exec_utils.get_param_value(Parameters.DOUBLE_ARC_THRESHOLD, parameters, 0.8)
-    inductive_miner_variant = exec_utils.get_param_value(Parameters.INDUCTIVE_MINER_VARIANT, parameters, "im")
-    diagnostics_with_tbr = exec_utils.get_param_value(Parameters.DIAGNOSTICS_WITH_TBR, parameters, False)
+    double_arc_threshold = exec_utils.get_param_value(
+        Parameters.DOUBLE_ARC_THRESHOLD, parameters, 0.8
+    )
+    inductive_miner_variant = exec_utils.get_param_value(
+        Parameters.INDUCTIVE_MINER_VARIANT, parameters, "im"
+    )
+    diagnostics_with_tbr = exec_utils.get_param_value(
+        Parameters.DIAGNOSTICS_WITH_TBR, parameters, False
+    )
 
     ocdfg_parameters = copy(parameters)
     ocdfg_parameters["compute_edges_performance"] = False
@@ -114,11 +122,19 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, 
     for ot in ocpn["object_types"]:
         activities_eo = ocpn["activities_ot"]["total_objects"][ot]
 
-        start_activities = {x: len(y) for x, y in ocpn["start_activities"]["events"][ot].items()}
-        end_activities = {x: len(y) for x, y in ocpn["end_activities"]["events"][ot].items()}
+        start_activities = {
+            x: len(y)
+            for x, y in ocpn["start_activities"]["events"][ot].items()
+        }
+        end_activities = {
+            x: len(y) for x, y in ocpn["end_activities"]["events"][ot].items()
+        }
         dfg = {}
         if ot in ocpn["edges"]["event_couples"]:
-            dfg = {x: len(y) for x, y in ocpn["edges"]["event_couples"][ot].items()}
+            dfg = {
+                x: len(y)
+                for x, y in ocpn["edges"]["event_couples"][ot].items()
+            }
 
         is_activity_double = {}
         for act in activities_eo:
@@ -140,9 +156,10 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, 
         # disables the fallthroughs, as computing the model on a myriad of different object types
         # could be really expensive
         im_parameters["disable_fallthroughs"] = True
-        # for performance reasons, also disable the strict sequence cut (use the normal sequence cut)
+        # for performance reasons, also disable the strict sequence cut (use
+        # the normal sequence cut)
         im_parameters["disable_strict_sequence_cut"] = True
-        
+
         process_tree = None
         flat_log = None
 
@@ -155,9 +172,15 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, 
             obj._graph = Counter(dfg)
             obj._start_activities = Counter(start_activities)
             obj._end_activities = Counter(end_activities)
-            process_tree = inductive_miner.apply(obj, variant=inductive_miner.Variants.IMd, parameters=im_parameters)
+            process_tree = inductive_miner.apply(
+                obj,
+                variant=inductive_miner.Variants.IMd,
+                parameters=im_parameters,
+            )
         elif inductive_miner_variant == "im":
-            process_tree = inductive_miner.apply(flat_log, parameters=im_parameters)
+            process_tree = inductive_miner.apply(
+                flat_log, parameters=im_parameters
+            )
 
         petri_net = tree_converter.apply(process_tree, parameters=parameters)
 
@@ -166,24 +189,39 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, 
             tbr_parameters["enable_pltr_fitness"] = True
             tbr_parameters["show_progress_bar"] = False
 
-            replayed_traces, place_fitness_per_trace, transition_fitness_per_trace, notexisting_activities_in_model = token_based_replay.apply(
-                flat_log, petri_net[0], petri_net[1], petri_net[2], parameters=tbr_parameters)
-            place_diagnostics = {place: {"m": 0, "r": 0, "c": 0, "p": 0} for place in place_fitness_per_trace}
+            (
+                replayed_traces,
+                place_fitness_per_trace,
+                transition_fitness_per_trace,
+                notexisting_activities_in_model,
+            ) = token_based_replay.apply(
+                flat_log,
+                petri_net[0],
+                petri_net[1],
+                petri_net[2],
+                parameters=tbr_parameters,
+            )
+            place_diagnostics = {
+                place: {"m": 0, "r": 0, "c": 0, "p": 0}
+                for place in place_fitness_per_trace
+            }
             trans_count = {trans: 0 for trans in petri_net[0].transitions}
-            # computes the missing, remaining, consumed, and produced tokens per place.
+            # computes the missing, remaining, consumed, and produced tokens
+            # per place.
             for place, res in place_fitness_per_trace.items():
-                place_diagnostics[place]['m'] += res['m']
-                place_diagnostics[place]['r'] += res['r']
-                place_diagnostics[place]['c'] += res['c']
-                place_diagnostics[place]['p'] += res['p']
+                place_diagnostics[place]["m"] += res["m"]
+                place_diagnostics[place]["r"] += res["r"]
+                place_diagnostics[place]["c"] += res["c"]
+                place_diagnostics[place]["p"] += res["p"]
 
-            # counts the number of times a transition has been fired during the replay.
+            # counts the number of times a transition has been fired during the
+            # replay.
             for trace in replayed_traces:
-                for trans in trace['activated_transitions']:
+                for trans in trace["activated_transitions"]:
                     trans_count[trans] += 1
 
             tbr_results[ot] = (place_diagnostics, trans_count)
-        
+
         petri_nets[ot] = petri_net
 
     ocpn["petri_nets"] = petri_nets

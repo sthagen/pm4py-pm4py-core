@@ -25,7 +25,10 @@ from typing import List, Collection, Any, Optional, Generic, Dict
 
 from pm4py.algo.discovery.inductive.cuts.abc import Cut, T
 from pm4py.algo.discovery.inductive.dtypes.im_dfg import InductiveDFG
-from pm4py.algo.discovery.inductive.dtypes.im_ds import IMDataStructureUVCL, IMDataStructureDFG
+from pm4py.algo.discovery.inductive.dtypes.im_ds import (
+    IMDataStructureUVCL,
+    IMDataStructureDFG,
+)
 from pm4py.objects.dfg import util as dfu
 from pm4py.objects.dfg.obj import DFG
 from pm4py.objects.process_tree.obj import Operator, ProcessTree
@@ -34,11 +37,15 @@ from pm4py.objects.process_tree.obj import Operator, ProcessTree
 class ConcurrencyCut(Cut[T], ABC, Generic[T]):
 
     @classmethod
-    def operator(cls, parameters: Optional[Dict[str, Any]] = None) -> ProcessTree:
+    def operator(
+        cls, parameters: Optional[Dict[str, Any]] = None
+    ) -> ProcessTree:
         return ProcessTree(operator=Operator.PARALLEL)
 
     @classmethod
-    def holds(cls, obj: T, parameters: Optional[Dict[str, Any]] = None) -> Optional[List[Collection[Any]]]:
+    def holds(
+        cls, obj: T, parameters: Optional[Dict[str, Any]] = None
+    ) -> Optional[List[Collection[Any]]]:
         dfg = obj.dfg
         alphabet = dfu.get_vertices(dfg)
         alphabet = sorted(list(alphabet))
@@ -58,7 +65,10 @@ class ConcurrencyCut(Cut[T], ABC, Generic[T]):
                 while j < len(groups):
                     for act1 in groups[i]:
                         for act2 in groups[j]:
-                            if (act1, act2) not in edges or (act2, act1) not in edges:
+                            if (act1, act2) not in edges or (
+                                act2,
+                                act1,
+                            ) not in edges:
                                 groups[i] = groups[i].union(groups[j])
                                 del groups[j]
                                 cont = True
@@ -75,8 +85,12 @@ class ConcurrencyCut(Cut[T], ABC, Generic[T]):
         groups = list(sorted(groups, key=lambda g: len(g)))
         i = 0
         while i < len(groups) and len(groups) > 1:
-            if len(groups[i].intersection(set(dfg.start_activities.keys()))) > 0 and len(
-                    groups[i].intersection(set(dfg.end_activities.keys()))) > 0:
+            if (
+                len(groups[i].intersection(set(dfg.start_activities.keys())))
+                > 0
+                and len(groups[i].intersection(set(dfg.end_activities.keys())))
+                > 0
+            ):
                 i += 1
                 continue
             group = groups[i]
@@ -92,7 +106,12 @@ class ConcurrencyCut(Cut[T], ABC, Generic[T]):
 class ConcurrencyCutUVCL(ConcurrencyCut[IMDataStructureUVCL]):
 
     @classmethod
-    def project(cls, obj: IMDataStructureUVCL, groups: List[Collection[Any]], parameters: Optional[Dict[str, Any]] = None) -> List[IMDataStructureUVCL]:
+    def project(
+        cls,
+        obj: IMDataStructureUVCL,
+        groups: List[Collection[Any]],
+        parameters: Optional[Dict[str, Any]] = None,
+    ) -> List[IMDataStructureUVCL]:
         r = list()
         for g in groups:
             c = Counter()
@@ -105,7 +124,12 @@ class ConcurrencyCutUVCL(ConcurrencyCut[IMDataStructureUVCL]):
 class ConcurrencyCutDFG(ConcurrencyCut[IMDataStructureDFG]):
 
     @classmethod
-    def project(cls, obj: IMDataStructureDFG, groups: List[Collection[Any]], parameters: Optional[Dict[str, Any]] = None) -> List[IMDataStructureDFG]:
+    def project(
+        cls,
+        obj: IMDataStructureDFG,
+        groups: List[Collection[Any]],
+        parameters: Optional[Dict[str, Any]] = None,
+    ) -> List[IMDataStructureDFG]:
         dfgs = []
         skippable = []
         for g in groups:
@@ -116,11 +140,18 @@ class ConcurrencyCutDFG(ConcurrencyCut[IMDataStructureDFG]):
             for a in obj.dfg.end_activities:
                 if a in g:
                     dfn.end_activities[a] = obj.dfg.end_activities[a]
-            for (a, b) in obj.dfg.graph:
+            for a, b in obj.dfg.graph:
                 if a in g and b in g:
                     dfn.graph[(a, b)] = obj.dfg.graph[(a, b)]
             skippable.append(False)
             dfgs.append(dfn)
         r = list()
-        [r.append(IMDataStructureDFG(InductiveDFG(dfg=dfgs[i], skip=skippable[i]))) for i in range(len(dfgs))]
+        [
+            r.append(
+                IMDataStructureDFG(
+                    InductiveDFG(dfg=dfgs[i], skip=skippable[i])
+                )
+            )
+            for i in range(len(dfgs))
+        ]
         return r

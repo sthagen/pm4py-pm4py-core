@@ -41,8 +41,10 @@ class Parameters(Enum):
     KEEP_ONCE_PER_CASE = "keep_once_per_case"
 
 
-def get_language(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Union[
-    Dict[List[str], float], Dict[str, float]]:
+def get_language(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Union[Dict[List[str], float], Dict[str, float]]:
     """
     Gets the stochastic language of the log (from the variants)
 
@@ -59,9 +61,14 @@ def get_language(log: EventLog, parameters: Optional[Dict[Union[str, Parameters]
         Dictionary containing the stochastic language of the log
         (variant associated to a number between 0 and 1; the sum is 1)
     """
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
     vars = get_variants(log, parameters=parameters)
-    vars = {variants_util.get_activities_from_variant(x): len(y) for x, y in vars.items()}
+    vars = {
+        variants_util.get_activities_from_variant(x): len(y)
+        for x, y in vars.items()
+    }
 
     all_values_sum = sum(vars.values())
     for x in vars:
@@ -69,8 +76,10 @@ def get_language(log: EventLog, parameters: Optional[Dict[Union[str, Parameters]
     return vars
 
 
-def get_variants(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Union[
-    Dict[List[str], List[Trace]], Dict[str, List[Trace]]]:
+def get_variants(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Union[Dict[List[str], List[Trace]], Dict[str, List[Trace]]]:
     """
     Gets a dictionary whose key is the variant and as value there
     is the list of traces that share the variant
@@ -88,18 +97,25 @@ def get_variants(log: EventLog, parameters: Optional[Dict[Union[str, Parameters]
     variant
         Dictionary with variant as the key and the list of traces as the value
     """
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    variants_trace_idx = get_variants_from_log_trace_idx(log, parameters=parameters)
+    variants_trace_idx = get_variants_from_log_trace_idx(
+        log, parameters=parameters
+    )
 
     all_var = convert_variants_trace_idx_to_trace_obj(log, variants_trace_idx)
 
     return all_var
 
 
-def get_variants_along_with_case_durations(log: EventLog,
-                                           parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Tuple[
-    Union[Dict[List[str], List[Trace]], Dict[str, List[Trace]]], np.array]:
+def get_variants_along_with_case_durations(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Tuple[
+    Union[Dict[List[str], List[Trace]], Dict[str, List[Trace]]], np.array
+]:
     """
     Gets a dictionary whose key is the variant and as value there
     is the list of traces that share the variant
@@ -120,11 +136,17 @@ def get_variants_along_with_case_durations(log: EventLog,
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY)
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY
+    )
 
-    variants_trace_idx = get_variants_from_log_trace_idx(log, parameters=parameters)
+    variants_trace_idx = get_variants_from_log_trace_idx(
+        log, parameters=parameters
+    )
     all_var = convert_variants_trace_idx_to_trace_obj(log, variants_trace_idx)
 
     all_durations = {}
@@ -132,8 +154,16 @@ def get_variants_along_with_case_durations(log: EventLog,
     for var in all_var:
         all_durations[var] = []
         for trace in all_var[var]:
-            if trace and timestamp_key in trace[-1] and timestamp_key in trace[0]:
-                all_durations[var].append((trace[-1][timestamp_key] - trace[0][timestamp_key]).total_seconds())
+            if (
+                trace
+                and timestamp_key in trace[-1]
+                and timestamp_key in trace[0]
+            ):
+                all_durations[var].append(
+                    (
+                        trace[-1][timestamp_key] - trace[0][timestamp_key]
+                    ).total_seconds()
+                )
             else:
                 all_durations[var].append(0)
         all_durations[var] = np.array(all_durations[var])
@@ -162,11 +192,15 @@ def get_variants_from_log_trace_idx(log, parameters=None):
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
     variants = {}
     for trace_idx, trace in enumerate(log):
-        variant = variants_util.get_variant_from_trace(trace, parameters=parameters)
+        variant = variants_util.get_variant_from_trace(
+            trace, parameters=parameters
+        )
         if variant not in variants:
             variants[variant] = []
         variants[variant].append(trace_idx)

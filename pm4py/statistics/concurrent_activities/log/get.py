@@ -35,7 +35,10 @@ class Parameters(Enum):
     STRICT = "strict"
 
 
-def apply(interval_log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[Tuple[str, str], int]:
+def apply(
+    interval_log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[Tuple[str, str], int]:
     """
     Gets the number of times for which two activities have been concurrent in the log
 
@@ -60,13 +63,25 @@ def apply(interval_log: EventLog, parameters: Optional[Dict[Union[str, Parameter
     if parameters is None:
         parameters = {}
 
-    interval_log = converter.apply(interval_log, variant=converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    interval_log = converter.apply(
+        interval_log,
+        variant=converter.Variants.TO_EVENT_LOG,
+        parameters=parameters,
+    )
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters,
-                                                     xes_constants.DEFAULT_TIMESTAMP_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
     strict = exec_utils.get_param_value(Parameters.STRICT, parameters, False)
 
     ret_dict = {}
@@ -84,7 +99,8 @@ def apply(interval_log: EventLog, parameters: Optional[Dict[Union[str, Parameter
                 act2 = sorted_trace[j][activity_key]
                 if max(ts1, ts2) <= min(tc1, tc2):
                     if not strict or max(ts1, ts2) < min(tc1, tc2):
-                        # avoid getting two entries for the same set of concurrent activities
+                        # avoid getting two entries for the same set of
+                        # concurrent activities
                         tup = tuple(sorted((act1, act2)))
                         if tup not in ret_dict:
                             ret_dict[tup] = 0

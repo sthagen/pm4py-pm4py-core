@@ -41,7 +41,10 @@ class Parameters(Enum):
 BETA = Parameters.BETA
 
 
-def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> SNA:
+def apply(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> SNA:
     """
     Calculates the HW metric
 
@@ -62,16 +65,30 @@ def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]]
     if parameters is None:
         parameters = {}
 
-    resource_key = exec_utils.get_param_value(Parameters.RESOURCE_KEY, parameters, xes.DEFAULT_RESOURCE_KEY)
+    resource_key = exec_utils.get_param_value(
+        Parameters.RESOURCE_KEY, parameters, xes.DEFAULT_RESOURCE_KEY
+    )
     beta = exec_utils.get_param_value(Parameters.BETA, parameters, 0)
 
-    parameters_variants = {variants_filter.Parameters.ACTIVITY_KEY: resource_key,
-                           variants_filter.Parameters.ATTRIBUTE_KEY: resource_key}
-    variants_occ = {x: len(y) for x, y in variants_filter.get_variants(log, parameters=parameters_variants).items()}
+    parameters_variants = {
+        variants_filter.Parameters.ACTIVITY_KEY: resource_key,
+        variants_filter.Parameters.ATTRIBUTE_KEY: resource_key,
+    }
+    variants_occ = {
+        x: len(y)
+        for x, y in variants_filter.get_variants(
+            log, parameters=parameters_variants
+        ).items()
+    }
     variants_resources = list(variants_occ.keys())
-    resources = [variants_util.get_activities_from_variant(y) for y in variants_resources]
+    resources = [
+        variants_util.get_activities_from_variant(y)
+        for y in variants_resources
+    ]
 
-    flat_list = sorted(list(set([item for sublist in resources for item in sublist])))
+    flat_list = sorted(
+        list(set([item for sublist in resources for item in sublist]))
+    )
 
     metric_matrix = numpy.zeros((len(flat_list), len(flat_list)))
 
@@ -82,24 +99,27 @@ def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]]
         rvj = variants_resources[idx]
         for i in range(len(rv) - 1):
             res_i = flat_list.index(rv[i])
-            if not res_i in sum_i_to_j:
+            if res_i not in sum_i_to_j:
                 sum_i_to_j[res_i] = {}
             for j in range(i + 1, len(rv)):
                 res_j = flat_list.index(rv[j])
-                if not res_j in sum_i_to_j[res_i]:
+                if res_j not in sum_i_to_j[res_i]:
                     sum_i_to_j[res_i][res_j] = 0
                 if beta == 0:
                     sum_i_to_j[res_i][res_j] += variants_occ[rvj]
                     dividend += variants_occ[rvj]
                     break
                 else:
-                    sum_i_to_j[res_i][res_j] += variants_occ[rvj] * (beta ** (j - i - 1))
+                    sum_i_to_j[res_i][res_j] += variants_occ[rvj] * (
+                        beta ** (j - i - 1)
+                    )
                     dividend += variants_occ[rvj] * (beta ** (j - i - 1))
 
     connections = {}
     for key1 in sum_i_to_j:
         for key2 in sum_i_to_j[key1]:
-            connections[(flat_list[key1], flat_list[key2])] = sum_i_to_j[key1][key2] / dividend
+            connections[(flat_list[key1], flat_list[key2])] = (
+                sum_i_to_j[key1][key2] / dividend
+            )
 
     return SNA(connections, True)
-

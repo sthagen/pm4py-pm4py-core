@@ -37,7 +37,10 @@ class Parameters(Enum):
     ACTIVITY_KEY = constants.PARAMETER_CONSTANT_ACTIVITY_KEY
 
 
-def apply(df: pd.DataFrame, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> List[Role]:
+def apply(
+    df: pd.DataFrame,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> List[Role]:
     """
     Gets the roles (group of different activities done by similar resources)
     out of the log
@@ -57,8 +60,14 @@ def apply(df: pd.DataFrame, parameters: Optional[Dict[Union[str, Parameters], An
     if parameters is None:
         parameters = {}
 
-    resource_key = exec_utils.get_param_value(Parameters.RESOURCE_KEY, parameters, xes.DEFAULT_RESOURCE_KEY)
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes.DEFAULT_NAME_KEY)
-    activity_resource_couples = Counter(df.groupby([resource_key, activity_key]).size().to_dict())
+    resource_key = exec_utils.get_param_value(
+        Parameters.RESOURCE_KEY, parameters, xes.DEFAULT_RESOURCE_KEY
+    )
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes.DEFAULT_NAME_KEY
+    )
+    activity_resource_couples = Counter(
+        df.groupby([resource_key, activity_key]).size().to_dict()
+    )
 
     return algorithm.apply(activity_resource_couples, parameters=parameters)

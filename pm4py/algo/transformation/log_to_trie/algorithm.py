@@ -32,17 +32,26 @@ import pandas as pd
 
 class Parameters(Enum):
     ACTIVITY_KEY = util.constants.PARAMETER_CONSTANT_ACTIVITY_KEY
-    MAX_PATH_LENGTH = "max_path_length"  # New parameter for maximum path length
+    MAX_PATH_LENGTH = (
+        "max_path_length"  # New parameter for maximum path length
+    )
 
 
-def apply(log: Union[EventLog, pd.DataFrame], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Trie:
+def apply(
+    log: Union[EventLog, pd.DataFrame],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Trie:
     parameters = parameters if parameters is not None else dict()
 
     # Extract the maximum path length if provided
-    max_path_length = exec_utils.get_param_value(Parameters.MAX_PATH_LENGTH, parameters, None)
+    max_path_length = exec_utils.get_param_value(
+        Parameters.MAX_PATH_LENGTH, parameters, None
+    )
 
     if pandas_utils.check_is_pandas_dataframe(log):
-        variants = get_variants_pandas.get_variants_set(log, parameters=parameters)
+        variants = get_variants_pandas.get_variants_set(
+            log, parameters=parameters
+        )
     else:
         variants = get_variants_log.get_variants(log, parameters=parameters)
 

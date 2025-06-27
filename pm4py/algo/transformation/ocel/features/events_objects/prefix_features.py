@@ -61,25 +61,44 @@ def apply(exploded_ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     if parameters is None:
         parameters = {}
 
-    enable_all = exec_utils.get_param_value(Parameters.ENABLE_ALL_PREFIX_FEATURES, parameters, True)
-    enable_prefix_length = exec_utils.get_param_value(Parameters.ENABLE_PREFIX_LENGTH, parameters, enable_all)
-    enable_prefix_timediff = exec_utils.get_param_value(Parameters.ENABLE_PREFIX_TIMEDIFF, parameters, enable_all)
-    enable_prefix_1h_encoding = exec_utils.get_param_value(Parameters.ENABLE_PREFIX_ONE_HOT_ENCODING, parameters, enable_all)
+    enable_all = exec_utils.get_param_value(
+        Parameters.ENABLE_ALL_PREFIX_FEATURES, parameters, True
+    )
+    enable_prefix_length = exec_utils.get_param_value(
+        Parameters.ENABLE_PREFIX_LENGTH, parameters, enable_all
+    )
+    enable_prefix_timediff = exec_utils.get_param_value(
+        Parameters.ENABLE_PREFIX_TIMEDIFF, parameters, enable_all
+    )
+    enable_prefix_1h_encoding = exec_utils.get_param_value(
+        Parameters.ENABLE_PREFIX_ONE_HOT_ENCODING, parameters, enable_all
+    )
 
-    ordered_events = parameters["ordered_events"] if "ordered_events" in parameters else exploded_ocel.events[
-        exploded_ocel.event_id_column].to_numpy()
+    ordered_events = (
+        parameters["ordered_events"]
+        if "ordered_events" in parameters
+        else exploded_ocel.events[exploded_ocel.event_id_column].to_numpy()
+    )
 
     datas = []
     feature_namess = []
 
-    prefixes = event_prefix_suffix_per_obj.apply(exploded_ocel, parameters=parameters)
+    prefixes = event_prefix_suffix_per_obj.apply(
+        exploded_ocel, parameters=parameters
+    )
     for e1 in prefixes:
         for obj in prefixes[e1]:
             val = prefixes[e1][obj]
             break
         prefixes[e1] = val
 
-    map0 = exploded_ocel.events[[exploded_ocel.event_id_column, exploded_ocel.event_activity, exploded_ocel.event_timestamp]].to_dict("records")
+    map0 = exploded_ocel.events[
+        [
+            exploded_ocel.event_id_column,
+            exploded_ocel.event_activity,
+            exploded_ocel.event_timestamp,
+        ]
+    ].to_dict("records")
     all_activities = set()
     evid_act_map = {}
     evid_timest_map = {}
@@ -107,17 +126,23 @@ def apply(exploded_ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
         feature_namess.append("@@ev_obj_pref_timediff")
         for i, ev in enumerate(ordered_events):
             if ev in prefixes:
-                datas[i].append(float(evid_timest_map[ev] - evid_timest_map[prefixes[ev][0]]))
+                datas[i].append(
+                    float(
+                        evid_timest_map[ev] - evid_timest_map[prefixes[ev][0]]
+                    )
+                )
             else:
                 datas[i].append(0.0)
 
     if enable_prefix_1h_encoding:
         for act in all_activities:
-            feature_namess.append("@@ev_obj_pref_act_"+act)
+            feature_namess.append("@@ev_obj_pref_act_" + act)
         for i, ev in enumerate(ordered_events):
             pref_activities = Counter()
             if ev in prefixes:
-                pref_activities = Counter([evid_act_map[x] for x in prefixes[ev]])
+                pref_activities = Counter(
+                    [evid_act_map[x] for x in prefixes[ev]]
+                )
             arr = []
             for act in all_activities:
                 arr.append(float(pref_activities[act]))

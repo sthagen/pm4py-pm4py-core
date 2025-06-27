@@ -52,10 +52,13 @@ def apply(conn, parameters: Optional[Dict[Any, Any]] = None) -> pd.DataFrame:
 
     import pm4py
 
-    connection_string = exec_utils.get_param_value(Parameters.CONNECTION_STRING, parameters, None)
+    connection_string = exec_utils.get_param_value(
+        Parameters.CONNECTION_STRING, parameters, None
+    )
 
     if conn is None:
         import pyodbc
+
         conn = pyodbc.connect(connection_string)
 
     curs = conn.cursor()
@@ -76,11 +79,19 @@ def apply(conn, parameters: Optional[Dict[Any, Any]] = None) -> pd.DataFrame:
         ai.EXECUTION_ID_,
         ai.START_TIME_;
     """
-    columns = ["processID", "case:concept:name", "concept:name", "time:timestamp", "org:resource"]
+    columns = [
+        "processID",
+        "case:concept:name",
+        "concept:name",
+        "time:timestamp",
+        "org:resource",
+    ]
 
     curs.execute(query)
     dataframe = curs.fetchall()
-    dataframe = pandas_utils.instantiate_dataframe_from_records(dataframe, columns=columns)
+    dataframe = pandas_utils.instantiate_dataframe_from_records(
+        dataframe, columns=columns
+    )
     dataframe = pm4py.format_dataframe(dataframe)
 
     curs.close()

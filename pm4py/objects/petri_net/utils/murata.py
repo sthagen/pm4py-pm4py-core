@@ -30,7 +30,9 @@ import importlib.util
 from pm4py.objects.petri_net.obj import PetriNet, Marking
 
 
-def apply_reduction(net: PetriNet, im: Marking, fm: Marking) -> Tuple[PetriNet, Marking, Marking]:
+def apply_reduction(
+    net: PetriNet, im: Marking, fm: Marking
+) -> Tuple[PetriNet, Marking, Marking]:
     """
     Apply the Murata reduction to an accepting Petri net, removing the structurally redundant places.
 
@@ -136,11 +138,22 @@ def apply_reduction(net: PetriNet, im: Marking, fm: Marking) -> Tuple[PetriNet, 
         else:
             if constants.SHOW_INTERNAL_WARNINGS:
                 warnings.warn(
-                    "solution from scipy may be unstable. Please install PuLP (pip install pulp) for fully reliable results.")
+                    "solution from scipy may be unstable. Please install PuLP (pip install pulp) for fully reliable results."
+                )
 
-        xx = solver.apply(c, Aub, bub, Aeq, beq, variant=proposed_solver, parameters={"integrality": integrality})
+        xx = solver.apply(
+            c,
+            Aub,
+            bub,
+            Aeq,
+            beq,
+            variant=proposed_solver,
+            parameters={"integrality": integrality},
+        )
 
-        if (hasattr(xx, "success") and xx.success) or (hasattr(xx, "sol_status") and xx.sol_status > -1):
+        if (hasattr(xx, "success") and xx.success) or (
+            hasattr(xx, "sol_status") and xx.sol_status > -1
+        ):
             redundant.add(place)
 
     for place in redundant:

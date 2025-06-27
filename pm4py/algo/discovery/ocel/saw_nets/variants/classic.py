@@ -56,7 +56,9 @@ def __ot_to_color(ot: str) -> str:
     return ret
 
 
-def __discover_petri_and_consumption_stats_tbr(ocel: OCEL, obj_types, parameters: Optional[Dict[Any, Any]] = None):
+def __discover_petri_and_consumption_stats_tbr(
+    ocel: OCEL, obj_types, parameters: Optional[Dict[Any, Any]] = None
+):
     """
     Flattens the OCEL, discovers Petri nets for the flattened log,
     and by the token-based replay measures the usage of the elements
@@ -65,11 +67,16 @@ def __discover_petri_and_consumption_stats_tbr(ocel: OCEL, obj_types, parameters
     ocpn_nets = {}
 
     for ot in obj_types:
-        flat_log = log_converter.apply(flattening.flatten(ocel, ot), variant=log_converter.Variants.TO_EVENT_LOG)
+        flat_log = log_converter.apply(
+            flattening.flatten(ocel, ot),
+            variant=log_converter.Variants.TO_EVENT_LOG,
+        )
         process_tree = inductive_miner.apply(flat_log, parameters=parameters)
         net, im, fm = pt_converter.apply(process_tree)
         ocpn_nets[ot] = (net, im, fm)
-        replayed_traces = token_replay.apply(flat_log, net, im, fm, parameters=parameters)
+        replayed_traces = token_replay.apply(
+            flat_log, net, im, fm, parameters=parameters
+        )
         transes_ev_ids = {x: [] for x in net.transitions}
         for i in range(len(flat_log)):
             flat_trace = flat_log[i]
@@ -83,7 +90,9 @@ def __discover_petri_and_consumption_stats_tbr(ocel: OCEL, obj_types, parameters
                     j = j + 1
                 z = z + 1
         for x in transes_ev_ids:
-            transes_ev_ids[x] = dict(Counter(list(Counter(transes_ev_ids[x]).values())))
+            transes_ev_ids[x] = dict(
+                Counter(list(Counter(transes_ev_ids[x]).values()))
+            )
         saw_weights[ot] = transes_ev_ids
 
     return ocpn_nets, saw_weights
@@ -102,10 +111,18 @@ def __get_ot_saw_nets(obj_types, ocpn_nets, saw_weights):
         for trans in net.transitions:
             saw_net.transitions.add(trans)
         for arc in net.arcs:
-            new_arc = petri_utils.add_arc_from_to(arc.source, arc.target, saw_net, type="stochastic_arc")
-            if isinstance(new_arc.source, PetriNet.Transition) and new_arc.source in saw_weights[ot]:
+            new_arc = petri_utils.add_arc_from_to(
+                arc.source, arc.target, saw_net, type="stochastic_arc"
+            )
+            if (
+                isinstance(new_arc.source, PetriNet.Transition)
+                and new_arc.source in saw_weights[ot]
+            ):
                 new_arc.weight = saw_weights[ot][new_arc.source]
-            elif isinstance(new_arc.target, PetriNet.Transition) and new_arc.target in saw_weights[ot]:
+            elif (
+                isinstance(new_arc.target, PetriNet.Transition)
+                and new_arc.target in saw_weights[ot]
+            ):
                 new_arc.weight = saw_weights[ot][new_arc.target]
         ot_saw_nets[ot] = saw_net
     return ot_saw_nets
@@ -140,13 +157,20 @@ def __get_multi_saw_net(ot_saw_nets):
             else:
                 el_corr[trans] = el_corr[trans_unq_corr[trans.label]]
         for arc in saw_net.arcs:
-            new_arc = petri_utils.add_arc_from_to(el_corr[arc.source], el_corr[arc.target], multi_saw_net, weight=arc.weight)
+            new_arc = petri_utils.add_arc_from_to(
+                el_corr[arc.source],
+                el_corr[arc.target],
+                multi_saw_net,
+                weight=arc.weight,
+            )
             decorations_multi_saw_net[new_arc] = ot_color
 
     return multi_saw_net, decorations_multi_saw_net
 
 
-def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, Any]:
+def apply(
+    ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None
+) -> Dict[str, Any]:
     """
     Discovers a SAW net representing the behavior of the provided object-centric event log.
 
@@ -169,18 +193,27 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, 
     if parameters is None:
         parameters = {}
 
-    object_type = exec_utils.get_param_value(Parameters.OBJECT_TYPE, parameters, ocel.object_type_column)
+    object_type = exec_utils.get_param_value(
+        Parameters.OBJECT_TYPE, parameters, ocel.object_type_column
+    )
     obj_types = pandas_utils.format_unique(ocel.objects[object_type].unique())
 
     disc_parameters = copy(parameters)
     # disables the fallthroughs, as computing the model on a myriad of different object types
     # could be really expensive
     disc_parameters["disable_fallthroughs"] = True
-    # for performance reasons, also disable the strict sequence cut (use the normal sequence cut)
+    # for performance reasons, also disable the strict sequence cut (use the
+    # normal sequence cut)
     disc_parameters["disable_strict_sequence_cut"] = True
-    ocpn_nets, saw_weights = __discover_petri_and_consumption_stats_tbr(ocel, obj_types, parameters=disc_parameters)
+    ocpn_nets, saw_weights = __discover_petri_and_consumption_stats_tbr(
+        ocel, obj_types, parameters=disc_parameters
+    )
 
     ot_saw_nets = __get_ot_saw_nets(obj_types, ocpn_nets, saw_weights)
     multi_saw_net, decorations_multi_saw_net = __get_multi_saw_net(ot_saw_nets)
 
-    return {"ot_saw_nets": ot_saw_nets, "multi_saw_net": multi_saw_net, "decorations_multi_saw_net": decorations_multi_saw_net}
+    return {
+        "ot_saw_nets": ot_saw_nets,
+        "multi_saw_net": multi_saw_net,
+        "decorations_multi_saw_net": decorations_multi_saw_net,
+    }

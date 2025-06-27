@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,7 +19,9 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.algo.organizational_mining.network_analysis.variants import dataframe
+from pm4py.algo.organizational_mining.network_analysis.variants import (
+    dataframe,
+)
 from enum import Enum
 from pm4py.util import exec_utils
 from typing import Dict, Optional, Any, Tuple, Union
@@ -32,7 +34,11 @@ class Variants(Enum):
     DATAFRAME = dataframe
 
 
-def apply(log: Union[pd.DataFrame, EventLog, EventStream], variant=Variants.DATAFRAME, parameters: Optional[Dict[Any, Any]] = None) -> Dict[Tuple[str, str], Dict[str, Any]]:
+def apply(
+    log: Union[pd.DataFrame, EventLog, EventStream],
+    variant=Variants.DATAFRAME,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Dict[Tuple[str, str], Dict[str, Any]]:
     """
     Performs the network analysis on the provided event log
 
@@ -48,4 +54,11 @@ def apply(log: Union[pd.DataFrame, EventLog, EventStream], variant=Variants.DATA
     network_analysis
         Edges of the network analysis (first key: edge; second key: type; value: number of occurrences)
     """
-    return exec_utils.get_variant(variant).apply(log_converter.apply(log, variant=log_converter.Variants.TO_DATA_FRAME, parameters=parameters), parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        log_converter.apply(
+            log,
+            variant=log_converter.Variants.TO_DATA_FRAME,
+            parameters=parameters,
+        ),
+        parameters=parameters,
+    )

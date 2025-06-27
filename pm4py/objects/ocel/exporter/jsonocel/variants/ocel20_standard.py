@@ -31,7 +31,9 @@ class Parameters(Enum):
     ENCODING = "encoding"
 
 
-def apply(ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = None):
+def apply(
+    ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = None
+):
     """
     Exports an object-centric event log (OCEL 2.0) in a JSON-OCEL 2.0 standard file
 
@@ -48,7 +50,9 @@ def apply(ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = N
     if parameters is None:
         parameters = {}
 
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, pm4_constants.DEFAULT_ENCODING)
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, pm4_constants.DEFAULT_ENCODING
+    )
 
     legacy_object = ocel20.get_enriched_object(ocel)
 
@@ -59,11 +63,17 @@ def apply(ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = N
     json_object["events"] = []
 
     for ot, attrs in legacy_object["ocel:objectTypes"].items():
-        descr = {"name": ot, "attributes": [{"name": x, "type": y} for x, y in attrs.items()]}
+        descr = {
+            "name": ot,
+            "attributes": [{"name": x, "type": y} for x, y in attrs.items()],
+        }
         json_object["objectTypes"].append(descr)
 
     for et, attrs in legacy_object["ocel:eventTypes"].items():
-        descr = {"name": et, "attributes": [{"name": x, "type": y} for x, y in attrs.items()]}
+        descr = {
+            "name": et,
+            "attributes": [{"name": x, "type": y} for x, y in attrs.items()],
+        }
         json_object["eventTypes"].append(descr)
 
     obj_idx = {}
@@ -74,11 +84,18 @@ def apply(ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = N
         if "ocel:ovmap" in obj and obj["ocel:ovmap"]:
             descr["attributes"] = []
             for k, v in obj["ocel:ovmap"].items():
-                descr["attributes"].append({"name": k, "time": "1970-01-01T00:00:00Z", "value": v})
+                descr["attributes"].append(
+                    {"name": k, "time": "1970-01-01T00:00:00Z", "value": v}
+                )
         if "ocel:o2o" in obj and obj["ocel:o2o"]:
             descr["relationships"] = []
             for v in obj["ocel:o2o"]:
-                descr["relationships"].append({"objectId": v["ocel:oid"], "qualifier": v["ocel:qualifier"]})
+                descr["relationships"].append(
+                    {
+                        "objectId": v["ocel:oid"],
+                        "qualifier": v["ocel:qualifier"],
+                    }
+                )
         json_object["objects"].append(descr)
         obj_idx[objid] = len(obj_idx)
 
@@ -95,7 +112,12 @@ def apply(ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = N
         if "ocel:typedOmap" in eve and eve["ocel:typedOmap"]:
             descr["relationships"] = []
             for v in eve["ocel:typedOmap"]:
-                descr["relationships"].append({"objectId": v["ocel:oid"], "qualifier": v["ocel:qualifier"]})
+                descr["relationships"].append(
+                    {
+                        "objectId": v["ocel:oid"],
+                        "qualifier": v["ocel:qualifier"],
+                    }
+                )
         json_object["events"].append(descr)
         eve_idx[evid] = len(eve_idx)
 
@@ -104,7 +126,12 @@ def apply(ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = N
         obj = json_object["objects"][obj_idx[oid]]
 
         obj["attributes"].append(
-            {"name": change["ocel:field"], "time": change["ocel:timestamp"], "value": change[change["ocel:field"]]})
+            {
+                "name": change["ocel:field"],
+                "time": change["ocel:timestamp"],
+                "value": change[change["ocel:field"]],
+            }
+        )
 
         json_object["objects"][obj_idx[oid]] = obj
 

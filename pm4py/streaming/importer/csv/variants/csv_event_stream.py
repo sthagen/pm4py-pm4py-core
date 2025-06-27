@@ -33,10 +33,12 @@ class CSVEventStreamReader(object):
     def __init__(self, path, parameters=None):
         self.path = path
         self.parameters = parameters
-        self.transformation_function = exec_utils.get_param_value(Parameters.TRANSFORMATION_FUNCTION, parameters,
-                                                                  lambda x: x)
-        self.acceptance_condition = exec_utils.get_param_value(Parameters.ACCEPTANCE_CONDITION, parameters,
-                                                               lambda x: True)
+        self.transformation_function = exec_utils.get_param_value(
+            Parameters.TRANSFORMATION_FUNCTION, parameters, lambda x: x
+        )
+        self.acceptance_condition = exec_utils.get_param_value(
+            Parameters.ACCEPTANCE_CONDITION, parameters, lambda x: True
+        )
         self.reset()
 
     def reset(self):
@@ -96,6 +98,7 @@ class CSVEventStreamReader(object):
             except StopIteration as exc:
                 self.reading_log = False
                 return None
+
 
 def apply(path, parameters=None):
     """

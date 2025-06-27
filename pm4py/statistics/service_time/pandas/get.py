@@ -40,7 +40,10 @@ class Parameters(Enum):
 DIFF_KEY = "@@diff"
 
 
-def apply(dataframe: pd.DataFrame, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[str, float]:
+def apply(
+    dataframe: pd.DataFrame,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[str, float]:
     """
     Gets the service time per activity on a Pandas dataframe
 
@@ -74,24 +77,52 @@ def apply(dataframe: pd.DataFrame, parameters: Optional[Dict[Union[str, Paramete
     if parameters is None:
         parameters = {}
 
-    business_hours = exec_utils.get_param_value(Parameters.BUSINESS_HOURS, parameters, False)
-    business_hours_slots = exec_utils.get_param_value(Parameters.BUSINESS_HOUR_SLOTS, parameters, constants.DEFAULT_BUSINESS_HOUR_SLOTS)
+    business_hours = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOURS, parameters, False
+    )
+    business_hours_slots = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOUR_SLOTS,
+        parameters,
+        constants.DEFAULT_BUSINESS_HOUR_SLOTS,
+    )
 
-    workcalendar = exec_utils.get_param_value(Parameters.WORKCALENDAR, parameters, constants.DEFAULT_BUSINESS_HOURS_WORKCALENDAR)
+    workcalendar = exec_utils.get_param_value(
+        Parameters.WORKCALENDAR,
+        parameters,
+        constants.DEFAULT_BUSINESS_HOURS_WORKCALENDAR,
+    )
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters,
-                                                     xes_constants.DEFAULT_TIMESTAMP_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    aggregation_measure = exec_utils.get_param_value(Parameters.AGGREGATION_MEASURE,
-                                                     parameters, "mean")
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    aggregation_measure = exec_utils.get_param_value(
+        Parameters.AGGREGATION_MEASURE, parameters, "mean"
+    )
 
     if business_hours:
         dataframe[DIFF_KEY] = dataframe.apply(
-            lambda x: soj_time_business_hours_diff(x[start_timestamp_key], x[timestamp_key], business_hours_slots, workcalendar), axis=1)
+            lambda x: soj_time_business_hours_diff(
+                x[start_timestamp_key],
+                x[timestamp_key],
+                business_hours_slots,
+                workcalendar,
+            ),
+            axis=1,
+        )
     else:
-        dataframe[DIFF_KEY] = pandas_utils.get_total_seconds(dataframe[timestamp_key] - dataframe[start_timestamp_key])
+        dataframe[DIFF_KEY] = pandas_utils.get_total_seconds(
+            dataframe[timestamp_key] - dataframe[start_timestamp_key]
+        )
 
     dataframe = dataframe.reset_index()
 

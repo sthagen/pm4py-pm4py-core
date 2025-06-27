@@ -53,8 +53,12 @@ def get_outgoing_arcs(dfg: DFG) -> Dict[Any, Dict[Any, int]]:
 
     """
     outgoing = {a: Counter() for a in get_vertices(dfg)}
-    for (a, b) in dfg.graph:
-        outgoing[a][b] = dfg.graph[(a, b)] if b not in outgoing[a] else outgoing[a][b] + dfg.graph[(a, b)]
+    for a, b in dfg.graph:
+        outgoing[a][b] = (
+            dfg.graph[(a, b)]
+            if b not in outgoing[a]
+            else outgoing[a][b] + dfg.graph[(a, b)]
+        )
     return outgoing
 
 
@@ -69,8 +73,12 @@ def get_incoming_arcs(dfg: DFG) -> Dict[Any, Dict[Any, int]]:
 
     """
     incoming = {a: Counter() for a in get_vertices(dfg)}
-    for (a, b) in dfg.graph:
-        incoming[b][a] = dfg.graph[(a, b)] if a not in incoming[b] else incoming[b][a] + dfg.graph[(a, b)]
+    for a, b in dfg.graph:
+        incoming[b][a] = (
+            dfg.graph[(a, b)]
+            if a not in incoming[b]
+            else incoming[b][a] + dfg.graph[(a, b)]
+        )
     return incoming
 
 
@@ -104,8 +112,10 @@ def get_sink_vertices(dfg: DFG) -> Collection[Any]:
     return ends
 
 
-def get_transitive_relations(dfg: DFG) -> Tuple[Dict[Any, Collection[Any]], Dict[Any, Collection[Any]]]:
-    '''
+def get_transitive_relations(
+    dfg: DFG,
+) -> Tuple[Dict[Any, Collection[Any]], Dict[Any, Collection[Any]]]:
+    """
     Computes the full transitive relations in both directions (all activities reachable from a given activity and all
     activities that can reach the activity)
 
@@ -114,7 +124,7 @@ def get_transitive_relations(dfg: DFG) -> Tuple[Dict[Any, Collection[Any]], Dict
     :rtype: ``Tuple[Dict[Any, Collection[Any]], Dict[Any, Collection[Any]]] first argument maps an activity on all other
     activities that are able to reach the activity ('transitive pre set')
         second argument maps an activity on all other activities that it can reach (transitively) ('transitive post set')
-    '''
+    """
     G = nx_utils.DiGraph()
     alph = get_vertices(dfg)
 
@@ -135,16 +145,16 @@ def get_transitive_relations(dfg: DFG) -> Tuple[Dict[Any, Collection[Any]], Dict
 
 
 def get_vertex_frequencies(dfg: DFG) -> Dict[Any, int]:
-    '''
+    """
     Computes the number of times a vertex in the dfg is visited.
     The number equals the number of occurrences in the underlying log and is computed by summing up the incoming
     arc frequency and the number of starts in the vertex. The value is equal to the number of outgoing arcs combined
     with the number of endings of the vertex.
-    '''
+    """
     c = Counter()
     for v in get_vertices(dfg):
         c[v] = 0
-    for (a, b) in dfg.graph:
+    for a, b in dfg.graph:
         c[a] += dfg.graph[(a, b)]
     for a in dfg.start_activities:
         c[a] += dfg.start_activities[a]

@@ -53,14 +53,22 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     if parameters is None:
         parameters = {}
 
-    event_id = exec_utils.get_param_value(Parameters.EVENT_ID, parameters, ocel.event_id_column)
-    object_type = exec_utils.get_param_value(Parameters.OBJECT_TYPE, parameters, ocel.object_type_column)
+    event_id = exec_utils.get_param_value(
+        Parameters.EVENT_ID, parameters, ocel.event_id_column
+    )
+    object_type = exec_utils.get_param_value(
+        Parameters.OBJECT_TYPE, parameters, ocel.object_type_column
+    )
 
-    object_types = pandas_utils.format_unique(ocel.objects[object_type].unique())
+    object_types = pandas_utils.format_unique(
+        ocel.objects[object_type].unique()
+    )
 
     ret = {}
 
     for ot in object_types:
-        ret[ot] = ocel.relations[ocel.relations[object_type] == ot][event_id].nunique()
+        ret[ot] = ocel.relations[ocel.relations[object_type] == ot][
+            event_id
+        ].nunique()
 
     return ret

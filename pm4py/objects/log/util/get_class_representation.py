@@ -23,7 +23,10 @@ import numpy as np
 from pm4py.util.business_hours import BusinessHours
 from pm4py.util import constants
 
-def get_class_representation_by_str_ev_attr_value_presence(log, str_attr_name, str_attr_value):
+
+def get_class_representation_by_str_ev_attr_value_presence(
+    log, str_attr_name, str_attr_value
+):
     """
     Get the representation for the target part of the decision tree learning
     if the focus is on the presence of a given value of a (string) event attribute
@@ -52,7 +55,10 @@ def get_class_representation_by_str_ev_attr_value_presence(log, str_attr_name, s
     for trace in log:
         value = False
         for event in trace:
-            if str_attr_name in event and event[str_attr_name] == str_attr_value:
+            if (
+                str_attr_name in event
+                and event[str_attr_name] == str_attr_value
+            ):
                 value = True
         if not str(value) in dictionary:
             dictionary[str(value)] = count
@@ -103,8 +109,9 @@ def get_class_representation_by_str_ev_attr_value_value(log, str_attr_name):
     return target, classes
 
 
-def get_class_representation_by_trace_duration(log, target_trace_duration, timestamp_key="time:timestamp",
-                                               parameters=None):
+def get_class_representation_by_trace_duration(
+    log, target_trace_duration, timestamp_key="time:timestamp", parameters=None
+):
     """
     Get class representation by splitting traces according to trace duration
 
@@ -127,8 +134,16 @@ def get_class_representation_by_trace_duration(log, target_trace_duration, times
     if parameters is None:
         parameters = {}
 
-    business_hours = parameters["business_hours"] if "business_hours" in parameters else False
-    business_hours_slots = parameters["business_hour_slots"] if "business_hour_slots" in parameters else constants.DEFAULT_BUSINESS_HOUR_SLOTS
+    business_hours = (
+        parameters["business_hours"]
+        if "business_hours" in parameters
+        else False
+    )
+    business_hours_slots = (
+        parameters["business_hour_slots"]
+        if "business_hour_slots" in parameters
+        else constants.DEFAULT_BUSINESS_HOUR_SLOTS
+    )
 
     count = 0
     dictionary = {}
@@ -137,12 +152,19 @@ def get_class_representation_by_trace_duration(log, target_trace_duration, times
 
     for trace in log:
         value = "LESSEQUAL"
-        if len(trace) > 0 and timestamp_key in trace[0] and timestamp_key in trace[-1]:
+        if (
+            len(trace) > 0
+            and timestamp_key in trace[0]
+            and timestamp_key in trace[-1]
+        ):
             timestamp_st = trace[0][timestamp_key]
             timestamp_et = trace[-1][timestamp_key]
             if business_hours:
-                bh = BusinessHours(timestamp_st, timestamp_et,
-                                   business_hour_slots=business_hours_slots)
+                bh = BusinessHours(
+                    timestamp_st,
+                    timestamp_et,
+                    business_hour_slots=business_hours_slots,
+                )
                 diff = bh.get_seconds()
             else:
                 diff = (timestamp_et - timestamp_st).total_seconds()

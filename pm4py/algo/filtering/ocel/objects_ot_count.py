@@ -36,7 +36,11 @@ class Parameters(Enum):
     OBJECT_TYPE = ocel_constants.PARAM_OBJECT_TYPE
 
 
-def apply(ocel: OCEL, min_num_obj_type: Dict[str, int], parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
+def apply(
+    ocel: OCEL,
+    min_num_obj_type: Dict[str, int],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> OCEL:
     """
     Filters the events of the object-centric logs which are related to at least
     the specified amount of objects per type.
@@ -70,18 +74,26 @@ def apply(ocel: OCEL, min_num_obj_type: Dict[str, int], parameters: Optional[Dic
     if parameters is None:
         parameters = {}
 
-    event_id = exec_utils.get_param_value(Parameters.EVENT_ID, parameters, ocel.event_id_column)
-    object_id = exec_utils.get_param_value(Parameters.OBJECT_ID, parameters, ocel.object_id_column)
-    object_type = exec_utils.get_param_value(Parameters.OBJECT_TYPE, parameters, ocel.object_type_column)
+    event_id = exec_utils.get_param_value(
+        Parameters.EVENT_ID, parameters, ocel.event_id_column
+    )
+    object_id = exec_utils.get_param_value(
+        Parameters.OBJECT_ID, parameters, ocel.object_id_column
+    )
+    object_type = exec_utils.get_param_value(
+        Parameters.OBJECT_TYPE, parameters, ocel.object_type_column
+    )
 
-    num_obj = objects_ot_count.get_objects_ot_count(ocel, parameters=parameters)
+    num_obj = objects_ot_count.get_objects_ot_count(
+        ocel, parameters=parameters
+    )
 
     filt_evs = set()
 
     for evid, evobjs in num_obj.items():
         is_ok = True
         for k, v in min_num_obj_type.items():
-            if not k in evobjs:
+            if k not in evobjs:
                 is_ok = False
                 break
             elif evobjs[k] < v:
@@ -93,4 +105,6 @@ def apply(ocel: OCEL, min_num_obj_type: Dict[str, int], parameters: Optional[Dic
     ocel = copy(ocel)
     ocel.events = ocel.events[ocel.events[event_id].isin(filt_evs)]
 
-    return filtering_utils.propagate_event_filtering(ocel, parameters=parameters)
+    return filtering_utils.propagate_event_filtering(
+        ocel, parameters=parameters
+    )

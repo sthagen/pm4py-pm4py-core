@@ -29,20 +29,26 @@ from pm4py.algo.discovery.inductive.dtypes.im_ds import IMDataStructureUVCL
 from pm4py.objects.powl.BinaryRelation import BinaryRelation
 from pm4py.objects.powl.obj import StrictPartialOrder, POWL
 from pm4py.algo.discovery.inductive.cuts import utils as cut_util
-from pm4py.algo.discovery.powl.inductive.variants.maximal.maximal_partial_order_cut import project_on_groups_with_unique_activities
+from pm4py.algo.discovery.powl.inductive.variants.maximal.maximal_partial_order_cut import (
+    project_on_groups_with_unique_activities, )
 from pm4py.objects.dfg import util as dfu
 from pm4py.statistics.eventually_follows.uvcl.get import apply as to_efg
 
 
 def generate_order(clusters, efg):
-    # Step 0: if we have one single group containing all activities ---> invoke fall-through.
+    # Step 0: if we have one single group containing all activities --->
+    # invoke fall-through.
     if len(clusters) < 2:
         return None
 
     # Step 1: Generate Order based on the EFG
     po = BinaryRelation([tuple(c) for c in sorted(clusters)])
-    at_least_one_efg = [[False for _ in range(len(po.nodes))] for _ in range(len(po.nodes))]
-    all_efg = [[True for _ in range(len(po.nodes))] for _ in range(len(po.nodes))]
+    at_least_one_efg = [
+        [False for _ in range(len(po.nodes))] for _ in range(len(po.nodes))
+    ]
+    all_efg = [
+        [True for _ in range(len(po.nodes))] for _ in range(len(po.nodes))
+    ]
 
     changed = False
     for i in range(len(po.nodes)):
@@ -72,12 +78,20 @@ def generate_order(clusters, efg):
         while continue_loop:
             continue_loop = False
             for i, j, k in product(range(n), range(n), range(n)):
-                if i != j and j != k and po.edges[i][j] and po.edges[j][k] and not po.is_edge_id(i, k):
+                if (
+                    i != j
+                    and j != k
+                    and po.edges[i][j]
+                    and po.edges[j][k]
+                    and not po.is_edge_id(i, k)
+                ):
                     if not at_least_one_efg[k][i]:
                         po.edges[i][k] = True
                         continue_loop = True
                     else:
-                        clusters = cut_util.merge_lists_based_on_activities(po.nodes[i][0], po.nodes[k][0], clusters)
+                        clusters = cut_util.merge_lists_based_on_activities(
+                            po.nodes[i][0], po.nodes[k][0], clusters
+                        )
                         return generate_order(clusters, efg)
 
     if not po.is_irreflexive():
@@ -85,8 +99,12 @@ def generate_order(clusters, efg):
             cluster_1 = po.nodes[i]
             for j in range(i + 1, len(po.nodes)):
                 cluster_2 = po.nodes[j]
-                if po.is_edge(cluster_1, cluster_2) and po.is_edge(cluster_2, cluster_1):
-                    clusters = cut_util.merge_lists_based_on_activities(cluster_1[0], cluster_2[0], clusters)
+                if po.is_edge(cluster_1, cluster_2) and po.is_edge(
+                    cluster_2, cluster_1
+                ):
+                    clusters = cut_util.merge_lists_based_on_activities(
+                        cluster_1[0], cluster_2[0], clusters
+                    )
                     changed = True
 
     if changed:
@@ -97,9 +115,15 @@ def generate_order(clusters, efg):
         cluster_1 = po.nodes[i]
         for j in range(i + 1, len(po.nodes)):
             cluster_2 = po.nodes[j]
-            if not po.is_edge(cluster_1, cluster_2) and not po.is_edge(cluster_2, cluster_1) and not \
-                    at_least_one_efg[i][j] and not at_least_one_efg[j][i]:
-                clusters = cut_util.merge_lists_based_on_activities(cluster_1[0], cluster_2[0], clusters)
+            if (
+                not po.is_edge(cluster_1, cluster_2)
+                and not po.is_edge(cluster_2, cluster_1)
+                and not at_least_one_efg[i][j]
+                and not at_least_one_efg[j][i]
+            ):
+                clusters = cut_util.merge_lists_based_on_activities(
+                    cluster_1[0], cluster_2[0], clusters
+                )
                 changed = True
 
     if changed:
@@ -123,8 +147,13 @@ def generate_order(clusters, efg):
         cluster_1 = po.nodes[i]
         for j in range(i + 1, len(po.nodes)):
             cluster_2 = po.nodes[j]
-            if pre[cluster_1] == pre[cluster_2] and post[cluster_1] == post[cluster_2]:
-                clusters = cut_util.merge_lists_based_on_activities(cluster_1[0], cluster_2[0], clusters)
+            if (
+                pre[cluster_1] == pre[cluster_2]
+                and post[cluster_1] == post[cluster_2]
+            ):
+                clusters = cut_util.merge_lists_based_on_activities(
+                    cluster_1[0], cluster_2[0], clusters
+                )
                 changed = True
 
     if changed and len(clusters) > 1:
@@ -136,11 +165,15 @@ def generate_order(clusters, efg):
 class DynamicClusteringPartialOrderCut(Cut[T], ABC, Generic[T]):
 
     @classmethod
-    def operator(cls, parameters: Optional[Dict[str, Any]] = None) -> StrictPartialOrder:
+    def operator(
+        cls, parameters: Optional[Dict[str, Any]] = None
+    ) -> StrictPartialOrder:
         raise Exception("This function should not be called!")
 
     @classmethod
-    def holds(cls, obj: T, parameters: Optional[Dict[str, Any]] = None) -> Optional[BinaryRelation]:
+    def holds(
+        cls, obj: T, parameters: Optional[Dict[str, Any]] = None
+    ) -> Optional[BinaryRelation]:
         alphabet = sorted(dfu.get_vertices(obj.dfg), key=lambda g: g.__str__())
         efg = to_efg(obj)
         clusters = [[a] for a in alphabet]
@@ -148,8 +181,9 @@ class DynamicClusteringPartialOrderCut(Cut[T], ABC, Generic[T]):
         return po
 
     @classmethod
-    def apply(cls, obj: T, parameters: Optional[Dict[str, Any]] = None) -> Optional[Tuple[StrictPartialOrder,
-                                                                                          List[POWL]]]:
+    def apply(
+        cls, obj: T, parameters: Optional[Dict[str, Any]] = None
+    ) -> Optional[Tuple[StrictPartialOrder, List[POWL]]]:
         g = cls.holds(obj, parameters)
         if g is None:
             return g
@@ -163,9 +197,17 @@ class DynamicClusteringPartialOrderCut(Cut[T], ABC, Generic[T]):
         return po, po.children
 
 
-class DynamicClusteringPartialOrderCutUVCL(DynamicClusteringPartialOrderCut[IMDataStructureUVCL]):
+class DynamicClusteringPartialOrderCutUVCL(
+    DynamicClusteringPartialOrderCut[IMDataStructureUVCL]
+):
 
     @classmethod
-    def project(cls, obj: IMDataStructureUVCL, groups: List[Collection[Any]],
-                parameters: Optional[Dict[str, Any]] = None) -> List[IMDataStructureUVCL]:
-        return project_on_groups_with_unique_activities(obj.data_structure, groups)
+    def project(
+        cls,
+        obj: IMDataStructureUVCL,
+        groups: List[Collection[Any]],
+        parameters: Optional[Dict[str, Any]] = None,
+    ) -> List[IMDataStructureUVCL]:
+        return project_on_groups_with_unique_activities(
+            obj.data_structure, groups
+        )

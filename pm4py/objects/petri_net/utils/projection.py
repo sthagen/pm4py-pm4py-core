@@ -56,8 +56,12 @@ def project_net_on_place(place):
     input_trans_visible = [trans for trans in input_trans if trans.label]
     output_trans_visible = [trans for trans in output_trans if trans.label]
 
-    if not len(input_trans) == len(input_trans_visible) or not len(output_trans) == len(output_trans_visible):
-        raise Exception("place projection not available on places that have invisible transitions as preset/postset")
+    if not len(input_trans) == len(input_trans_visible) or not len(
+        output_trans
+    ) == len(output_trans_visible):
+        raise Exception(
+            "place projection not available on places that have invisible transitions as preset/postset"
+        )
 
     new_place = PetriNet.Place(place.name)
     place_net.places.add(new_place)
@@ -96,10 +100,12 @@ def project_net_on_matrix(net, activities, parameters=None):
     for trans in net.transitions:
         if not trans.label:
             raise Exception(
-                "the project_net_on_matrix works only with Petri net that do not contain invisible transitions")
+                "the project_net_on_matrix works only with Petri net that do not contain invisible transitions"
+            )
         if trans.label in inv_trans_map:
             raise Exception(
-                "the project_net_on_matrix works only with Petri net that contains unique visible transitions")
+                "the project_net_on_matrix works only with Petri net that contains unique visible transitions"
+            )
         inv_trans_map[trans.label] = trans
     places_matrix = []
     for place in net.places:
@@ -107,17 +113,23 @@ def project_net_on_matrix(net, activities, parameters=None):
         input_trans_labels = set([arc.source.label for arc in place.in_arcs])
         output_trans_labels = set([arc.target.label for arc in place.out_arcs])
         if len(input_trans_labels.intersection(output_trans_labels)) > 0:
-            raise Exception("place has a transition that belongs to both preset and postset")
+            raise Exception(
+                "place has a transition that belongs to both preset and postset"
+            )
         for arc in place.in_arcs:
             input_trans_label = arc.source.label
             input_arc_weight = arc.weight
             if input_trans_label in activities:
-                place_repr[activities.index(input_trans_label)] = -input_arc_weight
+                place_repr[activities.index(input_trans_label)] = (
+                    -input_arc_weight
+                )
         for arc in place.out_arcs:
             output_trans_label = arc.target.label
             output_arc_weight = arc.weight
             if output_trans_label in activities:
-                place_repr[activities.index(output_trans_label)] = output_arc_weight
+                place_repr[activities.index(output_trans_label)] = (
+                    output_arc_weight
+                )
         if min(place_repr) < 0 < max(place_repr):
             places_matrix.append(place_repr)
     if len(places_matrix) == 0:

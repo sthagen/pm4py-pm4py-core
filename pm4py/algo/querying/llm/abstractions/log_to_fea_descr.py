@@ -25,7 +25,9 @@ from pm4py.util import exec_utils, constants, pandas_utils
 from pm4py.objects.log.obj import EventLog, EventStream
 import pandas as pd
 from pm4py.objects.conversion.log import converter as log_converter
-from pm4py.algo.transformation.log_to_features import algorithm as log_to_features
+from pm4py.algo.transformation.log_to_features import (
+    algorithm as log_to_features,
+)
 from enum import Enum
 import numpy as np
 
@@ -39,59 +41,109 @@ def __transform_to_string(stru: str) -> str:
     if stru == "@@max_concurrent_activities_general":
         return "Maximum Number of Concurrent Events"
     elif stru.startswith("@@max_concurrent_activities_like_"):
-        return "Maximum Number of Concurrent '"+stru.split("@@max_concurrent_activities_like_")[-1]+"'"
+        return (
+            "Maximum Number of Concurrent '"
+            + stru.split("@@max_concurrent_activities_like_")[-1]
+            + "'"
+        )
     elif stru.startswith("event:"):
         stru = stru.split("event:")[-1]
         if "@" in stru:
             attr = stru.split("@")[0]
             value = stru.split("@")[-1]
-            return "Value '"+value+"' for Event Attribute '"+attr+"'"
+            return "Value '" + value + "' for Event Attribute '" + attr + "'"
         else:
-            return "Values for Event Attribute '"+stru+"'"
+            return "Values for Event Attribute '" + stru + "'"
     elif stru.startswith("trace:"):
         stru = stru.split("trace:")[-1]
         if "@" in stru:
             attr = stru.split("@")[0]
             value = stru.split("@")[-1]
-            return "Value '"+value+"' for Case Attribute '"+attr+"'"
+            return "Value '" + value + "' for Case Attribute '" + attr + "'"
         else:
-            return "Values for Case Attribute '"+stru+"'"
+            return "Values for Case Attribute '" + stru + "'"
     elif stru.startswith("succession:"):
         stru = stru.split("succession:")[-1]
         attr = stru.split("@")[0]
         stru = stru.split("@")[-1]
         val1 = stru.split("#")[0]
         val2 = stru.split("#")[-1]
-        return "Succession '"+val1+"' -> '"+val2+"' for the Values of the Attribute '"+attr+"'"
+        return (
+            "Succession '"
+            + val1
+            + "' -> '"
+            + val2
+            + "' for the Values of the Attribute '"
+            + attr
+            + "'"
+        )
     elif stru == "@@caseDuration":
         return "Case Duration"
     elif stru.startswith("firstIndexAct@@"):
-        return "First Position of the Activity '"+stru.split("@@")[-1]+"' in the Case"
+        return (
+            "First Position of the Activity '"
+            + stru.split("@@")[-1]
+            + "' in the Case"
+        )
     elif stru.startswith("lastIndexAct@@"):
-        return "Last Position of the Activity '"+stru.split("@@")[-1]+"' in the Case"
+        return (
+            "Last Position of the Activity '"
+            + stru.split("@@")[-1]
+            + "' in the Case"
+        )
     elif stru.startswith("startToLastOcc@@"):
-        return "Time from Case Start to Last Occurrence of the Activity '" + stru.split("@@")[-1] + "'"
+        return (
+            "Time from Case Start to Last Occurrence of the Activity '"
+            + stru.split("@@")[-1]
+            + "'"
+        )
     elif stru.startswith("lastOccToEnd@@"):
-        return "Time from Last Occurrence of the Activity '" + stru.split("@@")[-1] + "' to Case End"
+        return (
+            "Time from Last Occurrence of the Activity '"
+            + stru.split("@@")[-1]
+            + "' to Case End"
+        )
     elif stru.startswith("startToFirstOcc@@"):
-        return "Time from Case Start to First Occurrence of the Activity '"+stru.split("@@")[-1]+"'"
+        return (
+            "Time from Case Start to First Occurrence of the Activity '"
+            + stru.split("@@")[-1]
+            + "'"
+        )
     elif stru.startswith("firstOccToEnd@@"):
-        return "Time from First Occurrence of the Activity '"+stru.split("@@")[-1]+"' to Case End"
+        return (
+            "Time from First Occurrence of the Activity '"
+            + stru.split("@@")[-1]
+            + "' to Case End"
+        )
     elif stru.startswith("directPathPerformanceLastOcc@@"):
         stru = stru.split("@@")[-1].split("##")
-        return "Directly-Follows Paths Throughput between '" + stru[0] + "' and '" + stru[1] + "' (last occurrence of the path in the case)"
+        return (
+            "Directly-Follows Paths Throughput between '"
+            + stru[0]
+            + "' and '"
+            + stru[1]
+            + "' (last occurrence of the path in the case)"
+        )
     elif stru.startswith("indirectPathPerformanceLastOcc@@"):
         stru = stru.split("@@")[-1].split("##")
-        return "Eventually-Follows Paths Throughput between '" + stru[0] + "' and '" + stru[1] + "' (last occurrence of the path in the case)"
+        return (
+            "Eventually-Follows Paths Throughput between '"
+            + stru[0]
+            + "' and '"
+            + stru[1]
+            + "' (last occurrence of the path in the case)"
+        )
     elif stru.startswith("resource_workload@@"):
-        return "Resource Workload of '"+stru.split("@@")[-1]+"'"
+        return "Resource Workload of '" + stru.split("@@")[-1] + "'"
     elif stru == "@@work_in_progress":
         return "Work in Progress"
 
     return stru
 
 
-def textual_abstraction_from_fea_df(fea_df: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None) -> str:
+def textual_abstraction_from_fea_df(
+    fea_df: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None
+) -> str:
     """
     Returns the textual abstraction of ML features already encoded in a feature table
 
@@ -122,8 +174,12 @@ def textual_abstraction_from_fea_df(fea_df: pd.DataFrame, parameters: Optional[D
     if parameters is None:
         parameters = {}
 
-    include_header = exec_utils.get_param_value(Parameters.INCLUDE_HEADER, parameters, True)
-    max_len = exec_utils.get_param_value(Parameters.MAX_LEN, parameters, constants.OPENAI_MAX_LEN)
+    include_header = exec_utils.get_param_value(
+        Parameters.INCLUDE_HEADER, parameters, True
+    )
+    max_len = exec_utils.get_param_value(
+        Parameters.MAX_LEN, parameters, constants.OPENAI_MAX_LEN
+    )
 
     cols = []
 
@@ -133,7 +189,7 @@ def textual_abstraction_from_fea_df(fea_df: pd.DataFrame, parameters: Optional[D
         if len(ser1) > 0:
             desc = __transform_to_string(c)
             avg = np.average(ser1)
-            stdavg = 0 if avg == 0 or len(ser1) == 1 else np.std(ser1)/avg
+            stdavg = 0 if avg == 0 or len(ser1) == 1 else np.std(ser1) / avg
             cols.append([desc, len(ser1), stdavg, ser1])
 
     cols = sorted(cols, key=lambda x: (x[1], x[2], x[0]), reverse=True)
@@ -153,7 +209,14 @@ def textual_abstraction_from_fea_df(fea_df: pd.DataFrame, parameters: Optional[D
         fea_name = cols[i][0]
         fea_col = cols[i][3]
 
-        stru = fea_name+":    number of non-zero values: "+str(cols[i][1])+" ; quantiles of the non-zero: "+str(fea_col.quantile([0.0, 0.25, 0.5, 0.75, 1.0]).to_dict())+"\n"
+        stru = (
+            fea_name
+            + ":    number of non-zero values: "
+            + str(cols[i][1])
+            + " ; quantiles of the non-zero: "
+            + str(fea_col.quantile([0.0, 0.25, 0.5, 0.75, 1.0]).to_dict())
+            + "\n"
+        )
 
         ret = ret + stru
 
@@ -162,7 +225,10 @@ def textual_abstraction_from_fea_df(fea_df: pd.DataFrame, parameters: Optional[D
     return ret
 
 
-def apply(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[Dict[Any, Any]] = None) -> str:
+def apply(
+    log: Union[EventLog, EventStream, pd.DataFrame],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> str:
     """
     Returns the textual abstraction of ML features extracted from a traditional event log object.
 
@@ -192,7 +258,9 @@ def apply(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
     data, feature_names = log_to_features.apply(log, parameters=parameters)
 

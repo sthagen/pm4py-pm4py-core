@@ -37,7 +37,11 @@ class Parameters(Enum):
     WORKCALENDAR = "workcalendar"
 
 
-def filter_on_ncases(df: pd.DataFrame, case_id_glue: str = constants.CASE_CONCEPT_NAME, max_no_cases: int = 1000):
+def filter_on_ncases(
+    df: pd.DataFrame,
+    case_id_glue: str = constants.CASE_CONCEPT_NAME,
+    max_no_cases: int = 1000,
+):
     """
     Filter a dataframe keeping only the specified maximum number of traces
 
@@ -59,13 +63,18 @@ def filter_on_ncases(df: pd.DataFrame, case_id_glue: str = constants.CASE_CONCEP
     cases_to_keep = []
     for case in cases_values_dict:
         cases_to_keep.append(case)
-    cases_to_keep = cases_to_keep[0:min(len(cases_to_keep), max_no_cases)]
+    cases_to_keep = cases_to_keep[0: min(len(cases_to_keep), max_no_cases)]
     ret = df[df[case_id_glue].isin(cases_to_keep)]
-    ret.attrs = copy(df.attrs) if hasattr(df, 'attrs') else {}
+    ret.attrs = copy(df.attrs) if hasattr(df, "attrs") else {}
     return ret
 
 
-def filter_on_case_size(df0: pd.DataFrame, case_id_glue: str = "case:concept:name", min_case_size: int = 2, max_case_size=None):
+def filter_on_case_size(
+    df0: pd.DataFrame,
+    case_id_glue: str = "case:concept:name",
+    min_case_size: int = 2,
+    max_case_size=None,
+):
     """
     Filter a dataframe keeping only traces with at least the specified number of events
 
@@ -86,18 +95,25 @@ def filter_on_case_size(df0: pd.DataFrame, case_id_glue: str = "case:concept:nam
         Filtered dataframe
     """
     df = df0.copy()
-    element_group_size = df[[case_id_glue]].groupby(case_id_glue).transform('size')
+    element_group_size = (
+        df[[case_id_glue]].groupby(case_id_glue).transform("size")
+    )
     df = df[element_group_size >= min_case_size]
     if max_case_size is not None:
         df = df[element_group_size <= max_case_size]
-    df.attrs = copy(df0.attrs) if hasattr(df0, 'attrs') else {}
+    df.attrs = copy(df0.attrs) if hasattr(df0, "attrs") else {}
     return df
 
 
-def filter_on_case_performance(df: pd.DataFrame, case_id_glue: str = constants.CASE_CONCEPT_NAME,
-                               timestamp_key: str = xes_constants.DEFAULT_TIMESTAMP_KEY,
-                               min_case_performance: float = 0, max_case_performance: float = 10000000000,
-                               business_hours=False, business_hours_slots=constants.DEFAULT_BUSINESS_HOUR_SLOTS) -> pd.DataFrame:
+def filter_on_case_performance(
+    df: pd.DataFrame,
+    case_id_glue: str = constants.CASE_CONCEPT_NAME,
+    timestamp_key: str = xes_constants.DEFAULT_TIMESTAMP_KEY,
+    min_case_performance: float = 0,
+    max_case_performance: float = 10000000000,
+    business_hours=False,
+    business_hours_slots=constants.DEFAULT_BUSINESS_HOUR_SLOTS,
+) -> pd.DataFrame:
     """
     Filter a dataframe on case performance
 
@@ -122,35 +138,65 @@ def filter_on_case_performance(df: pd.DataFrame, case_id_glue: str = constants.C
     grouped_df = df[[case_id_glue, timestamp_key]].groupby(case_id_glue)
     start_events = grouped_df.first()
     end_events = grouped_df.last()
-    end_events.columns = [str(col) + '_2' for col in end_events.columns]
+    end_events.columns = [str(col) + "_2" for col in end_events.columns]
     stacked_df = pandas_utils.concat([start_events, end_events], axis=1)
     if business_hours:
-        stacked_df['caseDuration'] = stacked_df.apply(
-            lambda x: soj_time_business_hours_diff(x[timestamp_key], x[timestamp_key + "_2"], business_hours_slots), axis=1)
+        stacked_df["caseDuration"] = stacked_df.apply(
+            lambda x: soj_time_business_hours_diff(
+                x[timestamp_key], x[timestamp_key + "_2"], business_hours_slots
+            ),
+            axis=1,
+        )
     else:
-        stacked_df['caseDuration'] = stacked_df[timestamp_key + "_2"] - stacked_df[timestamp_key]
-        stacked_df['caseDuration'] = pandas_utils.get_total_seconds(stacked_df['caseDuration'])
-    stacked_df = stacked_df[stacked_df['caseDuration'] <= max_case_performance]
-    stacked_df = stacked_df[stacked_df['caseDuration'] >= min_case_performance]
+        stacked_df["caseDuration"] = (
+            stacked_df[timestamp_key + "_2"] - stacked_df[timestamp_key]
+        )
+        stacked_df["caseDuration"] = pandas_utils.get_total_seconds(
+            stacked_df["caseDuration"]
+        )
+    stacked_df = stacked_df[stacked_df["caseDuration"] <= max_case_performance]
+    stacked_df = stacked_df[stacked_df["caseDuration"] >= min_case_performance]
     i1 = df.set_index(case_id_glue).index
     i2 = stacked_df.index
     ret = df[i1.isin(i2)]
-    ret.attrs = copy(df.attrs) if hasattr(df, 'attrs') else {}
+    ret.attrs = copy(df.attrs) if hasattr(df, "attrs") else {}
     return ret
 
 
-def filter_case_performance(df: pd.DataFrame, min_case_performance: float = 0, max_case_performance: float = 10000000000, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> pd.DataFrame:
+def filter_case_performance(
+    df: pd.DataFrame,
+    min_case_performance: float = 0,
+    max_case_performance: float = 10000000000,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> pd.DataFrame:
     if parameters is None:
         parameters = {}
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    case_glue = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    business_hours = exec_utils.get_param_value(Parameters.BUSINESS_HOURS, parameters, False)
-    business_hours_slots = exec_utils.get_param_value(Parameters.BUSINESS_HOUR_SLOTS, parameters, constants.DEFAULT_BUSINESS_HOUR_SLOTS)
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    case_glue = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    business_hours = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOURS, parameters, False
+    )
+    business_hours_slots = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOUR_SLOTS,
+        parameters,
+        constants.DEFAULT_BUSINESS_HOUR_SLOTS,
+    )
 
-    return filter_on_case_performance(df, min_case_performance=min_case_performance,
-                                      max_case_performance=max_case_performance, timestamp_key=timestamp_key,
-                                      case_id_glue=case_glue, business_hours=business_hours, business_hours_slots=business_hours_slots)
+    return filter_on_case_performance(
+        df,
+        min_case_performance=min_case_performance,
+        max_case_performance=max_case_performance,
+        timestamp_key=timestamp_key,
+        case_id_glue=case_glue,
+        business_hours=business_hours,
+        business_hours_slots=business_hours_slots,
+    )
 
 
 def apply(df, parameters=None):

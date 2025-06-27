@@ -54,7 +54,9 @@ def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
     if parameters is None:
         parameters = {}
 
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, pm4_constants.DEFAULT_ENCODING)
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, pm4_constants.DEFAULT_ENCODING
+    )
 
     F = open(file_path, "r", encoding=encoding)
     json_obj = json.load(F)
@@ -71,11 +73,18 @@ def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
         dct["ocel:timestamp"] = eve["time"]
         dct["ocel:vmap"] = {}
         if "attributes" in eve and eve["attributes"]:
-            dct["ocel:vmap"] = {x["name"]: x["value"] for x in eve["attributes"]}
+            dct["ocel:vmap"] = {
+                x["name"]: x["value"] for x in eve["attributes"]
+            }
         dct["ocel:typedOmap"] = []
         if "relationships" in eve and eve["relationships"]:
-            dct["ocel:typedOmap"] = [{"ocel:oid": x["objectId"], "ocel:qualifier": x["qualifier"]} for x in eve["relationships"]]
-        dct["ocel:omap"] = list(set(x["ocel:oid"] for x in dct["ocel:typedOmap"]))
+            dct["ocel:typedOmap"] = [
+                {"ocel:oid": x["objectId"], "ocel:qualifier": x["qualifier"]}
+                for x in eve["relationships"]
+            ]
+        dct["ocel:omap"] = list(
+            set(x["ocel:oid"] for x in dct["ocel:typedOmap"])
+        )
         legacy_obj["ocel:events"][eve["id"]] = dct
 
     for obj in json_obj["objects"]:
@@ -85,12 +94,23 @@ def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
         if "attributes" in obj and obj["attributes"]:
             for x in obj["attributes"]:
                 if x["name"] in dct["ocel:ovmap"]:
-                    legacy_obj["ocel:objectChanges"].append({"ocel:oid": obj["id"], "ocel:type": obj["type"], "ocel:field": x["name"], x["name"]: x["value"], "ocel:timestamp": x["time"]})
+                    legacy_obj["ocel:objectChanges"].append(
+                        {
+                            "ocel:oid": obj["id"],
+                            "ocel:type": obj["type"],
+                            "ocel:field": x["name"],
+                            x["name"]: x["value"],
+                            "ocel:timestamp": x["time"],
+                        }
+                    )
                 else:
                     dct["ocel:ovmap"][x["name"]] = x["value"]
         dct["ocel:o2o"] = []
         if "relationships" in obj and obj["relationships"]:
-            dct["ocel:o2o"] = [{"ocel:oid": x["objectId"], "ocel:qualifier": x["qualifier"]} for x in obj["relationships"]]
+            dct["ocel:o2o"] = [
+                {"ocel:oid": x["objectId"], "ocel:qualifier": x["qualifier"]}
+                for x in obj["relationships"]
+            ]
         legacy_obj["ocel:objects"][obj["id"]] = dct
 
     legacy_obj["ocel:global-log"] = {}
@@ -100,6 +120,8 @@ def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
     log = classic.get_base_ocel(legacy_obj, parameters=parameters)
 
     log = ocel_consistency.apply(log, parameters=parameters)
-    log = filtering_utils.propagate_relations_filtering(log, parameters=parameters)
+    log = filtering_utils.propagate_relations_filtering(
+        log, parameters=parameters
+    )
 
     return log

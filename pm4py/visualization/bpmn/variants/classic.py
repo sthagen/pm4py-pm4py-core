@@ -44,18 +44,36 @@ class Parameters(Enum):
     ENDPOINTS_SHAPE = "endpoints_shape"
 
 
-def add_bpmn_node(graph, n, font_size, include_name_in_events, endpoints_shape):
+def add_bpmn_node(
+    graph, n, font_size, include_name_in_events, endpoints_shape
+):
     n_id = str(id(n))
     node_label = str(n.name) if include_name_in_events else ""
 
     if isinstance(n, BPMN.Task):
         graph.node(n_id, shape="box", label=n.get_name(), fontsize=font_size)
     elif isinstance(n, BPMN.StartEvent):
-        graph.node(n_id, label="", shape=endpoints_shape, style="filled", fillcolor="green", fontsize=font_size)
+        graph.node(
+            n_id,
+            label="",
+            shape=endpoints_shape,
+            style="filled",
+            fillcolor="green",
+            fontsize=font_size,
+        )
     elif isinstance(n, BPMN.EndEvent):
-        graph.node(n_id, label="", shape=endpoints_shape, style="filled", fillcolor="orange", fontsize=font_size)
+        graph.node(
+            n_id,
+            label="",
+            shape=endpoints_shape,
+            style="filled",
+            fillcolor="orange",
+            fontsize=font_size,
+        )
     elif isinstance(n, BPMN.Event):
-        graph.node(n_id, label=node_label, shape="underline", fontsize=font_size)
+        graph.node(
+            n_id, label=node_label, shape="underline", fontsize=font_size
+        )
     elif isinstance(n, BPMN.TextAnnotation):
         graph.node(n_id, shape="box", label=n.text, fontsize=font_size)
     elif isinstance(n, BPMN.ParallelGateway):
@@ -73,7 +91,9 @@ def add_bpmn_node(graph, n, font_size, include_name_in_events, endpoints_shape):
     return True
 
 
-def apply(bpmn_graph: BPMN, parameters: Optional[Dict[Any, Any]] = None) -> graphviz.Digraph:
+def apply(
+    bpmn_graph: BPMN, parameters: Optional[Dict[Any, Any]] = None
+) -> graphviz.Digraph:
     """
     Visualize a BPMN graph
 
@@ -97,24 +117,61 @@ def apply(bpmn_graph: BPMN, parameters: Optional[Dict[Any, Any]] = None) -> grap
     from pm4py.objects.bpmn.obj import BPMN
     from pm4py.objects.bpmn.util.sorting import get_sorted_nodes_edges
 
-    image_format = exec_utils.get_param_value(Parameters.FORMAT, parameters, "png")
-    rankdir = exec_utils.get_param_value(Parameters.RANKDIR, parameters, constants.DEFAULT_RANKDIR_GVIZ)
-    font_size = exec_utils.get_param_value(Parameters.FONT_SIZE, parameters, 12)
+    image_format = exec_utils.get_param_value(
+        Parameters.FORMAT, parameters, "png"
+    )
+    rankdir = exec_utils.get_param_value(
+        Parameters.RANKDIR, parameters, constants.DEFAULT_RANKDIR_GVIZ
+    )
+    font_size = exec_utils.get_param_value(
+        Parameters.FONT_SIZE, parameters, 12
+    )
     font_size = str(font_size)
-    bgcolor = exec_utils.get_param_value(Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR)
-    enable_swimlanes = exec_utils.get_param_value(Parameters.ENABLE_SWIMLANES, parameters, True)
-    include_name_in_events = exec_utils.get_param_value(Parameters.INCLUDE_NAME_IN_EVENTS, parameters, True)
-    swimlanes_margin = exec_utils.get_param_value(Parameters.SWIMLANES_MARGIN, parameters, 35)
+    bgcolor = exec_utils.get_param_value(
+        Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR
+    )
+    enable_swimlanes = exec_utils.get_param_value(
+        Parameters.ENABLE_SWIMLANES, parameters, True
+    )
+    include_name_in_events = exec_utils.get_param_value(
+        Parameters.INCLUDE_NAME_IN_EVENTS, parameters, True
+    )
+    swimlanes_margin = exec_utils.get_param_value(
+        Parameters.SWIMLANES_MARGIN, parameters, 35
+    )
     swimlanes_margin = str(swimlanes_margin)
-    enable_graph_title = exec_utils.get_param_value(Parameters.ENABLE_GRAPH_TITLE, parameters, constants.DEFAULT_ENABLE_GRAPH_TITLES)
-    graph_title = exec_utils.get_param_value(Parameters.GRAPH_TITLE, parameters, "BPMN Diagram")
-    endpoints_shape = exec_utils.get_param_value(Parameters.ENDPOINTS_SHAPE, parameters, "circle")
+    enable_graph_title = exec_utils.get_param_value(
+        Parameters.ENABLE_GRAPH_TITLE,
+        parameters,
+        constants.DEFAULT_ENABLE_GRAPH_TITLES,
+    )
+    graph_title = exec_utils.get_param_value(
+        Parameters.GRAPH_TITLE, parameters, "BPMN Diagram"
+    )
+    endpoints_shape = exec_utils.get_param_value(
+        Parameters.ENDPOINTS_SHAPE, parameters, "circle"
+    )
 
-    filename = tempfile.NamedTemporaryFile(suffix='.gv')
+    filename = tempfile.NamedTemporaryFile(suffix=".gv")
     filename.close()
 
-    viz = Digraph("", filename=filename.name, engine='dot', graph_attr={'bgcolor': bgcolor})
-    viz.graph_attr['rankdir'] = rankdir
+    viz = Digraph(
+        "",
+        filename=filename.name,
+        engine="dot",
+        graph_attr={"bgcolor": bgcolor},
+    )
+    viz.graph_attr["rankdir"] = rankdir
+
+    if enable_graph_title:
+        viz.attr(
+            label='<<FONT POINT-SIZE="'
+            + str(2 * int(font_size))
+            + '">'
+            + graph_title
+            + "</FONT>>",
+            labelloc="top",
+        )
 
     nodes, edges = get_sorted_nodes_edges(bpmn_graph)
     process_ids = []
@@ -131,28 +188,40 @@ def apply(bpmn_graph: BPMN, parameters: Optional[Dict[Any, Any]] = None) -> grap
 
     if len(participant_nodes) < 1 or not enable_swimlanes:
         for n in nodes:
-            if add_bpmn_node(viz, n, font_size, include_name_in_events, endpoints_shape):
+            if add_bpmn_node(
+                viz, n, font_size, include_name_in_events, endpoints_shape
+            ):
                 added_nodes.add(str(id(n)))
     else:
         # style='invis'
-        viz.node('@@anchorStart', style='invis')
-        viz.node('@@anchorEnd', style='invis')
+        viz.node("@@anchorStart", style="invis")
+        viz.node("@@anchorEnd", style="invis")
 
         for subp in process_ids:
             this_added_nodes = []
             if subp in pref_pname:
-                with viz.subgraph(name="cluster"+pref_pid[subp]) as c:
+                with viz.subgraph(name="cluster" + pref_pid[subp]) as c:
                     c.attr(label=pref_pname[subp])
                     c.attr(margin=swimlanes_margin)
                     for n in process_ids_members[subp]:
-                        if add_bpmn_node(c, n, font_size, include_name_in_events, endpoints_shape):
+                        if add_bpmn_node(
+                            c,
+                            n,
+                            font_size,
+                            include_name_in_events,
+                            endpoints_shape,
+                        ):
                             added_nodes.add(str(id(n)))
                             this_added_nodes.append(str(id(n)))
-                    #c.attr(rank='same')
+                    # c.attr(rank='same')
 
                     if this_added_nodes:
-                        viz.edge('@@anchorStart', this_added_nodes[0], style='invis')
-                        viz.edge(this_added_nodes[-1], '@@anchorEnd', style='invis')
+                        viz.edge(
+                            "@@anchorStart", this_added_nodes[0], style="invis"
+                        )
+                        viz.edge(
+                            this_added_nodes[-1], "@@anchorEnd", style="invis"
+                        )
 
     for e in edges:
         n_id_1 = str(id(e[0]))
@@ -161,7 +230,7 @@ def apply(bpmn_graph: BPMN, parameters: Optional[Dict[Any, Any]] = None) -> grap
         if n_id_1 in added_nodes and n_id_2 in added_nodes:
             viz.edge(n_id_1, n_id_2)
 
-    viz.attr(overlap='false')
+    viz.attr(overlap="false")
 
     viz.format = image_format.replace("html", "plain-ext")
 

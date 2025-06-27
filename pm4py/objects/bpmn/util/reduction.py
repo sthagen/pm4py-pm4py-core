@@ -64,8 +64,12 @@ def reduce_xor_gateways(bpmn_graph, parameters=None):
         nodes = list(bpmn_graph.get_nodes())
         for node in nodes:
             if isinstance(node, BPMN.ExclusiveGateway):
-                if node in outgoing_edges and node in incoming_edges and len(outgoing_edges[node]) == 1 and len(
-                        incoming_edges[node]) == 1:
+                if (
+                    node in outgoing_edges
+                    and node in incoming_edges
+                    and len(outgoing_edges[node]) == 1
+                    and len(incoming_edges[node]) == 1
+                ):
                     changed = True
                     source_node = None
                     target_node = None
@@ -79,7 +83,9 @@ def reduce_xor_gateways(bpmn_graph, parameters=None):
                             bpmn_graph.remove_flow(flow)
                     if node in bpmn_graph.get_nodes():
                         bpmn_graph.remove_node(node)
-                    bpmn_graph.add_flow(BPMN.SequenceFlow(source_node, target_node))
+                    bpmn_graph.add_flow(
+                        BPMN.SequenceFlow(source_node, target_node)
+                    )
                     break
 
     return bpmn_graph

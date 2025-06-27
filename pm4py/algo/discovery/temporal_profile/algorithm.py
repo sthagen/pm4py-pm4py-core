@@ -28,7 +28,10 @@ from pm4py.objects.log.obj import EventLog
 from pm4py.util import typing, pandas_utils
 
 
-def apply(elog: Union[EventLog, pd.DataFrame], parameters: Optional[Dict[Any, Any]] = None) -> typing.TemporalProfile:
+def apply(
+    elog: Union[EventLog, pd.DataFrame],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> typing.TemporalProfile:
     """
     Discovers the temporal profile out of the provided log object.
 

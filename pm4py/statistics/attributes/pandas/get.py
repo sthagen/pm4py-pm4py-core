@@ -60,7 +60,11 @@ def __add_left_0(stri: str, target_length: int) -> str:
     return stri
 
 
-def get_events_distribution(df: pd.DataFrame, distr_type: str = "days_month", parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Tuple[List[str], List[int]]:
+def get_events_distribution(
+    df: pd.DataFrame,
+    distr_type: str = "days_month",
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Tuple[List[str], List[int]]:
     """
     Gets the distribution of the events in the specified dimension
 
@@ -90,7 +94,9 @@ def get_events_distribution(df: pd.DataFrame, distr_type: str = "days_month", pa
     if parameters is None:
         parameters = {}
 
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY)
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY
+    )
 
     values = None
     all_values = None
@@ -105,7 +111,9 @@ def get_events_distribution(df: pd.DataFrame, distr_type: str = "days_month", pa
     elif distr_type == "years":
         serie = df[timestamp_key].dt.year
         values = Counter(serie.value_counts().to_dict())
-        all_values = Counter({i: 0 for i in range(min(values), max(values)+1)})
+        all_values = Counter(
+            {i: 0 for i in range(min(values), max(values) + 1)}
+        )
     elif distr_type == "hours":
         serie = df[timestamp_key].dt.hour
         values = Counter(serie.value_counts().to_dict())
@@ -127,14 +135,25 @@ def get_events_distribution(df: pd.DataFrame, distr_type: str = "days_month", pa
     values = sorted([(__add_left_0(str(x), 2), y) for x, y in values.items()])
 
     if distr_type == "days_week":
-        mapping = {"00": "Monday", "01": "Tuesday", "02": "Wednesday", "03": "Thursday", "04": "Friday",
-                   "05": "Saturday", "06": "Sunday"}
+        mapping = {
+            "00": "Monday",
+            "01": "Tuesday",
+            "02": "Wednesday",
+            "03": "Thursday",
+            "04": "Friday",
+            "05": "Saturday",
+            "06": "Sunday",
+        }
         values = [(mapping[x[0]], x[1]) for x in values]
 
     return [x[0] for x in values], [x[1] for x in values]
 
 
-def get_attribute_values(df: pd.DataFrame, attribute_key: str, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[Any, int]:
+def get_attribute_values(
+    df: pd.DataFrame,
+    attribute_key: str,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[Any, int]:
     """
     Return list of attribute values contained in the specified column of the CSV
 
@@ -155,8 +174,12 @@ def get_attribute_values(df: pd.DataFrame, attribute_key: str, parameters: Optio
     if parameters is None:
         parameters = {}
 
-    case_id_glue = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    keep_once_per_case = exec_utils.get_param_value(Parameters.KEEP_ONCE_PER_CASE, parameters, False)
+    case_id_glue = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    keep_once_per_case = exec_utils.get_param_value(
+        Parameters.KEEP_ONCE_PER_CASE, parameters, False
+    )
 
     if keep_once_per_case:
         df = df.groupby([case_id_glue, attribute_key]).first().reset_index()
@@ -165,7 +188,11 @@ def get_attribute_values(df: pd.DataFrame, attribute_key: str, parameters: Optio
     return attributes_values_dict
 
 
-def get_kde_numeric_attribute(df: pd.DataFrame, attribute: str, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[Any, int]:
+def get_kde_numeric_attribute(
+    df: pd.DataFrame,
+    attribute: str,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[Any, int]:
     """
     Gets the KDE estimation for the distribution of a numeric attribute values
 
@@ -190,13 +217,17 @@ def get_kde_numeric_attribute(df: pd.DataFrame, attribute: str, parameters: Opti
     if parameters is None:
         parameters = {}
 
-    max_no_of_points_to_sample = exec_utils.get_param_value(Parameters.MAX_NO_POINTS_SAMPLE, parameters, 100000)
+    max_no_of_points_to_sample = exec_utils.get_param_value(
+        Parameters.MAX_NO_POINTS_SAMPLE, parameters, 100000
+    )
     red_df = df.dropna(subset=[attribute])
     if len(red_df) > max_no_of_points_to_sample:
         red_df = red_df.sample(n=max_no_of_points_to_sample)
     values = list(red_df[attribute])
 
-    return attributes_common.get_kde_numeric_attribute(values, parameters=parameters)
+    return attributes_common.get_kde_numeric_attribute(
+        values, parameters=parameters
+    )
 
 
 def get_kde_numeric_attribute_json(df, attribute, parameters=None):
@@ -221,10 +252,14 @@ def get_kde_numeric_attribute_json(df, attribute, parameters=None):
     """
     values = list(df.dropna(subset=[attribute])[attribute])
 
-    return attributes_common.get_kde_numeric_attribute_json(values, parameters=parameters)
+    return attributes_common.get_kde_numeric_attribute_json(
+        values, parameters=parameters
+    )
 
 
-def get_kde_date_attribute(df, attribute=DEFAULT_TIMESTAMP_KEY, parameters=None):
+def get_kde_date_attribute(
+    df, attribute=DEFAULT_TIMESTAMP_KEY, parameters=None
+):
     """
     Gets the KDE estimation for the distribution of a date attribute values
 
@@ -249,15 +284,21 @@ def get_kde_date_attribute(df, attribute=DEFAULT_TIMESTAMP_KEY, parameters=None)
     if parameters is None:
         parameters = {}
 
-    max_no_of_points_to_sample = exec_utils.get_param_value(Parameters.MAX_NO_POINTS_SAMPLE, parameters, 100000)
+    max_no_of_points_to_sample = exec_utils.get_param_value(
+        Parameters.MAX_NO_POINTS_SAMPLE, parameters, 100000
+    )
     red_df = df.dropna(subset=[attribute])
     if len(red_df) > max_no_of_points_to_sample:
         red_df = red_df.sample(n=max_no_of_points_to_sample)
     date_values = list(red_df[attribute])
-    return attributes_common.get_kde_date_attribute(date_values, parameters=parameters)
+    return attributes_common.get_kde_date_attribute(
+        date_values, parameters=parameters
+    )
 
 
-def get_kde_date_attribute_json(df, attribute=DEFAULT_TIMESTAMP_KEY, parameters=None):
+def get_kde_date_attribute_json(
+    df, attribute=DEFAULT_TIMESTAMP_KEY, parameters=None
+):
     """
     Gets the KDE estimation for the distribution of a date attribute values
     (expressed as JSON)
@@ -279,4 +320,6 @@ def get_kde_date_attribute_json(df, attribute=DEFAULT_TIMESTAMP_KEY, parameters=
     """
     values = list(df.dropna(subset=[attribute])[attribute])
 
-    return attributes_common.get_kde_date_attribute_json(values, parameters=parameters)
+    return attributes_common.get_kde_date_attribute_json(
+        values, parameters=parameters
+    )

@@ -36,7 +36,11 @@ class Parameters(Enum):
     MAX_REP = "max_rep"
 
 
-def apply(df: pd.DataFrame, value: Any, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> pd.DataFrame:
+def apply(
+    df: pd.DataFrame,
+    value: Any,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> pd.DataFrame:
     """
     Filters the trace of the dataframe where the given attribute value is repeated
     (in a range of repetitions that is specified by the user)
@@ -62,10 +66,16 @@ def apply(df: pd.DataFrame, value: Any, parameters: Optional[Dict[Union[str, Par
     if parameters is None:
         parameters = {}
 
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    attribute_key = exec_utils.get_param_value(Parameters.ATTRIBUTE_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    attribute_key = exec_utils.get_param_value(
+        Parameters.ATTRIBUTE_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
     min_rep = exec_utils.get_param_value(Parameters.MIN_REP, parameters, 2)
-    max_rep = exec_utils.get_param_value(Parameters.MAX_REP, parameters, sys.maxsize)
+    max_rep = exec_utils.get_param_value(
+        Parameters.MAX_REP, parameters, sys.maxsize
+    )
 
     filtered_df = df[df[attribute_key] == value]
     filtered_df = filtered_df.groupby(case_id_key).size().reset_index()
@@ -73,5 +83,5 @@ def apply(df: pd.DataFrame, value: Any, parameters: Optional[Dict[Union[str, Par
     filtered_df = filtered_df[filtered_df[0] <= max_rep]
 
     ret = df[df[case_id_key].isin(filtered_df[case_id_key])]
-    ret.attrs = copy(df.attrs) if hasattr(df, 'attrs') else {}
+    ret.attrs = copy(df.attrs) if hasattr(df, "attrs") else {}
     return ret

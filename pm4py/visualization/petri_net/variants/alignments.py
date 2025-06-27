@@ -25,7 +25,14 @@ from pm4py.objects.petri_net.obj import PetriNet, Marking
 from typing import Optional, Dict, Any
 
 
-def apply(net: PetriNet, initial_marking: Marking, final_marking: Marking, log=None, aggregated_statistics=None, parameters: Optional[Dict[Any, Any]] = None) -> str:
+def apply(
+    net: PetriNet,
+    initial_marking: Marking,
+    final_marking: Marking,
+    log=None,
+    aggregated_statistics=None,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> str:
     """
     Apply method for Petri net visualization (it calls the
     graphviz_visualization method)
@@ -51,8 +58,16 @@ def apply(net: PetriNet, initial_marking: Marking, final_marking: Marking, log=N
         Graph object
     """
     if aggregated_statistics is None and log is not None:
-        aggregated_statistics = alignments_decoration.get_alignments_decoration(net, initial_marking, final_marking,
-                                                                                log=log)
+        aggregated_statistics = (
+            alignments_decoration.get_alignments_decoration(
+                net, initial_marking, final_marking, log=log
+            )
+        )
 
-    return visualize.apply(net, initial_marking, final_marking, parameters=parameters,
-                           decorations=aggregated_statistics)
+    return visualize.apply(
+        net,
+        initial_marking,
+        final_marking,
+        parameters=parameters,
+        decorations=aggregated_statistics,
+    )

@@ -36,7 +36,11 @@ class Variants(Enum):
 DEFAULT_VARIANT = Variants.CLASSIC
 
 
-def apply(bpmn_graph: BPMN, variant=DEFAULT_VARIANT, parameters: Optional[Dict[Any, Any]] = None) -> graphviz.Digraph:
+def apply(
+    bpmn_graph: BPMN,
+    variant=DEFAULT_VARIANT,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> graphviz.Digraph:
     """
     Visualize a BPMN graph
 
@@ -55,10 +59,17 @@ def apply(bpmn_graph: BPMN, variant=DEFAULT_VARIANT, parameters: Optional[Dict[A
     gviz
         Graphviz representation
     """
-    return exec_utils.get_variant(variant).apply(bpmn_graph, parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        bpmn_graph, parameters=parameters
+    )
 
 
-def save(gviz: graphviz.Digraph, output_file_path: str, variant=DEFAULT_VARIANT, parameters=None):
+def save(
+    gviz: graphviz.Digraph,
+    output_file_path: str,
+    variant=DEFAULT_VARIANT,
+    parameters=None,
+):
     """
     Save the diagram
 
@@ -69,7 +80,9 @@ def save(gviz: graphviz.Digraph, output_file_path: str, variant=DEFAULT_VARIANT,
     output_file_path
         Path where the GraphViz output should be saved
     """
-    return exec_utils.get_variant(variant).save(gviz, output_file_path, parameters=parameters)
+    return exec_utils.get_variant(variant).save(
+        gviz, output_file_path, parameters=parameters
+    )
 
 
 def view(gviz: graphviz.Digraph, variant=DEFAULT_VARIANT, parameters=None):
@@ -84,7 +97,9 @@ def view(gviz: graphviz.Digraph, variant=DEFAULT_VARIANT, parameters=None):
     return exec_utils.get_variant(variant).view(gviz, parameters=parameters)
 
 
-def matplotlib_view(gviz: graphviz.Digraph, variant=DEFAULT_VARIANT, parameters=None):
+def matplotlib_view(
+    gviz: graphviz.Digraph, variant=DEFAULT_VARIANT, parameters=None
+):
     """
     Views the diagram using Matplotlib
 
@@ -93,4 +108,6 @@ def matplotlib_view(gviz: graphviz.Digraph, variant=DEFAULT_VARIANT, parameters=
     gviz
         Graphviz
     """
-    return exec_utils.get_variant(variant).matplotlib_view(gviz, parameters=parameters)
+    return exec_utils.get_variant(variant).matplotlib_view(
+        gviz, parameters=parameters
+    )

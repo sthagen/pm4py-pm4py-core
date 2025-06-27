@@ -61,22 +61,46 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Digraph:
     if parameters is None:
         parameters = {}
 
-    format = exec_utils.get_param_value(Parameters.FORMAT, parameters, constants.DEFAULT_FORMAT_GVIZ_VIEW)
-    bgcolor = exec_utils.get_param_value(Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR)
+    format = exec_utils.get_param_value(
+        Parameters.FORMAT, parameters, constants.DEFAULT_FORMAT_GVIZ_VIEW
+    )
+    bgcolor = exec_utils.get_param_value(
+        Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR
+    )
     rankdir = exec_utils.get_param_value(Parameters.RANKDIR, parameters, "LR")
-    annotate_frequency = exec_utils.get_param_value(Parameters.ANNOTATE_FREQUENCY, parameters, False)
-    enable_graph_title = exec_utils.get_param_value(Parameters.ENABLE_GRAPH_TITLE, parameters, constants.DEFAULT_ENABLE_GRAPH_TITLES)
-    graph_title = exec_utils.get_param_value(Parameters.GRAPH_TITLE, parameters, "Ev. Types to Obj. Types")
+    annotate_frequency = exec_utils.get_param_value(
+        Parameters.ANNOTATE_FREQUENCY, parameters, False
+    )
+    enable_graph_title = exec_utils.get_param_value(
+        Parameters.ENABLE_GRAPH_TITLE,
+        parameters,
+        constants.DEFAULT_ENABLE_GRAPH_TITLES,
+    )
+    graph_title = exec_utils.get_param_value(
+        Parameters.GRAPH_TITLE, parameters, "Ev. Types to Obj. Types"
+    )
 
-    filename = tempfile.NamedTemporaryFile(suffix='.gv')
-    viz = Digraph("eve_to_obj_types", filename=filename.name, engine='dot', graph_attr={'bgcolor': bgcolor})
+    filename = tempfile.NamedTemporaryFile(suffix=".gv")
+    viz = Digraph(
+        "eve_to_obj_types",
+        filename=filename.name,
+        engine="dot",
+        graph_attr={"bgcolor": bgcolor},
+    )
 
     if enable_graph_title:
-        viz.attr(label='<<FONT POINT-SIZE="20">'+graph_title+'</FONT>>', labelloc="top")
+        viz.attr(
+            label='<<FONT POINT-SIZE="20">' + graph_title + "</FONT>>",
+            labelloc="top",
+        )
 
     event_types = sorted(list(ocel.events[ocel.event_activity].unique()))
     object_types = sorted(list(ocel.objects[ocel.object_type_column].unique()))
-    ev_to_obj_types = ocel.relations.groupby([ocel.event_activity, ocel.object_type_column]).size().to_dict()
+    ev_to_obj_types = (
+        ocel.relations.groupby([ocel.event_activity, ocel.object_type_column])
+        .size()
+        .to_dict()
+    )
 
     min_num = min(ev_to_obj_types.values())
     max_num = max(ev_to_obj_types.values())
@@ -85,16 +109,37 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Digraph:
     obj_types_dict = {o: str(uuid.uuid4()) for o in object_types}
 
     for ev in event_types:
-        viz.node(ev_types_dict[ev], ev, style="filled", fillcolor="pink", shape='ellipse')
+        viz.node(
+            ev_types_dict[ev],
+            ev,
+            style="filled",
+            fillcolor="pink",
+            shape="ellipse",
+        )
 
     for obj in object_types:
-        viz.node(obj_types_dict[obj], obj, style="filled", fillcolor="lightblue", shape='box')
+        viz.node(
+            obj_types_dict[obj],
+            obj,
+            style="filled",
+            fillcolor="lightblue",
+            shape="box",
+        )
 
     for arc in ev_to_obj_types:
         label = " "
         if annotate_frequency:
             label = str(ev_to_obj_types[arc])
-        viz.edge(ev_types_dict[arc[0]], obj_types_dict[arc[1]], label=label, penwidth=str(vis_utils.get_arc_penwidth(ev_to_obj_types[arc], min_num, max_num)))
+        viz.edge(
+            ev_types_dict[arc[0]],
+            obj_types_dict[arc[1]],
+            label=label,
+            penwidth=str(
+                vis_utils.get_arc_penwidth(
+                    ev_to_obj_types[arc], min_num, max_num
+                )
+            ),
+        )
 
     viz.attr(rankdir=rankdir)
     viz.format = format.replace("html", "plain-ext")

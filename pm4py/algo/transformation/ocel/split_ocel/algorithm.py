@@ -22,7 +22,10 @@ Contact: info@processintelligence.solutions
 from pm4py.objects.ocel.obj import OCEL
 from typing import Optional, Dict, Any
 from enum import Enum
-from pm4py.algo.transformation.ocel.split_ocel.variants import connected_components, ancestors_descendants
+from pm4py.algo.transformation.ocel.split_ocel.variants import (
+    connected_components,
+    ancestors_descendants,
+)
 from pm4py.util import exec_utils
 
 
@@ -31,7 +34,11 @@ class Variants(Enum):
     ANCESTORS_DESCENDANTS = ancestors_descendants
 
 
-def apply(ocel: OCEL, variant=Variants.CONNECTED_COMPONENTS, parameters: Optional[Dict[Any, Any]] = None):
+def apply(
+    ocel: OCEL,
+    variant=Variants.CONNECTED_COMPONENTS,
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     """
     Splits an OCEL into sub-OCELs using a given criteria (variant).
 

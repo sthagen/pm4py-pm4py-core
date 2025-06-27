@@ -34,7 +34,9 @@ class Parameters(Enum):
     TEMP_SEPARATOR = "temp_separator"
 
 
-def get_object_type_activities(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, Collection[str]]:
+def get_object_type_activities(
+    ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None
+) -> Dict[str, Collection[str]]:
     """
     Gets the set of activities performed for each object type
 
@@ -55,11 +57,19 @@ def get_object_type_activities(ocel: OCEL, parameters: Optional[Dict[Any, Any]] 
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, ocel.event_activity)
-    object_type_column = exec_utils.get_param_value(Parameters.OBJECT_TYPE, parameters, ocel.object_type_column)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, ocel.event_activity
+    )
+    object_type_column = exec_utils.get_param_value(
+        Parameters.OBJECT_TYPE, parameters, ocel.object_type_column
+    )
 
     matching_dict = {}
-    prel_dict = ocel.relations.groupby([activity_key, object_type_column]).size().to_dict()
+    prel_dict = (
+        ocel.relations.groupby([activity_key, object_type_column])
+        .size()
+        .to_dict()
+    )
 
     for el in prel_dict:
         if not el[1] in matching_dict:

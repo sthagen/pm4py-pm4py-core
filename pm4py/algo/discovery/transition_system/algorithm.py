@@ -31,12 +31,17 @@ import pandas as pd
 class Variants(Enum):
     VIEW_BASED = view_based
 
+
 VERSIONS = {Variants.VIEW_BASED}
 VIEW_BASED = Variants.VIEW_BASED
 DEFAULT_VARIANT = Variants.VIEW_BASED
 
 
-def apply(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[Dict[Any, Any]] = None, variant=DEFAULT_VARIANT) -> TransitionSystem:
+def apply(
+    log: Union[EventLog, EventStream, pd.DataFrame],
+    parameters: Optional[Dict[Any, Any]] = None,
+    variant=DEFAULT_VARIANT,
+) -> TransitionSystem:
     """
     Find transition system given log
 

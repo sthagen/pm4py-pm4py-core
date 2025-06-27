@@ -27,12 +27,15 @@ from pm4py.objects.ocel.obj import OCEL
 from typing import Optional, Dict, Any, Collection
 import sys
 
+
 class Parameters(Enum):
     OBJECT_TYPE = "object_type"
     MAX_OBJS = "max_objs"
 
 
-def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Collection[OCEL]:
+def apply(
+    ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None
+) -> Collection[OCEL]:
     """
     Provided an object-centric event log and the specification of an object type,
     splits the OCEL in one OCEL per object of the given object type,
@@ -54,16 +57,33 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Collection
     if parameters is None:
         parameters = {}
 
-    object_type = exec_utils.get_param_value(Parameters.OBJECT_TYPE, parameters, None)
+    object_type = exec_utils.get_param_value(
+        Parameters.OBJECT_TYPE, parameters, None
+    )
     if object_type is None:
         raise Exception("the object type should be provided as parameter")
-    max_objs = exec_utils.get_param_value(Parameters.MAX_OBJS, parameters, sys.maxsize)
+    max_objs = exec_utils.get_param_value(
+        Parameters.MAX_OBJS, parameters, sys.maxsize
+    )
 
     import pm4py
-    interaction_graph = pm4py.discover_objects_graph(ocel, "object_interaction")
 
-    objects_start = ocel.relations.groupby(ocel.object_id_column)[ocel.event_timestamp].first().to_dict()
-    objects = ocel.objects[ocel.objects[ocel.object_type_column] == object_type][ocel.object_id_column].to_numpy().tolist()
+    interaction_graph = pm4py.discover_objects_graph(
+        ocel, "object_interaction"
+    )
+
+    objects_start = (
+        ocel.relations.groupby(ocel.object_id_column)[ocel.event_timestamp]
+        .first()
+        .to_dict()
+    )
+    objects = (
+        ocel.objects[ocel.objects[ocel.object_type_column] == object_type][
+            ocel.object_id_column
+        ]
+        .to_numpy()
+        .tolist()
+    )
 
     G = nx_utils.DiGraph()
     for obj in objects:
@@ -71,11 +91,17 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Collection
     for edge in interaction_graph:
         if objects_start[edge[0]] < objects_start[edge[1]]:
             G.add_edge(edge[0], edge[1])
-        elif objects_start[edge[0]] <= objects_start[edge[1]] and edge[0] in objects:
+        elif (
+            objects_start[edge[0]] <= objects_start[edge[1]]
+            and edge[0] in objects
+        ):
             G.add_edge(edge[0], edge[1])
         elif objects_start[edge[0]] > objects_start[edge[1]]:
             G.add_edge(edge[1], edge[0])
-        elif objects_start[edge[0]] >= objects_start[edge[1]] and edge[1] in objects:
+        elif (
+            objects_start[edge[0]] >= objects_start[edge[1]]
+            and edge[1] in objects
+        ):
             G.add_edge(edge[1], edge[0])
 
     lst = []

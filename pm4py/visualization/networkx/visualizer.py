@@ -33,8 +33,11 @@ class Variants(Enum):
     DIGRAPH = digraph
 
 
-def apply(G: nx.DiGraph, variant=Variants.DIGRAPH,
-          parameters: Optional[Dict[Any, Any]] = None) -> Digraph:
+def apply(
+    G: nx.DiGraph,
+    variant=Variants.DIGRAPH,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Digraph:
     """
     Creates a Graphviz Digraph from a NetworkX DiGraph object.
 

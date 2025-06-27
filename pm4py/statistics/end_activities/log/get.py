@@ -38,7 +38,10 @@ class Parameters(Enum):
     KEEP_ONCE_PER_CASE = "keep_once_per_case"
 
 
-def get_end_activities(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[str, int]:
+def get_end_activities(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[str, int]:
     """
     Get the end attributes of the log along with their count
 
@@ -57,9 +60,13 @@ def get_end_activities(log: EventLog, parameters: Optional[Dict[Union[str, Param
     """
     if parameters is None:
         parameters = {}
-    attribute_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, DEFAULT_NAME_KEY)
+    attribute_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, DEFAULT_NAME_KEY
+    )
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
     end_activities = {}
 
@@ -69,6 +76,8 @@ def get_end_activities(log: EventLog, parameters: Optional[Dict[Union[str, Param
                 activity_last_event = trace[-1][attribute_key]
                 if activity_last_event not in end_activities:
                     end_activities[activity_last_event] = 0
-                end_activities[activity_last_event] = end_activities[activity_last_event] + 1
+                end_activities[activity_last_event] = (
+                    end_activities[activity_last_event] + 1
+                )
 
     return end_activities

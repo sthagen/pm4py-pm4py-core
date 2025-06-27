@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,12 +19,13 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.algo.analysis.woflan.place_invariants.place_invariants import compute_place_invariants
+from pm4py.algo.analysis.woflan.place_invariants.place_invariants import (
+    compute_place_invariants,
+)
 from pm4py.algo.analysis.woflan.place_invariants.utility import transform_basis
 
 
 def apply(net):
-    place_invariants= compute_place_invariants(net)
-    modified_invariants=transform_basis(place_invariants, style='uniform')
+    place_invariants = compute_place_invariants(net)
+    modified_invariants = transform_basis(place_invariants, style="uniform")
     return modified_invariants
-

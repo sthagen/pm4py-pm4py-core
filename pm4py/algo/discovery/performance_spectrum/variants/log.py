@@ -39,7 +39,12 @@ class Parameters(Enum):
     SORT_LOG_REQUIRED = "sort_log_required"
 
 
-def apply(log: EventLog, list_activities: List[str], sample_size: int, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[str, Any]:
+def apply(
+    log: EventLog,
+    list_activities: List[str],
+    sample_size: int,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[str, Any]:
     """
     Finds the performance spectrum provided a log
     and a list of activities
@@ -65,23 +70,37 @@ def apply(log: EventLog, list_activities: List[str], sample_size: int, parameter
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes.DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes.DEFAULT_TIMESTAMP_KEY)
-    sort_log_required = exec_utils.get_param_value(Parameters.SORT_LOG_REQUIRED, parameters, True)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes.DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY, parameters, xes.DEFAULT_TIMESTAMP_KEY
+    )
+    sort_log_required = exec_utils.get_param_value(
+        Parameters.SORT_LOG_REQUIRED, parameters, True
+    )
 
     parameters[Parameters.ATTRIBUTE_KEY] = activity_key
-    log = basic_filter.filter_log_events_attr(log, list_activities, parameters=parameters)
+    log = basic_filter.filter_log_events_attr(
+        log, list_activities, parameters=parameters
+    )
     if sort_log_required:
         log = sorting.sort_timestamp_log(log, timestamp_key=timestamp_key)
 
     points = []
 
     for trace in log:
-        for i in range(len(trace)-len(list_activities)+1):
-            acti_comb = [event[activity_key] for event in trace[i:i+len(list_activities)]]
+        for i in range(len(trace) - len(list_activities) + 1):
+            acti_comb = [
+                event[activity_key]
+                for event in trace[i: i + len(list_activities)]
+            ]
 
             if acti_comb == list_activities:
-                timest_comb = [event[timestamp_key].timestamp() for event in trace[i:i+len(list_activities)]]
+                timest_comb = [
+                    event[timestamp_key].timestamp()
+                    for event in trace[i: i + len(list_activities)]
+                ]
 
                 points.append(timest_comb)
 

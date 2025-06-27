@@ -32,8 +32,11 @@ class Parameters(Enum):
     NUM_CASES_PROPERTY = "num_cases_property"
 
 
-def apply(pt: ProcessTree, align_result: Union[typing.AlignmentResult, typing.ListAlignments],
-          parameters: Optional[Dict[Any, Any]] = None) -> ProcessTree:
+def apply(
+    pt: ProcessTree,
+    align_result: Union[typing.AlignmentResult, typing.ListAlignments],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> ProcessTree:
     """
     Annotate a process tree with frequency information (number of events / number of cases),
     given the results of an alignment performed on the process tree.
@@ -55,8 +58,12 @@ def apply(pt: ProcessTree, align_result: Union[typing.AlignmentResult, typing.Li
     if parameters is None:
         parameters = {}
 
-    num_events_property = exec_utils.get_param_value(Parameters.NUM_EVENTS_PROPERTY, parameters, "num_events")
-    num_cases_property = exec_utils.get_param_value(Parameters.NUM_CASES_PROPERTY, parameters, "num_cases")
+    num_events_property = exec_utils.get_param_value(
+        Parameters.NUM_EVENTS_PROPERTY, parameters, "num_events"
+    )
+    num_cases_property = exec_utils.get_param_value(
+        Parameters.NUM_CASES_PROPERTY, parameters, "num_cases"
+    )
     bottomup_nodes = bottomup.get_bottomup_nodes(pt, parameters=parameters)
 
     all_paths_open_enabled_events = []
@@ -69,16 +76,38 @@ def apply(pt: ProcessTree, align_result: Union[typing.AlignmentResult, typing.Li
                 paths.append(state.path)
             state = state.parent
         paths.reverse()
-        paths_enabled = [y[0] for x in paths for y in x if y[1] is ProcessTree.OperatorState.ENABLED]
-        paths_open = [y[0] for x in paths for y in x if y[1] is ProcessTree.OperatorState.OPEN if
-                      y[0] not in paths_enabled]
-        all_paths_open_enabled_events = all_paths_open_enabled_events + paths_enabled + paths_open
-        all_paths_open_enabled_cases = all_paths_open_enabled_cases + list(set(paths_enabled + paths_open))
-    all_paths_open_enabled_events_counter = Counter(all_paths_open_enabled_events)
-    all_paths_open_enabled_cases_counter = Counter(all_paths_open_enabled_cases)
+        paths_enabled = [
+            y[0]
+            for x in paths
+            for y in x
+            if y[1] is ProcessTree.OperatorState.ENABLED
+        ]
+        paths_open = [
+            y[0]
+            for x in paths
+            for y in x
+            if y[1] is ProcessTree.OperatorState.OPEN
+            if y[0] not in paths_enabled
+        ]
+        all_paths_open_enabled_events = (
+            all_paths_open_enabled_events + paths_enabled + paths_open
+        )
+        all_paths_open_enabled_cases = all_paths_open_enabled_cases + list(
+            set(paths_enabled + paths_open)
+        )
+    all_paths_open_enabled_events_counter = Counter(
+        all_paths_open_enabled_events
+    )
+    all_paths_open_enabled_cases_counter = Counter(
+        all_paths_open_enabled_cases
+    )
 
     for node in bottomup_nodes:
-        node._properties[num_events_property] = all_paths_open_enabled_events_counter[node]
-        node._properties[num_cases_property] = all_paths_open_enabled_cases_counter[node]
+        node._properties[num_events_property] = (
+            all_paths_open_enabled_events_counter[node]
+        )
+        node._properties[num_cases_property] = (
+            all_paths_open_enabled_cases_counter[node]
+        )
 
     return pt

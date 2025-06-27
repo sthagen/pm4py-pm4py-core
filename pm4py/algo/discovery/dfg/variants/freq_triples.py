@@ -32,11 +32,17 @@ class Parameters(Enum):
     ACTIVITY_KEY = constants.PARAMETER_CONSTANT_ACTIVITY_KEY
 
 
-def apply(log: Union[EventLog, EventStream], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[Tuple[str, str, str], int]:
+def apply(
+    log: Union[EventLog, EventStream],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[Tuple[str, str, str], int]:
     return freq_triples(log, parameters=parameters)
 
 
-def freq_triples(log: Union[EventLog, EventStream], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[Tuple[str, str, str], int]:
+def freq_triples(
+    log: Union[EventLog, EventStream],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[Tuple[str, str, str], int]:
     """
     Counts the number of directly follows occurrences, i.e. of the form <...a,b...>, in an event log.
 
@@ -55,8 +61,20 @@ def freq_triples(log: Union[EventLog, EventStream], parameters: Optional[Dict[Un
     """
     if parameters is None:
         parameters = {}
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_util.DEFAULT_NAME_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_util.DEFAULT_NAME_KEY
+    )
     dfgs = map(
-        (lambda t: [(t[i - 2][activity_key], t[i - 1][activity_key], t[i][activity_key]) for i in range(2, len(t))]),
-        log)
+        (
+            lambda t: [
+                (
+                    t[i - 2][activity_key],
+                    t[i - 1][activity_key],
+                    t[i][activity_key],
+                )
+                for i in range(2, len(t))
+            ]
+        ),
+        log,
+    )
     return dict(Counter([dfg for lista in dfgs for dfg in lista]))

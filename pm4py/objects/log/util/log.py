@@ -22,7 +22,8 @@ Contact: info@processintelligence.solutions
 from pm4py.util import xes_constants as xes_util
 
 
-# TODO: we can do some instance checking and then support both trace level and event level logs..
+# TODO: we can do some instance checking and then support both trace level
+# and event level logs..
 def get_event_labels(event_log, key):
     """
     Fetches the labels present in a log, given a key to use within the events.
@@ -110,31 +111,47 @@ def project_traces(event_log, keys=xes_util.DEFAULT_NAME_KEY):
     if isinstance(keys, str):
         return list(map(lambda t: list(map(lambda e: e[keys], t)), event_log))
     else:
-        return list(map(lambda t: list(map(lambda e: {key: e[key] for key in keys}, t)), event_log))
+        return list(
+            map(
+                lambda t: list(
+                    map(lambda e: {key: e[key] for key in keys}, t)
+                ),
+                event_log,
+            )
+        )
 
 
-def derive_and_lift_trace_attributes_from_event_attributes(trlog, ignore=None, retain_on_event_level=False,
-                                                           verbose=False):
+def derive_and_lift_trace_attributes_from_event_attributes(
+    trlog, ignore=None, retain_on_event_level=False, verbose=False
+):
     if ignore is None:
         ignore = set()
     candidates = set(trlog[0][0].keys())
     for i in ignore:
         candidates.remove(i)
     if verbose:
-        print('candidates: %s' % candidates)
+        print("candidates: %s" % candidates)
     for t in trlog:
         attr = dict(t[0])
         for e in t:
             for k in candidates.copy():
                 if k not in e:
                     if verbose:
-                        print('removing %s, was not present in event' % k)
+                        print("removing %s, was not present in event" % k)
                     candidates.remove(k)
                     continue
                 if e[k] != attr[k]:
                     if verbose:
-                        print('removing ' + k + ' for trace with id ' + t.attributes[
-                            'concept:name'] + ', mismatch ' + str(e[k]) + ' != ' + str(attr[k]))
+                        print(
+                            "removing "
+                            + k
+                            + " for trace with id "
+                            + t.attributes["concept:name"]
+                            + ", mismatch "
+                            + str(e[k])
+                            + " != "
+                            + str(attr[k])
+                        )
                     candidates.remove(k)
                     continue
             if len(candidates) == 0:
@@ -150,9 +167,13 @@ def derive_and_lift_trace_attributes_from_event_attributes(trlog, ignore=None, r
     return trlog
 
 
-def add_artficial_start_and_end(event_log, start='[start>', end='[end]', activity_key=xes_util.DEFAULT_NAME_KEY):
+def add_artficial_start_and_end(
+    event_log,
+    start="[start>",
+    end="[end]",
+    activity_key=xes_util.DEFAULT_NAME_KEY,
+):
     for trace in event_log:
         trace.insert(0, event_log.Event({activity_key: start}))
         trace.append(event_log.Event({activity_key: end}))
     return event_log
-

@@ -31,8 +31,9 @@ class Parameters(Enum):
     RETURN_MAPPING = "return_mapping"
 
 
-def apply(dataframe: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None) -> Union[
-    pd.DataFrame, Tuple[pd.DataFrame, Dict[str, str]]]:
+def apply(
+    dataframe: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None
+) -> Union[pd.DataFrame, Tuple[pd.DataFrame, Dict[str, str]]]:
     """
     Remap the activities in a dataframe using an augmented alphabet to minimize the size of the encoding
 
@@ -65,15 +66,19 @@ def apply(dataframe: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None) 
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    return_mapping = exec_utils.get_param_value(Parameters.RETURN_MAPPING, parameters, False)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    return_mapping = exec_utils.get_param_value(
+        Parameters.RETURN_MAPPING, parameters, False
+    )
 
     activities_count = list(dataframe[activity_key].value_counts().to_dict())
     remap_dict = {}
     for index, act in enumerate(activities_count):
-        result = ''
+        result = ""
         while index >= 0:
-            result = chr((index % 26) + ord('A')) + result
+            result = chr((index % 26) + ord("A")) + result
             index = index // 26 - 1
         remap_dict[act] = result
     dataframe[activity_key] = dataframe[activity_key].map(remap_dict)

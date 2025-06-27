@@ -57,8 +57,12 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     if parameters is None:
         parameters = {}
 
-    include_df = exec_utils.get_param_value(Parameters.INCLUDE_DF, parameters, True)
-    include_object_changes = exec_utils.get_param_value(Parameters.INCLUDE_OBJECT_CHANGES, parameters, True)
+    include_df = exec_utils.get_param_value(
+        Parameters.INCLUDE_DF, parameters, True
+    )
+    include_object_changes = exec_utils.get_param_value(
+        Parameters.INCLUDE_OBJECT_CHANGES, parameters, True
+    )
 
     G = nx_utils.DiGraph()
 
@@ -81,24 +85,39 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     for rel in stream:
         qualifier = rel[ocel.qualifier]
         if qualifier is None:
-            qualifier = ''
-        G.add_edge(rel[ocel.event_id_column], rel[ocel.object_id_column], attr={"type": "E2O", "qualifier": qualifier})
+            qualifier = ""
+        G.add_edge(
+            rel[ocel.event_id_column],
+            rel[ocel.object_id_column],
+            attr={"type": "E2O", "qualifier": qualifier},
+        )
 
-    obj_relations = ocel.o2o[[ocel.object_id_column, ocel.object_id_column + '_2', ocel.qualifier]]
+    obj_relations = ocel.o2o[
+        [ocel.object_id_column, ocel.object_id_column + "_2", ocel.qualifier]
+    ]
     stream = obj_relations.to_dict("records")
     for rel in stream:
         qualifier = rel[ocel.qualifier]
         if qualifier is None:
-            qualifier = ''
-        G.add_edge(rel[ocel.object_id_column], rel[ocel.object_id_column + '_2'],
-                   attr={"type": "O2O", "qualifier": qualifier})
+            qualifier = ""
+        G.add_edge(
+            rel[ocel.object_id_column],
+            rel[ocel.object_id_column + "_2"],
+            attr={"type": "O2O", "qualifier": qualifier},
+        )
 
     if include_df:
-        lifecycle = relations.groupby(ocel.object_id_column).agg(list).to_dict()[ocel.event_id_column]
+        lifecycle = (
+            relations.groupby(ocel.object_id_column)
+            .agg(list)
+            .to_dict()[ocel.event_id_column]
+        )
         for obj in lifecycle:
             lif = lifecycle[obj]
             for i in range(len(lif) - 1):
-                G.add_edge(lif[i], lif[i + 1], attr={"type": "DF", "object": obj})
+                G.add_edge(
+                    lif[i], lif[i + 1], attr={"type": "DF", "object": obj}
+                )
 
     if include_object_changes:
         object_changes = ocel.object_changes.to_dict("records")
@@ -107,6 +126,10 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
             change_dict = copy(object_changes[i])
             change_dict["type"] = "CHANGE"
             G.add_node(change_id, attr=change_dict)
-            G.add_edge(change_id, object_changes[i][ocel.object_id_column], attr={"type": "CHANGE"})
+            G.add_edge(
+                change_id,
+                object_changes[i][ocel.object_id_column],
+                attr={"type": "CHANGE"},
+            )
 
     return G

@@ -42,7 +42,11 @@ def get_graph_components(places, inv_trans, trans_dup_label, tmap):
                 G.add_edge(tmap[x][i].label, tmap[x][j].label)
                 j = j + 1
             i = i + 1
-    all_inserted_val = set(places.values()).union(inv_trans.values()).union(trans_dup_label.values())
+    all_inserted_val = (
+        set(places.values())
+        .union(inv_trans.values())
+        .union(trans_dup_label.values())
+    )
     for v1 in all_inserted_val:
         for arc in v1.out_arcs:
             v2 = arc.target
@@ -61,7 +65,11 @@ def decompose(net, im, fm):
             if t.label not in tmap:
                 tmap[t.label] = []
             tmap[t.label].append(t)
-    trans_dup_label = {x.label: x for x in net.transitions if x.label is not None and len(tmap[x.label]) > 1}
+    trans_dup_label = {
+        x.label: x
+        for x in net.transitions
+        if x.label is not None and len(tmap[x.label]) > 1
+    }
     trans_labels = {x.name: x.label for x in net.transitions}
     conn_comp = get_graph_components(places, inv_trans, trans_dup_label, tmap)
     list_nets = []
@@ -86,23 +94,39 @@ def decompose(net, im, fm):
                 for arc in old_place.in_arcs:
                     st = arc.source
                     if st.name not in lmap:
-                        lmap[st.name] = PetriNet.Transition(st.name, trans_labels[st.name])
+                        lmap[st.name] = PetriNet.Transition(
+                            st.name, trans_labels[st.name]
+                        )
                         net_new.transitions.add(lmap[st.name])
                     add_arc_from_to(lmap[st.name], lmap[el], net_new)
                 for arc in old_place.out_arcs:
                     st = arc.target
                     if st.name not in lmap:
-                        lmap[st.name] = PetriNet.Transition(st.name, trans_labels[st.name])
+                        lmap[st.name] = PetriNet.Transition(
+                            st.name, trans_labels[st.name]
+                        )
                         net_new.transitions.add(lmap[st.name])
                     add_arc_from_to(lmap[el], lmap[st.name], net_new)
                 if old_place in im:
                     im_new[lmap[el]] = im[old_place]
                 if old_place in fm:
                     fm_new[lmap[el]] = fm[old_place]
-        lvis_labels = sorted([t.label for t in net_new.transitions if t.label is not None])
+        lvis_labels = sorted(
+            [t.label for t in net_new.transitions if t.label is not None]
+        )
         t_tuple = tuple(
-            sorted(list(int(hashlib.md5(t.name.encode(constants.DEFAULT_ENCODING)).hexdigest(), 16) for t in
-                        net_new.transitions)))
+            sorted(
+                list(
+                    int(
+                        hashlib.md5(
+                            t.name.encode(constants.DEFAULT_ENCODING)
+                        ).hexdigest(),
+                        16,
+                    )
+                    for t in net_new.transitions
+                )
+            )
+        )
         net_new.lvis_labels = lvis_labels
         net_new.t_tuple = t_tuple
 
@@ -140,25 +164,46 @@ def merge_comp(comp1, comp2):
         net.transitions.add(trans[tr.name])
 
     for tr in comp2[0].transitions:
-        if not tr.name in trans:
+        if tr.name not in trans:
             trans[tr.name] = PetriNet.Transition(tr.name, tr.label)
             net.transitions.add(trans[tr.name])
 
     for arc in comp1[0].arcs:
         if type(arc.source) is PetriNet.Place:
-            add_arc_from_to(places[arc.source.name], trans[arc.target.name], net)
+            add_arc_from_to(
+                places[arc.source.name], trans[arc.target.name], net
+            )
         else:
-            add_arc_from_to(trans[arc.source.name], places[arc.target.name], net)
+            add_arc_from_to(
+                trans[arc.source.name], places[arc.target.name], net
+            )
 
     for arc in comp2[0].arcs:
         if type(arc.source) is PetriNet.Place:
-            add_arc_from_to(places[arc.source.name], trans[arc.target.name], net)
+            add_arc_from_to(
+                places[arc.source.name], trans[arc.target.name], net
+            )
         else:
-            add_arc_from_to(trans[arc.source.name], places[arc.target.name], net)
+            add_arc_from_to(
+                trans[arc.source.name], places[arc.target.name], net
+            )
 
-    lvis_labels = sorted([t.label for t in net.transitions if t.label is not None])
-    t_tuple = tuple(sorted(
-        list(int(hashlib.md5(t.name.encode(constants.DEFAULT_ENCODING)).hexdigest(), 16) for t in net.transitions)))
+    lvis_labels = sorted(
+        [t.label for t in net.transitions if t.label is not None]
+    )
+    t_tuple = tuple(
+        sorted(
+            list(
+                int(
+                    hashlib.md5(
+                        t.name.encode(constants.DEFAULT_ENCODING)
+                    ).hexdigest(),
+                    16,
+                )
+                for t in net.transitions
+            )
+        )
+    )
     net.lvis_labels = lvis_labels
     net.t_tuple = t_tuple
 

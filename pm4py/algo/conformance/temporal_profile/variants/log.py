@@ -40,8 +40,11 @@ class Parameters(Enum):
     WORKCALENDAR = "workcalendar"
 
 
-def apply(log: EventLog, temporal_profile: typing.TemporalProfile,
-          parameters: Optional[Dict[Any, Any]] = None) -> typing.TemporalProfileConformanceResults:
+def apply(
+    log: EventLog,
+    temporal_profile: typing.TemporalProfile,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> typing.TemporalProfileConformanceResults:
     """
     Checks the conformance of the log using the provided temporal profile.
 
@@ -86,16 +89,32 @@ def apply(log: EventLog, temporal_profile: typing.TemporalProfile,
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    business_hours = exec_utils.get_param_value(Parameters.BUSINESS_HOURS, parameters, False)
-    business_hours_slots = exec_utils.get_param_value(Parameters.BUSINESS_HOUR_SLOTS, parameters, constants.DEFAULT_BUSINESS_HOUR_SLOTS)
+    business_hours = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOURS, parameters, False
+    )
+    business_hours_slots = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOUR_SLOTS,
+        parameters,
+        constants.DEFAULT_BUSINESS_HOUR_SLOTS,
+    )
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters,
-                                                     xes_constants.DEFAULT_TIMESTAMP_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
     zeta = exec_utils.get_param_value(Parameters.ZETA, parameters, 6.0)
 
     ret = []
@@ -111,17 +130,28 @@ def apply(log: EventLog, temporal_profile: typing.TemporalProfile,
                     act_j = trace[j][activity_key]
                     if (act_i, act_j) in temporal_profile:
                         if business_hours:
-                            bh = BusinessHours(trace[i][timestamp_key],
-                                               trace[j][start_timestamp_key],
-                                               business_hour_slots=business_hours_slots)
+                            bh = BusinessHours(
+                                trace[i][timestamp_key],
+                                trace[j][start_timestamp_key],
+                                business_hour_slots=business_hours_slots,
+                            )
                             this_diff = bh.get_seconds()
                         else:
                             this_diff = time_j - time_i
                         mean = temporal_profile[(act_i, act_j)][0]
                         std = temporal_profile[(act_i, act_j)][1]
-                        if this_diff < mean - zeta * std or this_diff > mean + zeta * std:
-                            this_zeta = abs(this_diff - mean) / std if std > 0 else sys.maxsize
-                            deviations.append((act_i, act_j, this_diff, this_zeta))
+                        if (
+                            this_diff < mean - zeta * std
+                            or this_diff > mean + zeta * std
+                        ):
+                            this_zeta = (
+                                abs(this_diff - mean) / std
+                                if std > 0
+                                else sys.maxsize
+                            )
+                            deviations.append(
+                                (act_i, act_j, this_diff, this_zeta)
+                            )
 
         ret.append(deviations)
 

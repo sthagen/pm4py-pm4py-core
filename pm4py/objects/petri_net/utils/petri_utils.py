@@ -27,7 +27,12 @@ from copy import copy, deepcopy
 
 from pm4py.objects.log.obj import Trace, Event
 from pm4py.objects.petri_net import semantics, properties
-from pm4py.objects.petri_net.obj import PetriNet, Marking, ResetNet, InhibitorNet
+from pm4py.objects.petri_net.obj import (
+    PetriNet,
+    Marking,
+    ResetNet,
+    InhibitorNet,
+)
 from pm4py.objects.petri_net.saw_net.obj import StochasticArcWeightNet
 from pm4py.util import xes_constants as xes_util
 
@@ -102,22 +107,38 @@ def remove_transition(net: PetriNet, trans: PetriNet.Transition) -> PetriNet:
 
 
 def add_place(net: PetriNet, name=None) -> PetriNet.Place:
-    name = name if name is not None else 'p_' + str(len(net.places)) + '_' + str(time.time()) + str(
-        random.randint(0, 10000))
+    name = (
+        name
+        if name is not None
+        else "p_"
+        + str(len(net.places))
+        + "_"
+        + str(time.time())
+        + str(random.randint(0, 10000))
+    )
     p = PetriNet.Place(name=name)
     net.places.add(p)
     return p
 
 
-def add_transition(net: PetriNet, name=None, label=None) -> PetriNet.Transition:
-    name = name if name is not None else 't_' + str(len(net.transitions)) + '_' + str(time.time()) + str(
-        random.randint(0, 10000))
+def add_transition(
+    net: PetriNet, name=None, label=None
+) -> PetriNet.Transition:
+    name = (
+        name
+        if name is not None
+        else "t_"
+        + str(len(net.transitions))
+        + "_"
+        + str(time.time())
+        + str(random.randint(0, 10000))
+    )
     t = PetriNet.Transition(name=name, label=label)
     net.transitions.add(t)
     return t
 
 
-def merge(trgt: Optional[PetriNet]=None, nets=None) -> PetriNet:
+def merge(trgt: Optional[PetriNet] = None, nets=None) -> PetriNet:
     trgt = trgt if trgt is not None else PetriNet()
     nets = nets if nets is not None else list()
     for net in nets:
@@ -158,7 +179,9 @@ def remove_place(net: PetriNet, place: PetriNet.Place) -> PetriNet:
     return net
 
 
-def add_arc_from_to(fr, to, net: PetriNet, weight=1, type=None) -> PetriNet.Arc:
+def add_arc_from_to(
+    fr, to, net: PetriNet, weight=1, type=None
+) -> PetriNet.Arc:
     """
     Adds an arc from a specific element to another element in some net. Assumes from and to are in the net!
 
@@ -178,19 +201,25 @@ def add_arc_from_to(fr, to, net: PetriNet, weight=1, type=None) -> PetriNet.Arc:
             a = InhibitorNet.InhibitorArc(fr, to, weight)
             a.properties[properties.ARCTYPE] = type
         else:
-            raise Exception("trying to add an inhibitor arc on a traditional Petri net object.")
+            raise Exception(
+                "trying to add an inhibitor arc on a traditional Petri net object."
+            )
     elif type == properties.RESET_ARC:
         if isinstance(net, ResetNet):
             a = ResetNet.ResetArc(fr, to, weight)
             a.properties[properties.ARCTYPE] = type
         else:
-            raise Exception("trying to add a reset arc on a traditional Petri net object.")
+            raise Exception(
+                "trying to add a reset arc on a traditional Petri net object."
+            )
     elif type == properties.STOCHASTIC_ARC:
         if isinstance(net, StochasticArcWeightNet):
             a = StochasticArcWeightNet.Arc(fr, to, weight)
-            #a.properties[properties.ARCTYPE] = type
+            # a.properties[properties.ARCTYPE] = type
         else:
-            raise Exception("trying to add a stochastic arc on a traditional Petri net object.")
+            raise Exception(
+                "trying to add a stochastic arc on a traditional Petri net object."
+            )
     else:
         a = PetriNet.Arc(fr, to, weight)
     net.arcs.add(a)
@@ -200,7 +229,11 @@ def add_arc_from_to(fr, to, net: PetriNet, weight=1, type=None) -> PetriNet.Arc:
     return a
 
 
-def construct_trace_net(trace, trace_name_key=xes_util.DEFAULT_NAME_KEY, activity_key=xes_util.DEFAULT_NAME_KEY):
+def construct_trace_net(
+    trace,
+    trace_name_key=xes_util.DEFAULT_NAME_KEY,
+    activity_key=xes_util.DEFAULT_NAME_KEY,
+):
     """
     Creates a trace net, i.e. a trace in Petri net form.
 
@@ -216,16 +249,24 @@ def construct_trace_net(trace, trace_name_key=xes_util.DEFAULT_NAME_KEY, activit
 
     """
     net = PetriNet(
-        'trace net of %s' % trace.attributes[trace_name_key] if trace_name_key in trace.attributes else ' ')
-    place_map = {0: PetriNet.Place('p_0')}
+        "trace net of %s" % trace.attributes[trace_name_key]
+        if trace_name_key in trace.attributes
+        else " "
+    )
+    place_map = {0: PetriNet.Place("p_0")}
     net.places.add(place_map[0])
     for i in range(0, len(trace)):
-        t = PetriNet.Transition('t_' + trace[i][activity_key] + '_' + str(i), trace[i][activity_key])
-        # 16/02/2021: set the trace index as property of the transition of the trace net
+        t = PetriNet.Transition(
+            "t_" + trace[i][activity_key] + "_" + str(i),
+            trace[i][activity_key],
+        )
+        # 16/02/2021: set the trace index as property of the transition of the
+        # trace net
         t.properties[properties.TRACE_NET_TRANS_INDEX] = i
         net.transitions.add(t)
-        place_map[i + 1] = PetriNet.Place('p_' + str(i + 1))
-        # 16/02/2021: set the place index as property of the place of the trace net
+        place_map[i + 1] = PetriNet.Place("p_" + str(i + 1))
+        # 16/02/2021: set the place index as property of the place of the trace
+        # net
         place_map[i + 1].properties[properties.TRACE_NET_PLACE_INDEX] = i + 1
         net.places.add(place_map[i + 1])
         add_arc_from_to(place_map[i], t, net)
@@ -233,8 +274,12 @@ def construct_trace_net(trace, trace_name_key=xes_util.DEFAULT_NAME_KEY, activit
     return net, Marking({place_map[0]: 1}), Marking({place_map[len(trace)]: 1})
 
 
-def construct_trace_net_cost_aware(trace, costs, trace_name_key=xes_util.DEFAULT_NAME_KEY,
-                                   activity_key=xes_util.DEFAULT_NAME_KEY):
+def construct_trace_net_cost_aware(
+    trace,
+    costs,
+    trace_name_key=xes_util.DEFAULT_NAME_KEY,
+    activity_key=xes_util.DEFAULT_NAME_KEY,
+):
     """
     Creates a trace net, i.e. a trace in Petri net form mapping specific costs to transitions.
 
@@ -252,26 +297,41 @@ def construct_trace_net_cost_aware(trace, costs, trace_name_key=xes_util.DEFAULT
 
     """
     net = PetriNet(
-        'trace net of %s' % trace.attributes[trace_name_key] if trace_name_key in trace.attributes else ' ')
-    place_map = {0: PetriNet.Place('p_0')}
+        "trace net of %s" % trace.attributes[trace_name_key]
+        if trace_name_key in trace.attributes
+        else " "
+    )
+    place_map = {0: PetriNet.Place("p_0")}
     net.places.add(place_map[0])
     cost_map = dict()
     for i in range(0, len(trace)):
-        t = PetriNet.Transition('t_' + trace[i][activity_key] + '_' + str(i), trace[i][activity_key])
-        # 16/02/2021: set the trace index as property of the transition of the trace net
+        t = PetriNet.Transition(
+            "t_" + trace[i][activity_key] + "_" + str(i),
+            trace[i][activity_key],
+        )
+        # 16/02/2021: set the trace index as property of the transition of the
+        # trace net
         t.properties[properties.TRACE_NET_TRANS_INDEX] = i
         cost_map[t] = costs[i]
         net.transitions.add(t)
-        place_map[i + 1] = PetriNet.Place('p_' + str(i + 1))
-        # 16/02/2021: set the place index as property of the place of the trace net
+        place_map[i + 1] = PetriNet.Place("p_" + str(i + 1))
+        # 16/02/2021: set the place index as property of the place of the trace
+        # net
         place_map[i + 1].properties[properties.TRACE_NET_PLACE_INDEX] = i + 1
         net.places.add(place_map[i + 1])
         add_arc_from_to(place_map[i], t, net)
         add_arc_from_to(t, place_map[i + 1], net)
-    return net, Marking({place_map[0]: 1}), Marking({place_map[len(trace)]: 1}), cost_map
+    return (
+        net,
+        Marking({place_map[0]: 1}),
+        Marking({place_map[len(trace)]: 1}),
+        cost_map,
+    )
 
 
-def acyclic_net_variants(net, initial_marking, final_marking, activity_key=xes_util.DEFAULT_NAME_KEY):
+def acyclic_net_variants(
+    net, initial_marking, final_marking, activity_key=xes_util.DEFAULT_NAME_KEY
+):
     """
     Given an acyclic accepting Petri net, initial and final marking extracts a set of variants (in form of traces)
     replayable on the net.
@@ -308,7 +368,9 @@ def acyclic_net_variants(net, initial_marking, final_marking, activity_key=xes_u
             if next_marking == final_marking:
                 variants.add(next_partial_trace)
             else:
-                # If the next marking is not in visited, if the next marking+partial trace is different from the current one+partial trace
+                # If the next marking is not in visited, if the next
+                # marking+partial trace is different from the current
+                # one+partial trace
                 if next_pair not in visited and curr_pair != next_pair:
                     active.add(next_pair)
         visited.add(curr_pair)
@@ -321,7 +383,9 @@ def acyclic_net_variants(net, initial_marking, final_marking, activity_key=xes_u
     return trace_variants
 
 
-def get_transition_by_name(net: PetriNet, transition_name) -> Optional[PetriNet.Transition]:
+def get_transition_by_name(
+    net: PetriNet, transition_name
+) -> Optional[PetriNet.Transition]:
     """
     Get a transition by its name
 
@@ -370,6 +434,7 @@ def decorate_transitions_prepostset(net: PetriNet):
         Petri net
     """
     from pm4py.objects.petri_net.obj import Marking
+
     for trans in net.transitions:
         sub_marking = Marking()
         add_marking = Marking()
@@ -386,8 +451,15 @@ def decorate_transitions_prepostset(net: PetriNet):
         trans.add_marking = add_marking
 
 
-def get_places_shortest_path(net, place_to_populate, current_place, places_shortest_path, actual_list, rec_depth,
-                             max_rec_depth):
+def get_places_shortest_path(
+    net,
+    place_to_populate,
+    current_place,
+    places_shortest_path,
+    actual_list,
+    rec_depth,
+    max_rec_depth,
+):
     """
     Get shortest path between places lead by hidden transitions
 
@@ -415,14 +487,25 @@ def get_places_shortest_path(net, place_to_populate, current_place, places_short
     for t in current_place.out_arcs:
         if t.target.label is None:
             for p2 in t.target.out_arcs:
-                if p2.target not in places_shortest_path[place_to_populate] or len(actual_list) + 1 < len(
-                        places_shortest_path[place_to_populate][p2.target]):
+                if p2.target not in places_shortest_path[
+                    place_to_populate
+                ] or len(actual_list) + 1 < len(
+                    places_shortest_path[place_to_populate][p2.target]
+                ):
                     new_actual_list = copy(actual_list)
                     new_actual_list.append(t.target)
-                    places_shortest_path[place_to_populate][p2.target] = copy(new_actual_list)
-                    places_shortest_path = get_places_shortest_path(net, place_to_populate, p2.target,
-                                                                    places_shortest_path, new_actual_list,
-                                                                    rec_depth + 1, max_rec_depth)
+                    places_shortest_path[place_to_populate][p2.target] = copy(
+                        new_actual_list
+                    )
+                    places_shortest_path = get_places_shortest_path(
+                        net,
+                        place_to_populate,
+                        p2.target,
+                        places_shortest_path,
+                        new_actual_list,
+                        rec_depth + 1,
+                        max_rec_depth,
+                    )
     return places_shortest_path
 
 
@@ -439,7 +522,9 @@ def get_places_shortest_path_by_hidden(net: PetriNet, max_rec_depth):
     """
     places_shortest_path = {}
     for p in net.places:
-        places_shortest_path = get_places_shortest_path(net, p, p, places_shortest_path, [], 0, max_rec_depth)
+        places_shortest_path = get_places_shortest_path(
+            net, p, p, places_shortest_path, [], 0, max_rec_depth
+        )
     return places_shortest_path
 
 
@@ -461,12 +546,13 @@ def invert_spaths_dictionary(spaths):
     inv_spaths = {}
     for target_place in spaths:
         for source_place in spaths[target_place]:
-            if not source_place in inv_spaths:
+            if source_place not in inv_spaths:
                 inv_spaths[source_place] = {}
-            if not target_place in inv_spaths[source_place]:
+            if target_place not in inv_spaths[source_place]:
                 inv_spaths[source_place][target_place] = set()
-            inv_spaths[source_place][target_place] = inv_spaths[source_place][target_place].union(
-                spaths[target_place][source_place])
+            inv_spaths[source_place][target_place] = inv_spaths[source_place][
+                target_place
+            ].union(spaths[target_place][source_place])
     return inv_spaths
 
 
@@ -500,8 +586,16 @@ def remove_unconnected_components(net: PetriNet) -> PetriNet:
     return net
 
 
-def get_s_components_from_petri(net, im, fm, rec_depth=0, curr_s_comp=None, visited_places=None,
-                                list_s_components=None, max_rec_depth=6):
+def get_s_components_from_petri(
+    net,
+    im,
+    fm,
+    rec_depth=0,
+    curr_s_comp=None,
+    visited_places=None,
+    list_s_components=None,
+    max_rec_depth=6,
+):
     """
     Gets the S-components from a Petri net
 
@@ -539,16 +633,28 @@ def get_s_components_from_petri(net, im, fm, rec_depth=0, curr_s_comp=None, visi
     something_changed = True
     while something_changed and rec_depth < max_rec_depth:
         something_changed = False
-        places_to_visit = sorted(list(set(curr_s_comp[len(visited_places):])), key=lambda x: len(x.out_arcs),
-                                 reverse=True)
+        places_to_visit = sorted(
+            list(set(curr_s_comp[len(visited_places):])),
+            key=lambda x: len(x.out_arcs),
+            reverse=True,
+        )
         for place_to_visit in places_to_visit:
             visited_places.append(place_to_visit)
-            target_trans = sorted(list(set([arc.target for arc in place_to_visit.out_arcs])),
-                                  key=lambda x: len(x.out_arcs))
+            target_trans = sorted(
+                list(set([arc.target for arc in place_to_visit.out_arcs])),
+                key=lambda x: len(x.out_arcs),
+            )
             for trans in target_trans:
                 visited_places_names = [x.name for x in visited_places]
                 target_trans_target = list(
-                    set([arc.target for arc in trans.out_arcs if arc.target.name not in visited_places_names]))
+                    set(
+                        [
+                            arc.target
+                            for arc in trans.out_arcs
+                            if arc.target.name not in visited_places_names
+                        ]
+                    )
+                )
                 if target_trans_target:
                     something_changed = True
                     if len(target_trans_target) == 1:
@@ -556,13 +662,20 @@ def get_s_components_from_petri(net, im, fm, rec_depth=0, curr_s_comp=None, visi
                         curr_s_comp.append(new_place)
                     else:
                         for new_place in target_trans_target:
-                            [new_curr_s_comp, new_visited_places] = deepcopy([curr_s_comp, visited_places])
+                            [new_curr_s_comp, new_visited_places] = deepcopy(
+                                [curr_s_comp, visited_places]
+                            )
                             new_curr_s_comp.append(new_place)
-                            list_s_components = get_s_components_from_petri(net, im, fm, rec_depth=rec_depth + 1,
-                                                                            curr_s_comp=new_curr_s_comp,
-                                                                            visited_places=new_visited_places,
-                                                                            list_s_components=list_s_components,
-                                                                            max_rec_depth=max_rec_depth)
+                            list_s_components = get_s_components_from_petri(
+                                net,
+                                im,
+                                fm,
+                                rec_depth=rec_depth + 1,
+                                curr_s_comp=new_curr_s_comp,
+                                visited_places=new_visited_places,
+                                list_s_components=list_s_components,
+                                max_rec_depth=max_rec_depth,
+                            )
 
     if not set([place.name for place in curr_s_comp]) in list_s_components:
         list_s_components.append(set([place.name for place in curr_s_comp]))

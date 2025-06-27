@@ -156,16 +156,28 @@ def is_valid_order(po, dfg_graph, efg):
                     all_ef_g2_g1 = False
         if all_ef_g1_g2 and all_ef_g2_g1 and (edge_g1_g2 or edge_g2_g1):
             return False
-        if not edge_g1_g2 and not edge_g2_g1 and not (all_ef_g1_g2 and all_ef_g2_g1):
+        if (
+            not edge_g1_g2
+            and not edge_g2_g1
+            and not (all_ef_g1_g2 and all_ef_g2_g1)
+        ):
             return False
 
     n = len(po.nodes)
     for i in range(n):
         group = po.nodes[i]
         c1 = contains(start_blocks, group)
-        c2 = len(set(group).intersection(set(dfg_graph.start_activities.keys()))) > 0
+        c2 = (
+            len(
+                set(group).intersection(set(dfg_graph.start_activities.keys()))
+            )
+            > 0
+        )
         c3 = contains(end_blocks, group)
-        c4 = len(set(group).intersection(set(dfg_graph.end_activities.keys()))) > 0
+        c4 = (
+            len(set(group).intersection(set(dfg_graph.end_activities.keys())))
+            > 0
+        )
         if (c1 and not c2) or (c3 and not c4):
             return False
 
@@ -175,14 +187,20 @@ def is_valid_order(po, dfg_graph, efg):
 class BruteForcePartialOrderCut(Cut[T], ABC, Generic[T]):
 
     @classmethod
-    def operator(cls, parameters: Optional[Dict[str, Any]] = None) -> StrictPartialOrder:
+    def operator(
+        cls, parameters: Optional[Dict[str, Any]] = None
+    ) -> StrictPartialOrder:
         raise Exception("This function should not be called!")
 
     @classmethod
-    def holds(cls, obj: T, parameters: Optional[Dict[str, Any]] = None) -> Optional[BinaryRelation]:
+    def holds(
+        cls, obj: T, parameters: Optional[Dict[str, Any]] = None
+    ) -> Optional[BinaryRelation]:
         dfg_graph = obj.dfg
         efg = to_efg(obj)
-        alphabet = sorted(dfu.get_vertices(dfg_graph), key=lambda g: g.__str__())
+        alphabet = sorted(
+            dfu.get_vertices(dfg_graph), key=lambda g: g.__str__()
+        )
         for part in partition(alphabet):
             po = generate_order(part, efg)
             if is_valid_order(po, dfg_graph, efg):
@@ -190,8 +208,9 @@ class BruteForcePartialOrderCut(Cut[T], ABC, Generic[T]):
         return None
 
     @classmethod
-    def apply(cls, obj: T, parameters: Optional[Dict[str, Any]] = None) -> Optional[
-            Tuple[StrictPartialOrder, List[POWL]]]:
+    def apply(
+        cls, obj: T, parameters: Optional[Dict[str, Any]] = None
+    ) -> Optional[Tuple[StrictPartialOrder, List[POWL]]]:
         g = cls.holds(obj, parameters)
         if g is None:
             return g
@@ -205,11 +224,17 @@ class BruteForcePartialOrderCut(Cut[T], ABC, Generic[T]):
         return po, po.children
 
 
-class BruteForcePartialOrderCutUVCL(BruteForcePartialOrderCut[IMDataStructureUVCL]):
+class BruteForcePartialOrderCutUVCL(
+    BruteForcePartialOrderCut[IMDataStructureUVCL]
+):
 
     @classmethod
-    def project(cls, obj: IMDataStructureUVCL, groups: List[Collection[Any]],
-                parameters: Optional[Dict[str, Any]] = None) -> List[IMDataStructureUVCL]:
+    def project(
+        cls,
+        obj: IMDataStructureUVCL,
+        groups: List[Collection[Any]],
+        parameters: Optional[Dict[str, Any]] = None,
+    ) -> List[IMDataStructureUVCL]:
         r = list()
         for g in groups:
             c = Counter()

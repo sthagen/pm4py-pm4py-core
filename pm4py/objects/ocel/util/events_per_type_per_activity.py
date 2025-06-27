@@ -33,7 +33,9 @@ class Parameters(Enum):
     OBJECT_TYPE = ocel_constants.PARAM_OBJECT_TYPE
 
 
-def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, Dict[str, float]]:
+def apply(
+    ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None
+) -> Dict[str, Dict[str, float]]:
     """
     Provided statistics (mean, median, min, max) on the number of events of a given activity that are associated
     to objects of a given type.
@@ -60,13 +62,25 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, 
 
     from statistics import mean, median
 
-    event_id = exec_utils.get_param_value(Parameters.EVENT_ID, parameters, ocel.event_id_column)
-    event_activity = exec_utils.get_param_value(Parameters.EVENT_ACTIVITY, parameters, ocel.event_activity)
-    object_id = exec_utils.get_param_value(Parameters.OBJECT_ID, parameters, ocel.object_id_column)
-    object_type = exec_utils.get_param_value(Parameters.OBJECT_TYPE, parameters, ocel.object_type_column)
+    event_id = exec_utils.get_param_value(
+        Parameters.EVENT_ID, parameters, ocel.event_id_column
+    )
+    event_activity = exec_utils.get_param_value(
+        Parameters.EVENT_ACTIVITY, parameters, ocel.event_activity
+    )
+    object_id = exec_utils.get_param_value(
+        Parameters.OBJECT_ID, parameters, ocel.object_id_column
+    )
+    object_type = exec_utils.get_param_value(
+        Parameters.OBJECT_TYPE, parameters, ocel.object_type_column
+    )
 
-    activities = pandas_utils.format_unique(ocel.events[event_activity].unique())
-    object_types = pandas_utils.format_unique(ocel.objects[object_type].unique())
+    activities = pandas_utils.format_unique(
+        ocel.events[event_activity].unique()
+    )
+    object_types = pandas_utils.format_unique(
+        ocel.objects[object_type].unique()
+    )
 
     ret = {}
 
@@ -75,9 +89,19 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, 
             ret[act] = {}
         df = ocel.relations[ocel.relations[event_activity] == act]
         for ot in object_types:
-            all_counts = list(df[df[object_type] == ot].groupby(object_id)[event_id].agg("count").to_dict().values())
+            all_counts = list(
+                df[df[object_type] == ot]
+                .groupby(object_id)[event_id]
+                .agg("count")
+                .to_dict()
+                .values()
+            )
             if all_counts:
-                ret[act][ot] = {"min": min(all_counts), "max": max(all_counts), "mean": mean(all_counts),
-                                "median": median(all_counts)}
+                ret[act][ot] = {
+                    "min": min(all_counts),
+                    "max": max(all_counts),
+                    "mean": mean(all_counts),
+                    "median": median(all_counts),
+                }
 
     return ret

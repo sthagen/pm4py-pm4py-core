@@ -36,7 +36,9 @@ class Parameters(Enum):
     INCLUDE_EDGE_ATTRIBUTES = "include_edge_attributes"
 
 
-def apply(G: nx.DiGraph, parameters: Optional[Dict[Any, Any]] = None) -> graphviz.Digraph:
+def apply(
+    G: nx.DiGraph, parameters: Optional[Dict[Any, Any]] = None
+) -> graphviz.Digraph:
     """
     Creates a Graphviz Digraph from a NetworkX DiGraph object.
 
@@ -75,15 +77,28 @@ def apply(G: nx.DiGraph, parameters: Optional[Dict[Any, Any]] = None) -> graphvi
     if parameters is None:
         parameters = {}
 
-    format = exec_utils.get_param_value(Parameters.FORMAT, parameters, constants.DEFAULT_FORMAT_GVIZ_VIEW)
-    bgcolor = exec_utils.get_param_value(Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR)
+    format = exec_utils.get_param_value(
+        Parameters.FORMAT, parameters, constants.DEFAULT_FORMAT_GVIZ_VIEW
+    )
+    bgcolor = exec_utils.get_param_value(
+        Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR
+    )
     rankdir = exec_utils.get_param_value(Parameters.RANKDIR, parameters, "LR")
 
-    include_node_attributes = exec_utils.get_param_value(Parameters.INCLUDE_NODE_ATTRIBUTES, parameters, True)
-    include_edge_attributes = exec_utils.get_param_value(Parameters.INCLUDE_EDGE_ATTRIBUTES, parameters, True)
+    include_node_attributes = exec_utils.get_param_value(
+        Parameters.INCLUDE_NODE_ATTRIBUTES, parameters, True
+    )
+    include_edge_attributes = exec_utils.get_param_value(
+        Parameters.INCLUDE_EDGE_ATTRIBUTES, parameters, True
+    )
 
-    filename = tempfile.NamedTemporaryFile(suffix='.gv')
-    viz = graphviz.Digraph("networkx_digraph", filename=filename.name, engine='dot', graph_attr={'bgcolor': bgcolor})
+    filename = tempfile.NamedTemporaryFile(suffix=".gv")
+    viz = graphviz.Digraph(
+        "networkx_digraph",
+        filename=filename.name,
+        engine="dot",
+        graph_attr={"bgcolor": bgcolor},
+    )
 
     nodes_dict = {}
     for node in G.nodes:

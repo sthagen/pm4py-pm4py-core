@@ -48,7 +48,11 @@ def ot_to_color(ot: str) -> str:
     return ret
 
 
-def apply(ocel: OCEL, graph: Set[Tuple[str, str]], parameters: Optional[Dict[Any, Any]] = None) -> Digraph:
+def apply(
+    ocel: OCEL,
+    graph: Set[Tuple[str, str]],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Digraph:
     """
     Visualizes an object graph
 
@@ -73,34 +77,70 @@ def apply(ocel: OCEL, graph: Set[Tuple[str, str]], parameters: Optional[Dict[Any
     if parameters is None:
         parameters = {}
 
-    image_format = exec_utils.get_param_value(Parameters.FORMAT, parameters, "png")
-    bgcolor = exec_utils.get_param_value(Parameters.BGCOLOR, parameters, "transparent")
-    rankdir = exec_utils.get_param_value(Parameters.RANKDIR, parameters, constants.DEFAULT_RANKDIR_GVIZ)
-    directed = exec_utils.get_param_value(Parameters.DIRECTED, parameters, True)
+    image_format = exec_utils.get_param_value(
+        Parameters.FORMAT, parameters, "png"
+    )
+    bgcolor = exec_utils.get_param_value(
+        Parameters.BGCOLOR, parameters, "transparent"
+    )
+    rankdir = exec_utils.get_param_value(
+        Parameters.RANKDIR, parameters, constants.DEFAULT_RANKDIR_GVIZ
+    )
+    directed = exec_utils.get_param_value(
+        Parameters.DIRECTED, parameters, True
+    )
 
-    enable_graph_title = exec_utils.get_param_value(Parameters.ENABLE_GRAPH_TITLE, parameters, constants.DEFAULT_ENABLE_GRAPH_TITLES)
-    graph_title = exec_utils.get_param_value(Parameters.GRAPH_TITLE, parameters, "Object-Centric Graph")
+    enable_graph_title = exec_utils.get_param_value(
+        Parameters.ENABLE_GRAPH_TITLE,
+        parameters,
+        constants.DEFAULT_ENABLE_GRAPH_TITLES,
+    )
+    graph_title = exec_utils.get_param_value(
+        Parameters.GRAPH_TITLE, parameters, "Object-Centric Graph"
+    )
 
-    filename = tempfile.NamedTemporaryFile(suffix='.gv')
+    filename = tempfile.NamedTemporaryFile(suffix=".gv")
     filename.close()
 
     if directed:
-        viz = Digraph("ograph", filename=filename.name, engine='dot', graph_attr={'bgcolor': bgcolor})
+        viz = Digraph(
+            "ograph",
+            filename=filename.name,
+            engine="dot",
+            graph_attr={"bgcolor": bgcolor},
+        )
     else:
-        viz = Graph("ograph", filename=filename.name, engine='dot', graph_attr={'bgcolor': bgcolor})
-    viz.attr('node', shape='ellipse', fixedsize='false')
+        viz = Graph(
+            "ograph",
+            filename=filename.name,
+            engine="dot",
+            graph_attr={"bgcolor": bgcolor},
+        )
+    viz.attr("node", shape="ellipse", fixedsize="false")
 
     if enable_graph_title:
-        viz.attr(label='<<FONT POINT-SIZE="20">'+graph_title+'</FONT>>', labelloc="top")
-    
-    ob_type = ocel.objects.groupby(ocel.object_id_column).first()[ocel.object_type_column].to_dict()
+        viz.attr(
+            label='<<FONT POINT-SIZE="20">' + graph_title + "</FONT>>",
+            labelloc="top",
+        )
+
+    ob_type = (
+        ocel.objects.groupby(ocel.object_id_column)
+        .first()[ocel.object_type_column]
+        .to_dict()
+    )
 
     nodes = set(x[0] for x in graph).union(set(x[1] for x in graph))
     nodes_dict = {}
     for n in nodes:
         v = str(uuid.uuid4())
         nodes_dict[n] = v
-        viz.node(v, label=n, fontcolor=ot_to_color(ob_type[n]), color=ot_to_color(ob_type[n]))
+        viz.node(
+            v,
+            label=n,
+            fontcolor=ot_to_color(ob_type[n]),
+            color=ot_to_color(ob_type[n]),
+        )
 
     for e in graph:
         viz.edge(nodes_dict[e[0]], nodes_dict[e[1]])

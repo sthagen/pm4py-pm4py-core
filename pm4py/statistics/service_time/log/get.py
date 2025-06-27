@@ -41,7 +41,10 @@ class Parameters(Enum):
 DIFF_KEY = "@@diff"
 
 
-def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[str, float]:
+def apply(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[str, float]:
     """
     Gets the service time per activity on an event log object
 
@@ -77,20 +80,41 @@ def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]]
 
     from statistics import mean, median
 
-    business_hours = exec_utils.get_param_value(Parameters.BUSINESS_HOURS, parameters, False)
-    business_hours_slots = exec_utils.get_param_value(Parameters.BUSINESS_HOUR_SLOTS, parameters, constants.DEFAULT_BUSINESS_HOUR_SLOTS)
+    business_hours = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOURS, parameters, False
+    )
+    business_hours_slots = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOUR_SLOTS,
+        parameters,
+        constants.DEFAULT_BUSINESS_HOUR_SLOTS,
+    )
 
-    workcalendar = exec_utils.get_param_value(Parameters.WORKCALENDAR, parameters, constants.DEFAULT_BUSINESS_HOURS_WORKCALENDAR)
+    workcalendar = exec_utils.get_param_value(
+        Parameters.WORKCALENDAR,
+        parameters,
+        constants.DEFAULT_BUSINESS_HOURS_WORKCALENDAR,
+    )
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters,
-                                                     xes_constants.DEFAULT_TIMESTAMP_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    aggregation_measure = exec_utils.get_param_value(Parameters.AGGREGATION_MEASURE,
-                                                     parameters, "mean")
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    aggregation_measure = exec_utils.get_param_value(
+        Parameters.AGGREGATION_MEASURE, parameters, "mean"
+    )
 
     durations_dict = {}
     activities = [ev[activity_key] for trace in log for ev in trace]
@@ -101,8 +125,12 @@ def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]]
         for event in trace:
             activity = event[activity_key]
             if business_hours:
-                bh = BusinessHours(event[start_timestamp_key], event[timestamp_key],
-                                   business_hour_slots=business_hours_slots, workcalendar=workcalendar)
+                bh = BusinessHours(
+                    event[start_timestamp_key],
+                    event[timestamp_key],
+                    business_hour_slots=business_hours_slots,
+                    workcalendar=workcalendar,
+                )
                 durations_dict[activity].append(bh.get_seconds())
             else:
                 start_time = event[start_timestamp_key].timestamp()

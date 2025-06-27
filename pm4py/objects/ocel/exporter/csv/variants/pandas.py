@@ -31,7 +31,12 @@ class Parameters(Enum):
     ENCODING = "encoding"
 
 
-def apply(ocel: OCEL, output_path: str, objects_path=None, parameters: Optional[Dict[Any, Any]] = None):
+def apply(
+    ocel: OCEL,
+    output_path: str,
+    objects_path=None,
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     """
     Exports an object-centric event log in a CSV file, using Pandas as backend
 
@@ -49,12 +54,20 @@ def apply(ocel: OCEL, output_path: str, objects_path=None, parameters: Optional[
     if parameters is None:
         parameters = {}
 
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, pm4_constants.DEFAULT_ENCODING)
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, pm4_constants.DEFAULT_ENCODING
+    )
 
     ocel = ocel_consistency.apply(ocel, parameters=parameters)
-    ocel = filtering_utils.propagate_relations_filtering(ocel, parameters=parameters)
+    ocel = filtering_utils.propagate_relations_filtering(
+        ocel, parameters=parameters
+    )
 
-    ocel.get_extended_table().to_csv(output_path, index=False, na_rep="", encoding=encoding)
+    ocel.get_extended_table().to_csv(
+        output_path, index=False, na_rep="", encoding=encoding
+    )
 
     if objects_path is not None:
-        ocel.objects.to_csv(objects_path, index=False, na_rep="", encoding=encoding)
+        ocel.objects.to_csv(
+            objects_path, index=False, na_rep="", encoding=encoding
+        )

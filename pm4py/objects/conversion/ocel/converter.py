@@ -24,7 +24,10 @@ from enum import Enum
 from pm4py.util import exec_utils
 from pm4py.objects.ocel.obj import OCEL
 from typing import Optional, Dict, Any
-from pm4py.objects.conversion.ocel.variants import ocel_to_nx, ocel_features_to_nx
+from pm4py.objects.conversion.ocel.variants import (
+    ocel_to_nx,
+    ocel_features_to_nx,
+)
 
 
 class Variants(Enum):
@@ -32,7 +35,11 @@ class Variants(Enum):
     OCEL_FEATURES_TO_NX = ocel_features_to_nx
 
 
-def apply(ocel: OCEL, variant=Variants.OCEL_TO_NX, parameters: Optional[Dict[Any, Any]] = None):
+def apply(
+    ocel: OCEL,
+    variant=Variants.OCEL_TO_NX,
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     """
     Converts an OCEL to another object.
 

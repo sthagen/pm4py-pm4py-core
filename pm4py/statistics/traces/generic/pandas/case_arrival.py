@@ -39,7 +39,10 @@ class Parameters(Enum):
     KEEP_ONCE_PER_CASE = "keep_once_per_case"
 
 
-def get_case_arrival_avg(df: pd.DataFrame, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> float:
+def get_case_arrival_avg(
+    df: pd.DataFrame,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> float:
     """
     Gets the average time interlapsed between case starts
 
@@ -59,8 +62,12 @@ def get_case_arrival_avg(df: pd.DataFrame, parameters: Optional[Dict[Union[str, 
     if parameters is None:
         parameters = {}
 
-    caseid_glue = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME)
-    timest_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY)
+    caseid_glue = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME
+    )
+    timest_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY
+    )
 
     first_df = df.groupby(caseid_glue).first()
 
@@ -68,14 +75,20 @@ def get_case_arrival_avg(df: pd.DataFrame, parameters: Optional[Dict[Union[str, 
 
     first_df_shift = first_df.shift(-1)
 
-    first_df_shift.columns = [str(col) + '_2' for col in first_df_shift.columns]
+    first_df_shift.columns = [
+        str(col) + "_2" for col in first_df_shift.columns
+    ]
 
-    df_successive_rows = pandas_utils.concat([first_df, first_df_shift], axis=1)
-    df_successive_rows['interlapsed_time'] = pandas_utils.get_total_seconds(df_successive_rows[timest_key + '_2'] - df_successive_rows[timest_key])
+    df_successive_rows = pandas_utils.concat(
+        [first_df, first_df_shift], axis=1
+    )
+    df_successive_rows["interlapsed_time"] = pandas_utils.get_total_seconds(
+        df_successive_rows[timest_key + "_2"] - df_successive_rows[timest_key]
+    )
 
-    df_successive_rows = df_successive_rows.dropna(subset=['interlapsed_time'])
+    df_successive_rows = df_successive_rows.dropna(subset=["interlapsed_time"])
 
-    return df_successive_rows['interlapsed_time'].mean()
+    return df_successive_rows["interlapsed_time"].mean()
 
 
 def get_case_dispersion_avg(df, parameters=None):
@@ -98,8 +111,12 @@ def get_case_dispersion_avg(df, parameters=None):
     if parameters is None:
         parameters = {}
 
-    caseid_glue = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME)
-    timest_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY)
+    caseid_glue = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME
+    )
+    timest_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY
+    )
 
     first_df = df.groupby(caseid_glue).last()
 
@@ -107,11 +124,17 @@ def get_case_dispersion_avg(df, parameters=None):
 
     first_df_shift = first_df.shift(-1)
 
-    first_df_shift.columns = [str(col) + '_2' for col in first_df_shift.columns]
+    first_df_shift.columns = [
+        str(col) + "_2" for col in first_df_shift.columns
+    ]
 
-    df_successive_rows = pandas_utils.concat([first_df, first_df_shift], axis=1)
-    df_successive_rows['interlapsed_time'] = pandas_utils.get_total_seconds(df_successive_rows[timest_key + '_2'] - df_successive_rows[timest_key])
+    df_successive_rows = pandas_utils.concat(
+        [first_df, first_df_shift], axis=1
+    )
+    df_successive_rows["interlapsed_time"] = pandas_utils.get_total_seconds(
+        df_successive_rows[timest_key + "_2"] - df_successive_rows[timest_key]
+    )
 
-    df_successive_rows = df_successive_rows.dropna(subset=['interlapsed_time'])
+    df_successive_rows = df_successive_rows.dropna(subset=["interlapsed_time"])
 
-    return df_successive_rows['interlapsed_time'].mean()
+    return df_successive_rows["interlapsed_time"].mean()

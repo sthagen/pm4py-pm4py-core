@@ -31,8 +31,13 @@ class Variants(Enum):
     PANDAS = pandas
 
 
-def apply(ocel: OCEL, output_path: str, variant=Variants.PANDAS, objects_path=None,
-          parameters: Optional[Dict[Any, Any]] = None):
+def apply(
+    ocel: OCEL,
+    output_path: str,
+    variant=Variants.PANDAS,
+    objects_path=None,
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     """
     Exports an object-centric event log in a CSV file
 
@@ -50,4 +55,6 @@ def apply(ocel: OCEL, output_path: str, variant=Variants.PANDAS, objects_path=No
     parameters
         Parameters of the algorithm
     """
-    return exec_utils.get_variant(variant).apply(ocel, output_path, objects_path=objects_path, parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        ocel, output_path, objects_path=objects_path, parameters=parameters
+    )

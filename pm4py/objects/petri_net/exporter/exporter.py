@@ -32,7 +32,14 @@ class Variants(Enum):
 PNML = Variants.PNML
 
 
-def apply(net, initial_marking, output_filename, final_marking=None, variant=PNML, parameters=None):
+def apply(
+    net,
+    initial_marking,
+    output_filename,
+    final_marking=None,
+    variant=PNML,
+    parameters=None,
+):
     """
     Export a Petri net along with an initial marking (and possibly a final marking) to an output file
 
@@ -52,8 +59,13 @@ def apply(net, initial_marking, output_filename, final_marking=None, variant=PNM
     parameters
         Parameters of the exporter
     """
-    return exec_utils.get_variant(variant).export_net(net, initial_marking, output_filename,
-                                                      final_marking=final_marking, parameters=parameters)
+    return exec_utils.get_variant(variant).export_net(
+        net,
+        initial_marking,
+        output_filename,
+        final_marking=final_marking,
+        parameters=parameters,
+    )
 
 
 def serialize(net, initial_marking, final_marking=None, variant=PNML):
@@ -77,4 +89,6 @@ def serialize(net, initial_marking, final_marking=None, variant=PNML):
     serialization
         Binary string (BPMN 2.0 XML standard)
     """
-    return exec_utils.get_variant(variant).export_petri_as_string(net, initial_marking, final_marking=final_marking)
+    return exec_utils.get_variant(variant).export_petri_as_string(
+        net, initial_marking, final_marking=final_marking
+    )

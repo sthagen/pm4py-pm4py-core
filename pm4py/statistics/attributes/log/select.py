@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,7 +19,12 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.statistics.attributes.log.get import get_attribute_values, get_all_event_attributes_from_log, get_all_trace_attributes_from_log, get_trace_attribute_values
+from pm4py.statistics.attributes.log.get import (
+    get_attribute_values,
+    get_all_event_attributes_from_log,
+    get_all_trace_attributes_from_log,
+    get_trace_attribute_values,
+)
 from pm4py.objects.log.util import sampling
 from typing import Union, List, Set
 from pm4py.objects.log.obj import EventLog
@@ -29,8 +34,11 @@ from pm4py.objects.conversion.log import converter as log_converter
 DEFAULT_MAX_CASES_FOR_ATTR_SELECTION = 50
 
 
-def select_attributes_from_log_for_tree(log: EventLog, max_cases_for_attr_selection=DEFAULT_MAX_CASES_FOR_ATTR_SELECTION,
-                                        max_diff_occ=DEFAULT_MAX_CASES_FOR_ATTR_SELECTION / 4):
+def select_attributes_from_log_for_tree(
+    log: EventLog,
+    max_cases_for_attr_selection=DEFAULT_MAX_CASES_FOR_ATTR_SELECTION,
+    max_diff_occ=DEFAULT_MAX_CASES_FOR_ATTR_SELECTION / 4,
+):
     """
     Select attributes from log for tree
 
@@ -58,9 +66,13 @@ def select_attributes_from_log_for_tree(log: EventLog, max_cases_for_attr_select
     event_attributes_values = {}
     trace_attributes_values = {}
     for attr in event_attributes:
-        event_attributes_values[attr] = set(get_attribute_values(log, attr).keys())
+        event_attributes_values[attr] = set(
+            get_attribute_values(log, attr).keys()
+        )
     for attr in trace_attributes:
-        trace_attributes_values[attr] = set(get_trace_attribute_values(log, attr).keys())
+        trace_attributes_values[attr] = set(
+            get_trace_attribute_values(log, attr).keys()
+        )
 
     numeric_event_attributes_to_consider = list()
     string_event_attributes_to_consider = list()
@@ -83,19 +95,30 @@ def select_attributes_from_log_for_tree(log: EventLog, max_cases_for_attr_select
         elif type(val) is str and len(lst) < max_diff_occ:
             string_trace_attributes_to_consider.append(attr)
 
-    numeric_event_attributes_to_consider = check_event_attributes_presence(log,
-                                                                           numeric_event_attributes_to_consider)
-    string_event_attributes_to_consider = check_event_attributes_presence(log,
-                                                                          string_event_attributes_to_consider)
-    numeric_trace_attributes_to_consider = check_trace_attributes_presence(log,
-                                                                           numeric_trace_attributes_to_consider)
-    string_trace_attributes_to_consider = check_trace_attributes_presence(log,
-                                                                          string_trace_attributes_to_consider)
+    numeric_event_attributes_to_consider = check_event_attributes_presence(
+        log, numeric_event_attributes_to_consider
+    )
+    string_event_attributes_to_consider = check_event_attributes_presence(
+        log, string_event_attributes_to_consider
+    )
+    numeric_trace_attributes_to_consider = check_trace_attributes_presence(
+        log, numeric_trace_attributes_to_consider
+    )
+    string_trace_attributes_to_consider = check_trace_attributes_presence(
+        log, string_trace_attributes_to_consider
+    )
 
-    return string_trace_attributes_to_consider, string_event_attributes_to_consider, numeric_trace_attributes_to_consider, numeric_event_attributes_to_consider
+    return (
+        string_trace_attributes_to_consider,
+        string_event_attributes_to_consider,
+        numeric_trace_attributes_to_consider,
+        numeric_event_attributes_to_consider,
+    )
 
 
-def check_trace_attributes_presence(log: EventLog, attributes_set: Union[Set[str], List[str]]) -> Union[Set[str], List[str]]:
+def check_trace_attributes_presence(
+    log: EventLog, attributes_set: Union[Set[str], List[str]]
+) -> Union[Set[str], List[str]]:
     """
     Check trace attributes presence in all the traces of the log
 
@@ -120,7 +143,9 @@ def check_trace_attributes_presence(log: EventLog, attributes_set: Union[Set[str
     return attributes_set
 
 
-def check_event_attributes_presence(log: EventLog, attributes_set: Union[Set[str], List[str]]) -> Union[Set[str], List[str]]:
+def check_event_attributes_presence(
+    log: EventLog, attributes_set: Union[Set[str], List[str]]
+) -> Union[Set[str], List[str]]:
     """
     Check event attributes presence in all the traces of the log
 
@@ -145,7 +170,9 @@ def check_event_attributes_presence(log: EventLog, attributes_set: Union[Set[str
     return attributes_set
 
 
-def verify_if_event_attribute_is_in_each_trace(log: EventLog, attribute: str) -> bool:
+def verify_if_event_attribute_is_in_each_trace(
+    log: EventLog, attribute: str
+) -> bool:
     """
     Verify if the event attribute is in each trace
 
@@ -174,7 +201,9 @@ def verify_if_event_attribute_is_in_each_trace(log: EventLog, attribute: str) ->
     return True
 
 
-def verify_if_trace_attribute_is_in_each_trace(log: EventLog, attribute: str) -> bool:
+def verify_if_trace_attribute_is_in_each_trace(
+    log: EventLog, attribute: str
+) -> bool:
     """
     Verify if the trace attribute is in each trace
 

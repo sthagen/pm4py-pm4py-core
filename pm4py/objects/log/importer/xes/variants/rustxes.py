@@ -34,11 +34,15 @@ class Parameters(Enum):
     RETURN_LEGACY_LOG_OBJECT = "return_legacy_log_object"
 
 
-def apply(log_path: str, parameters: Optional[Dict[Any, Any]] = None) -> Union[EventLog, pd.DataFrame]:
+def apply(
+    log_path: str, parameters: Optional[Dict[Any, Any]] = None
+) -> Union[EventLog, pd.DataFrame]:
     if parameters is None:
         parameters = {}
 
-    return_legacy_log_object = exec_utils.get_param_value(Parameters.RETURN_LEGACY_LOG_OBJECT, parameters, True)
+    return_legacy_log_object = exec_utils.get_param_value(
+        Parameters.RETURN_LEGACY_LOG_OBJECT, parameters, True
+    )
 
     import rustxes
 
@@ -52,12 +56,17 @@ def apply(log_path: str, parameters: Optional[Dict[Any, Any]] = None) -> Union[E
 
     if importlib.util.find_spec("cudf"):
         import cudf
+
         log = cudf.DataFrame(log)
 
     if return_legacy_log_object:
         this_parameters = copy(parameters)
         this_parameters["stream_postprocessing"] = True
 
-        log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=this_parameters)
+        log = log_converter.apply(
+            log,
+            variant=log_converter.Variants.TO_EVENT_LOG,
+            parameters=this_parameters,
+        )
 
     return log

@@ -26,18 +26,53 @@ from enum import Enum
 
 class XESExtension(Enum):
     ArtifactLifecycle = (
-    'ArtifactLifecycle', 'artifactlifecycle', 'http://www.xes-standard.org/artifactlifecycle.xesext')
-    Concept = ('Concept', 'concept', 'http://www.xes-standard.org/concept.xesext')
-    Cost = ('Cost', 'cost', 'http://www.xes-standard.org/cost.xesext')
-    Identity = ('Identity', 'identity', 'http://www.xes-standard.org/identity.xesext')
-    Lifecycle = ('Lifecycle', 'lifecycle', 'http://www.xes-standard.org/lifecycle.xesext')
-    Micro = ('Micro', 'micro', 'http://www.xes-standard.org/micro.xesext')
-    Organizational = ('Organizational', 'org', 'http://www.xes-standard.org/org.xesext')
-    Semantic = ('Semantic', 'semantic', 'http://www.xes-standard.org/semantic.xesext')
-    SoftwareCommunication = ('Software Communication', 'swcomm', 'http://www.xes-standard.org/swcomm.xesext')
-    SoftwareEvent = ('Software Event', 'swevent', 'http://www.xes-standard.org/swevent.xesext')
-    SoftwareTelemetry = ('Software Telemetry', 'swtelemetry', 'http://www.xes-standard.org/swtelemetry.xesext')
-    Time = ('Time', 'time', 'http://www.xes-standard.org/time.xesext')
+        "ArtifactLifecycle",
+        "artifactlifecycle",
+        "http://www.xes-standard.org/artifactlifecycle.xesext",
+    )
+    Concept = (
+        "Concept",
+        "concept",
+        "http://www.xes-standard.org/concept.xesext",
+    )
+    Cost = ("Cost", "cost", "http://www.xes-standard.org/cost.xesext")
+    Identity = (
+        "Identity",
+        "identity",
+        "http://www.xes-standard.org/identity.xesext",
+    )
+    Lifecycle = (
+        "Lifecycle",
+        "lifecycle",
+        "http://www.xes-standard.org/lifecycle.xesext",
+    )
+    Micro = ("Micro", "micro", "http://www.xes-standard.org/micro.xesext")
+    Organizational = (
+        "Organizational",
+        "org",
+        "http://www.xes-standard.org/org.xesext",
+    )
+    Semantic = (
+        "Semantic",
+        "semantic",
+        "http://www.xes-standard.org/semantic.xesext",
+    )
+    SoftwareCommunication = (
+        "Software Communication",
+        "swcomm",
+        "http://www.xes-standard.org/swcomm.xesext",
+    )
+    SoftwareEvent = (
+        "Software Event",
+        "swevent",
+        "http://www.xes-standard.org/swevent.xesext",
+    )
+    SoftwareTelemetry = (
+        "Software Telemetry",
+        "swtelemetry",
+        "http://www.xes-standard.org/swtelemetry.xesext",
+    )
+    Time = ("Time", "time", "http://www.xes-standard.org/time.xesext")
 
     def __init__(self, name, prefix, uri):
         self._name = name
@@ -83,7 +118,9 @@ class Event(Mapping):
         return hash(frozenset((str(x), str(y)) for x, y in self.items()))
 
     def __eq__(self, other):
-        return frozenset((str(x), str(y)) for x, y in self.items()) == frozenset((str(x), str(y)) for x, y in other.items())
+        return frozenset(
+            (str(x), str(y)) for x, y in self.items()
+        ) == frozenset((str(x), str(y)) for x, y in other.items())
 
     def __copy__(self):
         event = Event()
@@ -104,12 +141,23 @@ class Event(Mapping):
 class EventStream(Sequence):
 
     def __init__(self, *args, **kwargs):
-        self._attributes = kwargs['attributes'] if 'attributes' in kwargs else {}
-        self._extensions = kwargs['extensions'] if 'extensions' in kwargs else {}
-        self._omni = kwargs['omni_present'] if 'omni_present' in kwargs else kwargs[
-            'globals'] if 'globals' in kwargs else {}
-        self._classifiers = kwargs['classifiers'] if 'classifiers' in kwargs else {}
-        self._properties = kwargs['properties'] if 'properties' in kwargs else {}
+        self._attributes = (
+            kwargs["attributes"] if "attributes" in kwargs else {}
+        )
+        self._extensions = (
+            kwargs["extensions"] if "extensions" in kwargs else {}
+        )
+        self._omni = (
+            kwargs["omni_present"]
+            if "omni_present" in kwargs
+            else kwargs["globals"] if "globals" in kwargs else {}
+        )
+        self._classifiers = (
+            kwargs["classifiers"] if "classifiers" in kwargs else {}
+        )
+        self._properties = (
+            kwargs["properties"] if "properties" in kwargs else {}
+        )
         self._list = list(*args)
 
     def __hash__(self):
@@ -216,8 +264,12 @@ class EventStream(Sequence):
 class Trace(Sequence):
 
     def __init__(self, *args, **kwargs):
-        self._set_attributes(kwargs['attributes'] if 'attributes' in kwargs else {})
-        self._properties = kwargs['properties'] if 'properties' in kwargs else {}
+        self._set_attributes(
+            kwargs["attributes"] if "attributes" in kwargs else {}
+        )
+        self._properties = (
+            kwargs["properties"] if "properties" in kwargs else {}
+        )
         self._list = list(*args)
 
     def __hash__(self):
@@ -289,7 +341,10 @@ class Trace(Sequence):
         elif len(self._list) == 1:
             ret = {"attributes": self._attributes, "events": [self._list[0]]}
         else:
-            ret = {"attributes": self._attributes, "events": [self._list[0], "..", self._list[-1]]}
+            ret = {
+                "attributes": self._attributes,
+                "events": [self._list[0], "..", self._list[-1]],
+            }
         if ret_list:
             return ret
         return str(ret)
@@ -329,7 +384,11 @@ class EventLog(EventStream):
         elif len(self._list) == 1:
             ret = [self._list[0].__repr__(ret_list=True)]
         else:
-            ret = [self._list[0].__repr__(ret_list=True), "....", self._list[-1].__repr__(ret_list=True)]
+            ret = [
+                self._list[0].__repr__(ret_list=True),
+                "....",
+                self._list[-1].__repr__(ret_list=True),
+            ]
         return str(ret)
 
     def __str__(self):

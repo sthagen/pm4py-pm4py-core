@@ -36,8 +36,12 @@ class Variants(Enum):
     CLASSIC = classic
 
 
-def apply(log_obj: Union[pd.DataFrame, EventLog], attributes: List[str], variant=Variants.CLASSIC,
-          parameters: Optional[Dict[Any, Any]] = None) -> str:
+def apply(
+    log_obj: Union[pd.DataFrame, EventLog],
+    attributes: List[str],
+    variant=Variants.CLASSIC,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> str:
     """
     Creates the dotted chart with the log objects and the provided attributes
 
@@ -62,10 +66,16 @@ def apply(log_obj: Union[pd.DataFrame, EventLog], attributes: List[str], variant
         log_obj = log_obj[list(set(attributes))]
 
     parameters["deepcopy"] = False
-    stream = log_converter.apply(log_obj, variant=log_converter.Variants.TO_EVENT_STREAM, parameters=parameters)
+    stream = log_converter.apply(
+        log_obj,
+        variant=log_converter.Variants.TO_EVENT_STREAM,
+        parameters=parameters,
+    )
     stream = [tuple(y[a] for a in attributes) for y in stream]
 
-    return exec_utils.get_variant(variant).apply(stream, attributes, parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        stream, attributes, parameters=parameters
+    )
 
 
 def view(figure: str):
@@ -81,8 +91,9 @@ def view(figure: str):
         if constants.DEFAULT_GVIZ_VIEW == "matplotlib_view":
             import matplotlib.pyplot as plt
             import matplotlib.image as mpimg
+
             img = mpimg.imread(figure)
-            plt.axis('off')
+            plt.axis("off")
             plt.tight_layout(pad=0, w_pad=0, h_pad=0)
             plt.imshow(img)
             plt.show()

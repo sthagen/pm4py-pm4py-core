@@ -33,7 +33,9 @@ from PIL import ImageGrab
 
 
 class WindowsEventLogger(Thread):
-    def __init__(self, event_stream, context_keys=None, screenshots_folder=None):
+    def __init__(
+        self, event_stream, context_keys=None, screenshots_folder=None
+    ):
         """
         Keyboard and mouse click recorder for Windows. This is useful for task mining purposes.
 
@@ -80,9 +82,34 @@ class WindowsEventLogger(Thread):
         self.lock = Lock()
         self.context_keys = context_keys
         if self.context_keys is None:
-            self.context_keys = {Key.tab, Key.enter, Key.esc, Key.f1, Key.f2, Key.f3, Key.f4, Key.f5, Key.f6, Key.f7,
-                                 Key.f8, Key.f9, Key.f10, Key.f11, Key.f12, Key.f13, Key.f14, Key.f15, Key.f16, Key.f16,
-                                 Key.f17, Key.f18, Key.f19, Key.f20, Key.home, Key.end}
+            self.context_keys = {
+                Key.tab,
+                Key.enter,
+                Key.esc,
+                Key.f1,
+                Key.f2,
+                Key.f3,
+                Key.f4,
+                Key.f5,
+                Key.f6,
+                Key.f7,
+                Key.f8,
+                Key.f9,
+                Key.f10,
+                Key.f11,
+                Key.f12,
+                Key.f13,
+                Key.f14,
+                Key.f15,
+                Key.f16,
+                Key.f16,
+                Key.f17,
+                Key.f18,
+                Key.f19,
+                Key.f20,
+                Key.home,
+                Key.end,
+            }
 
         self.screenshots_folder = screenshots_folder
         if self.screenshots_folder is not None:
@@ -90,7 +117,9 @@ class WindowsEventLogger(Thread):
                 os.mkdir(self.screenshots_folder)
 
         self.mouse_listener = mouse.Listener(on_click=self.on_click)
-        self.keyboard_listener = keyboard.Listener(on_release=self.on_key_release)
+        self.keyboard_listener = keyboard.Listener(
+            on_release=self.on_key_release
+        )
 
     def run(self):
         self.mouse_listener.start()
@@ -114,7 +143,15 @@ class WindowsEventLogger(Thread):
         except (psutil.NoSuchProcess, IndexError):
             return None
 
-    def record(self, windows_title, process_name=None, x=None, y=None, button=None, key=None):
+    def record(
+        self,
+        windows_title,
+        process_name=None,
+        x=None,
+        y=None,
+        button=None,
+        key=None,
+    ):
         self.lock.acquire()
 
         process_name = str(process_name) if process_name is not None else ""
@@ -130,12 +167,28 @@ class WindowsEventLogger(Thread):
         img = None
 
         if self.screenshots_folder is not None:
-            image_path = os.path.join(self.screenshots_folder, "screenshot_%s.png" % (
-                    dt_object.strftime('%Y%m%d_%H%M%S') + '_' + dt_object.strftime('%f')[:3]))
+            image_path = os.path.join(
+                self.screenshots_folder,
+                "screenshot_%s.png"
+                % (
+                    dt_object.strftime("%Y%m%d_%H%M%S")
+                    + "_"
+                    + dt_object.strftime("%f")[:3]
+                ),
+            )
 
         event = Event(
-            {"timestamp": "NONE", "windows_title": windows_title, "process_name": process_name, "x": x, "y": y,
-             "button": button, "key": key, "screenshot": image_path})
+            {
+                "timestamp": "NONE",
+                "windows_title": windows_title,
+                "process_name": process_name,
+                "x": x,
+                "y": y,
+                "button": button,
+                "key": key,
+                "screenshot": image_path,
+            }
+        )
         self.event_stream.append(event)
 
         if image_path:
@@ -157,7 +210,13 @@ class WindowsEventLogger(Thread):
             # Get the process name using the window handle
             process_name = self.get_process_name(gw.getActiveWindow()._hWnd)
 
-            self.record(window_title, process_name=process_name, x=x, y=y, button=button)
+            self.record(
+                window_title,
+                process_name=process_name,
+                x=x,
+                y=y,
+                button=button,
+            )
 
     def on_key_release(self, key):
         # Check if the released key is in the list

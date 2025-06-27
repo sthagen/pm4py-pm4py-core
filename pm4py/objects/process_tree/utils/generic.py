@@ -31,7 +31,7 @@ from pm4py.util import constants
 
 
 def fold(tree):
-    '''
+    """
     This method reduces a process tree by merging nodes of the form N(N(a,b),c) into N(a,b,c), i.e., where
     N = || or X. For example X(X(a,b),c) == X(a,b,c).
     Furthermore, meaningless parts, e.g., internal nodes without children, or, operators with one child are removed
@@ -39,7 +39,7 @@ def fold(tree):
 
     :param tree:
     :return:
-    '''
+    """
     tree = copy.deepcopy(tree)
     tree = _fold(tree)
     root = tree
@@ -96,7 +96,11 @@ def _fold(tree):
             if len(tree.children) == 0:
                 tree.operator = None
 
-        if tree.operator in [pt_op.Operator.SEQUENCE, pt_op.Operator.XOR, pt_op.Operator.PARALLEL]:
+        if tree.operator in [
+            pt_op.Operator.SEQUENCE,
+            pt_op.Operator.XOR,
+            pt_op.Operator.PARALLEL,
+        ]:
             chlds = [c for c in tree.children]
             for c in chlds:
                 if c.operator == tree.operator:
@@ -111,14 +115,14 @@ def _fold(tree):
 
 
 def reduce_tau_leafs(tree):
-    '''
+    """
     This method reduces tau leaves that are not meaningful. For example tree ->(a,\tau,b) is reduced to ->(a,b).
     In some cases this results in constructs such as ->(a), i.e., a sequence with a single child. Such constructs
     are not further reduced.
 
     :param tree:
     :return:
-    '''
+    """
     if len(tree.children) > 0:
         for c in tree.children:
             reduce_tau_leafs(c)
@@ -129,9 +133,14 @@ def reduce_tau_leafs(tree):
         if silents > 0:
             if len(tree.children) == silents:
                 # all children are tau, keep one (might be folded later)
-                if tree.operator in [pt_op.Operator.SEQUENCE, pt_op.Operator.PARALLEL, pt_op.Operator.XOR,
-                                     pt_op.Operator.OR]:
-                    # remove all but one, later reductions might need the fact that skipping is possible
+                if tree.operator in [
+                    pt_op.Operator.SEQUENCE,
+                    pt_op.Operator.PARALLEL,
+                    pt_op.Operator.XOR,
+                    pt_op.Operator.OR,
+                ]:
+                    # remove all but one, later reductions might need the fact
+                    # that skipping is possible
                     while silents > 1:
                         cc = tree.children
                         for c in cc:
@@ -140,7 +149,10 @@ def reduce_tau_leafs(tree):
                                 tree.children.remove(c)
                                 silents -= 1
                                 break
-                elif tree.operator == pt_op.Operator.LOOP and len(tree.children) == 2:
+                elif (
+                    tree.operator == pt_op.Operator.LOOP
+                    and len(tree.children) == 2
+                ):
                     # remove all loop is redundant
                     cc = tree.children
                     for c in cc:
@@ -149,7 +161,10 @@ def reduce_tau_leafs(tree):
                             tree.children.remove(c)
             else:
                 # at least one non-tau child
-                if tree.operator in [pt_op.Operator.SEQUENCE, pt_op.Operator.PARALLEL]:
+                if tree.operator in [
+                    pt_op.Operator.SEQUENCE,
+                    pt_op.Operator.PARALLEL,
+                ]:
                     # remove all, they are redundant for these operators
                     cc = tree.children
                     for c in cc:
@@ -174,7 +189,9 @@ def is_tau_leaf(tree):
 
 
 def is_leaf(tree):
-    return (tree.children is None or len(tree.children) == 0) and tree.operator is None
+    return (
+        tree.children is None or len(tree.children) == 0
+    ) and tree.operator is None
 
 
 def project_execution_sequence_to_leafs(execution_sequence):
@@ -192,8 +209,17 @@ def project_execution_sequence_to_leafs(execution_sequence):
     list_leafs
         Leafs nodes of the process tree
     """
-    return list(map(lambda x: x[0],
-                    filter(lambda x: (x[1] is pt_st.State.OPEN and len(x[0].children) == 0), execution_sequence)))
+    return list(
+        map(
+            lambda x: x[0],
+            filter(
+                lambda x: (
+                    x[1] is pt_st.State.OPEN and len(x[0].children) == 0
+                ),
+                execution_sequence,
+            ),
+        )
+    )
 
 
 def project_execution_sequence_to_labels(execution_sequence):
@@ -210,8 +236,15 @@ def project_execution_sequence_to_labels(execution_sequence):
     list_labels
         List of labels contained in the process tree
     """
-    return list(map(lambda x: x.label,
-                    filter(lambda x: x.label is not None, project_execution_sequence_to_leafs(execution_sequence))))
+    return list(
+        map(
+            lambda x: x.label,
+            filter(
+                lambda x: x.label is not None,
+                project_execution_sequence_to_leafs(execution_sequence),
+            ),
+        )
+    )
 
 
 def parse(string_rep):
@@ -282,29 +315,33 @@ def parse_recursive(string_rep, depth_cache, depth):
             parent.children.append(node)
         depth += 1
         string_rep = string_rep.strip()
-        assert (string_rep[0] == '(')
+        assert string_rep[0] == "("
         parse_recursive(string_rep[1:], depth_cache, depth)
     else:
         label = None
-        if string_rep.startswith('\''):
+        if string_rep.startswith("'"):
             string_rep = string_rep[1:]
-            escape_ext = string_rep.find('\'')
+            escape_ext = string_rep.find("'")
             label = string_rep[0:escape_ext]
             string_rep = string_rep[escape_ext + 1:]
         else:
-            assert (string_rep.startswith('tau') or string_rep.startswith('τ') or string_rep.startswith(u'\u03c4'))
-            if string_rep.startswith('tau'):
-                string_rep = string_rep[len('tau'):]
-            elif string_rep.startswith('τ'):
-                string_rep = string_rep[len('τ'):]
-            elif string_rep.startswith(u'\u03c4'):
-                string_rep = string_rep[len(u'\u03c4'):]
+            assert (
+                string_rep.startswith("tau")
+                or string_rep.startswith("τ")
+                or string_rep.startswith("\u03c4")
+            )
+            if string_rep.startswith("tau"):
+                string_rep = string_rep[len("tau"):]
+            elif string_rep.startswith("τ"):
+                string_rep = string_rep[len("τ"):]
+            elif string_rep.startswith("\u03c4"):
+                string_rep = string_rep[len("\u03c4"):]
         parent = None if depth == 0 else depth_cache[depth - 1]
         node = pt.ProcessTree(operator=operator, parent=parent, label=label)
         if parent is not None:
             parent.children.append(node)
 
-        while string_rep.strip().startswith(')'):
+        while string_rep.strip().startswith(")"):
             depth -= 1
             string_rep = (string_rep.strip())[1:]
         if len(string_rep.strip()) > 0:
@@ -328,22 +365,31 @@ def tree_sort(tree):
         tree_sort(child)
         tree.labels_hash_sum += child.labels_hash_sum
     if tree.label is not None:
-        # this assures that among different executions, the same string gets always the same hash
-        this_hash = int(hashlib.md5(str(tree.label).encode(constants.DEFAULT_ENCODING)).hexdigest(), 16)
+        # this assures that among different executions, the same string gets
+        # always the same hash
+        this_hash = int(
+            hashlib.md5(
+                str(tree.label).encode(constants.DEFAULT_ENCODING)
+            ).hexdigest(),
+            16,
+        )
         tree.labels_hash_sum += this_hash
-    if tree.operator is pt_op.Operator.PARALLEL or tree.operator is pt_op.Operator.XOR:
+    if (
+        tree.operator is pt_op.Operator.PARALLEL
+        or tree.operator is pt_op.Operator.XOR
+    ):
         tree.children = sorted(tree.children, key=lambda x: x.labels_hash_sum)
 
 
 def structurally_language_equal(tree1, tree2):
-    '''
+    """
     this function checks if two given process trees are structurally equal, modulo, shuffling of children (if allowed),
     i.e., in the parallel, or and xor operators, the order does not matter.
 
     :param tree1:
     :param tree2:
     :return:
-    '''
+    """
     if tree1.label is not None:
         return True if tree2.label == tree1.label else False
     elif len(tree1.children) == 0:
@@ -352,17 +398,28 @@ def structurally_language_equal(tree1, tree2):
         if tree1.operator == tree2.operator:
             if len(tree1.children) != len(tree2.children):
                 return False
-            if tree1.operator in [pt_op.Operator.SEQUENCE, pt_op.Operator.LOOP]:
+            if tree1.operator in [
+                pt_op.Operator.SEQUENCE,
+                pt_op.Operator.LOOP,
+            ]:
                 for i in range(len(tree1.children)):
-                    if not structurally_language_equal(tree1.children[i], tree2.children[i]):
+                    if not structurally_language_equal(
+                        tree1.children[i], tree2.children[i]
+                    ):
                         return False
                 return True
-            elif tree1.operator in [pt_op.Operator.PARALLEL, pt_op.Operator.XOR, pt_op.Operator.OR]:
+            elif tree1.operator in [
+                pt_op.Operator.PARALLEL,
+                pt_op.Operator.XOR,
+                pt_op.Operator.OR,
+            ]:
                 matches = list(range(len(tree1.children)))
                 for i in range(len(tree1.children)):
                     mm = [m for m in matches]
                     for j in mm:
-                        if structurally_language_equal(tree1.children[i], tree2.children[j]):
+                        if structurally_language_equal(
+                            tree1.children[i], tree2.children[j]
+                        ):
                             matches.remove(j)
                             break
                 return True if len(matches) == 0 else False
@@ -390,8 +447,9 @@ def process_tree_to_binary_process_tree(tree: ProcessTree) -> ProcessTree:
         if tree.operator == pt_op.Operator.LOOP:
             right_tree_op = pt_op.Operator.XOR
 
-        right_tree = ProcessTree(operator=right_tree_op, parent=tree,
-                                 children=tree.children[1:])
+        right_tree = ProcessTree(
+            operator=right_tree_op, parent=tree, children=tree.children[1:]
+        )
         for child in right_tree.children:
             child.parent = right_tree
 
@@ -417,7 +475,9 @@ def common_ancestor(t1: ProcessTree, t2: ProcessTree) -> Optional[ProcessTree]:
     return None
 
 
-def get_ancestors_until(t: ProcessTree, until: ProcessTree, include_until: bool = True) -> Optional[List[ProcessTree]]:
+def get_ancestors_until(
+    t: ProcessTree, until: ProcessTree, include_until: bool = True
+) -> Optional[List[ProcessTree]]:
     ancestors = list()
     if t == until:
         return ancestors
@@ -453,16 +513,33 @@ def get_leaves_as_tuples(t: ProcessTree, leaves=None):
 
 
 def is_operator(tree: ProcessTree, operator: pt_op.Operator) -> bool:
-    return tree is not None and tree.operator is not None and tree.operator == operator
+    return (
+        tree is not None
+        and tree.operator is not None
+        and tree.operator == operator
+    )
 
 
-def is_any_operator_of(tree: ProcessTree, operators: List[pt_op.Operator]) -> bool:
-    return tree is not None and tree.operator is not None and tree.operator in operators
+def is_any_operator_of(
+    tree: ProcessTree, operators: List[pt_op.Operator]
+) -> bool:
+    return (
+        tree is not None
+        and tree.operator is not None
+        and tree.operator in operators
+    )
 
 
-def is_in_state(tree: ProcessTree, target_state: ProcessTree.OperatorState,
-                tree_state: Dict[Tuple[int, ProcessTree], ProcessTree.OperatorState]) -> bool:
-    return tree is not None and (id(tree), tree) in tree_state and tree_state[(id(tree), tree)] == target_state
+def is_in_state(
+    tree: ProcessTree,
+    target_state: ProcessTree.OperatorState,
+    tree_state: Dict[Tuple[int, ProcessTree], ProcessTree.OperatorState],
+) -> bool:
+    return (
+        tree is not None
+        and (id(tree), tree) in tree_state
+        and tree_state[(id(tree), tree)] == target_state
+    )
 
 
 def is_root(tree: ProcessTree) -> bool:

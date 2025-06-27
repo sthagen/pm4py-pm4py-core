@@ -45,7 +45,13 @@ VARIANT_DMM_VEC = Variants.VARIANT_DMM_VEC
 VARIANT_AVG_VEC = Variants.VARIANT_AVG_VEC
 DFG = Variants.DFG
 
-VERSIONS = {VARIANT_DMM_LEVEN, VARIANT_AVG_VEC, VARIANT_DMM_VEC, VARIANT_AVG_VEC, DFG}
+VERSIONS = {
+    VARIANT_DMM_LEVEN,
+    VARIANT_AVG_VEC,
+    VARIANT_DMM_VEC,
+    VARIANT_AVG_VEC,
+    DFG,
+}
 
 
 def bfs(tree):
@@ -56,17 +62,22 @@ def bfs(tree):
         # element in queue is waiting to become root and splited into child
         # root is the first ele of queue
         root = queue.pop(0)
-        if len(root['children']) > 0:
-            name = [root['name']]
-            for child in root['children']:
+        if len(root["children"]) > 0:
+            name = [root["name"]]
+            for child in root["children"]:
                 queue.append(child)
-                name.append(child['name'])
+                name.append(child["name"])
             output.append(name)
 
     return output
 
 
-def apply(log: Union[EventLog, EventStream, pd.DataFrame], trace_attribute: str, variant=VARIANT_DMM_LEVEN, parameters: Optional[Dict[Any, Any]] = None) -> Any:
+def apply(
+    log: Union[EventLog, EventStream, pd.DataFrame],
+    trace_attribute: str,
+    variant=VARIANT_DMM_LEVEN,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Any:
     """
     Apply the hierarchical clustering to a log starting from a trace attribute.
 
@@ -97,14 +108,18 @@ def apply(log: Union[EventLog, EventStream, pd.DataFrame], trace_attribute: str,
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
     percent = 1
     alpha = 0.5
 
     list_of_vals = []
     list_log = []
-    list_of_vals_dict = attributes_filter.get_trace_attribute_values(log, trace_attribute)
+    list_of_vals_dict = attributes_filter.get_trace_attribute_values(
+        log, trace_attribute
+    )
 
     list_of_vals_keys = list(list_of_vals_dict.keys())
     for i in range(len(list_of_vals_keys)):
@@ -116,7 +131,7 @@ def apply(log: Union[EventLog, EventStream, pd.DataFrame], trace_attribute: str,
 
     y = exec_utils.get_variant(variant)(list_log, percent, alpha)
 
-    Z = linkage(y, method='average')
+    Z = linkage(y, method="average")
 
     # Create dictionary for labeling nodes by their IDs
 
@@ -128,11 +143,11 @@ def apply(log: Union[EventLog, EventStream, pd.DataFrame], trace_attribute: str,
 
     leafname = merge_log.label_tree(d3Dendro["children"][0], id2name)
     d3Dendro = d3Dendro["children"][0]
-    d3Dendro["name"] = 'root'
+    d3Dendro["name"] = "root"
     tree = d3Dendro
 
     trilist = bfs(tree)
-    trilist[0][0] = trilist[0][1] + '-' + trilist[0][2]
+    trilist[0][0] = trilist[0][1] + "-" + trilist[0][2]
 
     rootlist = []
     for ele in trilist:

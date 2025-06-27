@@ -34,11 +34,17 @@ class Parameters(Enum):
     KEEP_ONCE_PER_CASE = "keep_once_per_case"
 
 
-def apply(log: Union[EventLog, EventStream], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[Tuple[str, str], int]:
+def apply(
+    log: Union[EventLog, EventStream],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[Tuple[str, str], int]:
     return native(log, parameters=parameters)
 
 
-def native(log: Union[EventLog, EventStream], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[Tuple[str, str], int]:
+def native(
+    log: Union[EventLog, EventStream],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[Tuple[str, str], int]:
     """
     Counts the number of directly follows occurrences, i.e. of the form <...a,b...>, in an event log.
 
@@ -57,12 +63,31 @@ def native(log: Union[EventLog, EventStream], parameters: Optional[Dict[Union[st
     """
     if parameters is None:
         parameters = {}
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_util.DEFAULT_NAME_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_util.DEFAULT_NAME_KEY
+    )
     window = exec_utils.get_param_value(Parameters.WINDOW, parameters, 1)
-    keep_once_per_case = exec_utils.get_param_value(Parameters.KEEP_ONCE_PER_CASE, parameters, False)
+    keep_once_per_case = exec_utils.get_param_value(
+        Parameters.KEEP_ONCE_PER_CASE, parameters, False
+    )
     if keep_once_per_case:
-        dfgs = map((lambda t: set((t[i - window][activity_key], t[i][activity_key]) for i in range(window, len(t)))),
-                   log)
+        dfgs = map(
+            (
+                lambda t: set(
+                    (t[i - window][activity_key], t[i][activity_key])
+                    for i in range(window, len(t))
+                )
+            ),
+            log,
+        )
     else:
-        dfgs = map((lambda t: [(t[i - window][activity_key], t[i][activity_key]) for i in range(window, len(t))]), log)
+        dfgs = map(
+            (
+                lambda t: [
+                    (t[i - window][activity_key], t[i][activity_key])
+                    for i in range(window, len(t))
+                ]
+            ),
+            log,
+        )
     return Counter([dfg for lista in dfgs for dfg in lista])

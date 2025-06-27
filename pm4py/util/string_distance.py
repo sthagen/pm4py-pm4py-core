@@ -47,6 +47,7 @@ def levenshtein_distance(s1, s2):
 def levenshtein(stru1, stru2):
     if importlib.util.find_spec("stringdist"):
         import stringdist
+
         return stringdist.levenshtein(stru1, stru2)
 
     return levenshtein_distance(stru1, stru2)

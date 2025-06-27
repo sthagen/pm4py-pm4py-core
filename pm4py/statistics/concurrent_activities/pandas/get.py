@@ -21,7 +21,9 @@ Contact: info@processintelligence.solutions
 '''
 from enum import Enum
 
-from pm4py.algo.discovery.dfg.adapters.pandas.df_statistics import get_concurrent_events_dataframe
+from pm4py.algo.discovery.dfg.adapters.pandas.df_statistics import (
+    get_concurrent_events_dataframe,
+)
 from pm4py.util import exec_utils, constants, xes_constants
 from typing import Optional, Dict, Any, Union, Tuple
 import pandas as pd
@@ -35,7 +37,10 @@ class Parameters(Enum):
     STRICT = "strict"
 
 
-def apply(dataframe: pd.DataFrame, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[Tuple[str, str], int]:
+def apply(
+    dataframe: pd.DataFrame,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[Tuple[str, str], int]:
     """
     Gets the number of times for which two activities have been concurrent in the log
 
@@ -61,18 +66,36 @@ def apply(dataframe: pd.DataFrame, parameters: Optional[Dict[Union[str, Paramete
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    case_id_glue = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters, None)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    case_id_glue = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY, parameters, None
+    )
     strict = exec_utils.get_param_value(Parameters.STRICT, parameters, False)
 
-    concurrent_dataframe = get_concurrent_events_dataframe(dataframe, start_timestamp_key=start_timestamp_key,
-                                                           timestamp_key=timestamp_key, case_id_glue=case_id_glue,
-                                                           activity_key=activity_key, strict=strict)
+    concurrent_dataframe = get_concurrent_events_dataframe(
+        dataframe,
+        start_timestamp_key=start_timestamp_key,
+        timestamp_key=timestamp_key,
+        case_id_glue=case_id_glue,
+        activity_key=activity_key,
+        strict=strict,
+    )
 
-    ret_dict0 = concurrent_dataframe.groupby([activity_key, activity_key + '_2']).size().to_dict()
+    ret_dict0 = (
+        concurrent_dataframe.groupby([activity_key, activity_key + "_2"])
+        .size()
+        .to_dict()
+    )
     ret_dict = {}
 
     # assure to avoid problems with np.float64, by using the Python float type
@@ -82,4 +105,3 @@ def apply(dataframe: pd.DataFrame, parameters: Optional[Dict[Union[str, Paramete
         ret_dict[el2] = int(ret_dict0[el])
 
     return ret_dict
-

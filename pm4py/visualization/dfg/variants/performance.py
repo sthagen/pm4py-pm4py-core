@@ -53,7 +53,13 @@ class Parameters(Enum):
     GRAPH_TITLE = "graph_title"
 
 
-def apply(dfg: Dict[Tuple[str, str], int], log: EventLog = None, parameters: Optional[Dict[Any, Any]] = None, activities_count : Dict[str, int] = None, serv_time: Dict[str, float] = None) -> graphviz.Digraph:
+def apply(
+    dfg: Dict[Tuple[str, str], int],
+    log: EventLog = None,
+    parameters: Optional[Dict[Any, Any]] = None,
+    activities_count: Dict[str, int] = None,
+    serv_time: Dict[str, float] = None,
+) -> graphviz.Digraph:
     """
     Visualize a performance directly-follows graph
 
@@ -78,20 +84,46 @@ def apply(dfg: Dict[Tuple[str, str], int], log: EventLog = None, parameters: Opt
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes.DEFAULT_NAME_KEY)
-    image_format = exec_utils.get_param_value(Parameters.FORMAT, parameters, "png")
-    max_no_of_edges_in_diagram = exec_utils.get_param_value(Parameters.MAX_NO_EDGES_IN_DIAGRAM, parameters, 100000)
-    start_activities = exec_utils.get_param_value(Parameters.START_ACTIVITIES, parameters, [])
-    end_activities = exec_utils.get_param_value(Parameters.END_ACTIVITIES, parameters, [])
-    font_size = exec_utils.get_param_value(Parameters.FONT_SIZE, parameters, 12)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes.DEFAULT_NAME_KEY
+    )
+    image_format = exec_utils.get_param_value(
+        Parameters.FORMAT, parameters, "png"
+    )
+    max_no_of_edges_in_diagram = exec_utils.get_param_value(
+        Parameters.MAX_NO_EDGES_IN_DIAGRAM, parameters, 100000
+    )
+    start_activities = exec_utils.get_param_value(
+        Parameters.START_ACTIVITIES, parameters, []
+    )
+    end_activities = exec_utils.get_param_value(
+        Parameters.END_ACTIVITIES, parameters, []
+    )
+    font_size = exec_utils.get_param_value(
+        Parameters.FONT_SIZE, parameters, 12
+    )
     font_size = str(font_size)
     activities = dfg_utils.get_activities_from_dfg(dfg)
-    aggregation_measure = exec_utils.get_param_value(Parameters.AGGREGATION_MEASURE, parameters, "mean")
+    aggregation_measure = exec_utils.get_param_value(
+        Parameters.AGGREGATION_MEASURE, parameters, "mean"
+    )
 
-    rankdir = exec_utils.get_param_value(Parameters.RANKDIR, parameters, constants.DEFAULT_RANKDIR_GVIZ)
-    bgcolor = exec_utils.get_param_value(Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR)
-    enable_graph_title = exec_utils.get_param_value(Parameters.ENABLE_GRAPH_TITLE, parameters, constants.DEFAULT_ENABLE_GRAPH_TITLES)
-    graph_title = exec_utils.get_param_value(Parameters.GRAPH_TITLE, parameters, "Performance Directly-Follows Graph")
+    rankdir = exec_utils.get_param_value(
+        Parameters.RANKDIR, parameters, constants.DEFAULT_RANKDIR_GVIZ
+    )
+    bgcolor = exec_utils.get_param_value(
+        Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR
+    )
+    enable_graph_title = exec_utils.get_param_value(
+        Parameters.ENABLE_GRAPH_TITLE,
+        parameters,
+        constants.DEFAULT_ENABLE_GRAPH_TITLES,
+    )
+    graph_title = exec_utils.get_param_value(
+        Parameters.GRAPH_TITLE,
+        parameters,
+        "Performance Directly-Follows Graph",
+    )
 
     # if all the aggregation measures are provided for a given key,
     # then pick one of the values for the representation
@@ -103,16 +135,19 @@ def apply(dfg: Dict[Tuple[str, str], int], log: EventLog = None, parameters: Opt
                 dfg[key] = dfg0[key][aggregation_measure]
             else:
                 dfg[key] = dfg0[key]
-        except:
+        except BaseException:
             dfg[key] = dfg0[key]
-    
+
     if activities_count is None:
         if log is not None:
-            activities_count = attr_get.get_attribute_values(log, activity_key, parameters=parameters)
+            activities_count = attr_get.get_attribute_values(
+                log, activity_key, parameters=parameters
+            )
         else:
             # the frequency of an activity in the log is at least the number of occurrences of
             # incoming arcs in the DFG.
-            # if the frequency of the start activities nodes is also provided, use also that.
+            # if the frequency of the start activities nodes is also provided,
+            # use also that.
             activities_count = Counter({key: 0 for key in activities})
             for el in dfg:
                 activities_count[el[1]] += dfg[el]
@@ -126,8 +161,18 @@ def apply(dfg: Dict[Tuple[str, str], int], log: EventLog = None, parameters: Opt
         else:
             serv_time = {key: -1 for key in activities}
 
-    return dfg_gviz.graphviz_visualization(activities_count, dfg, image_format=image_format, measure="performance",
-                                           max_no_of_edges_in_diagram=max_no_of_edges_in_diagram,
-                                           start_activities=start_activities, end_activities=end_activities, serv_time=serv_time,
-                                           font_size=font_size, bgcolor=bgcolor, rankdir=rankdir,
-                                           enable_graph_title=enable_graph_title, graph_title=graph_title)
+    return dfg_gviz.graphviz_visualization(
+        activities_count,
+        dfg,
+        image_format=image_format,
+        measure="performance",
+        max_no_of_edges_in_diagram=max_no_of_edges_in_diagram,
+        start_activities=start_activities,
+        end_activities=end_activities,
+        serv_time=serv_time,
+        font_size=font_size,
+        bgcolor=bgcolor,
+        rankdir=rankdir,
+        enable_graph_title=enable_graph_title,
+        graph_title=graph_title,
+    )

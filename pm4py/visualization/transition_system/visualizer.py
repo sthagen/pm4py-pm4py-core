@@ -21,7 +21,10 @@ Contact: info@processintelligence.solutions
 '''
 from pm4py.visualization.common import gview
 from pm4py.visualization.common import save as gsave
-from pm4py.visualization.transition_system.variants import view_based, trans_frequency
+from pm4py.visualization.transition_system.variants import (
+    view_based,
+    trans_frequency,
+)
 from enum import Enum
 from pm4py.util import exec_utils
 from pm4py.visualization.common.gview import serialize, serialize_dot
@@ -38,7 +41,11 @@ class Variants(Enum):
 DEFAULT_VARIANT = Variants.VIEW_BASED
 
 
-def apply(tsys: TransitionSystem, parameters: Optional[Dict[Any, Any]] = None, variant=DEFAULT_VARIANT) -> graphviz.Digraph:
+def apply(
+    tsys: TransitionSystem,
+    parameters: Optional[Dict[Any, Any]] = None,
+    variant=DEFAULT_VARIANT,
+) -> graphviz.Digraph:
     """
     Get visualization of a Transition System
 

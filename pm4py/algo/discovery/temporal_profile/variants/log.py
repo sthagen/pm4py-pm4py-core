@@ -38,7 +38,9 @@ class Parameters(Enum):
     WORKCALENDAR = "workcalendar"
 
 
-def apply(log: EventLog, parameters: Optional[Dict[Any, Any]] = None) -> typing.TemporalProfile:
+def apply(
+    log: EventLog, parameters: Optional[Dict[Any, Any]] = None
+) -> typing.TemporalProfile:
     """
     Gets the temporal profile from the log.
 
@@ -77,16 +79,32 @@ def apply(log: EventLog, parameters: Optional[Dict[Any, Any]] = None) -> typing.
 
     from statistics import mean, stdev
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    business_hours = exec_utils.get_param_value(Parameters.BUSINESS_HOURS, parameters, False)
-    business_hours_slots = exec_utils.get_param_value(Parameters.BUSINESS_HOUR_SLOTS, parameters, constants.DEFAULT_BUSINESS_HOUR_SLOTS)
+    business_hours = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOURS, parameters, False
+    )
+    business_hours_slots = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOUR_SLOTS,
+        parameters,
+        constants.DEFAULT_BUSINESS_HOUR_SLOTS,
+    )
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters,
-                                                     xes_constants.DEFAULT_TIMESTAMP_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
 
     diff_time_recordings = {}
 
@@ -101,17 +119,26 @@ def apply(log: EventLog, parameters: Optional[Dict[Any, Any]] = None) -> typing.
                     if not (act_i, act_j) in diff_time_recordings:
                         diff_time_recordings[(act_i, act_j)] = []
                     if business_hours:
-                        bh = BusinessHours(trace[i][timestamp_key],
-                                           trace[j][start_timestamp_key],
-                                           business_hour_slots=business_hours_slots)
-                        diff_time_recordings[(act_i, act_j)].append(bh.get_seconds())
+                        bh = BusinessHours(
+                            trace[i][timestamp_key],
+                            trace[j][start_timestamp_key],
+                            business_hour_slots=business_hours_slots,
+                        )
+                        diff_time_recordings[(act_i, act_j)].append(
+                            bh.get_seconds()
+                        )
                     else:
-                        diff_time_recordings[(act_i, act_j)].append(time_j - time_i)
+                        diff_time_recordings[(act_i, act_j)].append(
+                            time_j - time_i
+                        )
 
     temporal_profile = {}
     for ac in diff_time_recordings:
         if len(diff_time_recordings[ac]) > 1:
-            temporal_profile[ac] = (mean(diff_time_recordings[ac]), stdev(diff_time_recordings[ac]))
+            temporal_profile[ac] = (
+                mean(diff_time_recordings[ac]),
+                stdev(diff_time_recordings[ac]),
+            )
         else:
             temporal_profile[ac] = (diff_time_recordings[ac][0], 0)
 

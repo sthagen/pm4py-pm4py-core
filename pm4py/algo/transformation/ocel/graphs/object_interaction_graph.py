@@ -23,7 +23,9 @@ from pm4py.objects.ocel.obj import OCEL
 from typing import Optional, Dict, Any, Set, Tuple
 
 
-def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Set[Tuple[str, str]]:
+def apply(
+    ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None
+) -> Set[Tuple[str, str]]:
     """
     Calculates the object interaction graph. Two objects are connected iff they are both related to an event
     of the OCEL.
@@ -45,7 +47,11 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Set[Tuple[
 
     graph = set()
 
-    ev_rel_obj = ocel.relations.groupby(ocel.event_id_column)[ocel.object_id_column].agg(list).to_dict()
+    ev_rel_obj = (
+        ocel.relations.groupby(ocel.event_id_column)[ocel.object_id_column]
+        .agg(list)
+        .to_dict()
+    )
 
     for ev in ev_rel_obj:
         rel_obj = ev_rel_obj[ev]

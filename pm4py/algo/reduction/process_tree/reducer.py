@@ -48,5 +48,7 @@ def apply(*args, **kwargs) -> Any:
     """
     variant = kwargs["variant"] if "variant" in kwargs else None
     if variant is None:
-        raise Exception("please specify the variant of the reduction to be used.")
+        raise Exception(
+            "please specify the variant of the reduction to be used."
+        )
     return exec_utils.get_variant(variant).apply(*args, **kwargs)

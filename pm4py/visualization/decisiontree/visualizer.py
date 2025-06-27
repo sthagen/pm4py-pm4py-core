@@ -37,7 +37,13 @@ class Variants(Enum):
 DEFAULT_VARIANT = Variants.CLASSIC
 
 
-def apply(clf: DecisionTreeClassifier, feature_names: List[str], classes: List[str], parameters: Optional[Dict[Any, Any]] = None, variant=DEFAULT_VARIANT) -> graphviz.Source:
+def apply(
+    clf: DecisionTreeClassifier,
+    feature_names: List[str],
+    classes: List[str],
+    parameters: Optional[Dict[Any, Any]] = None,
+    variant=DEFAULT_VARIANT,
+) -> graphviz.Source:
     """
     Method to apply the visualization of the decision tree
 
@@ -61,7 +67,9 @@ def apply(clf: DecisionTreeClassifier, feature_names: List[str], classes: List[s
     gviz
         GraphViz object
     """
-    return exec_utils.get_variant(variant).apply(clf, feature_names, classes, parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        clf, feature_names, classes, parameters=parameters
+    )
 
 
 def save(gviz: graphviz.Source, output_file_path: str, parameters=None):

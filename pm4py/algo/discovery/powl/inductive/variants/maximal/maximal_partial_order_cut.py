@@ -96,7 +96,11 @@ def is_valid_order(po, efg, start_activities, end_activities):
                     all_ef_g2_g1 = False
         if all_ef_g1_g2 and all_ef_g2_g1 and (edge_g1_g2 or edge_g2_g1):
             return False
-        if not edge_g1_g2 and not edge_g2_g1 and not (all_ef_g1_g2 and all_ef_g2_g1):
+        if (
+            not edge_g1_g2
+            and not edge_g2_g1
+            and not (all_ef_g1_g2 and all_ef_g2_g1)
+        ):
             return False
 
     n = len(po.nodes)
@@ -147,11 +151,15 @@ def cluster_order(binary_relation):
 class MaximalPartialOrderCut(Cut[T], ABC, Generic[T]):
 
     @classmethod
-    def operator(cls, parameters: Optional[Dict[str, Any]] = None) -> StrictPartialOrder:
+    def operator(
+        cls, parameters: Optional[Dict[str, Any]] = None
+    ) -> StrictPartialOrder:
         raise Exception("This function should not be called!")
 
     @classmethod
-    def holds(cls, obj: T, parameters: Optional[Dict[str, Any]] = None) -> Optional[BinaryRelation]:
+    def holds(
+        cls, obj: T, parameters: Optional[Dict[str, Any]] = None
+    ) -> Optional[BinaryRelation]:
 
         efg = to_efg(obj)
         alphabet = sorted(dfu.get_vertices(obj.dfg), key=lambda g: g.__str__())
@@ -166,8 +174,9 @@ class MaximalPartialOrderCut(Cut[T], ABC, Generic[T]):
             return None
 
     @classmethod
-    def apply(cls, obj: T, parameters: Optional[Dict[str, Any]] = None) -> Optional[Tuple[StrictPartialOrder,
-                                                                                          List[POWL]]]:
+    def apply(
+        cls, obj: T, parameters: Optional[Dict[str, Any]] = None
+    ) -> Optional[Tuple[StrictPartialOrder, List[POWL]]]:
         g = cls.holds(obj, parameters)
         if g is None:
             return g
@@ -181,7 +190,9 @@ class MaximalPartialOrderCut(Cut[T], ABC, Generic[T]):
         return po, po.children
 
 
-def project_on_groups_with_unique_activities(log: Counter, groups: List[Collection[Any]]):
+def project_on_groups_with_unique_activities(
+    log: Counter, groups: List[Collection[Any]]
+):
     r = list()
     for g in groups:
         new_log = Counter()
@@ -202,6 +213,12 @@ def project_on_groups_with_unique_activities(log: Counter, groups: List[Collecti
 class MaximalPartialOrderCutUVCL(MaximalPartialOrderCut[IMDataStructureUVCL]):
 
     @classmethod
-    def project(cls, obj: IMDataStructureUVCL, groups: List[Collection[Any]],
-                parameters: Optional[Dict[str, Any]] = None) -> List[IMDataStructureUVCL]:
-        return project_on_groups_with_unique_activities(obj.data_structure, groups)
+    def project(
+        cls,
+        obj: IMDataStructureUVCL,
+        groups: List[Collection[Any]],
+        parameters: Optional[Dict[str, Any]] = None,
+    ) -> List[IMDataStructureUVCL]:
+        return project_on_groups_with_unique_activities(
+            obj.data_structure, groups
+        )

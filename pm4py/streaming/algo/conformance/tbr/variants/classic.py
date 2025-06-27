@@ -57,11 +57,15 @@ class TbrStreamingConformance(StreamingAlgorithm):
         """
         if parameters is None:
             parameters = {}
-        self.case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-        self.activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters,
-                                                       xes_constants.DEFAULT_NAME_KEY)
-        self.maximum_iterations_invisibles = exec_utils.get_param_value(Parameters.MAXIMUM_ITERATIONS_INVISIBLES,
-                                                                        parameters, 10)
+        self.case_id_key = exec_utils.get_param_value(
+            Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+        )
+        self.activity_key = exec_utils.get_param_value(
+            Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+        )
+        self.maximum_iterations_invisibles = exec_utils.get_param_value(
+            Parameters.MAXIMUM_ITERATIONS_INVISIBLES, parameters, 10
+        )
         self.net = net
         self.im = im
         self.fm = fm
@@ -84,19 +88,33 @@ class TbrStreamingConformance(StreamingAlgorithm):
              - Parameters.MISSING_DICT_ID: identifier of the dictionary hosting the missing tokens (1)
              - Parameters.REMAINING_DICT_ID: identifier of the dictionary hosting the remaining tokens (2)
         """
-        dict_variant = exec_utils.get_param_value(Parameters.DICT_VARIANT, parameters, generator.Variants.THREAD_SAFE)
-        case_dict_id = exec_utils.get_param_value(Parameters.CASE_DICT_ID, parameters, 0)
-        missing_dict_id = exec_utils.get_param_value(Parameters.MISSING_DICT_ID, parameters, 1)
-        remaining_dict_id = exec_utils.get_param_value(Parameters.REMAINING_DICT_ID, parameters, 2)
+        dict_variant = exec_utils.get_param_value(
+            Parameters.DICT_VARIANT, parameters, generator.Variants.THREAD_SAFE
+        )
+        case_dict_id = exec_utils.get_param_value(
+            Parameters.CASE_DICT_ID, parameters, 0
+        )
+        missing_dict_id = exec_utils.get_param_value(
+            Parameters.MISSING_DICT_ID, parameters, 1
+        )
+        remaining_dict_id = exec_utils.get_param_value(
+            Parameters.REMAINING_DICT_ID, parameters, 2
+        )
         parameters_case_dict = copy(parameters)
         parameters_case_dict[Parameters.DICT_ID] = case_dict_id
         parameters_missing = copy(parameters)
         parameters_case_dict[Parameters.DICT_ID] = missing_dict_id
         parameters_remaining = copy(parameters)
         parameters_remaining[Parameters.DICT_ID] = remaining_dict_id
-        self.case_dict = generator.apply(variant=dict_variant, parameters=parameters_case_dict)
-        self.missing = generator.apply(variant=dict_variant, parameters=parameters_missing)
-        self.remaining = generator.apply(variant=dict_variant, parameters=parameters_remaining)
+        self.case_dict = generator.apply(
+            variant=dict_variant, parameters=parameters_case_dict
+        )
+        self.missing = generator.apply(
+            variant=dict_variant, parameters=parameters_missing
+        )
+        self.remaining = generator.apply(
+            variant=dict_variant, parameters=parameters_remaining
+        )
 
     def get_paths_net(self):
         """
@@ -124,7 +142,11 @@ class TbrStreamingConformance(StreamingAlgorithm):
         for el in shortest_path:
             if type(el[0]) is PetriNet.Place:
                 for sel in el[1]:
-                    spath = [x for x in el[1][sel][1:-2] if type(x) is PetriNet.Transition]
+                    spath = [
+                        x
+                        for x in el[1][sel][1:-2]
+                        if type(x) is PetriNet.Transition
+                    ]
                     if spath:
                         if not el[0] in dictio_spaths:
                             dictio_spaths[el[0]] = {}
@@ -146,7 +168,9 @@ class TbrStreamingConformance(StreamingAlgorithm):
             Boolean value
         """
         case = event[self.case_id_key] if self.case_id_key in event else None
-        activity = event[self.activity_key] if self.activity_key in event else None
+        activity = (
+            event[self.activity_key] if self.activity_key in event else None
+        )
         if case is not None and activity is not None:
             self.verify_tbr(self.encode_str(case), activity)
         else:
@@ -203,26 +227,38 @@ class TbrStreamingConformance(StreamingAlgorithm):
                 numb_it = numb_it + 1
                 if numb_it > self.maximum_iterations_invisibles:
                     break
-                enabled_transitions = semantics.enabled_transitions(self.net, new_marking)
-                matching_transitions = [x for x in enabled_transitions if x.label == activity]
+                enabled_transitions = semantics.enabled_transitions(
+                    self.net, new_marking
+                )
+                matching_transitions = [
+                    x for x in enabled_transitions if x.label == activity
+                ]
                 if matching_transitions:
-                    new_marking = semantics.weak_execute(matching_transitions[0], new_marking)
+                    new_marking = semantics.weak_execute(
+                        matching_transitions[0], new_marking
+                    )
                     self.case_dict[case] = self.encode_marking(new_marking)
                     correct_exec = True
                     break
                 prev_marking = new_marking
-                new_marking = self.enable_trans_with_invisibles(new_marking, activity)
+                new_marking = self.enable_trans_with_invisibles(
+                    new_marking, activity
+                )
                 correct_exec = False
             if correct_exec is False:
                 self.message_missing_tokens(activity, case)
                 # enables one of the matching transitions
-                matching_transitions = [x for x in self.net.transitions if x.label == activity]
+                matching_transitions = [
+                    x for x in self.net.transitions if x.label == activity
+                ]
                 t = matching_transitions[0]
                 for a in t.in_arcs:
                     pl = a.source
                     mark = a.weight
                     if pl not in marking or new_marking[pl] < mark:
-                        self.missing[case] = int(self.missing[case]) + (mark - marking[pl])
+                        self.missing[case] = int(self.missing[case]) + (
+                            mark - marking[pl]
+                        )
                         marking[pl] = mark
                 new_marking = semantics.weak_execute(t, marking)
                 self.case_dict[case] = self.encode_marking(new_marking)
@@ -246,7 +282,9 @@ class TbrStreamingConformance(StreamingAlgorithm):
         new_marking
             New marking (where the transition CAN be enabled)
         """
-        corr_trans_to_act = [x for x in self.net.transitions if x.label == activity]
+        corr_trans_to_act = [
+            x for x in self.net.transitions if x.label == activity
+        ]
         spath = None
         spath_length = sys.maxsize
         for pl in marking:
@@ -277,7 +315,10 @@ class TbrStreamingConformance(StreamingAlgorithm):
             Case
         """
         if case in self.case_dict:
-            return {"marking": self.decode_marking(self.case_dict[case]), "missing": int(self.missing[case])}
+            return {
+                "marking": self.decode_marking(self.case_dict[case]),
+                "missing": int(self.missing[case]),
+            }
         else:
             self.message_case_not_in_dictionary(case)
 
@@ -299,23 +340,32 @@ class TbrStreamingConformance(StreamingAlgorithm):
         if case in self.case_dict:
             remaining = 0
             if not self.decode_marking(self.case_dict[case]) == self.fm:
-                new_marking = self.reach_fm_with_invisibles(self.case_dict[case])
+                new_marking = self.reach_fm_with_invisibles(
+                    self.case_dict[case]
+                )
                 if new_marking is None:
                     new_marking = self.decode_marking(self.case_dict[case])
                 if not new_marking == self.fm:
                     self.message_final_marking_not_reached(case, new_marking)
                     fm_copy = copy(self.fm)
                     for m in fm_copy:
-                        if not m in new_marking:
+                        if m not in new_marking:
                             new_marking[m] = 0
-                        self.missing[case] = int(self.missing[case]) + (fm_copy[m] - new_marking[m])
+                        self.missing[case] = int(self.missing[case]) + (
+                            fm_copy[m] - new_marking[m]
+                        )
                     for m in new_marking:
-                        if not m in fm_copy:
+                        if m not in fm_copy:
                             fm_copy[m] = 0
                         remaining += new_marking[m] - fm_copy[m]
             missing = int(self.missing[case])
             is_fit = missing == 0 and remaining == 0
-            ret = {"marking": self.decode_marking(self.case_dict[case]), "missing": missing, "remaining": remaining, "is_fit": is_fit}
+            ret = {
+                "marking": self.decode_marking(self.case_dict[case]),
+                "missing": missing,
+                "remaining": remaining,
+                "is_fit": is_fit,
+            }
             del self.case_dict[case]
             del self.missing[case]
             del self.remaining[case]
@@ -384,7 +434,12 @@ class TbrStreamingConformance(StreamingAlgorithm):
         case
             Case
         """
-        logging.error("the activity " + str(activity) + " is not possible according to the model! case: " + str(case))
+        logging.error(
+            "the activity "
+            + str(activity)
+            + " is not possible according to the model! case: "
+            + str(case)
+        )
 
     def message_missing_tokens(self, activity, case):
         """
@@ -399,8 +454,11 @@ class TbrStreamingConformance(StreamingAlgorithm):
             Case
         """
         logging.error(
-            "the activity " + str(activity) + " could not be executed without inserting missing tokens! case: " + str(
-                case))
+            "the activity "
+            + str(activity)
+            + " could not be executed without inserting missing tokens! case: "
+            + str(case)
+        )
 
     def message_case_not_in_dictionary(self, case):
         """
@@ -413,7 +471,12 @@ class TbrStreamingConformance(StreamingAlgorithm):
         case
             Case
         """
-        logging.error("the case " + str(case) + " is not in the dictionary! case: " + str(case))
+        logging.error(
+            "the case "
+            + str(case)
+            + " is not in the dictionary! case: "
+            + str(case)
+        )
 
     def message_final_marking_not_reached(self, case, marking):
         """
@@ -425,8 +488,14 @@ class TbrStreamingConformance(StreamingAlgorithm):
         case
             Case
         """
-        logging.error("the final marking is not reached! case: " + str(case) + " marking: " + str(
-            marking) + " final marking: " + str(self.fm))
+        logging.error(
+            "the final marking is not reached! case: "
+            + str(case)
+            + " marking: "
+            + str(marking)
+            + " final marking: "
+            + str(self.fm)
+        )
         pass
 
     def _current_result(self):
@@ -448,7 +517,9 @@ class TbrStreamingConformance(StreamingAlgorithm):
             status = self.get_status(case)
             missing = status["missing"]
             is_fit = missing == 0
-            diagn_stream.append({"case": case, "is_fit": is_fit, "missing": missing})
+            diagn_stream.append(
+                {"case": case, "is_fit": is_fit, "missing": missing}
+            )
 
         return pandas_utils.instantiate_dataframe(diagn_stream)
 

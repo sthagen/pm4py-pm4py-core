@@ -38,8 +38,10 @@ class Parameters(Enum):
     FILTER_ACTIVITY_COUPLE = "filter_activity_couple"
 
 
-def log_to_intervals(log: Union[EventLog, pd.DataFrame], parameters: Optional[Dict[Any, Any]] = None) -> List[
-    List[Any]]:
+def log_to_intervals(
+    log: Union[EventLog, pd.DataFrame],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> List[List[Any]]:
     """
     Transforms the event log to a list of intervals that are the
     directly-follows paths in the log (open at the complete timestamp of the source event,
@@ -66,14 +68,26 @@ def log_to_intervals(log: Union[EventLog, pd.DataFrame], parameters: Optional[Di
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters,
-                                                     xes_constants.DEFAULT_TIMESTAMP_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    filter_activity_couple = exec_utils.get_param_value(Parameters.FILTER_ACTIVITY_COUPLE, parameters, None)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    filter_activity_couple = exec_utils.get_param_value(
+        Parameters.FILTER_ACTIVITY_COUPLE, parameters, None
+    )
 
     ret_list = []
 
@@ -84,32 +98,57 @@ def log_to_intervals(log: Union[EventLog, pd.DataFrame], parameters: Optional[Di
                 time_j = trace[j][start_timestamp_key].timestamp()
                 if time_j >= time_i:
                     if filter_activity_couple is None or (
-                            trace[i][activity_key] == filter_activity_couple[0] and trace[j][activity_key] ==
-                            filter_activity_couple[1]):
-                        ret_list.append([time_i, time_j, trace[i], trace[j], trace.attributes])
+                        trace[i][activity_key] == filter_activity_couple[0]
+                        and trace[j][activity_key] == filter_activity_couple[1]
+                    ):
+                        ret_list.append(
+                            [
+                                time_i,
+                                time_j,
+                                trace[i],
+                                trace[j],
+                                trace.attributes,
+                            ]
+                        )
                     break
 
     ret_list.sort(key=lambda x: (x[0], x[1], x[2], x[3]))
     return ret_list
 
 
-def interval_to_tree(intervals: List[List[Any]], parameters: Optional[Dict[Any, Any]] = None) -> IntervalTree:
+def interval_to_tree(
+    intervals: List[List[Any]], parameters: Optional[Dict[Any, Any]] = None
+) -> IntervalTree:
     """Internal methods to convert the obtained intervals to the eventual IntervalTree"""
     if parameters is None:
         parameters = {}
 
-    epsilon = exec_utils.get_param_value(Parameters.EPSILON, parameters, 0.00001)
+    epsilon = exec_utils.get_param_value(
+        Parameters.EPSILON, parameters, 0.00001
+    )
 
     tree = IntervalTree()
 
     for inte in intervals:
-        tree.add(Interval(inte[0] - epsilon, inte[1] + epsilon,
-                          data={"source_event": inte[2], "target_event": inte[3], "trace_attributes": inte[4]}))
+        tree.add(
+            Interval(
+                inte[0] - epsilon,
+                inte[1] + epsilon,
+                data={
+                    "source_event": inte[2],
+                    "target_event": inte[3],
+                    "trace_attributes": inte[4],
+                },
+            )
+        )
 
     return tree
 
 
-def apply(log: Union[EventLog, pd.DataFrame], parameters: Optional[Dict[Any, Any]] = None) -> IntervalTree:
+def apply(
+    log: Union[EventLog, pd.DataFrame],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> IntervalTree:
     """
     Transforms the event log to an interval tree in which the intervals are the
     directly-follows paths in the log (open at the complete timestamp of the source event,

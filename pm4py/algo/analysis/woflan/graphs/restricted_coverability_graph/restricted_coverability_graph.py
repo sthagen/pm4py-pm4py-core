@@ -33,7 +33,9 @@ def construct_tree(net, initial_marking):
     :return:
     """
     initial_marking = helper.convert_marking(net, initial_marking)
-    firing_dict = helper.split_incidence_matrix(helper.compute_incidence_matrix(net), net)
+    firing_dict = helper.split_incidence_matrix(
+        helper.compute_incidence_matrix(net), net
+    )
     req_dict = helper.compute_firing_requirement(net)
     look_up_indices = {}
     j = 0
@@ -48,15 +50,22 @@ def construct_tree(net, initial_marking):
         nodes = list(coverability_graph.nodes).copy()
         while len(nodes) > 0:
             m = nodes.pop()
-            if not np.inf in coverability_graph.nodes[m]['marking']:
-                possible_markings = helper.enabled_markings(firing_dict, req_dict,
-                                                            coverability_graph.nodes[m]['marking'])
+            if np.inf not in coverability_graph.nodes[m]["marking"]:
+                possible_markings = helper.enabled_markings(
+                    firing_dict,
+                    req_dict,
+                    coverability_graph.nodes[m]["marking"],
+                )
                 m2 = None
                 if len(possible_markings) > 0:
                     for marking in possible_markings:
-                        # check for m1 + since we want to construct a tree, we do not want that a marking is already in a graph since it is going to have an arc
+                        # check for m1 + since we want to construct a tree, we
+                        # do not want that a marking is already in a graph
+                        # since it is going to have an arc
                         if np.array2string(marking[0]) not in look_up_indices:
-                            if check_if_transition_unique(m, coverability_graph, marking[1]):
+                            if check_if_transition_unique(
+                                m, coverability_graph, marking[1]
+                            ):
                                 m2 = marking
                                 new_arc = True
                                 break
@@ -66,7 +75,13 @@ def construct_tree(net, initial_marking):
             lplaces = sorted(list(net.places), key=lambda x: x.name)
             m3 = np.zeros(len(lplaces))
             for place in lplaces:
-                if check_for_smaller_marking(m2, coverability_graph, lplaces.index(place), m, look_up_indices):
+                if check_for_smaller_marking(
+                    m2,
+                    coverability_graph,
+                    lplaces.index(place),
+                    m,
+                    look_up_indices,
+                ):
                     m3[lplaces.index(place)] = np.inf
                 else:
                     m3[lplaces.index(place)] = m2[0][lplaces.index(place)]
@@ -79,17 +94,32 @@ def construct_tree(net, initial_marking):
 
 def check_if_transition_unique(marking, graph, transition):
     for edge in graph.out_edges(marking):
-        if graph[edge[0]][edge[1]]['transition'] == transition:
+        if graph[edge[0]][edge[1]]["transition"] == transition:
             return False
     return True
 
 
-def check_for_smaller_marking(marking, coverability_graph, index, current_node, look_up_indices):
+def check_for_smaller_marking(
+    marking, coverability_graph, index, current_node, look_up_indices
+):
     for node in coverability_graph.nodes:
-        if all(np.less_equal(coverability_graph.nodes[node]['marking'], marking[0])):
-            if coverability_graph.nodes[node]['marking'][index] < marking[0][index]:
-                if nx_utils.has_path(coverability_graph,
-                               look_up_indices[np.array2string(coverability_graph.nodes[node]['marking'])],
-                               current_node):
+        if all(
+            np.less_equal(
+                coverability_graph.nodes[node]["marking"], marking[0]
+            )
+        ):
+            if (
+                coverability_graph.nodes[node]["marking"][index]
+                < marking[0][index]
+            ):
+                if nx_utils.has_path(
+                    coverability_graph,
+                    look_up_indices[
+                        np.array2string(
+                            coverability_graph.nodes[node]["marking"]
+                        )
+                    ],
+                    current_node,
+                ):
                     return True
     return False

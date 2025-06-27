@@ -34,13 +34,15 @@ P = TypeVar("P", bound=StochasticPetriNet.Place)
 class StochasticPetriNetSemantics(PetriNetSemantics[N], Generic[N]):
 
     @classmethod
-    def sample_enabled_transition(cls, pn: N, marking: Counter[P], seed: int = None) -> T:
+    def sample_enabled_transition(
+        cls, pn: N, marking: Counter[P], seed: int = None
+    ) -> T:
         """
         Randomly samples a transition from all enabled transitions
 
         Parameters
         ----------
-        :param pn: Petri net    
+        :param pn: Petri net
         :param marking: marking to use
 
         Returns
@@ -49,13 +51,24 @@ class StochasticPetriNetSemantics(PetriNetSemantics[N], Generic[N]):
         """
         if seed is not None:
             random.seed(seed)
-        enabled = list(filter(lambda t: cls.is_enabled(
-            pn, t, marking), [t for t in pn.transitions]))
-        weights = list(map(lambda t : cls.probability_of_transition(pn,t,marking), enabled))
+        enabled = list(
+            filter(
+                lambda t: cls.is_enabled(pn, t, marking),
+                [t for t in pn.transitions],
+            )
+        )
+        weights = list(
+            map(
+                lambda t: cls.probability_of_transition(pn, t, marking),
+                enabled,
+            )
+        )
         return random.choices(enabled, weights)[0]
 
     @classmethod
-    def probability_of_transition(cls, pn: N, transition: T, marking: Counter[P]) -> float:
+    def probability_of_transition(
+        cls, pn: N, transition: T, marking: Counter[P]
+    ) -> float:
         """
         Compute the probability of firing a transition in the net and marking.
 
@@ -67,6 +80,20 @@ class StochasticPetriNetSemantics(PetriNetSemantics[N], Generic[N]):
         Returns:
             float: _description_
         """
-        if not transition in pn.transitions or not cls.is_enabled(pn, transition, marking):
+        if transition not in pn.transitions or not cls.is_enabled(
+            pn, transition, marking
+        ):
             return 0.0
-        return transition.weight / sum(list(map(lambda t: t.weight, list(filter(lambda t: cls.is_enabled(pn, t, marking), [t for t in pn.transitions])))))
+        return transition.weight / sum(
+            list(
+                map(
+                    lambda t: t.weight,
+                    list(
+                        filter(
+                            lambda t: cls.is_enabled(pn, t, marking),
+                            [t for t in pn.transitions],
+                        )
+                    ),
+                )
+            )
+        )

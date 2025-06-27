@@ -51,10 +51,17 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     if parameters is None:
         parameters = {}
 
-    ot_prefix = exec_utils.get_param_value(Parameters.OCEL_TYPE_PREFIX, parameters,
-                                           ocel_constants.DEFAULT_OBJECT_TYPE_PREFIX_EXTENDED)
+    ot_prefix = exec_utils.get_param_value(
+        Parameters.OCEL_TYPE_PREFIX,
+        parameters,
+        ocel_constants.DEFAULT_OBJECT_TYPE_PREFIX_EXTENDED,
+    )
 
     ext_table = ocel.get_extended_table(ot_prefix)
 
     for k, ev in ext_table.iterrows():
-        yield {x: y for x, y in dict(ev).items() if isinstance(y, list) or not pd.isna(y)}
+        yield {
+            x: y
+            for x, y in dict(ev).items()
+            if isinstance(y, list) or not pd.isna(y)
+        }

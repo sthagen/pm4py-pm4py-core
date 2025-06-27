@@ -33,7 +33,11 @@ class Variants(Enum):
     PANDAS = pandas
 
 
-def apply(log: Union[EventLog, EventStream, pd.DataFrame], variant=None, parameters: Optional[Dict[Any, Any]] = None) -> List[Any]:
+def apply(
+    log: Union[EventLog, EventStream, pd.DataFrame],
+    variant=None,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> List[Any]:
     """
     Gets the roles (group of different activities done by similar resources)
     out of the log.

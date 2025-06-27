@@ -39,7 +39,10 @@ class Parameters(Enum):
     GRAPH_TITLE = "graph_title"
 
 
-def apply(network_analysis_edges0: Dict[Tuple[str, str], Dict[str, Any]], parameters: Optional[Dict[Any, Any]] = None) -> Digraph:
+def apply(
+    network_analysis_edges0: Dict[Tuple[str, str], Dict[str, Any]],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Digraph:
     """
     Creates a visualization of the network analysis (performance view)
 
@@ -63,11 +66,21 @@ def apply(network_analysis_edges0: Dict[Tuple[str, str], Dict[str, Any]], parame
     if parameters is None:
         parameters = {}
 
-    image_format = exec_utils.get_param_value(Parameters.FORMAT, parameters, "png")
-    bgcolor = exec_utils.get_param_value(Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR)
-    activity_threshold = exec_utils.get_param_value(Parameters.ACTIVITY_THRESHOLD, parameters, 1)
-    edge_threshold = exec_utils.get_param_value(Parameters.EDGE_THRESHOLD, parameters, 1)
-    aggregation_measure = exec_utils.get_param_value(Parameters.AGGREGATION_MEASURE, parameters, "mean")
+    image_format = exec_utils.get_param_value(
+        Parameters.FORMAT, parameters, "png"
+    )
+    bgcolor = exec_utils.get_param_value(
+        Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR
+    )
+    activity_threshold = exec_utils.get_param_value(
+        Parameters.ACTIVITY_THRESHOLD, parameters, 1
+    )
+    edge_threshold = exec_utils.get_param_value(
+        Parameters.EDGE_THRESHOLD, parameters, 1
+    )
+    aggregation_measure = exec_utils.get_param_value(
+        Parameters.AGGREGATION_MEASURE, parameters, "mean"
+    )
 
     from statistics import mean, median, stdev
 
@@ -84,17 +97,31 @@ def apply(network_analysis_edges0: Dict[Tuple[str, str], Dict[str, Any]], parame
     elif aggregation_measure == "sum":
         aggregation_f = sum
 
-    enable_graph_title = exec_utils.get_param_value(Parameters.ENABLE_GRAPH_TITLE, parameters, constants.DEFAULT_ENABLE_GRAPH_TITLES)
-    graph_title = exec_utils.get_param_value(Parameters.GRAPH_TITLE, parameters, "Network Analysis")
+    enable_graph_title = exec_utils.get_param_value(
+        Parameters.ENABLE_GRAPH_TITLE,
+        parameters,
+        constants.DEFAULT_ENABLE_GRAPH_TITLES,
+    )
+    graph_title = exec_utils.get_param_value(
+        Parameters.GRAPH_TITLE, parameters, "Network Analysis"
+    )
 
-    filename = tempfile.NamedTemporaryFile(suffix='.gv')
+    filename = tempfile.NamedTemporaryFile(suffix=".gv")
     filename.close()
 
-    viz = Digraph("pt", filename=filename.name, engine='dot', graph_attr={'bgcolor': bgcolor})
-    viz.attr('node', shape='ellipse', fixedsize='false')
+    viz = Digraph(
+        "pt",
+        filename=filename.name,
+        engine="dot",
+        graph_attr={"bgcolor": bgcolor},
+    )
+    viz.attr("node", shape="ellipse", fixedsize="false")
 
     if enable_graph_title:
-        viz.attr(label='<<FONT POINT-SIZE="20">'+graph_title+'</FONT>>', labelloc="top")
+        viz.attr(
+            label='<<FONT POINT-SIZE="20">' + graph_title + "</FONT>>",
+            labelloc="top",
+        )
 
     network_analysis_edges = {}
     network_analysis_edges_agg_performance = {}
@@ -103,17 +130,27 @@ def apply(network_analysis_edges0: Dict[Tuple[str, str], Dict[str, Any]], parame
         network_analysis_edges_agg_performance[x] = {}
         for y in network_analysis_edges0[x]:
             network_analysis_edges[x][y] = len(network_analysis_edges0[x][y])
-            network_analysis_edges_agg_performance[x][y] = aggregation_f(network_analysis_edges0[x][y])
+            network_analysis_edges_agg_performance[x][y] = aggregation_f(
+                network_analysis_edges0[x][y]
+            )
 
-    nodes = set(x[0] for x in network_analysis_edges).union(set(x[1] for x in network_analysis_edges))
+    nodes = set(x[0] for x in network_analysis_edges).union(
+        set(x[1] for x in network_analysis_edges)
+    )
     nodes_in_degree = {x: 0 for x in nodes}
     nodes_out_degree = {x: 0 for x in nodes}
     for edge in network_analysis_edges:
         for edge_value in network_analysis_edges[edge]:
             if network_analysis_edges[edge][edge_value] >= edge_threshold:
-                nodes_in_degree[edge[1]] += network_analysis_edges[edge][edge_value]
-                nodes_out_degree[edge[0]] += network_analysis_edges[edge][edge_value]
-    nodes_max_degree = {x: max(nodes_in_degree[x], nodes_out_degree[x]) for x in nodes}
+                nodes_in_degree[edge[1]] += network_analysis_edges[edge][
+                    edge_value
+                ]
+                nodes_out_degree[edge[0]] += network_analysis_edges[edge][
+                    edge_value
+                ]
+    nodes_max_degree = {
+        x: max(nodes_in_degree[x], nodes_out_degree[x]) for x in nodes
+    }
 
     max_node_value = sys.maxsize
     min_node_value = -sys.maxsize
@@ -122,7 +159,19 @@ def apply(network_analysis_edges0: Dict[Tuple[str, str], Dict[str, Any]], parame
     for node in nodes_max_degree:
         if nodes_max_degree[node] >= activity_threshold:
             nodes_dict[node] = str(uuid.uuid4())
-            viz.node(nodes_dict[node], node+"\n(in="+str(nodes_in_degree[node])+"; out="+str(nodes_out_degree[node])+")", style="filled", fillcolor=vis_utils.get_trans_freq_color(nodes_max_degree[node], max_node_value, max_node_value))
+            viz.node(
+                nodes_dict[node],
+                node
+                + "\n(in="
+                + str(nodes_in_degree[node])
+                + "; out="
+                + str(nodes_out_degree[node])
+                + ")",
+                style="filled",
+                fillcolor=vis_utils.get_trans_freq_color(
+                    nodes_max_degree[node], max_node_value, max_node_value
+                ),
+            )
             count = nodes_max_degree[node]
             if count > max_node_value:
                 max_node_value = count
@@ -145,7 +194,25 @@ def apply(network_analysis_edges0: Dict[Tuple[str, str], Dict[str, Any]], parame
         if edge[0] in nodes_dict and edge[1] in nodes_dict:
             for edge_value in network_analysis_edges[edge]:
                 if network_analysis_edges[edge][edge_value] >= edge_threshold:
-                    viz.edge(nodes_dict[edge[0]], nodes_dict[edge[1]], label=edge_value+"\n"+vis_utils.human_readable_stat(network_analysis_edges_agg_performance[edge][edge_value])+"", penwidth=str(vis_utils.get_arc_penwidth(network_analysis_edges[edge][edge_value], min_edge_value, max_edge_value)))
+                    viz.edge(
+                        nodes_dict[edge[0]],
+                        nodes_dict[edge[1]],
+                        label=edge_value
+                        + "\n"
+                        + vis_utils.human_readable_stat(
+                            network_analysis_edges_agg_performance[edge][
+                                edge_value
+                            ]
+                        )
+                        + "",
+                        penwidth=str(
+                            vis_utils.get_arc_penwidth(
+                                network_analysis_edges[edge][edge_value],
+                                min_edge_value,
+                                max_edge_value,
+                            )
+                        ),
+                    )
 
     viz.format = image_format.replace("html", "plain-ext")
 

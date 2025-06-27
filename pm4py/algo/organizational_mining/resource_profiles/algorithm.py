@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,7 +19,10 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.algo.organizational_mining.resource_profiles.variants import pandas, log
+from pm4py.algo.organizational_mining.resource_profiles.variants import (
+    pandas,
+    log,
+)
 import pandas as pd
 from pm4py.objects.log.obj import EventLog
 from typing import Union, Optional, Dict, Any
@@ -27,8 +30,13 @@ from pm4py.util import pandas_utils
 from datetime import datetime
 
 
-def distinct_activities(log_obj: Union[pd.DataFrame, EventLog], t1: Union[datetime, str], t2: Union[datetime, str], r: str,
-                        parameters: Optional[Dict[Any, Any]] = None) -> int:
+def distinct_activities(
+    log_obj: Union[pd.DataFrame, EventLog],
+    t1: Union[datetime, str],
+    t2: Union[datetime, str],
+    r: str,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> int:
     """
     Number of distinct activities done by a resource in a given time interval [t1, t2)
 
@@ -52,13 +60,23 @@ def distinct_activities(log_obj: Union[pd.DataFrame, EventLog], t1: Union[dateti
         Distinct activities
     """
     if pandas_utils.check_is_pandas_dataframe(log_obj):
-        return pandas.distinct_activities(log_obj, t1, t2, r, parameters=parameters)
+        return pandas.distinct_activities(
+            log_obj, t1, t2, r, parameters=parameters
+        )
     else:
-        return log.distinct_activities(log_obj, t1, t2, r, parameters=parameters)
+        return log.distinct_activities(
+            log_obj, t1, t2, r, parameters=parameters
+        )
 
 
-def activity_frequency(log_obj: Union[pd.DataFrame, EventLog], t1: Union[datetime, str], t2: Union[datetime, str], r: str, a: str,
-                        parameters: Optional[Dict[Any, Any]] = None) -> float:
+def activity_frequency(
+    log_obj: Union[pd.DataFrame, EventLog],
+    t1: Union[datetime, str],
+    t2: Union[datetime, str],
+    r: str,
+    a: str,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> float:
     """
     Fraction of completions of a given activity a, by a given resource r, during a given time slot, [t1, t2),
     with respect to the total number of activity completions by resource r during [t1, t2)
@@ -85,13 +103,22 @@ def activity_frequency(log_obj: Union[pd.DataFrame, EventLog], t1: Union[datetim
         Value of the metric
     """
     if pandas_utils.check_is_pandas_dataframe(log_obj):
-        return pandas.activity_frequency(log_obj, t1, t2, r, a, parameters=parameters)
+        return pandas.activity_frequency(
+            log_obj, t1, t2, r, a, parameters=parameters
+        )
     else:
-        return log.activity_frequency(log_obj, t1, t2, r, a, parameters=parameters)
+        return log.activity_frequency(
+            log_obj, t1, t2, r, a, parameters=parameters
+        )
 
 
-def activity_completions(log_obj: Union[pd.DataFrame, EventLog], t1: Union[datetime, str], t2: Union[datetime, str], r: str,
-                        parameters: Optional[Dict[Any, Any]] = None) -> int:
+def activity_completions(
+    log_obj: Union[pd.DataFrame, EventLog],
+    t1: Union[datetime, str],
+    t2: Union[datetime, str],
+    r: str,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> int:
     """
     The number of activity instances completed by a given resource during a given time slot.
 
@@ -115,13 +142,22 @@ def activity_completions(log_obj: Union[pd.DataFrame, EventLog], t1: Union[datet
         Value of the metric
     """
     if pandas_utils.check_is_pandas_dataframe(log_obj):
-        return pandas.activity_completions(log_obj, t1, t2, r, parameters=parameters)
+        return pandas.activity_completions(
+            log_obj, t1, t2, r, parameters=parameters
+        )
     else:
-        return log.activity_completions(log_obj, t1, t2, r, parameters=parameters)
+        return log.activity_completions(
+            log_obj, t1, t2, r, parameters=parameters
+        )
 
 
-def case_completions(log_obj: Union[pd.DataFrame, EventLog], t1: Union[datetime, str], t2: Union[datetime, str], r: str,
-                        parameters: Optional[Dict[Any, Any]] = None) -> int:
+def case_completions(
+    log_obj: Union[pd.DataFrame, EventLog],
+    t1: Union[datetime, str],
+    t2: Union[datetime, str],
+    r: str,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> int:
     """
     The number of cases completed during a given time slot in which a given resource was involved.
 
@@ -145,13 +181,20 @@ def case_completions(log_obj: Union[pd.DataFrame, EventLog], t1: Union[datetime,
         Value of the metric
     """
     if pandas_utils.check_is_pandas_dataframe(log_obj):
-        return pandas.case_completions(log_obj, t1, t2, r, parameters=parameters)
+        return pandas.case_completions(
+            log_obj, t1, t2, r, parameters=parameters
+        )
     else:
         return log.case_completions(log_obj, t1, t2, r, parameters=parameters)
 
 
-def fraction_case_completions(log_obj: Union[pd.DataFrame, EventLog], t1: Union[datetime, str], t2: Union[datetime, str], r: str,
-                        parameters: Optional[Dict[Any, Any]] = None) -> float:
+def fraction_case_completions(
+    log_obj: Union[pd.DataFrame, EventLog],
+    t1: Union[datetime, str],
+    t2: Union[datetime, str],
+    r: str,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> float:
     """
     The fraction of cases completed during a given time slot in which a given resource was involved with respect to the
     total number of cases completed during the time slot.
@@ -176,13 +219,22 @@ def fraction_case_completions(log_obj: Union[pd.DataFrame, EventLog], t1: Union[
         Value of the metric
     """
     if pandas_utils.check_is_pandas_dataframe(log_obj):
-        return pandas.fraction_case_completions(log_obj, t1, t2, r, parameters=parameters)
+        return pandas.fraction_case_completions(
+            log_obj, t1, t2, r, parameters=parameters
+        )
     else:
-        return log.fraction_case_completions(log_obj, t1, t2, r, parameters=parameters)
+        return log.fraction_case_completions(
+            log_obj, t1, t2, r, parameters=parameters
+        )
 
 
-def average_workload(log_obj: Union[pd.DataFrame, EventLog], t1: Union[datetime, str], t2: Union[datetime, str], r: str,
-                     parameters: Optional[Dict[Any, Any]] = None) -> float:
+def average_workload(
+    log_obj: Union[pd.DataFrame, EventLog],
+    t1: Union[datetime, str],
+    t2: Union[datetime, str],
+    r: str,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> float:
     """
     The average number of activities started by a given resource but not completed at a moment in time.
 
@@ -206,13 +258,20 @@ def average_workload(log_obj: Union[pd.DataFrame, EventLog], t1: Union[datetime,
         Value of the metric
     """
     if pandas_utils.check_is_pandas_dataframe(log_obj):
-        return pandas.average_workload(log_obj, t1, t2, r, parameters=parameters)
+        return pandas.average_workload(
+            log_obj, t1, t2, r, parameters=parameters
+        )
     else:
         return log.average_workload(log_obj, t1, t2, r, parameters=parameters)
 
 
-def multitasking(log_obj: Union[pd.DataFrame, EventLog], t1: Union[datetime, str], t2: Union[datetime, str], r: str,
-                 parameters: Optional[Dict[Any, Any]] = None) -> float:
+def multitasking(
+    log_obj: Union[pd.DataFrame, EventLog],
+    t1: Union[datetime, str],
+    t2: Union[datetime, str],
+    r: str,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> float:
     """
     The fraction of active time during which a given resource is involved in more than one activity with respect
     to the resource's active time.
@@ -242,8 +301,14 @@ def multitasking(log_obj: Union[pd.DataFrame, EventLog], t1: Union[datetime, str
         return log.multitasking(log_obj, t1, t2, r, parameters=parameters)
 
 
-def average_duration_activity(log_obj: Union[pd.DataFrame, EventLog], t1: Union[datetime, str], t2: Union[datetime, str], r: str, a: str,
-                       parameters: Optional[Dict[Any, Any]] = None) -> float:
+def average_duration_activity(
+    log_obj: Union[pd.DataFrame, EventLog],
+    t1: Union[datetime, str],
+    t2: Union[datetime, str],
+    r: str,
+    a: str,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> float:
     """
     The average duration of instances of a given activity completed during a given time slot by a given resource.
 
@@ -269,13 +334,22 @@ def average_duration_activity(log_obj: Union[pd.DataFrame, EventLog], t1: Union[
         Value of the metric
     """
     if pandas_utils.check_is_pandas_dataframe(log_obj):
-        return pandas.average_duration_activity(log_obj, t1, t2, r, a, parameters=parameters)
+        return pandas.average_duration_activity(
+            log_obj, t1, t2, r, a, parameters=parameters
+        )
     else:
-        return log.average_duration_activity(log_obj, t1, t2, r, a, parameters=parameters)
+        return log.average_duration_activity(
+            log_obj, t1, t2, r, a, parameters=parameters
+        )
 
 
-def average_case_duration(log_obj: Union[pd.DataFrame, EventLog], t1: Union[datetime, str], t2: Union[datetime, str], r: str,
-                          parameters: Optional[Dict[Any, Any]] = None) -> float:
+def average_case_duration(
+    log_obj: Union[pd.DataFrame, EventLog],
+    t1: Union[datetime, str],
+    t2: Union[datetime, str],
+    r: str,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> float:
     """
     The average duration of cases completed during a given time slot in which a given resource was involved.
 
@@ -299,13 +373,23 @@ def average_case_duration(log_obj: Union[pd.DataFrame, EventLog], t1: Union[date
         Value of the metric
     """
     if pandas_utils.check_is_pandas_dataframe(log_obj):
-        return pandas.average_case_duration(log_obj, t1, t2, r, parameters=parameters)
+        return pandas.average_case_duration(
+            log_obj, t1, t2, r, parameters=parameters
+        )
     else:
-        return log.average_case_duration(log_obj, t1, t2, r, parameters=parameters)
+        return log.average_case_duration(
+            log_obj, t1, t2, r, parameters=parameters
+        )
 
 
-def interaction_two_resources(log_obj: Union[pd.DataFrame, EventLog], t1: Union[datetime, str], t2: Union[datetime, str], r1: str, r2: str,
-                              parameters: Optional[Dict[Any, Any]] = None) -> float:
+def interaction_two_resources(
+    log_obj: Union[pd.DataFrame, EventLog],
+    t1: Union[datetime, str],
+    t2: Union[datetime, str],
+    r1: str,
+    r2: str,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> float:
     """
     The number of cases completed during a given time slot in which two given resources were involved.
 
@@ -331,13 +415,22 @@ def interaction_two_resources(log_obj: Union[pd.DataFrame, EventLog], t1: Union[
         Value of the metric
     """
     if pandas_utils.check_is_pandas_dataframe(log_obj):
-        return pandas.interaction_two_resources(log_obj, t1, t2, r1, r2, parameters=parameters)
+        return pandas.interaction_two_resources(
+            log_obj, t1, t2, r1, r2, parameters=parameters
+        )
     else:
-        return log.interaction_two_resources(log_obj, t1, t2, r1, r2, parameters=parameters)
+        return log.interaction_two_resources(
+            log_obj, t1, t2, r1, r2, parameters=parameters
+        )
 
 
-def social_position(log_obj: Union[pd.DataFrame, EventLog], t1: Union[datetime, str], t2: Union[datetime, str], r: str,
-                              parameters: Optional[Dict[Any, Any]] = None) -> float:
+def social_position(
+    log_obj: Union[pd.DataFrame, EventLog],
+    t1: Union[datetime, str],
+    t2: Union[datetime, str],
+    r: str,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> float:
     """
     The fraction of resources involved in the same cases with a given resource during a given time slot with
     respect to the total number of resources active during the time slot.
@@ -362,6 +455,8 @@ def social_position(log_obj: Union[pd.DataFrame, EventLog], t1: Union[datetime, 
         Value of the metric
     """
     if pandas_utils.check_is_pandas_dataframe(log_obj):
-        return pandas.social_position(log_obj, t1, t2, r, parameters=parameters)
+        return pandas.social_position(
+            log_obj, t1, t2, r, parameters=parameters
+        )
     else:
         return log.social_position(log_obj, t1, t2, r, parameters=parameters)

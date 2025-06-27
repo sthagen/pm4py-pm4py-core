@@ -33,7 +33,12 @@ class Variants(Enum):
     GRAPHVIZ = graphviz
 
 
-def apply(ocel: OCEL, graph: Set[Tuple[str, str]], variant=Variants.GRAPHVIZ, parameters: Optional[Dict[Any, Any]] = None) -> Digraph:
+def apply(
+    ocel: OCEL,
+    graph: Set[Tuple[str, str]],
+    variant=Variants.GRAPHVIZ,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Digraph:
     """
     Visualizes an object graph
 
@@ -54,7 +59,9 @@ def apply(ocel: OCEL, graph: Set[Tuple[str, str]], variant=Variants.GRAPHVIZ, pa
     gviz
         Graphviz object
     """
-    return exec_utils.get_variant(variant).apply(ocel, graph, parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        ocel, graph, parameters=parameters
+    )
 
 
 def save(gviz: Digraph, output_file_path: str, parameters=None):

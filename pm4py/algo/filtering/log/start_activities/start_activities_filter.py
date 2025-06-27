@@ -36,7 +36,11 @@ class Parameters(Enum):
     POSITIVE = "positive"
 
 
-def apply(log: EventLog, admitted_start_activities: List[str], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> EventLog:
+def apply(
+    log: EventLog,
+    admitted_start_activities: List[str],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> EventLog:
     """
     Filter the log on the specified start activities
 
@@ -57,28 +61,54 @@ def apply(log: EventLog, admitted_start_activities: List[str], parameters: Optio
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    attribute_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, DEFAULT_NAME_KEY)
-    positive = exec_utils.get_param_value(Parameters.POSITIVE, parameters, True)
+    attribute_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, DEFAULT_NAME_KEY
+    )
+    positive = exec_utils.get_param_value(
+        Parameters.POSITIVE, parameters, True
+    )
     if positive:
         filtered_log = EventLog(
-            [trace for trace in log if trace and trace[0][attribute_key] in admitted_start_activities],
-            attributes=log.attributes, extensions=log.extensions, classifiers=log.classifiers,
-            omni_present=log.omni_present, properties=log.properties)
+            [
+                trace
+                for trace in log
+                if trace
+                and trace[0][attribute_key] in admitted_start_activities
+            ],
+            attributes=log.attributes,
+            extensions=log.extensions,
+            classifiers=log.classifiers,
+            omni_present=log.omni_present,
+            properties=log.properties,
+        )
     else:
         filtered_log = EventLog(
-            [trace for trace in log if trace and trace[0][attribute_key] not in admitted_start_activities],
-            attributes=log.attributes, extensions=log.extensions, classifiers=log.classifiers,
-            omni_present=log.omni_present, properties=log.properties)
+            [
+                trace
+                for trace in log
+                if trace
+                and trace[0][attribute_key] not in admitted_start_activities
+            ],
+            attributes=log.attributes,
+            extensions=log.extensions,
+            classifiers=log.classifiers,
+            omni_present=log.omni_present,
+            properties=log.properties,
+        )
 
     return filtered_log
 
 
-def filter_log_by_start_activities(start_activities, variants, vc, threshold, activity_key="concept:name"):
+def filter_log_by_start_activities(
+    start_activities, variants, vc, threshold, activity_key="concept:name"
+):
     """
     Keep only variants of the log with a start activity which number of occurrences is above the threshold
-    
+
     Parameters
     ----------
     start_activities
@@ -91,7 +121,7 @@ def filter_log_by_start_activities(start_activities, variants, vc, threshold, ac
         Cutting threshold (remove variants having start attributes which number of occurrences is below the threshold
     activity_key
         (If specified) Specify the activity key in the log (default concept:name)
-    
+
     Returns
     ----------
     filtered_log

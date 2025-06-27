@@ -46,30 +46,36 @@ class Parameters(Enum):
 
 
 def get_right_edge_coord(layout, node, p, partial_counter, total_counter):
-    y_factor = partial_counter[EndpointDirection.RIGHT] / (total_counter[EndpointDirection.RIGHT] + 1.0)
+    y_factor = partial_counter[EndpointDirection.RIGHT] / (
+        total_counter[EndpointDirection.RIGHT] + 1.0
+    )
     new_x = p[0] + layout.get(node).get_width()
-    new_y = p[1] + round(
-        layout.get(node).get_height() * y_factor)
+    new_y = p[1] + round(layout.get(node).get_height() * y_factor)
     return (new_x, new_y)
 
 
 def get_left_edge_coord(layout, node, p, partial_counter, total_counter):
-    y_factor = partial_counter[EndpointDirection.LEFT] / (total_counter[EndpointDirection.LEFT] + 1.0)
+    y_factor = partial_counter[EndpointDirection.LEFT] / (
+        total_counter[EndpointDirection.LEFT] + 1.0
+    )
     new_x = p[0]
-    new_y = p[1] + round(
-        layout.get(node).get_height() * y_factor)
+    new_y = p[1] + round(layout.get(node).get_height() * y_factor)
     return (new_x, new_y)
 
 
 def get_top_edge_coord(layout, node, p, partial_counter, total_counter):
-    x_factor = partial_counter[EndpointDirection.TOP] / (total_counter[EndpointDirection.TOP] + 1.0)
+    x_factor = partial_counter[EndpointDirection.TOP] / (
+        total_counter[EndpointDirection.TOP] + 1.0
+    )
     new_x = p[0] + round(layout.get(node).get_width() * x_factor)
     new_y = p[1]
     return (new_x, new_y)
 
 
 def get_bottom_edge_coord(layout, node, p, partial_counter, total_counter):
-    x_factor = partial_counter[EndpointDirection.BOTTOM] / (total_counter[EndpointDirection.BOTTOM] + 1.0)
+    x_factor = partial_counter[EndpointDirection.BOTTOM] / (
+        total_counter[EndpointDirection.BOTTOM] + 1.0
+    )
     new_x = p[0] + round(layout.get(node).get_width() * x_factor)
     new_y = p[1] + layout.get(node).get_height()
     return (new_x, new_y)
@@ -101,21 +107,29 @@ def apply(bpmn_graph, parameters=None):
     if parameters is None:
         parameters = {}
 
-    screen_size_x = exec_utils.get_param_value(Parameters.SCREEN_SIZE_X, parameters, 1920.0)
-    screen_size_y = exec_utils.get_param_value(Parameters.SCREEN_SIZE_Y, parameters, 1080.0)
-    scaling_factor = exec_utils.get_param_value(Parameters.SCALING_FACTOR, parameters, 2.5)
+    screen_size_x = exec_utils.get_param_value(
+        Parameters.SCREEN_SIZE_X, parameters, 1920.0
+    )
+    screen_size_y = exec_utils.get_param_value(
+        Parameters.SCREEN_SIZE_Y, parameters, 1080.0
+    )
+    scaling_factor = exec_utils.get_param_value(
+        Parameters.SCALING_FACTOR, parameters, 2.5
+    )
 
     nodes = bpmn_graph.get_nodes()
     flows = bpmn_graph.get_flows()
     layout = bpmn_graph.get_layout()
 
-    filename_gv = tempfile.NamedTemporaryFile(suffix='.gv')
+    filename_gv = tempfile.NamedTemporaryFile(suffix=".gv")
     filename_gv.close()
-    filename_svg = tempfile.NamedTemporaryFile(suffix='.svg')
+    filename_svg = tempfile.NamedTemporaryFile(suffix=".svg")
     filename_svg.close()
-    viz = Digraph(bpmn_graph.get_name(), filename=filename_gv.name, engine='dot')
+    viz = Digraph(
+        bpmn_graph.get_name(), filename=filename_gv.name, engine="dot"
+    )
     viz.format = "svg"
-    viz.graph_attr['rankdir'] = 'LR'
+    viz.graph_attr["rankdir"] = "LR"
 
     graph_nodes, graph_edges = get_sorted_nodes_edges(bpmn_graph)
 
@@ -138,7 +152,9 @@ def apply(bpmn_graph, parameters=None):
     for node in nodes_p:
         nodes_pos[inv_nodes_dict[node]] = nodes_p[node]["polygon"]
 
-    endpoints_wh = exec_utils.get_param_value(Parameters.TASK_WH, parameters, 30)
+    endpoints_wh = exec_utils.get_param_value(
+        Parameters.TASK_WH, parameters, 30
+    )
     task_wh = exec_utils.get_param_value(Parameters.TASK_WH, parameters, 60)
 
     # add node positions to BPMN nodes
@@ -150,7 +166,10 @@ def apply(bpmn_graph, parameters=None):
         layout.get(n).set_x(pos_x)
         layout.get(n).set_y(pos_y)
         if isinstance(n, BPMN.Task):
-            this_width = min(round(2 * task_wh), round(2 * (len(n.get_name()) + 7) * task_wh / 22.0))
+            this_width = min(
+                round(2 * task_wh),
+                round(2 * (len(n.get_name()) + 7) * task_wh / 22.0),
+            )
             layout.get(n).set_width(this_width)
             layout.get(n).set_height(task_wh)
         elif isinstance(n, BPMN.StartEvent) or isinstance(n, BPMN.EndEvent):
@@ -169,8 +188,12 @@ def apply(bpmn_graph, parameters=None):
     stretch_fact_y = scaling_factor * screen_size_y / max_y
 
     for node in nodes:
-        layout.get(node).set_x(round(layout.get(node).get_x() * stretch_fact_x))
-        layout.get(node).set_y(round(layout.get(node).get_y() * stretch_fact_y))
+        layout.get(node).set_x(
+            round(layout.get(node).get_x() * stretch_fact_x)
+        )
+        layout.get(node).set_y(
+            round(layout.get(node).get_y() * stretch_fact_y)
+        )
 
     min_x = min(layout.get(node).get_x() for node in nodes)
     min_y = min(layout.get(node).get_y() for node in nodes)
@@ -203,26 +226,50 @@ def apply(bpmn_graph, parameters=None):
 
         if not (x_src, y_src) in outgoing_edges:
             outgoing_edges[(x_src, y_src)] = {}
-        outgoing_edges[(x_src, y_src)][(x_trg, y_trg)] = {EndpointDirection.RIGHT: 0.0, EndpointDirection.LEFT: 0.0,
-                                                          EndpointDirection.TOP: 0.0, EndpointDirection.BOTTOM: 0.0}
+        outgoing_edges[(x_src, y_src)][(x_trg, y_trg)] = {
+            EndpointDirection.RIGHT: 0.0,
+            EndpointDirection.LEFT: 0.0,
+            EndpointDirection.TOP: 0.0,
+            EndpointDirection.BOTTOM: 0.0,
+        }
         if not (x_trg, y_trg) in ingoing_edges:
             ingoing_edges[(x_trg, y_trg)] = {}
-        ingoing_edges[(x_trg, y_trg)][(x_src, y_src)] = {EndpointDirection.RIGHT: 0.0, EndpointDirection.LEFT: 0.0,
-                                                         EndpointDirection.TOP: 0.0, EndpointDirection.BOTTOM: 0.0}
+        ingoing_edges[(x_trg, y_trg)][(x_src, y_src)] = {
+            EndpointDirection.RIGHT: 0.0,
+            EndpointDirection.LEFT: 0.0,
+            EndpointDirection.TOP: 0.0,
+            EndpointDirection.BOTTOM: 0.0,
+        }
 
         if x_trg > x_src:
-            outgoing_edges[(x_src, y_src)][(x_trg, y_trg)][EndpointDirection.RIGHT] = diff_x / (diff_x + diff_y)
-            ingoing_edges[(x_trg, y_trg)][(x_src, y_src)][EndpointDirection.LEFT] = diff_x / (diff_x + diff_y)
+            outgoing_edges[(x_src, y_src)][(x_trg, y_trg)][
+                EndpointDirection.RIGHT
+            ] = diff_x / (diff_x + diff_y)
+            ingoing_edges[(x_trg, y_trg)][(x_src, y_src)][
+                EndpointDirection.LEFT
+            ] = diff_x / (diff_x + diff_y)
         else:
-            outgoing_edges[(x_src, y_src)][(x_trg, y_trg)][EndpointDirection.LEFT] = diff_x / (diff_x + diff_y)
-            ingoing_edges[(x_trg, y_trg)][(x_src, y_src)][EndpointDirection.RIGHT] = diff_x / (diff_x + diff_y)
+            outgoing_edges[(x_src, y_src)][(x_trg, y_trg)][
+                EndpointDirection.LEFT
+            ] = diff_x / (diff_x + diff_y)
+            ingoing_edges[(x_trg, y_trg)][(x_src, y_src)][
+                EndpointDirection.RIGHT
+            ] = diff_x / (diff_x + diff_y)
 
         if y_src > y_trg:
-            outgoing_edges[(x_src, y_src)][(x_trg, y_trg)][EndpointDirection.TOP] = diff_y / (diff_x + diff_y)
-            ingoing_edges[(x_trg, y_trg)][(x_src, y_src)][EndpointDirection.BOTTOM] = diff_y / (diff_x + diff_y)
+            outgoing_edges[(x_src, y_src)][(x_trg, y_trg)][
+                EndpointDirection.TOP
+            ] = diff_y / (diff_x + diff_y)
+            ingoing_edges[(x_trg, y_trg)][(x_src, y_src)][
+                EndpointDirection.BOTTOM
+            ] = diff_y / (diff_x + diff_y)
         else:
-            outgoing_edges[(x_src, y_src)][(x_trg, y_trg)][EndpointDirection.BOTTOM] = diff_y / (diff_x + diff_y)
-            ingoing_edges[(x_trg, y_trg)][(x_src, y_src)][EndpointDirection.TOP] = diff_y / (diff_x + diff_y)
+            outgoing_edges[(x_src, y_src)][(x_trg, y_trg)][
+                EndpointDirection.BOTTOM
+            ] = diff_y / (diff_x + diff_y)
+            ingoing_edges[(x_trg, y_trg)][(x_src, y_src)][
+                EndpointDirection.TOP
+            ] = diff_y / (diff_x + diff_y)
 
     # normalization
     outgoing_edges0 = deepcopy(outgoing_edges)
@@ -246,17 +293,25 @@ def apply(bpmn_graph, parameters=None):
                 sum_bottom += ingoing_edges0[p1][p2][EndpointDirection.BOTTOM]
         for p2 in outgoing_edges[p1]:
             if sum_right > 0:
-                outgoing_edges[p1][p2][EndpointDirection.RIGHT] = outgoing_edges[p1][p2][
-                                                                      EndpointDirection.RIGHT] ** 2 / sum_right
+                outgoing_edges[p1][p2][EndpointDirection.RIGHT] = (
+                    outgoing_edges[p1][p2][EndpointDirection.RIGHT] ** 2
+                    / sum_right
+                )
             if sum_left > 0:
-                outgoing_edges[p1][p2][EndpointDirection.LEFT] = outgoing_edges[p1][p2][
-                                                                     EndpointDirection.LEFT] ** 2 / sum_left
+                outgoing_edges[p1][p2][EndpointDirection.LEFT] = (
+                    outgoing_edges[p1][p2][EndpointDirection.LEFT] ** 2
+                    / sum_left
+                )
             if sum_top > 0:
-                outgoing_edges[p1][p2][EndpointDirection.TOP] = outgoing_edges[p1][p2][
-                                                                    EndpointDirection.TOP] ** 2 / sum_top
+                outgoing_edges[p1][p2][EndpointDirection.TOP] = (
+                    outgoing_edges[p1][p2][EndpointDirection.TOP] ** 2
+                    / sum_top
+                )
             if sum_bottom > 0:
-                outgoing_edges[p1][p2][EndpointDirection.BOTTOM] = outgoing_edges[p1][p2][
-                                                                       EndpointDirection.BOTTOM] ** 2 / sum_bottom
+                outgoing_edges[p1][p2][EndpointDirection.BOTTOM] = (
+                    outgoing_edges[p1][p2][EndpointDirection.BOTTOM] ** 2
+                    / sum_bottom
+                )
     for p1 in ingoing_edges:
         sum_right = 0.0
         sum_left = 0.0
@@ -275,26 +330,41 @@ def apply(bpmn_graph, parameters=None):
                 sum_bottom += outgoing_edges0[p1][p2][EndpointDirection.BOTTOM]
         for p2 in ingoing_edges[p1]:
             if sum_right > 0:
-                ingoing_edges[p1][p2][EndpointDirection.RIGHT] = ingoing_edges[p1][p2][
-                                                                     EndpointDirection.RIGHT] ** 2 / sum_right
+                ingoing_edges[p1][p2][EndpointDirection.RIGHT] = (
+                    ingoing_edges[p1][p2][EndpointDirection.RIGHT] ** 2
+                    / sum_right
+                )
             if sum_left > 0:
-                ingoing_edges[p1][p2][EndpointDirection.LEFT] = ingoing_edges[p1][p2][
-                                                                    EndpointDirection.LEFT] ** 2 / sum_left
+                ingoing_edges[p1][p2][EndpointDirection.LEFT] = (
+                    ingoing_edges[p1][p2][EndpointDirection.LEFT] ** 2
+                    / sum_left
+                )
             if sum_top > 0:
-                ingoing_edges[p1][p2][EndpointDirection.TOP] = ingoing_edges[p1][p2][
-                                                                   EndpointDirection.TOP] ** 2 / sum_top
+                ingoing_edges[p1][p2][EndpointDirection.TOP] = (
+                    ingoing_edges[p1][p2][EndpointDirection.TOP] ** 2 / sum_top
+                )
             if sum_bottom > 0:
-                ingoing_edges[p1][p2][EndpointDirection.BOTTOM] = ingoing_edges[p1][p2][
-                                                                      EndpointDirection.BOTTOM] ** 2 / sum_bottom
+                ingoing_edges[p1][p2][EndpointDirection.BOTTOM] = (
+                    ingoing_edges[p1][p2][EndpointDirection.BOTTOM] ** 2
+                    / sum_bottom
+                )
 
     # keep best direction
     for p1 in outgoing_edges:
         for p2 in outgoing_edges[p1]:
-            vals = sorted([(x, y) for x, y in outgoing_edges[p1][p2].items()], key=lambda x: x[1], reverse=True)
+            vals = sorted(
+                [(x, y) for x, y in outgoing_edges[p1][p2].items()],
+                key=lambda x: x[1],
+                reverse=True,
+            )
             outgoing_edges[p1][p2] = vals[0][0]
     for p1 in ingoing_edges:
         for p2 in ingoing_edges[p1]:
-            vals = sorted([(x, y) for x, y in ingoing_edges[p1][p2].items()], key=lambda x: x[1], reverse=True)
+            vals = sorted(
+                [(x, y) for x, y in ingoing_edges[p1][p2].items()],
+                key=lambda x: x[1],
+                reverse=True,
+            )
             ingoing_edges[p1][p2] = vals[0][0]
 
     total_counter = dict()
@@ -320,34 +390,54 @@ def apply(bpmn_graph, parameters=None):
         node = sources_dict[p1]
         if p1 not in partial_counter:
             partial_counter[p1] = Counter()
-        sorted_outgoing_edges = sorted(outgoing_edges[p1], key=lambda x: x, reverse=False)
+        sorted_outgoing_edges = sorted(
+            outgoing_edges[p1], key=lambda x: x, reverse=False
+        )
         for p2 in sorted_outgoing_edges:
             dir = outgoing_edges[p1][p2]
             partial_counter[p1][dir] += 1
             if dir == EndpointDirection.RIGHT:
-                outgoing_edges[p1][p2] = get_right_edge_coord(layout, node, p1, partial_counter[p1], total_counter[p1])
+                outgoing_edges[p1][p2] = get_right_edge_coord(
+                    layout, node, p1, partial_counter[p1], total_counter[p1]
+                )
             elif dir == EndpointDirection.LEFT:
-                outgoing_edges[p1][p2] = get_left_edge_coord(layout, node, p1, partial_counter[p1], total_counter[p1])
+                outgoing_edges[p1][p2] = get_left_edge_coord(
+                    layout, node, p1, partial_counter[p1], total_counter[p1]
+                )
             elif dir == EndpointDirection.TOP:
-                outgoing_edges[p1][p2] = get_top_edge_coord(layout, node, p1, partial_counter[p1], total_counter[p1])
+                outgoing_edges[p1][p2] = get_top_edge_coord(
+                    layout, node, p1, partial_counter[p1], total_counter[p1]
+                )
             elif dir == EndpointDirection.BOTTOM:
-                outgoing_edges[p1][p2] = get_bottom_edge_coord(layout, node, p1, partial_counter[p1], total_counter[p1])
+                outgoing_edges[p1][p2] = get_bottom_edge_coord(
+                    layout, node, p1, partial_counter[p1], total_counter[p1]
+                )
     for p1 in ingoing_edges:
         node = targets_dict[p1]
         if p1 not in partial_counter:
             partial_counter[p1] = Counter()
-        sorted_ingoing_edges = sorted(ingoing_edges[p1], key=lambda x: x, reverse=False)
+        sorted_ingoing_edges = sorted(
+            ingoing_edges[p1], key=lambda x: x, reverse=False
+        )
         for p2 in sorted_ingoing_edges:
             dir = ingoing_edges[p1][p2]
             partial_counter[p1][dir] += 1
             if dir == EndpointDirection.RIGHT:
-                ingoing_edges[p1][p2] = get_right_edge_coord(layout, node, p1, partial_counter[p1], total_counter[p1])
+                ingoing_edges[p1][p2] = get_right_edge_coord(
+                    layout, node, p1, partial_counter[p1], total_counter[p1]
+                )
             elif dir == EndpointDirection.LEFT:
-                ingoing_edges[p1][p2] = get_left_edge_coord(layout, node, p1, partial_counter[p1], total_counter[p1])
+                ingoing_edges[p1][p2] = get_left_edge_coord(
+                    layout, node, p1, partial_counter[p1], total_counter[p1]
+                )
             elif dir == EndpointDirection.TOP:
-                ingoing_edges[p1][p2] = get_top_edge_coord(layout, node, p1, partial_counter[p1], total_counter[p1])
+                ingoing_edges[p1][p2] = get_top_edge_coord(
+                    layout, node, p1, partial_counter[p1], total_counter[p1]
+                )
             elif dir == EndpointDirection.BOTTOM:
-                ingoing_edges[p1][p2] = get_bottom_edge_coord(layout, node, p1, partial_counter[p1], total_counter[p1])
+                ingoing_edges[p1][p2] = get_bottom_edge_coord(
+                    layout, node, p1, partial_counter[p1], total_counter[p1]
+                )
 
     # order the left-entering ingoing edges better
     for p1 in ingoing_edges:
@@ -389,13 +479,19 @@ def apply(bpmn_graph, parameters=None):
             if dir_target in [EndpointDirection.LEFT, EndpointDirection.RIGHT]:
                 flow.add_waypoint((middle_x, source_y))
                 flow.add_waypoint((middle_x, target_y))
-            elif dir_target in [EndpointDirection.TOP, EndpointDirection.BOTTOM]:
+            elif dir_target in [
+                EndpointDirection.TOP,
+                EndpointDirection.BOTTOM,
+            ]:
                 flow.add_waypoint((target_x, source_y))
         elif dir_source in [EndpointDirection.TOP, EndpointDirection.BOTTOM]:
             if dir_target in [EndpointDirection.TOP, EndpointDirection.BOTTOM]:
                 flow.add_waypoint((source_x, middle_y))
                 flow.add_waypoint((target_x, middle_y))
-            elif dir_target in [EndpointDirection.LEFT, EndpointDirection.RIGHT]:
+            elif dir_target in [
+                EndpointDirection.LEFT,
+                EndpointDirection.RIGHT,
+            ]:
                 flow.add_waypoint((source_x, target_y))
 
         flow.add_waypoint((target_x, target_y))

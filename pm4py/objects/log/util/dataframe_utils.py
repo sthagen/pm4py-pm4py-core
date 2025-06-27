@@ -81,11 +81,16 @@ def insert_partitioning(df, num_partitions, parameters=None):
     if parameters is None:
         parameters = {}
 
-    case_index_key = exec_utils.get_param_value(Parameters.CASE_INDEX_KEY, parameters, constants.DEFAULT_CASE_INDEX_KEY)
-    partition_column = exec_utils.get_param_value(Parameters.PARTITION_COLUMN, parameters, "@@partitioning")
+    case_index_key = exec_utils.get_param_value(
+        Parameters.CASE_INDEX_KEY, parameters, constants.DEFAULT_CASE_INDEX_KEY
+    )
+    partition_column = exec_utils.get_param_value(
+        Parameters.PARTITION_COLUMN, parameters, "@@partitioning"
+    )
 
     if case_index_key not in df.columns:
         from pm4py.util import pandas_utils
+
         df = pandas_utils.insert_case_index(df, case_index_key)
 
     df[partition_column] = df[case_index_key] % num_partitions
@@ -109,7 +114,9 @@ def legacy_parquet_support(df, parameters=None):
     if parameters is None:
         parameters = {}
 
-    df.columns = [x.replace(LEGACY_PARQUET_TP_REPLACER, ":") for x in df.columns]
+    df.columns = [
+        x.replace(LEGACY_PARQUET_TP_REPLACER, ":") for x in df.columns
+    ]
 
     return df
 
@@ -133,7 +140,9 @@ def table_to_stream(table, parameters=None):
     # for legacy format support
     if LEGACY_PARQUET_CASECONCEPTNAME in keys:
         for key in keys:
-            dict0[key.replace(LEGACY_PARQUET_TP_REPLACER, ":")] = dict0.pop(key)
+            dict0[key.replace(LEGACY_PARQUET_TP_REPLACER, ":")] = dict0.pop(
+                key
+            )
 
     stream = EventStream([dict(zip(dict0, i)) for i in zip(*dict0.values())])
 
@@ -159,7 +168,9 @@ def table_to_log(table, parameters=None):
     return log_converter.apply(stream, parameters=parameters)
 
 
-def convert_timestamp_columns_in_df(df, timest_format=None, timest_columns=None):
+def convert_timestamp_columns_in_df(
+    df, timest_format=None, timest_columns=None
+):
     """
     Convert all dataframe columns in a dataframe
 
@@ -188,14 +199,25 @@ def convert_timestamp_columns_in_df(df, timest_format=None, timest_columns=None)
         if timest_columns is None or col in timest_columns:
             if "obj" in str(df[col].dtype) or "str" in str(df[col].dtype):
                 try:
-                    df[col] = pandas_utils.dataframe_column_string_to_datetime(df[col], format=timest_format, utc=True)
-                except:
+                    df[col] = pandas_utils.dataframe_column_string_to_datetime(
+                        df[col], format=timest_format, utc=True
+                    )
+                except BaseException:
                     try:
-                        df[col] = pandas_utils.dataframe_column_string_to_datetime(df[col], format=timest_format, exact=False, utc=True)
-                    except:
+                        df[col] = (
+                            pandas_utils.dataframe_column_string_to_datetime(
+                                df[col],
+                                format=timest_format,
+                                exact=False,
+                                utc=True,
+                            )
+                        )
+                    except BaseException:
                         try:
-                            df[col] = pandas_utils.dataframe_column_string_to_datetime(df[col], format=timest_format)
-                        except:
+                            df[col] = (
+                                pandas_utils.dataframe_column_string_to_datetime(
+                                    df[col], format=timest_format))
+                        except BaseException:
                             pass
 
     for col in df.columns:
@@ -226,9 +248,15 @@ def sample_dataframe(df, parameters=None):
     if parameters is None:
         parameters = {}
 
-    deterministic = exec_utils.get_param_value(Parameters.DETERMINISTIC, parameters, False)
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    max_no_cases = exec_utils.get_param_value(Parameters.MAX_NO_CASES, parameters, 100)
+    deterministic = exec_utils.get_param_value(
+        Parameters.DETERMINISTIC, parameters, False
+    )
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    max_no_cases = exec_utils.get_param_value(
+        Parameters.MAX_NO_CASES, parameters, 100
+    )
 
     case_ids = pandas_utils.format_unique(df[case_id_key].unique())
     case_ids = list(case_ids)
@@ -236,7 +264,9 @@ def sample_dataframe(df, parameters=None):
     if not deterministic:
         random.shuffle(case_ids)
 
-    case_id_to_retain = points_subset.pick_chosen_points_list(min(max_no_cases, len(case_ids)), case_ids)
+    case_id_to_retain = points_subset.pick_chosen_points_list(
+        min(max_no_cases, len(case_ids)), case_ids
+    )
 
     return df[df[case_id_key].isin(case_id_to_retain)]
 
@@ -261,17 +291,32 @@ def automatic_feature_selection_df(df, parameters=None):
     if parameters is None:
         parameters = {}
 
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
 
-    mandatory_attributes = exec_utils.get_param_value(Parameters.MANDATORY_ATTRIBUTES, parameters,
-                                                      set(df.columns).intersection(
-                                                          {case_id_key, activity_key,
-                                                           timestamp_key}))
+    mandatory_attributes = exec_utils.get_param_value(
+        Parameters.MANDATORY_ATTRIBUTES,
+        parameters,
+        set(df.columns).intersection(
+            {case_id_key, activity_key, timestamp_key}
+        ),
+    )
 
-    min_different_occ_str_attr = exec_utils.get_param_value(Parameters.MIN_DIFFERENT_OCC_STR_ATTR, parameters, 5)
-    max_different_occ_str_attr = exec_utils.get_param_value(Parameters.MAX_DIFFERENT_OCC_STR_ATTR, parameters, 50)
+    min_different_occ_str_attr = exec_utils.get_param_value(
+        Parameters.MIN_DIFFERENT_OCC_STR_ATTR, parameters, 5
+    )
+    max_different_occ_str_attr = exec_utils.get_param_value(
+        Parameters.MAX_DIFFERENT_OCC_STR_ATTR, parameters, 50
+    )
 
     cols_dtypes = {x: str(df[x].dtype) for x in df.columns}
     other_attributes_to_retain = set()
@@ -290,19 +335,30 @@ def automatic_feature_selection_df(df, parameters=None):
                 # (as in the classic log version) keep string attributes if they have enough variability, but not too much
                 # (that would be hard to explain)
                 unique_val_count = df[x].nunique()
-                if min_different_occ_str_attr <= unique_val_count <= max_different_occ_str_attr:
+                if (
+                    min_different_occ_str_attr
+                    <= unique_val_count
+                    <= max_different_occ_str_attr
+                ):
                     other_attributes_to_retain.add(x)
             else:
-                # not consider the attribute after this feature selection if it has other types (for example, date)
+                # not consider the attribute after this feature selection if it
+                # has other types (for example, date)
                 pass
 
-    attributes_to_retain = mandatory_attributes.union(other_attributes_to_retain)
+    attributes_to_retain = mandatory_attributes.union(
+        other_attributes_to_retain
+    )
 
     return df[list(attributes_to_retain)]
 
 
-def select_number_column(df: pd.DataFrame, fea_df: pd.DataFrame, col: str,
-                         case_id_key=constants.CASE_CONCEPT_NAME) -> pd.DataFrame:
+def select_number_column(
+    df: pd.DataFrame,
+    fea_df: pd.DataFrame,
+    col: str,
+    case_id_key=constants.CASE_CONCEPT_NAME,
+) -> pd.DataFrame:
     """
     Extract a column for the features dataframe for the given numeric attribute
 
@@ -322,14 +378,25 @@ def select_number_column(df: pd.DataFrame, fea_df: pd.DataFrame, col: str,
     fea_df
         Feature dataframe (desidered output)
     """
-    df = df.dropna(subset=[col]).groupby(case_id_key).last().reset_index()[[case_id_key, col]]
-    fea_df = fea_df.merge(df, on=[case_id_key], how="left", suffixes=('', '_y'))
+    df = (
+        df.dropna(subset=[col])
+        .groupby(case_id_key)
+        .last()
+        .reset_index()[[case_id_key, col]]
+    )
+    fea_df = fea_df.merge(
+        df, on=[case_id_key], how="left", suffixes=("", "_y")
+    )
     fea_df[col] = fea_df[col].astype(np.float32)
     return fea_df
 
 
-def select_string_column(df: pd.DataFrame, fea_df: pd.DataFrame, col: str,
-                         case_id_key=constants.CASE_CONCEPT_NAME) -> pd.DataFrame:
+def select_string_column(
+    df: pd.DataFrame,
+    fea_df: pd.DataFrame,
+    col: str,
+    case_id_key=constants.CASE_CONCEPT_NAME,
+) -> pd.DataFrame:
     """
     Extract N columns (for N different attribute values; hotencoding) for the features dataframe for the given string attribute
 
@@ -352,15 +419,26 @@ def select_string_column(df: pd.DataFrame, fea_df: pd.DataFrame, col: str,
     vals = pandas_utils.format_unique(df[col].unique())
     for val in vals:
         if val is not None:
-            filt_df_cases = pandas_utils.format_unique(df[df[col] == val][case_id_key].unique())
-            new_col = col + "_" + val.encode('ascii', errors='ignore').decode('ascii').replace(" ", "")
+            filt_df_cases = pandas_utils.format_unique(
+                df[df[col] == val][case_id_key].unique()
+            )
+            new_col = (
+                col
+                + "_"
+                + val.encode("ascii", errors="ignore")
+                .decode("ascii")
+                .replace(" ", "")
+            )
             fea_df[new_col] = fea_df[case_id_key].isin(filt_df_cases)
             fea_df[new_col] = fea_df[new_col].astype(np.float32)
     return fea_df
 
 
-def get_features_df(df: pd.DataFrame, list_columns: List[str],
-                    parameters: Optional[Dict[Any, Any]] = None) -> pd.DataFrame:
+def get_features_df(
+    df: pd.DataFrame,
+    list_columns: List[str],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> pd.DataFrame:
     """
     Given a dataframe and a list of columns, performs an automatic feature extraction
 
@@ -382,15 +460,29 @@ def get_features_df(df: pd.DataFrame, list_columns: List[str],
     if parameters is None:
         parameters = {}
 
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    add_case_identifier_column = exec_utils.get_param_value(Parameters.ADD_CASE_IDENTIFIER_COLUMN, parameters, False)
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    add_case_identifier_column = exec_utils.get_param_value(
+        Parameters.ADD_CASE_IDENTIFIER_COLUMN, parameters, False
+    )
 
-    fea_df = pandas_utils.instantiate_dataframe({case_id_key: sorted(pandas_utils.format_unique(df[case_id_key].unique()))})
+    fea_df = pandas_utils.instantiate_dataframe(
+        {
+            case_id_key: sorted(
+                pandas_utils.format_unique(df[case_id_key].unique())
+            )
+        }
+    )
     for col in list_columns:
         if "obj" in str(df[col].dtype) or "str" in str(df[col].dtype):
-            fea_df = select_string_column(df, fea_df, col, case_id_key=case_id_key)
+            fea_df = select_string_column(
+                df, fea_df, col, case_id_key=case_id_key
+            )
         elif "float" in str(df[col].dtype) or "int" in str(df[col].dtype):
-            fea_df = select_number_column(df, fea_df, col, case_id_key=case_id_key)
+            fea_df = select_number_column(
+                df, fea_df, col, case_id_key=case_id_key
+            )
     fea_df = fea_df.sort_values(case_id_key)
     if not add_case_identifier_column:
         del fea_df[case_id_key]
@@ -398,7 +490,9 @@ def get_features_df(df: pd.DataFrame, list_columns: List[str],
     return fea_df
 
 
-def automatic_feature_extraction_df(df: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None) -> pd.DataFrame:
+def automatic_feature_extraction_df(
+    df: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None
+) -> pd.DataFrame:
     """
     Performs an automatic feature extraction given a dataframe
 
@@ -420,8 +514,14 @@ def automatic_feature_extraction_df(df: pd.DataFrame, parameters: Optional[Dict[
     if parameters is None:
         parameters = {}
 
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
 
     fea_sel_df = automatic_feature_selection_df(df, parameters=parameters)
     columns = set(fea_sel_df.columns)
@@ -435,7 +535,9 @@ def automatic_feature_extraction_df(df: pd.DataFrame, parameters: Optional[Dict[
     return get_features_df(fea_sel_df, list(columns), parameters=parameters)
 
 
-def insert_artificial_start_end(df0: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None) -> pd.DataFrame:
+def insert_artificial_start_end(
+    df0: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None
+) -> pd.DataFrame:
     """
     Inserts the artificial start/end activities in a Pandas dataframe
 
@@ -457,30 +559,63 @@ def insert_artificial_start_end(df0: pd.DataFrame, parameters: Optional[Dict[Any
     if parameters is None:
         parameters = {}
 
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    use_extremes_timestamp = exec_utils.get_param_value(Parameters.USE_EXTREMES_TIMESTAMP, parameters, False)
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    use_extremes_timestamp = exec_utils.get_param_value(
+        Parameters.USE_EXTREMES_TIMESTAMP, parameters, False
+    )
 
-    artificial_start_activity = exec_utils.get_param_value(Parameters.PARAM_ARTIFICIAL_START_ACTIVITY, parameters, constants.DEFAULT_ARTIFICIAL_START_ACTIVITY)
-    artificial_end_activity = exec_utils.get_param_value(Parameters.PARAM_ARTIFICIAL_END_ACTIVITY, parameters, constants.DEFAULT_ARTIFICIAL_END_ACTIVITY)
+    artificial_start_activity = exec_utils.get_param_value(
+        Parameters.PARAM_ARTIFICIAL_START_ACTIVITY,
+        parameters,
+        constants.DEFAULT_ARTIFICIAL_START_ACTIVITY,
+    )
+    artificial_end_activity = exec_utils.get_param_value(
+        Parameters.PARAM_ARTIFICIAL_END_ACTIVITY,
+        parameters,
+        constants.DEFAULT_ARTIFICIAL_END_ACTIVITY,
+    )
 
-    index_key = exec_utils.get_param_value(Parameters.INDEX_KEY, parameters, constants.DEFAULT_INDEX_KEY)
+    index_key = exec_utils.get_param_value(
+        Parameters.INDEX_KEY, parameters, constants.DEFAULT_INDEX_KEY
+    )
 
     df = df0.copy()
     df = pandas_utils.insert_index(df, index_key)
     df = df.sort_values([case_id_key, timestamp_key, index_key])
 
-    start_df = df[[case_id_key, timestamp_key]].groupby(case_id_key).first().reset_index()
-    end_df = df[[case_id_key, timestamp_key]].groupby(case_id_key).last().reset_index()
-    # stability trick: remove 1ms from the artificial start activity timestamp, add 1ms to the artificial end activity timestamp
+    start_df = (
+        df[[case_id_key, timestamp_key]]
+        .groupby(case_id_key)
+        .first()
+        .reset_index()
+    )
+    end_df = (
+        df[[case_id_key, timestamp_key]]
+        .groupby(case_id_key)
+        .last()
+        .reset_index()
+    )
+    # stability trick: remove 1ms from the artificial start activity
+    # timestamp, add 1ms to the artificial end activity timestamp
     if use_extremes_timestamp:
         start_df[timestamp_key] = pd.Timestamp.min
         end_df[timestamp_key] = pd.Timestamp.max
         start_df[timestamp_key] = start_df[timestamp_key].dt.tz_localize("utc")
         end_df[timestamp_key] = end_df[timestamp_key].dt.tz_localize("utc")
     else:
-        start_df[timestamp_key] = start_df[timestamp_key] - pd.Timedelta("1 ms")
+        start_df[timestamp_key] = start_df[timestamp_key] - pd.Timedelta(
+            "1 ms"
+        )
         end_df[timestamp_key] = end_df[timestamp_key] + pd.Timedelta("1 ms")
 
     start_df[activity_key] = artificial_start_activity
@@ -495,7 +630,9 @@ def insert_artificial_start_end(df0: pd.DataFrame, parameters: Optional[Dict[Any
     return df
 
 
-def dataframe_to_activity_case_table(df: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None):
+def dataframe_to_activity_case_table(
+    df: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None
+):
     """
     Transforms a Pandas dataframe into:
     - an "activity" table, containing the events and their attributes
@@ -523,15 +660,30 @@ def dataframe_to_activity_case_table(df: pd.DataFrame, parameters: Optional[Dict
         parameters = {}
 
     # make sure we start from a dataframe object
-    df = log_converter.apply(df, variant=log_converter.Variants.TO_DATA_FRAME, parameters=parameters)
+    df = log_converter.apply(
+        df, variant=log_converter.Variants.TO_DATA_FRAME, parameters=parameters
+    )
 
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    case_id_prefix = exec_utils.get_param_value(Parameters.CASE_PREFIX, parameters, constants.CASE_ATTRIBUTE_PREFIX)
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    case_id_prefix = exec_utils.get_param_value(
+        Parameters.CASE_PREFIX, parameters, constants.CASE_ATTRIBUTE_PREFIX
+    )
 
-    case_attributes = exec_utils.get_param_value(Parameters.CASE_ATTRIBUTES, parameters, set([x for x in df.columns if x.startswith(case_id_prefix)]))
+    case_attributes = exec_utils.get_param_value(
+        Parameters.CASE_ATTRIBUTES,
+        parameters,
+        set([x for x in df.columns if x.startswith(case_id_prefix)]),
+    )
     event_attributes = set([x for x in df.columns if x not in case_attributes])
 
     activity_table = df[event_attributes.union({case_id_key})]
-    case_table = df[case_attributes.union({case_id_key})].groupby(case_id_key).first().reset_index()
+    case_table = (
+        df[case_attributes.union({case_id_key})]
+        .groupby(case_id_key)
+        .first()
+        .reset_index()
+    )
 
     return activity_table, case_table

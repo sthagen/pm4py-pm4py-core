@@ -47,14 +47,29 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     if parameters is None:
         parameters = {}
 
-    ordered_objects = parameters["ordered_objects"] if "ordered_objects" in parameters else ocel.objects[
-        ocel.object_id_column].to_numpy()
+    ordered_objects = (
+        parameters["ordered_objects"]
+        if "ordered_objects" in parameters
+        else ocel.objects[ocel.object_id_column].to_numpy()
+    )
 
-    first_object_timestamp = ocel.relations.groupby(ocel.object_id_column).first()[ocel.event_timestamp].to_dict()
-    last_object_timestamp = ocel.relations.groupby(ocel.object_id_column).last()[ocel.event_timestamp].to_dict()
+    first_object_timestamp = (
+        ocel.relations.groupby(ocel.object_id_column)
+        .first()[ocel.event_timestamp]
+        .to_dict()
+    )
+    last_object_timestamp = (
+        ocel.relations.groupby(ocel.object_id_column)
+        .last()[ocel.event_timestamp]
+        .to_dict()
+    )
 
     data = []
-    feature_names = ["@@object_lifecycle_duration", "@@object_lifecycle_start_timestamp", "@@object_lifecycle_end_timestamp"]
+    feature_names = [
+        "@@object_lifecycle_duration",
+        "@@object_lifecycle_start_timestamp",
+        "@@object_lifecycle_end_timestamp",
+    ]
 
     for obj in ordered_objects:
         if obj in first_object_timestamp:

@@ -24,10 +24,17 @@ import pandas as pd
 from sqlite3 import Connection as SQ3_Connection
 from pm4py.objects.ocel.obj import OCEL
 from pm4py.util import pandas_utils, exec_utils
-from pm4py.algo.querying.llm.injection.db_knowledge.variants import pandas_duckdb, sqlite3_traditional
+from pm4py.algo.querying.llm.injection.db_knowledge.variants import (
+    pandas_duckdb,
+    sqlite3_traditional,
+)
 
 
-def apply(db: Union[pd.DataFrame, SQ3_Connection, OCEL], variant=None, parameters: Optional[Dict[Any, Any]] = None) -> str:
+def apply(
+    db: Union[pd.DataFrame, SQ3_Connection, OCEL],
+    variant=None,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> str:
     """
     Provides a string containing the required database knowledge for database querying
     (in order for the LLM to produce meaningful queries).

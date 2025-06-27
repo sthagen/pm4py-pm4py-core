@@ -93,14 +93,25 @@ def get_all_nodes_inside_process(process_id, bpmn_graph, deep=True):
 
 
 # return the direct children of a subprocess
-def get_all_direct_child_subprocesses(process_id, bpmn_graph, include_normal=False):
+def get_all_direct_child_subprocesses(
+    process_id, bpmn_graph, include_normal=False
+):
     nodes = set()
     for node in bpmn_graph.get_nodes():
-        if isinstance(node, BPMN.SubProcess) and node.get_process() == process_id:
+        if (
+            isinstance(node, BPMN.SubProcess)
+            and node.get_process() == process_id
+        ):
             if not include_normal:
-                boundary_events = get_boundary_events_of_activity(node.get_id(), bpmn_graph)
+                boundary_events = get_boundary_events_of_activity(
+                    node.get_id(), bpmn_graph
+                )
                 # termination events inside subprocess
-                termination_events = get_termination_events_of_subprocess_for_pnet(node.get_id(), bpmn_graph)
+                termination_events = (
+                    get_termination_events_of_subprocess_for_pnet(
+                        node.get_id(), bpmn_graph
+                    )
+                )
                 if len(boundary_events) > 0 or len(termination_events) > 0:
                     nodes.add(node)
             else:
@@ -111,9 +122,15 @@ def get_all_direct_child_subprocesses(process_id, bpmn_graph, include_normal=Fal
 # return the direct and indirect children of a subprocess
 def get_all_child_subprocesses(process_id, bpmn_graph, include_normal=False):
     sub_processes = set()
-    for child in get_all_direct_child_subprocesses(process_id, bpmn_graph, include_normal):
+    for child in get_all_direct_child_subprocesses(
+        process_id, bpmn_graph, include_normal
+    ):
         sub_processes.add(child)
-        sub_processes = sub_processes.union(get_all_child_subprocesses(child.get_id(), bpmn_graph, include_normal))
+        sub_processes = sub_processes.union(
+            get_all_child_subprocesses(
+                child.get_id(), bpmn_graph, include_normal
+            )
+        )
     return sub_processes
 
 
@@ -121,18 +138,29 @@ def get_processes_deep(node, bpmn_graph):
     if node.get_process() == bpmn_graph.get_process_id():
         return [bpmn_graph.get_process_id()]
     else:
-        return [node.get_process()] + get_processes_deep(get_node_by_id(node.get_process(), bpmn_graph), bpmn_graph)
+        return [node.get_process()] + get_processes_deep(
+            get_node_by_id(node.get_process(), bpmn_graph), bpmn_graph
+        )
 
 
 def get_subprocesses_sorted_by_depth(bpmn_graph):
-    return sorted([node for node in bpmn_graph.get_nodes() if isinstance(node, BPMN.SubProcess)],
-                  key=lambda x: x.get_depth(), reverse=True)
+    return sorted(
+        [
+            node
+            for node in bpmn_graph.get_nodes()
+            if isinstance(node, BPMN.SubProcess)
+        ],
+        key=lambda x: x.get_depth(),
+        reverse=True,
+    )
 
 
 def get_termination_events_of_subprocess(activity_id, bpmn_graph):
     events = []
     for node in bpmn_graph.get_nodes():
-        if node.get_process() == activity_id and isinstance(node, BPMN.TerminateEndEvent):
+        if node.get_process() == activity_id and isinstance(
+            node, BPMN.TerminateEndEvent
+        ):
             events.append(node)
     return events
 
@@ -140,10 +168,13 @@ def get_termination_events_of_subprocess(activity_id, bpmn_graph):
 def get_termination_events_of_subprocess_for_pnet(activity_id, bpmn_graph):
     events = []
     for node in bpmn_graph.get_nodes():
-        if node.get_process() == activity_id and isinstance(node,
-                                                            (BPMN.IntermediateCatchEvent, BPMN.IntermediateThrowEvent)):
+        if node.get_process() == activity_id and isinstance(
+            node, (BPMN.IntermediateCatchEvent, BPMN.IntermediateThrowEvent)
+        ):
             cond = False
-            for boundary_event in get_boundary_events_of_activity(activity_id, bpmn_graph):
+            for boundary_event in get_boundary_events_of_activity(
+                activity_id, bpmn_graph
+            ):
                 if boundary_event.get_name() == node.get_name():
                     cond = True
             if not cond:
@@ -154,7 +185,9 @@ def get_termination_events_of_subprocess_for_pnet(activity_id, bpmn_graph):
 def get_start_events_of_subprocess(activity_id, bpmn_graph):
     events = []
     for node in bpmn_graph.get_nodes():
-        if node.get_process() == activity_id and isinstance(node, BPMN.StartEvent):
+        if node.get_process() == activity_id and isinstance(
+            node, BPMN.StartEvent
+        ):
             events.append(node)
     return events
 
@@ -162,7 +195,9 @@ def get_start_events_of_subprocess(activity_id, bpmn_graph):
 def get_end_events_of_subprocess(activity_id, bpmn_graph):
     events = []
     for node in bpmn_graph.get_nodes():
-        if node.get_process() == activity_id and isinstance(node, BPMN.EndEvent):
+        if node.get_process() == activity_id and isinstance(
+            node, BPMN.EndEvent
+        ):
             events.append(node)
     return events
 
@@ -171,7 +206,10 @@ def bpmn_graph_end_events_as_throw_events(bpmn_graph):
     events = []
     for node in bpmn_graph.get_nodes():
         # subprocess end event
-        if node.get_process() != bpmn_graph.get_process_id() and isinstance(node, BPMN.EndEvent) and not isinstance(
-                node, BPMN.NormalEndEvent):
+        if (
+            node.get_process() != bpmn_graph.get_process_id()
+            and isinstance(node, BPMN.EndEvent)
+            and not isinstance(node, BPMN.NormalEndEvent)
+        ):
             events.append(node)
     return events

@@ -32,8 +32,12 @@ class Parameters(Enum):
     RIGHT_SUFFIX = "right_suffix"
 
 
-def apply(dataframe1: pd.DataFrame, dataframe2: pd.DataFrame, case_relations: pd.DataFrame,
-          parameters: Optional[Dict[Any, Any]] = None) -> pd.DataFrame:
+def apply(
+    dataframe1: pd.DataFrame,
+    dataframe2: pd.DataFrame,
+    case_relations: pd.DataFrame,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> pd.DataFrame:
     """
     Merges the two dataframes (dataframe1 and dataframe2), inserting the events of the second
     dataframe inside the cases of the first dataframe.
@@ -65,13 +69,26 @@ def apply(dataframe1: pd.DataFrame, dataframe2: pd.DataFrame, case_relations: pd
     if parameters is None:
         parameters = {}
 
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    left_suffix = exec_utils.get_param_value(Parameters.LEFT_SUFFIX, parameters, "_LEFT")
-    right_suffix = exec_utils.get_param_value(Parameters.RIGHT_SUFFIX, parameters, "_RIGHT")
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    left_suffix = exec_utils.get_param_value(
+        Parameters.LEFT_SUFFIX, parameters, "_LEFT"
+    )
+    right_suffix = exec_utils.get_param_value(
+        Parameters.RIGHT_SUFFIX, parameters, "_RIGHT"
+    )
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
 
-    dataframe2 = dataframe2.merge(case_relations, left_on=case_id_key, right_on=case_id_key + right_suffix)
+    dataframe2 = dataframe2.merge(
+        case_relations,
+        left_on=case_id_key,
+        right_on=case_id_key + right_suffix,
+    )
     dataframe2[case_id_key] = dataframe2[case_id_key + left_suffix]
 
     dataframe1 = pandas_utils.concat([dataframe1, dataframe2])

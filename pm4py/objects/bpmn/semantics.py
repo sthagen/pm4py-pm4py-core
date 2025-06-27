@@ -29,9 +29,10 @@ import operator
 def is_enabled(node, bpmn, m):
     if node not in bpmn.get_nodes():
         return False
-    elif isinstance(node, (
-            BPMN.ParallelGateway,
-            BPMN.InclusiveGateway)) and node.get_gateway_direction() == BPMN.Gateway.Direction.CONVERGING:
+    elif (
+        isinstance(node, (BPMN.ParallelGateway, BPMN.InclusiveGateway))
+        and node.get_gateway_direction() == BPMN.Gateway.Direction.CONVERGING
+    ):
         if m[node] < len(node.get_in_arcs()):
             return False
     else:
@@ -64,7 +65,9 @@ def sub_vector(a, b):
 
 def power_set(iterable, min=1):
     s = list(iterable)
-    return chain.from_iterable(combinations(s, r) for r in range(min, len(s) + 1))
+    return chain.from_iterable(
+        combinations(s, r) for r in range(min, len(s) + 1)
+    )
 
 
 def weak_execute(node, m, bpmn_graph):
@@ -74,20 +77,28 @@ def weak_execute(node, m, bpmn_graph):
     """
 
     # this first if is a workaround. env events inside subprocesses will be handled explicitly
-    # tokens flow out to the first element outside the subprocess. the activated boundary events become deactivated
-    if isinstance(node,
-                  (BPMN.NormalEndEvent, BPMN.TerminateEndEvent)) and node.get_process() != bpmn_graph.get_process_id():
+    # tokens flow out to the first element outside the subprocess. the
+    # activated boundary events become deactivated
+    if (
+        isinstance(node, (BPMN.NormalEndEvent, BPMN.TerminateEndEvent))
+        and node.get_process() != bpmn_graph.get_process_id()
+    ):
         m_out = copy.copy(m)
         # reset marking at current node
         del m_out[node]
 
         sub_process_node = get_node_by_id(node.get_process(), bpmn_graph)
 
-        # delete markings inside subprocess and from other enabled message transitions
-        for key in get_all_nodes_inside_process(node.get_process(), bpmn_graph):
+        # delete markings inside subprocess and from other enabled message
+        # transitions
+        for key in get_all_nodes_inside_process(
+            node.get_process(), bpmn_graph
+        ):
             if key in m_out:
                 del m_out[key]
-        for key in get_boundary_events_of_activity(node.get_process(), bpmn_graph):
+        for key in get_boundary_events_of_activity(
+            node.get_process(), bpmn_graph
+        ):
             if key in m_out and key != node:
                 del m_out[key]
 
@@ -99,7 +110,9 @@ def weak_execute(node, m, bpmn_graph):
         return [m_out]
 
     elif isinstance(node, (BPMN.Event, BPMN.Activity)) or (
-            isinstance(node, BPMN.Gateway) and node.get_gateway_direction() == BPMN.Gateway.Direction.CONVERGING):
+        isinstance(node, BPMN.Gateway)
+        and node.get_gateway_direction() == BPMN.Gateway.Direction.CONVERGING
+    ):
         m_out = copy.copy(m)
         # reset marking at current node
         del m_out[node]
@@ -111,11 +124,16 @@ def weak_execute(node, m, bpmn_graph):
 
         # external subprocess cancellation
         if isinstance(node, BPMN.MessageBoundaryEvent):
-            # delete markings inside subprocess and from other enabled message transitions
-            for key in get_all_nodes_inside_process(node.get_activity(), bpmn_graph):
+            # delete markings inside subprocess and from other enabled message
+            # transitions
+            for key in get_all_nodes_inside_process(
+                node.get_activity(), bpmn_graph
+            ):
                 if key in m_out:
                     del m_out[key]
-            for key in get_boundary_events_of_activity(node.get_activity(), bpmn_graph):
+            for key in get_boundary_events_of_activity(
+                node.get_activity(), bpmn_graph
+            ):
                 if key in m_out and key != node:
                     del m_out[key]
 
@@ -149,11 +167,15 @@ def weak_execute(node, m, bpmn_graph):
 def execute_token_flow(target, marking, bpmn_graph):
     # next node is a subprocess --> add tokens in its start events
     if isinstance(target, BPMN.SubProcess):
-        start_events = get_start_events_of_subprocess(target.get_id(), bpmn_graph)
+        start_events = get_start_events_of_subprocess(
+            target.get_id(), bpmn_graph
+        )
         for start_event in start_events:
             marking[start_event] += 1
         # handle external boundary events
-        for boundary_event in get_external_boundary_events_of_activity(target.get_id(), bpmn_graph):
+        for boundary_event in get_external_boundary_events_of_activity(
+            target.get_id(), bpmn_graph
+        ):
             marking[boundary_event] += 1
     elif isinstance(target, BPMN.EndEvent):
         # end event globally
@@ -167,24 +189,41 @@ def execute_token_flow(target, marking, bpmn_graph):
         else:
             sub_process_node = get_node_by_id(target.get_process(), bpmn_graph)
             # end event is connected to boundary transition
-            for boundary_event in get_boundary_events_of_activity(sub_process_node.get_id(), bpmn_graph):
-                if boundary_event.name == target.name:  # TODO: also type of event could be checked, e.g. error end and boundary event
+            for boundary_event in get_boundary_events_of_activity(
+                sub_process_node.get_id(), bpmn_graph
+            ):
+                # TODO: also type of event could be checked, e.g. error end and
+                # boundary event
+                if (boundary_event.name == target.name):
                     # add token to boundary event
                     marking[boundary_event] += 1
-                    # reset all tokens inside subprocess and on other boundary events
-                    for key in get_all_nodes_inside_process(target.get_process(), bpmn_graph):
+                    # reset all tokens inside subprocess and on other boundary
+                    # events
+                    for key in get_all_nodes_inside_process(
+                        target.get_process(), bpmn_graph
+                    ):
                         if key in marking:
                             del marking[key]
-                    for key in get_boundary_events_of_activity(sub_process_node.get_id(), bpmn_graph):
+                    for key in get_boundary_events_of_activity(
+                        sub_process_node.get_id(), bpmn_graph
+                    ):
                         if key in marking and key != boundary_event:
                             del marking[key]
                     return
             # internal subprocess termination event
             if isinstance(target, BPMN.TerminateEndEvent):
-                keys_to_delete = [key for key in marking if key != target and \
-                                  key in get_all_nodes_inside_process(target.get_process(),
-                                                                      bpmn_graph) + get_boundary_events_of_activity(
-                    sub_process_node.get_id(), bpmn_graph)]
+                keys_to_delete = [
+                    key
+                    for key in marking
+                    if key != target
+                    and key
+                    in get_all_nodes_inside_process(
+                        target.get_process(), bpmn_graph
+                    )
+                    + get_boundary_events_of_activity(
+                        sub_process_node.get_id(), bpmn_graph
+                    )
+                ]
                 for key in keys_to_delete:
                     del marking[key]
                 # add marking at outgoing flow
@@ -192,8 +231,10 @@ def execute_token_flow(target, marking, bpmn_graph):
                     target_node = sub_process_node.get_out_arcs()[0].target
                     execute_token_flow(target_node, marking, bpmn_graph)
                     return
-            marking[
-                target] += 1  # instead add token to end event, workaround to make sure that you can fire a message event even after the last event inside subprocess
+            # instead add token to end event, workaround to make sure that you
+            # can fire a message event even after the last event inside
+            # subprocess
+            marking[target] += 1
     # just normal token flow to next node
     else:
         marking[target] += 1
@@ -216,7 +257,9 @@ def enabled_nodes(bpmn, m):
     for node in bpmn.get_nodes():
         if is_enabled(node, bpmn, m):
             enabled.add(node)
-            if isinstance(node,
-                          BPMN.EndEvent) and node.get_process() == bpmn.get_process_id():  # if there is a token in an end event, we are done and there is no enabled node anymore
+            if (
+                isinstance(node, BPMN.EndEvent)
+                and node.get_process() == bpmn.get_process_id()
+            ):  # if there is a token in an end event, we are done and there is no enabled node anymore
                 return set()
     return enabled

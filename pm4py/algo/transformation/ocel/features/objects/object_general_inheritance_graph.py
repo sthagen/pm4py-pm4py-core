@@ -45,13 +45,19 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     if parameters is None:
         parameters = {}
 
-    ordered_objects = parameters["ordered_objects"] if "ordered_objects" in parameters else ocel.objects[
-        ocel.object_id_column].to_numpy()
+    ordered_objects = (
+        parameters["ordered_objects"]
+        if "ordered_objects" in parameters
+        else ocel.objects[ocel.object_id_column].to_numpy()
+    )
 
     g0 = object_inheritance_graph.apply(ocel, parameters=parameters)
 
     data = []
-    feature_names = ["@@object_general_inheritance_graph_ascendants", "@@object_general_inheritance_graph_descendants"]
+    feature_names = [
+        "@@object_general_inheritance_graph_ascendants",
+        "@@object_general_inheritance_graph_descendants",
+    ]
 
     ascendants = {}
     descendants = {}
@@ -64,6 +70,8 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
         ascendants[el[1]].append(el[0])
 
     for obj in ordered_objects:
-        data.append([float(len(ascendants[obj])), float(len(descendants[obj]))])
+        data.append(
+            [float(len(ascendants[obj])), float(len(descendants[obj]))]
+        )
 
     return data, feature_names

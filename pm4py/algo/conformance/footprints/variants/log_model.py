@@ -45,7 +45,11 @@ class Parameters(Enum):
     STRICT = "strict"
 
 
-def apply_single(log_footprints: Dict[str, Any], model_footprints: Dict[str, Any], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[str, Any]:
+def apply_single(
+    log_footprints: Dict[str, Any],
+    model_footprints: Dict[str, Any],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[str, Any]:
     """
     Apply footprints conformance between a log footprints object
     and a model footprints object
@@ -72,21 +76,33 @@ def apply_single(log_footprints: Dict[str, Any], model_footprints: Dict[str, Any
     strict = exec_utils.get_param_value(Parameters.STRICT, parameters, False)
 
     if strict:
-        s1 = log_footprints[Outputs.SEQUENCE.value].difference(model_footprints[Outputs.SEQUENCE.value])
-        s2 = log_footprints[Outputs.PARALLEL.value].difference(model_footprints[Outputs.PARALLEL.value])
+        s1 = log_footprints[Outputs.SEQUENCE.value].difference(
+            model_footprints[Outputs.SEQUENCE.value]
+        )
+        s2 = log_footprints[Outputs.PARALLEL.value].difference(
+            model_footprints[Outputs.PARALLEL.value]
+        )
 
         violations = s1.union(s2)
 
     else:
-        s1 = log_footprints[Outputs.SEQUENCE.value].union(log_footprints[Outputs.PARALLEL.value])
-        s2 = model_footprints[Outputs.SEQUENCE.value].union(model_footprints[Outputs.PARALLEL.value])
+        s1 = log_footprints[Outputs.SEQUENCE.value].union(
+            log_footprints[Outputs.PARALLEL.value]
+        )
+        s2 = model_footprints[Outputs.SEQUENCE.value].union(
+            model_footprints[Outputs.PARALLEL.value]
+        )
 
         violations = s1.difference(s2)
 
     return violations
 
 
-def apply(log_footprints: Union[Dict[str, Any], List[Dict[str, Any]]], model_footprints: Dict[str, Any], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+def apply(
+    log_footprints: Union[Dict[str, Any], List[Dict[str, Any]]],
+    model_footprints: Dict[str, Any],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
     """
     Apply footprints conformance between a log footprints object
     and a model footprints object
@@ -110,12 +126,22 @@ def apply(log_footprints: Union[Dict[str, Any], List[Dict[str, Any]]], model_foo
     if type(log_footprints) is list:
         ret = []
         for case_footprints in log_footprints:
-            ret.append(apply_single(case_footprints, model_footprints, parameters=parameters))
+            ret.append(
+                apply_single(
+                    case_footprints, model_footprints, parameters=parameters
+                )
+            )
         return ret
-    return apply_single(log_footprints, model_footprints, parameters=parameters)
+    return apply_single(
+        log_footprints, model_footprints, parameters=parameters
+    )
 
 
-def get_diagnostics_dataframe(log: EventLog, conf_result: Union[List[Dict[str, Any]], Dict[str, Any]], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> pd.DataFrame:
+def get_diagnostics_dataframe(
+    log: EventLog,
+    conf_result: Union[List[Dict[str, Any]], Dict[str, Any]],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> pd.DataFrame:
     """
     Gets the diagnostics dataframe from the log
     and the results of footprints conformance checking
@@ -136,7 +162,9 @@ def get_diagnostics_dataframe(log: EventLog, conf_result: Union[List[Dict[str, A
     if parameters is None:
         parameters = {}
 
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, xes_constants.DEFAULT_TRACEID_KEY)
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, xes_constants.DEFAULT_TRACEID_KEY
+    )
 
     import pandas as pd
 
@@ -147,6 +175,12 @@ def get_diagnostics_dataframe(log: EventLog, conf_result: Union[List[Dict[str, A
         num_violations = len(conf_result[index])
         is_fit = num_violations == 0
 
-        diagn_stream.append({"case_id": case_id, "num_violations": num_violations, "is_fit": is_fit})
+        diagn_stream.append(
+            {
+                "case_id": case_id,
+                "num_violations": num_violations,
+                "is_fit": is_fit,
+            }
+        )
 
     return pandas_utils.instantiate_dataframe(diagn_stream)

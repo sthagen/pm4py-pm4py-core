@@ -33,7 +33,9 @@ class Parameters(Enum):
     POSITIVE = "positive"
 
 
-def apply(log: EventLog, activity: str, parameters: Optional[Dict[Any, Any]] = None) -> EventLog:
+def apply(
+    log: EventLog, activity: str, parameters: Optional[Dict[Any, Any]] = None
+) -> EventLog:
     """
     Applies the rework filter on the provided event log and activity.
     This filter the cases of the log having at least Parameters.MIN_OCCURRENCES (default: 2) occurrences
@@ -63,20 +65,41 @@ def apply(log: EventLog, activity: str, parameters: Optional[Dict[Any, Any]] = N
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    min_occurrences = exec_utils.get_param_value(Parameters.MIN_OCCURRENCES, parameters, 2)
-    positive = exec_utils.get_param_value(Parameters.POSITIVE, parameters, True)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    min_occurrences = exec_utils.get_param_value(
+        Parameters.MIN_OCCURRENCES, parameters, 2
+    )
+    positive = exec_utils.get_param_value(
+        Parameters.POSITIVE, parameters, True
+    )
 
-    filtered_log = EventLog(list(), attributes=log.attributes, extensions=log.extensions, classifiers=log.classifiers,
-                            omni_present=log.omni_present, properties=log.properties)
+    filtered_log = EventLog(
+        list(),
+        attributes=log.attributes,
+        extensions=log.extensions,
+        classifiers=log.classifiers,
+        omni_present=log.omni_present,
+        properties=log.properties,
+    )
 
     for trace in log:
         act_counter = Counter([x[activity_key] for x in trace])
-        if positive and activity in act_counter and act_counter[activity] >= min_occurrences:
+        if (
+            positive
+            and activity in act_counter
+            and act_counter[activity] >= min_occurrences
+        ):
             filtered_log.append(trace)
-        elif not positive and (activity not in act_counter or act_counter[activity] < min_occurrences):
+        elif not positive and (
+            activity not in act_counter
+            or act_counter[activity] < min_occurrences
+        ):
             filtered_log.append(trace)
 
     return filtered_log

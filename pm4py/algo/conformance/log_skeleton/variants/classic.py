@@ -29,17 +29,29 @@ from pm4py.objects.log.obj import EventLog, Trace
 import pandas as pd
 
 from enum import Enum
-from pm4py.util.constants import PARAMETER_CONSTANT_ACTIVITY_KEY, PARAMETER_CONSTANT_CASEID_KEY, CASE_CONCEPT_NAME
+from pm4py.util.constants import (
+    PARAMETER_CONSTANT_ACTIVITY_KEY,
+    PARAMETER_CONSTANT_CASEID_KEY,
+    CASE_CONCEPT_NAME,
+)
 
 
 class Parameters(Enum):
     # parameter for the noise threshold
     NOISE_THRESHOLD = "noise_threshold"
-    # considered constraints in conformance checking among: equivalence, always_after, always_before, never_together, directly_follows, activ_freq
+    # considered constraints in conformance checking among: equivalence,
+    # always_after, always_before, never_together, directly_follows,
+    # activ_freq
     CONSIDERED_CONSTRAINTS = "considered_constraints"
     # default choice for conformance checking
-    DEFAULT_CONSIDERED_CONSTRAINTS = ["equivalence", "always_after", "always_before", "never_together",
-                                      "directly_follows", "activ_freq"]
+    DEFAULT_CONSIDERED_CONSTRAINTS = [
+        "equivalence",
+        "always_after",
+        "always_before",
+        "never_together",
+        "directly_follows",
+        "activ_freq",
+    ]
     CASE_ID_KEY = PARAMETER_CONSTANT_CASEID_KEY
     ACTIVITY_KEY = PARAMETER_CONSTANT_ACTIVITY_KEY
     PARAMETER_VARIANT_DELIMITER = "variant_delimiter"
@@ -69,7 +81,11 @@ class Outputs(Enum):
     IS_FIT = "is_fit"
 
 
-def apply_log(log: Union[EventLog, pd.DataFrame], model: Dict[str, Any], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> List[Set[Any]]:
+def apply_log(
+    log: Union[EventLog, pd.DataFrame],
+    model: Dict[str, Any],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> List[Set[Any]]:
     """
     Apply log-skeleton based conformance checking given an event log
     and a log-skeleton model
@@ -96,11 +112,21 @@ def apply_log(log: Union[EventLog, pd.DataFrame], model: Dict[str, Any], paramet
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes.DEFAULT_NAME_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes.DEFAULT_NAME_KEY
+    )
 
     if pandas_utils.check_is_pandas_dataframe(log):
-        case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME)
-        traces = [tuple(x) for x in log.groupby(case_id_key)[activity_key].agg(list).to_dict().values()]
+        case_id_key = exec_utils.get_param_value(
+            Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME
+        )
+        traces = [
+            tuple(x)
+            for x in log.groupby(case_id_key)[activity_key]
+            .agg(list)
+            .to_dict()
+            .values()
+        ]
     else:
         traces = [tuple(y[activity_key] for y in x) for x in log]
     grouped_traces = {}
@@ -108,7 +134,7 @@ def apply_log(log: Union[EventLog, pd.DataFrame], model: Dict[str, Any], paramet
     inv_idxs = {}
     for i in range(len(traces)):
         tr = traces[i]
-        if not tr in grouped_traces:
+        if tr not in grouped_traces:
             grouped_traces[tr] = []
             gtk.append(tr)
         grouped_traces[tr].append(i)
@@ -125,7 +151,11 @@ def apply_log(log: Union[EventLog, pd.DataFrame], model: Dict[str, Any], paramet
     return res
 
 
-def apply_trace(trace: Trace, model: Dict[str, Any], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> List[Set[Any]]:
+def apply_trace(
+    trace: Trace,
+    model: Dict[str, Any],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> List[Set[Any]]:
     """
     Apply log-skeleton based conformance checking given a trace
     and a log-skeleton model
@@ -152,7 +182,9 @@ def apply_trace(trace: Trace, model: Dict[str, Any], parameters: Optional[Dict[U
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes.DEFAULT_NAME_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes.DEFAULT_NAME_KEY
+    )
     trace = [x[activity_key] for x in trace]
 
     return apply_actlist(trace, model, parameters=parameters)
@@ -185,7 +217,11 @@ def apply_actlist(trace, model, parameters=None):
     if parameters is None:
         parameters = {}
 
-    consid_constraints = exec_utils.get_param_value(Parameters.CONSIDERED_CONSTRAINTS, parameters, Parameters.DEFAULT_CONSIDERED_CONSTRAINTS.value)
+    consid_constraints = exec_utils.get_param_value(
+        Parameters.CONSIDERED_CONSTRAINTS,
+        parameters,
+        Parameters.DEFAULT_CONSIDERED_CONSTRAINTS.value,
+    )
     trace_info = trace_skel.get_trace_info(trace)
 
     ret = {}
@@ -193,45 +229,106 @@ def apply_actlist(trace, model, parameters=None):
     dev_total = 0
     conf_total = 0
 
-    default_considered_constraints = Parameters.DEFAULT_CONSIDERED_CONSTRAINTS.value
+    default_considered_constraints = (
+        Parameters.DEFAULT_CONSIDERED_CONSTRAINTS.value
+    )
 
     i = 0
     while i < len(default_considered_constraints):
         if default_considered_constraints[i] in consid_constraints:
-            if default_considered_constraints[i] == DiscoveryOutputs.ACTIV_FREQ.value:
-                this_constraints = {x: y for x, y in model[default_considered_constraints[i]].items()}
-                conf_total += len(list(act for act in trace_info[i] if act in this_constraints)) + len(list(act for act in trace_info[i] if act not in this_constraints)) + len(list(act for act in this_constraints if min(this_constraints[act]) > 0 and not act in trace))
+            if (
+                default_considered_constraints[i]
+                == DiscoveryOutputs.ACTIV_FREQ.value
+            ):
+                this_constraints = {
+                    x: y
+                    for x, y in model[
+                        default_considered_constraints[i]
+                    ].items()
+                }
+                conf_total += (
+                    len(
+                        list(
+                            act
+                            for act in trace_info[i]
+                            if act in this_constraints
+                        )
+                    )
+                    + len(
+                        list(
+                            act
+                            for act in trace_info[i]
+                            if act not in this_constraints
+                        )
+                    )
+                    + len(
+                        list(
+                            act
+                            for act in this_constraints
+                            if min(this_constraints[act]) > 0
+                            and act not in trace
+                        )
+                    )
+                )
                 for act in trace_info[i]:
                     if act in this_constraints:
                         if trace_info[i][act] not in this_constraints[act]:
                             dev_total += 1
-                            ret[Outputs.DEVIATIONS.value].append((default_considered_constraints[i], (act, trace_info[i][act])))
+                            ret[Outputs.DEVIATIONS.value].append(
+                                (
+                                    default_considered_constraints[i],
+                                    (act, trace_info[i][act]),
+                                )
+                            )
                     else:
                         dev_total += 1
-                        ret[Outputs.DEVIATIONS.value].append((default_considered_constraints[i], (act, 0)))
+                        ret[Outputs.DEVIATIONS.value].append(
+                            (default_considered_constraints[i], (act, 0))
+                        )
                 for act in this_constraints:
-                    if min(this_constraints[act]) > 0 and not act in trace:
+                    if min(this_constraints[act]) > 0 and act not in trace:
                         dev_total += 1
-                        ret[Outputs.DEVIATIONS.value].append((default_considered_constraints[i], (act, 0)))
-            elif default_considered_constraints[i] == DiscoveryOutputs.NEVER_TOGETHER.value:
-                this_constraints = {x for x in model[default_considered_constraints[i]] if x[0] in trace}
+                        ret[Outputs.DEVIATIONS.value].append(
+                            (default_considered_constraints[i], (act, 0))
+                        )
+            elif (
+                default_considered_constraints[i]
+                == DiscoveryOutputs.NEVER_TOGETHER.value
+            ):
+                this_constraints = {
+                    x
+                    for x in model[default_considered_constraints[i]]
+                    if x[0] in trace
+                }
                 conf_total += len(this_constraints)
                 setinte = this_constraints.intersection(trace_info[i])
                 dev_total += len(setinte)
                 if len(setinte) > 0:
-                    ret[Outputs.DEVIATIONS.value].append((default_considered_constraints[i], tuple(setinte)))
+                    ret[Outputs.DEVIATIONS.value].append(
+                        (default_considered_constraints[i], tuple(setinte))
+                    )
             else:
-                this_constraints = {x for x in model[default_considered_constraints[i]] if x[0] in trace}
+                this_constraints = {
+                    x
+                    for x in model[default_considered_constraints[i]]
+                    if x[0] in trace
+                }
                 conf_total += len(this_constraints)
                 setdiff = this_constraints.difference(trace_info[i])
                 dev_total += len(setdiff)
                 if len(setdiff) > 0:
-                    ret[Outputs.DEVIATIONS.value].append((default_considered_constraints[i], tuple(setdiff)))
+                    ret[Outputs.DEVIATIONS.value].append(
+                        (default_considered_constraints[i], tuple(setdiff))
+                    )
         i = i + 1
     ret[Outputs.NO_DEV_TOTAL.value] = dev_total
     ret[Outputs.NO_CONSTR_TOTAL.value] = conf_total
-    ret[Outputs.DEV_FITNESS.value] = 1.0 - float(dev_total)/float(conf_total) if conf_total > 0 else 1.0
-    ret[Outputs.DEVIATIONS.value] = sorted(ret[Outputs.DEVIATIONS.value], key=lambda x: (x[0], x[1]))
+    ret[Outputs.DEV_FITNESS.value] = (
+        1.0 - float(dev_total) / float(conf_total) if conf_total > 0 else 1.0
+    )
+    ret[Outputs.DEVIATIONS.value] = sorted(
+        ret[Outputs.DEVIATIONS.value], key=lambda x: (x[0], x[1])
+    )
     ret[Outputs.IS_FIT.value] = len(ret[Outputs.DEVIATIONS.value]) == 0
     return ret
 
@@ -265,7 +362,9 @@ def apply_from_variants_list(var_list, model, parameters=None):
         v = cv[0]
         trace = variants_util.variant_to_trace(v, parameters=parameters)
 
-        conformance_output[v] = apply_trace(trace, model, parameters=parameters)
+        conformance_output[v] = apply_trace(
+            trace, model, parameters=parameters
+        )
 
     return conformance_output
 
@@ -284,13 +383,25 @@ def after_decode(log_skeleton):
     log_skeleton
         Log skeleton (with sets instead of lists)
     """
-    log_skeleton[DiscoveryOutputs.EQUIVALENCE.value] = set(log_skeleton[DiscoveryOutputs.EQUIVALENCE.value])
-    log_skeleton[DiscoveryOutputs.ALWAYS_AFTER.value] = set(log_skeleton[DiscoveryOutputs.ALWAYS_AFTER.value])
-    log_skeleton[DiscoveryOutputs.ALWAYS_BEFORE.value] = set(log_skeleton[DiscoveryOutputs.ALWAYS_BEFORE.value])
-    log_skeleton[DiscoveryOutputs.NEVER_TOGETHER.value] = set(log_skeleton[DiscoveryOutputs.NEVER_TOGETHER.value])
-    log_skeleton[DiscoveryOutputs.DIRECTLY_FOLLOWS.value] = set(log_skeleton[DiscoveryOutputs.DIRECTLY_FOLLOWS.value])
+    log_skeleton[DiscoveryOutputs.EQUIVALENCE.value] = set(
+        log_skeleton[DiscoveryOutputs.EQUIVALENCE.value]
+    )
+    log_skeleton[DiscoveryOutputs.ALWAYS_AFTER.value] = set(
+        log_skeleton[DiscoveryOutputs.ALWAYS_AFTER.value]
+    )
+    log_skeleton[DiscoveryOutputs.ALWAYS_BEFORE.value] = set(
+        log_skeleton[DiscoveryOutputs.ALWAYS_BEFORE.value]
+    )
+    log_skeleton[DiscoveryOutputs.NEVER_TOGETHER.value] = set(
+        log_skeleton[DiscoveryOutputs.NEVER_TOGETHER.value]
+    )
+    log_skeleton[DiscoveryOutputs.DIRECTLY_FOLLOWS.value] = set(
+        log_skeleton[DiscoveryOutputs.DIRECTLY_FOLLOWS.value]
+    )
     for act in log_skeleton[DiscoveryOutputs.ACTIV_FREQ.value]:
-        log_skeleton[DiscoveryOutputs.ACTIV_FREQ.value][act] = set(log_skeleton[DiscoveryOutputs.ACTIV_FREQ.value][act])
+        log_skeleton[DiscoveryOutputs.ACTIV_FREQ.value][act] = set(
+            log_skeleton[DiscoveryOutputs.ACTIV_FREQ.value][act]
+        )
     return log_skeleton
 
 
@@ -314,7 +425,9 @@ def get_diagnostics_dataframe(log, conf_result, parameters=None):
     if parameters is None:
         parameters = {}
 
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, xes_constants.DEFAULT_TRACEID_KEY)
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, xes_constants.DEFAULT_TRACEID_KEY
+    )
 
     import pandas as pd
 
@@ -327,6 +440,13 @@ def get_diagnostics_dataframe(log, conf_result, parameters=None):
         no_constr_total = conf_result[index][Outputs.NO_CONSTR_TOTAL.value]
         dev_fitness = conf_result[index][Outputs.DEV_FITNESS.value]
 
-        diagn_stream.append({"case_id": case_id, "no_dev_total": no_dev_total, "no_constr_total": no_constr_total, "dev_fitness": dev_fitness})
+        diagn_stream.append(
+            {
+                "case_id": case_id,
+                "no_dev_total": no_dev_total,
+                "no_constr_total": no_constr_total,
+                "dev_fitness": dev_fitness,
+            }
+        )
 
     return pandas_utils.instantiate_dataframe(diagn_stream)

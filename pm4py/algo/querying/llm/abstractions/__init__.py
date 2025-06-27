@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,5 +19,15 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-
-from pm4py.algo.querying.llm.abstractions import case_to_descr, log_to_cols_descr, log_to_dfg_descr, log_to_fea_descr, log_to_variants_descr, logske_to_descr, net_to_descr, ocel_fea_descr, ocel_ocdfg_descr, stream_to_descr
+from pm4py.algo.querying.llm.abstractions import (
+    case_to_descr,
+    log_to_cols_descr,
+    log_to_dfg_descr,
+    log_to_fea_descr,
+    log_to_variants_descr,
+    logske_to_descr,
+    net_to_descr,
+    ocel_fea_descr,
+    ocel_ocdfg_descr,
+    stream_to_descr,
+)

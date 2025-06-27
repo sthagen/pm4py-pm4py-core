@@ -34,7 +34,10 @@ class Parameters(Enum):
     CASE_ID_KEY = constants.PARAMETER_CONSTANT_CASEID_KEY
 
 
-def apply(df: pd.DataFrame, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> List[int]:
+def apply(
+    df: pd.DataFrame,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> List[int]:
     """
     Computes the case overlap statistic from a Pandas dataframe
 
@@ -55,14 +58,22 @@ def apply(df: pd.DataFrame, parameters: Optional[Dict[Union[str, Parameters], An
     if parameters is None:
         parameters = {}
 
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters,
-                                                     xes_constants.DEFAULT_TIMESTAMP_KEY)
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
 
     columns = list({timestamp_key, start_timestamp_key, case_id_key})
-    stream = df[columns].to_dict('records')
+    stream = df[columns].to_dict("records")
 
     points = []
     cases = []
@@ -72,10 +83,17 @@ def apply(df: pd.DataFrame, parameters: Optional[Dict[Union[str, Parameters], An
         if case_id not in cases:
             cases.append(case_id)
             cases_points[case_id] = []
-        cases_points[case_id].append((event[start_timestamp_key].timestamp(), event[timestamp_key].timestamp()))
+        cases_points[case_id].append(
+            (
+                event[start_timestamp_key].timestamp(),
+                event[timestamp_key].timestamp(),
+            )
+        )
 
     for case in cases:
         case_points = cases_points[case]
-        points.append((min(x[0] for x in case_points), max(x[1] for x in case_points)))
+        points.append(
+            (min(x[0] for x in case_points), max(x[1] for x in case_points))
+        )
 
     return compute.apply(points, parameters=parameters)

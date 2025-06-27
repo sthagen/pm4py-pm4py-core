@@ -34,7 +34,9 @@ class Parameters(Enum):
     OBJECT_TYPE = ocel_constants.PARAM_OBJECT_TYPE
 
 
-def filter_start_events_per_object_type(ocel: OCEL, object_type: str, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
+def filter_start_events_per_object_type(
+    ocel: OCEL, object_type: str, parameters: Optional[Dict[Any, Any]] = None
+) -> OCEL:
     """
     Filters the events in which a new object for the given object type is spawn.
     (E.g. an event with activity "Create Order" might spawn new orders).
@@ -59,19 +61,35 @@ def filter_start_events_per_object_type(ocel: OCEL, object_type: str, parameters
     if parameters is None:
         parameters = {}
 
-    event_id = exec_utils.get_param_value(Parameters.EVENT_ID, parameters, ocel.event_id_column)
-    object_id = exec_utils.get_param_value(Parameters.OBJECT_ID, parameters, ocel.object_id_column)
-    object_type_column = exec_utils.get_param_value(Parameters.OBJECT_TYPE, parameters, ocel.object_type_column)
+    event_id = exec_utils.get_param_value(
+        Parameters.EVENT_ID, parameters, ocel.event_id_column
+    )
+    object_id = exec_utils.get_param_value(
+        Parameters.OBJECT_ID, parameters, ocel.object_id_column
+    )
+    object_type_column = exec_utils.get_param_value(
+        Parameters.OBJECT_TYPE, parameters, ocel.object_type_column
+    )
 
-    evs = ocel.relations[ocel.relations[object_type_column] == object_type].groupby(object_id).first()[event_id].to_numpy().tolist()
+    evs = (
+        ocel.relations[ocel.relations[object_type_column] == object_type]
+        .groupby(object_id)
+        .first()[event_id]
+        .to_numpy()
+        .tolist()
+    )
 
     ocel = copy(ocel)
     ocel.events = ocel.events[ocel.events[event_id].isin(evs)]
 
-    return filtering_utils.propagate_event_filtering(ocel, parameters=parameters)
+    return filtering_utils.propagate_event_filtering(
+        ocel, parameters=parameters
+    )
 
 
-def filter_end_events_per_object_type(ocel: OCEL, object_type: str, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
+def filter_end_events_per_object_type(
+    ocel: OCEL, object_type: str, parameters: Optional[Dict[Any, Any]] = None
+) -> OCEL:
     """
     Filters the events in which an object for the given object type terminates its lifecycle.
     (E.g. an event with activity "Pay Order" might terminate an order).
@@ -96,13 +114,25 @@ def filter_end_events_per_object_type(ocel: OCEL, object_type: str, parameters: 
     if parameters is None:
         parameters = {}
 
-    event_id = exec_utils.get_param_value(Parameters.EVENT_ID, parameters, ocel.event_id_column)
-    object_id = exec_utils.get_param_value(Parameters.OBJECT_ID, parameters, ocel.object_id_column)
-    object_type_column = exec_utils.get_param_value(Parameters.OBJECT_TYPE, parameters, ocel.object_type_column)
+    event_id = exec_utils.get_param_value(
+        Parameters.EVENT_ID, parameters, ocel.event_id_column
+    )
+    object_id = exec_utils.get_param_value(
+        Parameters.OBJECT_ID, parameters, ocel.object_id_column
+    )
+    object_type_column = exec_utils.get_param_value(
+        Parameters.OBJECT_TYPE, parameters, ocel.object_type_column
+    )
 
-    evs = ocel.relations[ocel.relations[object_type_column] == object_type].groupby(object_id).last()[event_id]
+    evs = (
+        ocel.relations[ocel.relations[object_type_column] == object_type]
+        .groupby(object_id)
+        .last()[event_id]
+    )
 
     ocel = copy(ocel)
     ocel.events = ocel.events[ocel.events[event_id].isin(evs)]
 
-    return filtering_utils.propagate_event_filtering(ocel, parameters=parameters)
+    return filtering_utils.propagate_event_filtering(
+        ocel, parameters=parameters
+    )

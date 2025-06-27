@@ -41,9 +41,9 @@ if hasattr(pulp, "__version__"):
     # New interface
     from pulp import PULP_CBC_CMD
 
-
     def solver(prob):
         return prob.solve(PULP_CBC_CMD(msg=0))
+
 else:
     # Old interface
     def solver(prob):
@@ -87,9 +87,13 @@ def apply(c, Aub, bub, Aeq=None, beq=None, parameters=None):
 
     # Validate integrality and bounds lists
     if integrality is not None and len(integrality) != num_vars:
-        raise ValueError("Length of 'integrality' list must be equal to the number of variables.")
+        raise ValueError(
+            "Length of 'integrality' list must be equal to the number of variables."
+        )
     if bounds is not None and len(bounds) != num_vars:
-        raise ValueError("Length of 'bounds' list must be equal to the number of variables.")
+        raise ValueError(
+            "Length of 'bounds' list must be equal to the number of variables."
+        )
 
     x_vars = []
 
@@ -102,19 +106,19 @@ def apply(c, Aub, bub, Aeq=None, beq=None, parameters=None):
         if bounds is not None:
             lb, ub = bounds[i]
             # Convert 'None' strings to actual None
-            lb = None if lb == 'None' else lb
-            ub = None if ub == 'None' else ub
+            lb = None if lb == "None" else lb
+            ub = None if ub == "None" else ub
 
         # Determine variable category (continuous or integer)
         if integrality is not None:
             # Use integrality list
-            cat = 'Integer' if integrality[i] else 'Continuous'
+            cat = "Integer" if integrality[i] else "Continuous"
         elif require_ilp:
             # All variables are integer
-            cat = 'Integer'
+            cat = "Integer"
         else:
             # All variables are continuous
-            cat = 'Continuous'
+            cat = "Continuous"
 
         x_vars.append(LpVariable(var_name, lowBound=lb, upBound=ub, cat=cat))
 
@@ -127,7 +131,9 @@ def apply(c, Aub, bub, Aeq=None, beq=None, parameters=None):
     # Add inequality constraints
     for i in range(len(Aub)):
         constraint_expr = lpSum(
-            Aub[i][j] * x_vars[j] for j in range(num_vars) if abs(Aub[i][j]) >= MIN_THRESHOLD
+            Aub[i][j] * x_vars[j]
+            for j in range(num_vars)
+            if abs(Aub[i][j]) >= MIN_THRESHOLD
         )
         constraint_name = f"Inequality_Constraint_{get_variable_name(i)}"
         prob += constraint_expr <= bub[i], constraint_name
@@ -136,9 +142,13 @@ def apply(c, Aub, bub, Aeq=None, beq=None, parameters=None):
     if Aeq is not None and beq is not None:
         for i in range(len(Aeq)):
             constraint_expr = lpSum(
-                Aeq[i][j] * x_vars[j] for j in range(num_vars) if abs(Aeq[i][j]) >= MIN_THRESHOLD
+                Aeq[i][j] * x_vars[j]
+                for j in range(num_vars)
+                if abs(Aeq[i][j]) >= MIN_THRESHOLD
             )
-            constraint_name = f"Equality_Constraint_{get_variable_name(i + len(Aub))}"
+            constraint_name = (
+                f"Equality_Constraint_{get_variable_name(i + len(Aub))}"
+            )
             prob += constraint_expr == beq[i], constraint_name
 
     # Solve the problem

@@ -29,7 +29,10 @@ class Parameters(Enum):
     K = "k"
 
 
-def apply(petri_net: PetriNet, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> float:
+def apply(
+    petri_net: PetriNet,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> float:
     """
     Gets simplicity from a Petri net
 

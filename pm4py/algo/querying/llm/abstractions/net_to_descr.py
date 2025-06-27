@@ -30,7 +30,12 @@ class Parameters(Enum):
     RESPONSE_HEADER = "response_header"
 
 
-def apply(net: PetriNet, im: Marking, fm: Marking, parameters: Optional[Dict[Any, Any]] = None) -> str:
+def apply(
+    net: PetriNet,
+    im: Marking,
+    fm: Marking,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> str:
     """
     Provides the description of an accepting Petri net
 
@@ -54,14 +59,16 @@ def apply(net: PetriNet, im: Marking, fm: Marking, parameters: Optional[Dict[Any
     if parameters is None:
         parameters = {}
 
-    include_header = exec_utils.get_param_value(Parameters.RESPONSE_HEADER, parameters, True)
+    include_header = exec_utils.get_param_value(
+        Parameters.RESPONSE_HEADER, parameters, True
+    )
 
     ret = ["\n"]
     if include_header:
         ret.append("If I have a Petri net:\n")
     ret.append(repr(net))
-    ret.append("\ninitial marking: "+repr(im))
-    ret.append("final marking: "+repr(fm))
+    ret.append("\ninitial marking: " + repr(im))
+    ret.append("final marking: " + repr(fm))
     ret.append("\n")
 
     return "\n".join(ret)

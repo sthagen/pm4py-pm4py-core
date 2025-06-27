@@ -24,7 +24,9 @@ import importlib.util
 
 def apply(input_path, validation_path, parameters=None):
     if not importlib.util.find_spec("lxml"):
-        raise Exception("please install lxml in order to validate an XMLOCEL file.")
+        raise Exception(
+            "please install lxml in order to validate an XMLOCEL file."
+        )
 
     import lxml.etree
 

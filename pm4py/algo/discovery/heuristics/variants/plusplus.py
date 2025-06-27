@@ -62,7 +62,9 @@ class Parameters(Enum):
     HEU_NET_DECORATION = "heu_net_decoration"
 
 
-def apply(log: EventLog, parameters: Optional[Dict[Any, Any]] = None) -> Tuple[PetriNet, Marking, Marking]:
+def apply(
+    log: EventLog, parameters: Optional[Dict[Any, Any]] = None
+) -> Tuple[PetriNet, Marking, Marking]:
     """
     Discovers a Petri net using the Heuristics Miner ++ algorithm
 
@@ -100,7 +102,9 @@ def apply(log: EventLog, parameters: Optional[Dict[Any, Any]] = None) -> Tuple[P
     return net, im, fm
 
 
-def apply_pandas(df: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None) -> Tuple[PetriNet, Marking, Marking]:
+def apply_pandas(
+    df: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None
+) -> Tuple[PetriNet, Marking, Marking]:
     """
     Discovers a Petri net using the Heuristics Miner ++ algorithm
 
@@ -139,7 +143,9 @@ def apply_pandas(df: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None) 
     return net, im, fm
 
 
-def apply_heu(log: EventLog, parameters: Optional[Dict[Any, Any]] = None) -> HeuristicsNet:
+def apply_heu(
+    log: EventLog, parameters: Optional[Dict[Any, Any]] = None
+) -> HeuristicsNet:
     """
     Discovers an heuristics net using the Heuristics Miner ++ algorithm
 
@@ -171,22 +177,41 @@ def apply_heu(log: EventLog, parameters: Optional[Dict[Any, Any]] = None) -> Heu
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
     log = interval_lifecycle.to_interval(log, parameters=parameters)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters,
-                                                     None)
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY, parameters, None
+    )
     if start_timestamp_key is None:
         start_timestamp_key = xes.DEFAULT_START_TIMESTAMP_KEY
         parameters = copy(parameters)
         parameters[Parameters.START_TIMESTAMP_KEY] = start_timestamp_key
-    start_activities, end_activities, activities_occurrences, dfg, performance_dfg, sojourn_time, concurrent_activities = discover_abstraction_log(
-        log, parameters=parameters)
-    return discover_heu_net_plus_plus(start_activities, end_activities, activities_occurrences, dfg, performance_dfg,
-                                      sojourn_time, concurrent_activities, parameters=parameters)
+    (
+        start_activities,
+        end_activities,
+        activities_occurrences,
+        dfg,
+        performance_dfg,
+        sojourn_time,
+        concurrent_activities,
+    ) = discover_abstraction_log(log, parameters=parameters)
+    return discover_heu_net_plus_plus(
+        start_activities,
+        end_activities,
+        activities_occurrences,
+        dfg,
+        performance_dfg,
+        sojourn_time,
+        concurrent_activities,
+        parameters=parameters,
+    )
 
 
-def discover_abstraction_log(log: EventLog, parameters: Optional[Dict[Any, Any]] = None) -> Tuple[
-    Any, Any, Any, Any, Any, Any, Any]:
+def discover_abstraction_log(
+    log: EventLog, parameters: Optional[Dict[Any, Any]] = None
+) -> Tuple[Any, Any, Any, Any, Any, Any, Any]:
     """
     Discovers an abstraction from a log that is useful for the Heuristics Miner ++ algorithm
 
@@ -221,22 +246,36 @@ def discover_abstraction_log(log: EventLog, parameters: Optional[Dict[Any, Any]]
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes.DEFAULT_NAME_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes.DEFAULT_NAME_KEY
+    )
     start_activities = log_sa.get_start_activities(log, parameters=parameters)
     end_activities = log_ea.get_end_activities(log, parameters=parameters)
-    activities_occurrences = log_attributes.get_attribute_values(log, activity_key, parameters=parameters)
+    activities_occurrences = log_attributes.get_attribute_values(
+        log, activity_key, parameters=parameters
+    )
     efg_parameters = copy(parameters)
     efg_parameters[efg_get.Parameters.KEEP_FIRST_FOLLOWING] = True
     dfg = efg_get.apply(log, parameters=efg_parameters)
-    performance_dfg = dfg_alg.apply(log, variant=dfg_alg.Variants.PERFORMANCE, parameters=parameters)
+    performance_dfg = dfg_alg.apply(
+        log, variant=dfg_alg.Variants.PERFORMANCE, parameters=parameters
+    )
     sojourn_time = soj_get.apply(log, parameters=parameters)
     concurrent_activities = conc_act_get.apply(log, parameters=parameters)
     return (
-        start_activities, end_activities, activities_occurrences, dfg, performance_dfg, sojourn_time,
-        concurrent_activities)
+        start_activities,
+        end_activities,
+        activities_occurrences,
+        dfg,
+        performance_dfg,
+        sojourn_time,
+        concurrent_activities,
+    )
 
 
-def apply_heu_pandas(df: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None) -> HeuristicsNet:
+def apply_heu_pandas(
+    df: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None
+) -> HeuristicsNet:
     """
     Discovers an heuristics net using the Heuristics Miner ++ algorithm
 
@@ -268,14 +307,30 @@ def apply_heu_pandas(df: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = No
     """
     if parameters is None:
         parameters = {}
-    start_activities, end_activities, activities_occurrences, dfg, performance_dfg, sojourn_time, concurrent_activities = discover_abstraction_dataframe(
-        df, parameters=parameters)
-    return discover_heu_net_plus_plus(start_activities, end_activities, activities_occurrences, dfg, performance_dfg,
-                                      sojourn_time, concurrent_activities, parameters=parameters)
+    (
+        start_activities,
+        end_activities,
+        activities_occurrences,
+        dfg,
+        performance_dfg,
+        sojourn_time,
+        concurrent_activities,
+    ) = discover_abstraction_dataframe(df, parameters=parameters)
+    return discover_heu_net_plus_plus(
+        start_activities,
+        end_activities,
+        activities_occurrences,
+        dfg,
+        performance_dfg,
+        sojourn_time,
+        concurrent_activities,
+        parameters=parameters,
+    )
 
 
-def discover_abstraction_dataframe(df: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None) -> Tuple[
-    Any, Any, Any, Any, Any, Any, Any]:
+def discover_abstraction_dataframe(
+    df: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None
+) -> Tuple[Any, Any, Any, Any, Any, Any, Any]:
     """
     Discovers an abstraction from a dataframe that is useful for the Heuristics Miner ++ algorithm
 
@@ -309,33 +364,61 @@ def discover_abstraction_dataframe(df: pd.DataFrame, parameters: Optional[Dict[A
     """
     if parameters is None:
         parameters = {}
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes.DEFAULT_NAME_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters,
-                                                     None)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes.DEFAULT_NAME_KEY
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY, parameters, None
+    )
     if start_timestamp_key is None:
         start_timestamp_key = xes.DEFAULT_START_TIMESTAMP_KEY
         parameters = copy(parameters)
         parameters[Parameters.START_TIMESTAMP_KEY] = start_timestamp_key
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes.DEFAULT_TIMESTAMP_KEY)
-    case_id_glue = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY, parameters, xes.DEFAULT_TIMESTAMP_KEY
+    )
+    case_id_glue = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
     start_activities = pd_sa.get_start_activities(df, parameters=parameters)
     end_activities = pd_ea.get_end_activities(df, parameters=parameters)
-    activities_occurrences = pd_attributes.get_attribute_values(df, activity_key, parameters=parameters)
+    activities_occurrences = pd_attributes.get_attribute_values(
+        df, activity_key, parameters=parameters
+    )
     efg_parameters = copy(parameters)
     efg_parameters[pd_efg.Parameters.KEEP_FIRST_FOLLOWING] = True
     dfg = pd_efg.apply(df, parameters=efg_parameters)
-    performance_dfg = df_statistics.get_dfg_graph(df, case_id_glue=case_id_glue,
-                                                  activity_key=activity_key, timestamp_key=timestamp_key,
-                                                  start_timestamp_key=start_timestamp_key, measure="performance")
+    performance_dfg = df_statistics.get_dfg_graph(
+        df,
+        case_id_glue=case_id_glue,
+        activity_key=activity_key,
+        timestamp_key=timestamp_key,
+        start_timestamp_key=start_timestamp_key,
+        measure="performance",
+    )
     sojourn_time = pd_soj_time.apply(df, parameters=parameters)
     concurrent_activities = pd_conc_act.apply(df, parameters=parameters)
     return (
-        start_activities, end_activities, activities_occurrences, dfg, performance_dfg, sojourn_time,
-        concurrent_activities)
+        start_activities,
+        end_activities,
+        activities_occurrences,
+        dfg,
+        performance_dfg,
+        sojourn_time,
+        concurrent_activities,
+    )
 
 
-def discover_heu_net_plus_plus(start_activities, end_activities, activities_occurrences, dfg, performance_dfg,
-                               sojourn_time, concurrent_activities, parameters: Optional[Dict[Any, Any]] = None):
+def discover_heu_net_plus_plus(
+    start_activities,
+    end_activities,
+    activities_occurrences,
+    dfg,
+    performance_dfg,
+    sojourn_time,
+    concurrent_activities,
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     """
     Discovers an heuristics net using the Heuristics Miner ++ algorithm
 
@@ -375,38 +458,80 @@ def discover_heu_net_plus_plus(start_activities, end_activities, activities_occu
     """
     if parameters is None:
         parameters = {}
-    dependency_thresh = exec_utils.get_param_value(Parameters.DEPENDENCY_THRESH, parameters,
-                                                   defaults.DEFAULT_DEPENDENCY_THRESH)
-    and_measure_thresh = exec_utils.get_param_value(Parameters.AND_MEASURE_THRESH, parameters,
-                                                    defaults.DEFAULT_AND_MEASURE_THRESH)
-    min_act_count = exec_utils.get_param_value(Parameters.MIN_ACT_COUNT, parameters, defaults.DEFAULT_MIN_ACT_COUNT)
-    min_dfg_occurrences = exec_utils.get_param_value(Parameters.MIN_DFG_OCCURRENCES, parameters,
-                                                     defaults.DEFAULT_MIN_DFG_OCCURRENCES)
-    heu_net_decoration = exec_utils.get_param_value(Parameters.HEU_NET_DECORATION, parameters, "frequency")
+    dependency_thresh = exec_utils.get_param_value(
+        Parameters.DEPENDENCY_THRESH,
+        parameters,
+        defaults.DEFAULT_DEPENDENCY_THRESH,
+    )
+    and_measure_thresh = exec_utils.get_param_value(
+        Parameters.AND_MEASURE_THRESH,
+        parameters,
+        defaults.DEFAULT_AND_MEASURE_THRESH,
+    )
+    min_act_count = exec_utils.get_param_value(
+        Parameters.MIN_ACT_COUNT, parameters, defaults.DEFAULT_MIN_ACT_COUNT
+    )
+    min_dfg_occurrences = exec_utils.get_param_value(
+        Parameters.MIN_DFG_OCCURRENCES,
+        parameters,
+        defaults.DEFAULT_MIN_DFG_OCCURRENCES,
+    )
+    heu_net_decoration = exec_utils.get_param_value(
+        Parameters.HEU_NET_DECORATION, parameters, "frequency"
+    )
 
     # filter on activity and paths occurrence
-    activities_occurrences = {x: y for x, y in activities_occurrences.items() if y >= min_act_count}
-    dfg = {x: y for x, y in dfg.items() if
-           y >= min_dfg_occurrences and x[0] in activities_occurrences and x[1] in activities_occurrences}
+    activities_occurrences = {
+        x: y for x, y in activities_occurrences.items() if y >= min_act_count
+    }
+    dfg = {
+        x: y
+        for x, y in dfg.items()
+        if y >= min_dfg_occurrences
+        and x[0] in activities_occurrences
+        and x[1] in activities_occurrences
+    }
     performance_dfg = {x: y for x, y in performance_dfg.items() if x in dfg}
-    start_activities = {x: y for x, y in start_activities.items() if x in activities_occurrences}
-    end_activities = {x: y for x, y in end_activities.items() if x in activities_occurrences}
+    start_activities = {
+        x: y
+        for x, y in start_activities.items()
+        if x in activities_occurrences
+    }
+    end_activities = {
+        x: y for x, y in end_activities.items() if x in activities_occurrences
+    }
     activities = list(activities_occurrences.keys())
     if heu_net_decoration == "frequency":
-        heu_net = HeuristicsNet(dfg, activities=activities, activities_occurrences=activities_occurrences,
-                                start_activities=start_activities, end_activities=end_activities)
+        heu_net = HeuristicsNet(
+            dfg,
+            activities=activities,
+            activities_occurrences=activities_occurrences,
+            start_activities=start_activities,
+            end_activities=end_activities,
+        )
     else:
-        heu_net = HeuristicsNet(dfg, activities=activities, activities_occurrences=activities_occurrences,
-                                start_activities=start_activities, end_activities=end_activities,
-                                performance_dfg=performance_dfg)
+        heu_net = HeuristicsNet(
+            dfg,
+            activities=activities,
+            activities_occurrences=activities_occurrences,
+            start_activities=start_activities,
+            end_activities=end_activities,
+            performance_dfg=performance_dfg,
+        )
     heu_net.min_dfg_occurrences = min_dfg_occurrences
     heu_net.sojourn_times = sojourn_time
     heu_net.concurrent_activities = concurrent_activities
-    return calculate(heu_net, dependency_thresh, and_measure_thresh, heu_net_decoration)
+    return calculate(
+        heu_net, dependency_thresh, and_measure_thresh, heu_net_decoration
+    )
 
 
-def calculate(heu_net: HeuristicsNet, dependency_thresh: float, and_measure_thresh: float,
-              heu_net_decoration: str) -> HeuristicsNet:
+def calculate(
+    heu_net: HeuristicsNet,
+    dependency_thresh: float,
+    and_measure_thresh: float,
+    heu_net_decoration: str,
+) -> HeuristicsNet:
     """
     Calculates the dependency matrix and the AND measures using the Heuristics Miner ++ formulas
 
@@ -438,19 +563,34 @@ def calculate(heu_net: HeuristicsNet, dependency_thresh: float, and_measure_thre
             heu_net.performance_matrix[act1] = {}
         heu_net.dfg_matrix[act1][act2] = heu_net.dfg[el]
         heu_net.dependency_matrix[act1][act2] = -1
-        heu_net.performance_matrix[act1][act2] = heu_net.performance_dfg[el] if heu_net.performance_dfg and el in heu_net.performance_dfg else 0.0
+        heu_net.performance_matrix[act1][act2] = (
+            heu_net.performance_dfg[el]
+            if heu_net.performance_dfg and el in heu_net.performance_dfg
+            else 0.0
+        )
     for act1 in heu_net.activities:
-        heu_net.nodes[act1] = Node(heu_net, act1, heu_net.activities_occurrences[act1], node_type=heu_net.node_type)
+        heu_net.nodes[act1] = Node(
+            heu_net,
+            act1,
+            heu_net.activities_occurrences[act1],
+            node_type=heu_net.node_type,
+        )
     # calculates the dependencies between the activities
-    heu_net = calculate_dependency(heu_net, dependency_thresh, heu_net_decoration)
-    # calculates the AND measure for outgoing edges (e.g. which activities happen in parallel after a given activity)
+    heu_net = calculate_dependency(
+        heu_net, dependency_thresh, heu_net_decoration
+    )
+    # calculates the AND measure for outgoing edges (e.g. which activities
+    # happen in parallel after a given activity)
     heu_net = calculate_and_out_measure(heu_net, and_measure_thresh)
-    # calculates the AND measure for ingoing edges (e.g. which activities happen in parallel before a given activity)
+    # calculates the AND measure for ingoing edges (e.g. which activities
+    # happen in parallel before a given activity)
     heu_net = calculate_and_in_measure(heu_net, and_measure_thresh)
     return heu_net
 
 
-def calculate_dependency(heu_net: HeuristicsNet, dependency_thresh: float, heu_net_decoration: str) -> HeuristicsNet:
+def calculate_dependency(
+    heu_net: HeuristicsNet, dependency_thresh: float, heu_net_decoration: str
+) -> HeuristicsNet:
     """
     Calculates the dependency matrix using the Heuristics Miner ++ formula
 
@@ -472,21 +612,39 @@ def calculate_dependency(heu_net: HeuristicsNet, dependency_thresh: float, heu_n
         if act1 in heu_net.dfg_matrix:
             for act2 in heu_net.dfg_matrix[act1]:
                 v1 = heu_net.dfg_matrix[act1][act2]
-                v2 = heu_net.dfg_matrix[act2][act1] if act2 in heu_net.dfg_matrix and act1 in heu_net.dfg_matrix[
-                    act2] else 0.0
+                v2 = (
+                    heu_net.dfg_matrix[act2][act1]
+                    if act2 in heu_net.dfg_matrix
+                    and act1 in heu_net.dfg_matrix[act2]
+                    else 0.0
+                )
                 tup = tuple(sorted((act1, act2)))
                 # added term for Heuristics Miner ++
-                v3 = heu_net.concurrent_activities[tup] if tup in heu_net.concurrent_activities else 0.0
+                v3 = (
+                    heu_net.concurrent_activities[tup]
+                    if tup in heu_net.concurrent_activities
+                    else 0.0
+                )
                 dep = (v1 - v2) / (v1 + v2 + v3)
                 heu_net.dependency_matrix[act1][act2] = dep
                 if dep > dependency_thresh:
-                    repr_value = v1 if heu_net_decoration == "frequency" else heu_net.performance_matrix[act1][act2]
-                    heu_net.nodes[act1].add_output_connection(heu_net.nodes[act2], dep, v1, repr_value=repr_value)
-                    heu_net.nodes[act2].add_input_connection(heu_net.nodes[act1], dep, v1, repr_value=repr_value)
+                    repr_value = (
+                        v1
+                        if heu_net_decoration == "frequency"
+                        else heu_net.performance_matrix[act1][act2]
+                    )
+                    heu_net.nodes[act1].add_output_connection(
+                        heu_net.nodes[act2], dep, v1, repr_value=repr_value
+                    )
+                    heu_net.nodes[act2].add_input_connection(
+                        heu_net.nodes[act1], dep, v1, repr_value=repr_value
+                    )
     return heu_net
 
 
-def calculate_and_out_measure(heu_net: HeuristicsNet, and_measure_thresh: float) -> HeuristicsNet:
+def calculate_and_out_measure(
+    heu_net: HeuristicsNet, and_measure_thresh: float
+) -> HeuristicsNet:
     """
     Calculates the AND measure for outgoing edges using the Heuristics Miner ++ formula
 
@@ -503,20 +661,45 @@ def calculate_and_out_measure(heu_net: HeuristicsNet, and_measure_thresh: float)
         Heuristics net (enriched)
     """
     for act in heu_net.nodes:
-        nodes = sorted(x.node_name for x in heu_net.nodes[act].output_connections)
+        nodes = sorted(
+            x.node_name for x in heu_net.nodes[act].output_connections
+        )
         i = 0
         while i < len(nodes):
             n1 = nodes[i]
-            v3 = heu_net.dfg_matrix[act][n1] if act in heu_net.dfg_matrix and n1 in heu_net.dfg_matrix[act] else 0.0
+            v3 = (
+                heu_net.dfg_matrix[act][n1]
+                if act in heu_net.dfg_matrix and n1 in heu_net.dfg_matrix[act]
+                else 0.0
+            )
             j = i + 1
             while j < len(nodes):
                 n2 = nodes[j]
                 tup = tuple(sorted((n1, n2)))
-                v1 = heu_net.dfg_matrix[n1][n2] if n1 in heu_net.dfg_matrix and n2 in heu_net.dfg_matrix[n1] else 0.0
-                v2 = heu_net.dfg_matrix[n2][n1] if n2 in heu_net.dfg_matrix and n1 in heu_net.dfg_matrix[n2] else 0.0
-                v4 = heu_net.dfg_matrix[act][n2] if act in heu_net.dfg_matrix and n2 in heu_net.dfg_matrix[act] else 0.0
+                v1 = (
+                    heu_net.dfg_matrix[n1][n2]
+                    if n1 in heu_net.dfg_matrix
+                    and n2 in heu_net.dfg_matrix[n1]
+                    else 0.0
+                )
+                v2 = (
+                    heu_net.dfg_matrix[n2][n1]
+                    if n2 in heu_net.dfg_matrix
+                    and n1 in heu_net.dfg_matrix[n2]
+                    else 0.0
+                )
+                v4 = (
+                    heu_net.dfg_matrix[act][n2]
+                    if act in heu_net.dfg_matrix
+                    and n2 in heu_net.dfg_matrix[act]
+                    else 0.0
+                )
                 # added term for Heuristics Miner ++
-                v5 = heu_net.concurrent_activities[tup] if tup in heu_net.concurrent_activities else 0.0
+                v5 = (
+                    heu_net.concurrent_activities[tup]
+                    if tup in heu_net.concurrent_activities
+                    else 0.0
+                )
                 this_value = (v1 + v2 + v5) / (v3 + v4)
                 if this_value > and_measure_thresh:
                     if n1 not in heu_net.nodes[act].and_measures_out:
@@ -527,7 +710,9 @@ def calculate_and_out_measure(heu_net: HeuristicsNet, and_measure_thresh: float)
     return heu_net
 
 
-def calculate_and_in_measure(heu_net: HeuristicsNet, and_measure_thresh: float) -> HeuristicsNet:
+def calculate_and_in_measure(
+    heu_net: HeuristicsNet, and_measure_thresh: float
+) -> HeuristicsNet:
     """
     Calculates the AND measure for incoming edges using the Heuristics Miner ++ formula
 
@@ -544,20 +729,45 @@ def calculate_and_in_measure(heu_net: HeuristicsNet, and_measure_thresh: float) 
         Heuristics net (enriched)
     """
     for act in heu_net.nodes:
-        nodes = sorted(x.node_name for x in heu_net.nodes[act].input_connections)
+        nodes = sorted(
+            x.node_name for x in heu_net.nodes[act].input_connections
+        )
         i = 0
         while i < len(nodes):
             n1 = nodes[i]
-            v3 = heu_net.dfg_matrix[n1][act] if n1 in heu_net.dfg_matrix and act in heu_net.dfg_matrix[n1] else 0.0
+            v3 = (
+                heu_net.dfg_matrix[n1][act]
+                if n1 in heu_net.dfg_matrix and act in heu_net.dfg_matrix[n1]
+                else 0.0
+            )
             j = i + 1
             while j < len(nodes):
                 n2 = nodes[j]
                 tup = tuple(sorted((n1, n2)))
-                v1 = heu_net.dfg_matrix[n1][n2] if n1 in heu_net.dfg_matrix and n2 in heu_net.dfg_matrix[n1] else 0.0
-                v2 = heu_net.dfg_matrix[n2][n1] if n2 in heu_net.dfg_matrix and n1 in heu_net.dfg_matrix[n2] else 0.0
-                v4 = heu_net.dfg_matrix[n2][act] if n2 in heu_net.dfg_matrix and act in heu_net.dfg_matrix[n2] else 0.0
+                v1 = (
+                    heu_net.dfg_matrix[n1][n2]
+                    if n1 in heu_net.dfg_matrix
+                    and n2 in heu_net.dfg_matrix[n1]
+                    else 0.0
+                )
+                v2 = (
+                    heu_net.dfg_matrix[n2][n1]
+                    if n2 in heu_net.dfg_matrix
+                    and n1 in heu_net.dfg_matrix[n2]
+                    else 0.0
+                )
+                v4 = (
+                    heu_net.dfg_matrix[n2][act]
+                    if n2 in heu_net.dfg_matrix
+                    and act in heu_net.dfg_matrix[n2]
+                    else 0.0
+                )
                 # added term for Heuristics Miner ++
-                v5 = heu_net.concurrent_activities[tup] if tup in heu_net.concurrent_activities else 0.0
+                v5 = (
+                    heu_net.concurrent_activities[tup]
+                    if tup in heu_net.concurrent_activities
+                    else 0.0
+                )
                 this_value = (v1 + v2 + v5) / (v3 + v4)
                 if this_value > and_measure_thresh:
                     if n1 not in heu_net.nodes[act].and_measures_in:
@@ -568,11 +778,25 @@ def calculate_and_in_measure(heu_net: HeuristicsNet, and_measure_thresh: float) 
     return heu_net
 
 
-def apply_dfg(dfg, activities=None, activities_occurrences=None, start_activities=None, end_activities=None,
-              parameters=None):
+def apply_dfg(
+    dfg,
+    activities=None,
+    activities_occurrences=None,
+    start_activities=None,
+    end_activities=None,
+    parameters=None,
+):
     raise Exception("not implemented for plusplus version")
 
 
-def apply_heu_dfg(dfg, activities=None, activities_occurrences=None, start_activities=None, end_activities=None,
-                  dfg_window_2=None, freq_triples=None, parameters=None):
+def apply_heu_dfg(
+    dfg,
+    activities=None,
+    activities_occurrences=None,
+    start_activities=None,
+    end_activities=None,
+    dfg_window_2=None,
+    freq_triples=None,
+    parameters=None,
+):
     raise Exception("not implemented for plusplus version")

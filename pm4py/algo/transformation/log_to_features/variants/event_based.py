@@ -38,8 +38,12 @@ class Parameters(Enum):
     MAX_NUM_DIFF_STR_VALUES = "max_num_diff_str_values"
 
 
-def extract_all_ev_features_names_from_log(log: EventLog, str_ev_attr: List[str], num_ev_attr: List[str],
-                                           parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> List[str]:
+def extract_all_ev_features_names_from_log(
+    log: EventLog,
+    str_ev_attr: List[str],
+    num_ev_attr: List[str],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> List[str]:
     """
     Extracts the feature names from an event log.
 
@@ -64,8 +68,12 @@ def extract_all_ev_features_names_from_log(log: EventLog, str_ev_attr: List[str]
     if parameters is None:
         parameters = {}
 
-    min_num_diff_str_values = exec_utils.get_param_value(Parameters.MIN_NUM_DIFF_STR_VALUES, parameters, 2)
-    max_num_diff_str_values = exec_utils.get_param_value(Parameters.MAX_NUM_DIFF_STR_VALUES, parameters, 500)
+    min_num_diff_str_values = exec_utils.get_param_value(
+        Parameters.MIN_NUM_DIFF_STR_VALUES, parameters, 2
+    )
+    max_num_diff_str_values = exec_utils.get_param_value(
+        Parameters.MAX_NUM_DIFF_STR_VALUES, parameters, 500
+    )
 
     str_features = {}
     num_features = Counter()
@@ -75,16 +83,30 @@ def extract_all_ev_features_names_from_log(log: EventLog, str_ev_attr: List[str]
             count_events += 1
             for attr_name in event:
                 attr_value = event[attr_name]
-                if isinstance(attr_value, str) and (str_ev_attr is None or attr_name in str_ev_attr):
+                if isinstance(attr_value, str) and (
+                    str_ev_attr is None or attr_name in str_ev_attr
+                ):
                     if attr_name not in str_features:
                         str_features[attr_name] = set()
-                    str_features[attr_name].add("event:" + attr_name + "@" + attr_value)
-                elif isinstance(attr_value, int) or isinstance(attr_value, float):
+                    str_features[attr_name].add(
+                        "event:" + attr_name + "@" + attr_value
+                    )
+                elif isinstance(attr_value, int) or isinstance(
+                    attr_value, float
+                ):
                     if num_ev_attr is None or attr_name in num_ev_attr:
                         num_features["event:" + attr_name] += 1
-    num_features = list({x for x, y in num_features.items() if y == count_events})
-    str_features = list({z for x, y in str_features.items() for z in y if
-                         min_num_diff_str_values <= len(y) <= max_num_diff_str_values})
+    num_features = list(
+        {x for x, y in num_features.items() if y == count_events}
+    )
+    str_features = list(
+        {
+            z
+            for x, y in str_features.items()
+            for z in y
+            if min_num_diff_str_values <= len(y) <= max_num_diff_str_values
+        }
+    )
 
     feature_names = str_features + num_features
     feature_names = sorted(feature_names)
@@ -92,8 +114,11 @@ def extract_all_ev_features_names_from_log(log: EventLog, str_ev_attr: List[str]
     return feature_names
 
 
-def extract_features(log: EventLog, feature_names: List[str], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Tuple[
-    Any, List[str]]:
+def extract_features(
+    log: EventLog,
+    feature_names: List[str],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Tuple[Any, List[str]]:
     """
     Extracts the matrix of the features from an event log
 
@@ -123,19 +148,26 @@ def extract_features(log: EventLog, feature_names: List[str], parameters: Option
                 attr_value = event[attr_name]
                 if isinstance(attr_value, str):
                     str_features.add("event:" + attr_name + "@" + attr_value)
-                elif isinstance(attr_value, int) or isinstance(attr_value, float):
+                elif isinstance(attr_value, int) or isinstance(
+                    attr_value, float
+                ):
                     num_features["event:" + attr_name] = float(attr_value)
             for attr in str_features:
                 if attr in feature_names:
                     data[i1, i2, feature_names.index(attr)] = 1.0
             for attr in num_features:
                 if attr in feature_names:
-                    data[i1, i2, feature_names.index(attr)] = float(num_features[attr])
+                    data[i1, i2, feature_names.index(attr)] = float(
+                        num_features[attr]
+                    )
 
     return data, feature_names
 
 
-def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Tuple[Any, List[str]]:
+def apply(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Tuple[Any, List[str]]:
     """
     Extracts all the features for the traces of an event log (each trace becomes a vector of vectors, where each
     event has its own vector)
@@ -160,13 +192,23 @@ def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]]
     if parameters is None:
         parameters = {}
 
-    str_ev_attr = exec_utils.get_param_value(Parameters.STR_EVENT_ATTRIBUTES, parameters, None)
-    num_ev_attr = exec_utils.get_param_value(Parameters.NUM_EVENT_ATTRIBUTES, parameters, None)
-    feature_names = exec_utils.get_param_value(Parameters.FEATURE_NAMES, parameters, None)
+    str_ev_attr = exec_utils.get_param_value(
+        Parameters.STR_EVENT_ATTRIBUTES, parameters, None
+    )
+    num_ev_attr = exec_utils.get_param_value(
+        Parameters.NUM_EVENT_ATTRIBUTES, parameters, None
+    )
+    feature_names = exec_utils.get_param_value(
+        Parameters.FEATURE_NAMES, parameters, None
+    )
 
-    log = converter.apply(log, variant=converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = converter.apply(
+        log, variant=converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
     if feature_names is None:
-        feature_names = extract_all_ev_features_names_from_log(log, str_ev_attr, num_ev_attr, parameters=parameters)
+        feature_names = extract_all_ev_features_names_from_log(
+            log, str_ev_attr, num_ev_attr, parameters=parameters
+        )
 
     return extract_features(log, feature_names, parameters=parameters)

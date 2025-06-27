@@ -42,7 +42,11 @@ DENSITY_LABEL = "Density"
 GRAPH_DEFAULT_TITLE = "Case Duration"
 
 
-def apply_plot(x: List[float], y: List[float], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> str:
+def apply_plot(
+    x: List[float],
+    y: List[float],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> str:
     """
     Plot (non-logarithmic way) the graph with axis values contained in x and y
 
@@ -66,16 +70,28 @@ def apply_plot(x: List[float], y: List[float], parameters: Optional[Dict[Union[s
         parameters = {}
 
     format = exec_utils.get_param_value(Parameters.FORMAT, parameters, "png")
-    title = exec_utils.get_param_value(Parameters.TITLE, parameters, GRAPH_DEFAULT_TITLE)
-    x_axis = exec_utils.get_param_value(Parameters.X_AXIS, parameters, CASE_DURATION_LABEL)
-    y_axis = exec_utils.get_param_value(Parameters.Y_AXIS, parameters, DENSITY_LABEL)
-    pyplot_plot_kwargs = exec_utils.get_param_value(Parameters.PYPLOT_PLOT_KWARGS, parameters, {})
-    is_transp = exec_utils.get_param_value(Parameters.TRANSPARENT, parameters, True if constants.DEFAULT_BGCOLOR == "transparent" else False)
+    title = exec_utils.get_param_value(
+        Parameters.TITLE, parameters, GRAPH_DEFAULT_TITLE
+    )
+    x_axis = exec_utils.get_param_value(
+        Parameters.X_AXIS, parameters, CASE_DURATION_LABEL
+    )
+    y_axis = exec_utils.get_param_value(
+        Parameters.Y_AXIS, parameters, DENSITY_LABEL
+    )
+    pyplot_plot_kwargs = exec_utils.get_param_value(
+        Parameters.PYPLOT_PLOT_KWARGS, parameters, {}
+    )
+    is_transp = exec_utils.get_param_value(
+        Parameters.TRANSPARENT,
+        parameters,
+        True if constants.DEFAULT_BGCOLOR == "transparent" else False,
+    )
 
     filename = common.get_temp_file_name(format)
 
     current_backend = copy(matplotlib.get_backend())
-    matplotlib.use('Agg')
+    matplotlib.use("Agg")
     from matplotlib import pyplot
 
     pyplot.clf()
@@ -91,7 +107,11 @@ def apply_plot(x: List[float], y: List[float], parameters: Optional[Dict[Union[s
     return filename
 
 
-def apply_semilogx(x: List[float], y: List[float], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> str:
+def apply_semilogx(
+    x: List[float],
+    y: List[float],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> str:
     """
     Plot (semi-logarithmic way) the graph with axis values contained in x and y
 
@@ -115,14 +135,22 @@ def apply_semilogx(x: List[float], y: List[float], parameters: Optional[Dict[Uni
         parameters = {}
 
     format = exec_utils.get_param_value(Parameters.FORMAT, parameters, "png")
-    title = exec_utils.get_param_value(Parameters.TITLE, parameters, GRAPH_DEFAULT_TITLE)
-    pyplot_plot_kwargs = exec_utils.get_param_value(Parameters.PYPLOT_PLOT_KWARGS, parameters, {})
-    is_transp = exec_utils.get_param_value(Parameters.TRANSPARENT, parameters, True if constants.DEFAULT_BGCOLOR == "transparent" else False)
+    title = exec_utils.get_param_value(
+        Parameters.TITLE, parameters, GRAPH_DEFAULT_TITLE
+    )
+    pyplot_plot_kwargs = exec_utils.get_param_value(
+        Parameters.PYPLOT_PLOT_KWARGS, parameters, {}
+    )
+    is_transp = exec_utils.get_param_value(
+        Parameters.TRANSPARENT,
+        parameters,
+        True if constants.DEFAULT_BGCOLOR == "transparent" else False,
+    )
 
     filename = common.get_temp_file_name(format)
 
     current_backend = copy(matplotlib.get_backend())
-    matplotlib.use('Agg')
+    matplotlib.use("Agg")
     from matplotlib import pyplot
 
     pyplot.clf()

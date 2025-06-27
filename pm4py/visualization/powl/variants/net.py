@@ -61,9 +61,15 @@ class JoinExclusiveGateway(BPMN.ExclusiveGateway):
 def can_connect_without_xor_violation(input_nodes, output_nodes):
     for in_node in input_nodes:
         for out_node in output_nodes:
-            if isinstance(in_node, BPMN.ExclusiveGateway) and len(output_nodes) > 1:
+            if (
+                isinstance(in_node, BPMN.ExclusiveGateway)
+                and len(output_nodes) > 1
+            ):
                 return False
-            if isinstance(out_node, BPMN.ExclusiveGateway) and len(input_nodes) > 1:
+            if (
+                isinstance(out_node, BPMN.ExclusiveGateway)
+                and len(input_nodes) > 1
+            ):
                 return False
 
     return True
@@ -89,82 +95,200 @@ def simplify_and_gateways(nodes, edges):
 def add_node(n, viz):
     n_id = str(id(n))
     if isinstance(n, FrequencyTask):
-        font_size = '18'
+        font_size = "18"
         if FREQUENCY_TAG_IMAGES:
             if n.skippable:
                 if n.selfloop:
-                    with importlib.resources.path("pm4py.visualization.powl.variants.icons",
-                                                  "skip-loop-tag.svg") as gimg:
+                    with importlib.resources.path(
+                        "pm4py.visualization.powl.variants.icons",
+                        "skip-loop-tag.svg",
+                    ) as gimg:
                         image = str(gimg)
-                        viz.node(n_id, label='\n' + n.activity, imagepos='tr',
-                                 image=image, style='filled', fillcolor=node_color,
-                                 shape='box', width=min_width, fontsize=font_size)
+                        viz.node(
+                            n_id,
+                            label="\n" + n.activity,
+                            imagepos="tr",
+                            image=image,
+                            style="filled",
+                            fillcolor=node_color,
+                            shape="box",
+                            width=min_width,
+                            fontsize=font_size,
+                        )
                 else:
-                    with importlib.resources.path("pm4py.visualization.powl.variants.icons",
-                                                  "skip-tag.svg") as gimg:
+                    with importlib.resources.path(
+                        "pm4py.visualization.powl.variants.icons",
+                        "skip-tag.svg",
+                    ) as gimg:
                         skip_image = str(gimg)
-                        viz.node(n_id, label="\n" + n.activity, imagepos='tr',
-                                 image=skip_image, style='filled', fillcolor=node_color,
-                                 shape='box', width=min_width, fontsize=font_size)
+                        viz.node(
+                            n_id,
+                            label="\n" + n.activity,
+                            imagepos="tr",
+                            image=skip_image,
+                            style="filled",
+                            fillcolor=node_color,
+                            shape="box",
+                            width=min_width,
+                            fontsize=font_size,
+                        )
             else:
                 if n.selfloop:
-                    with importlib.resources.path("pm4py.visualization.powl.variants.icons",
-                                                  "loop-tag.svg") as gimg:
+                    with importlib.resources.path(
+                        "pm4py.visualization.powl.variants.icons",
+                        "loop-tag.svg",
+                    ) as gimg:
                         loop_image = str(gimg)
-                        viz.node(n_id, label="\n" + n.activity, imagepos='tr',
-                                 image=loop_image, style='filled', fillcolor=node_color,
-                                 shape='box', width=min_width, fontsize=font_size)
+                        viz.node(
+                            n_id,
+                            label="\n" + n.activity,
+                            imagepos="tr",
+                            image=loop_image,
+                            style="filled",
+                            fillcolor=node_color,
+                            shape="box",
+                            width=min_width,
+                            fontsize=font_size,
+                        )
                 else:
-                    viz.node(n_id, label=n.activity, style='filled', fillcolor=node_color,
-                             shape='box', width=min_width, fontsize=font_size)
+                    viz.node(
+                        n_id,
+                        label=n.activity,
+                        style="filled",
+                        fillcolor=node_color,
+                        shape="box",
+                        width=min_width,
+                        fontsize=font_size,
+                    )
         else:
             if n.skippable:
-                viz.node(n_id, shape="box", label=n.activity, fontsize=font_size,
-                         style="dashed", width=min_width)
+                viz.node(
+                    n_id,
+                    shape="box",
+                    label=n.activity,
+                    fontsize=font_size,
+                    style="dashed",
+                    width=min_width,
+                )
             else:
-                viz.node(n_id, shape="box", label=n.activity, fontsize=font_size,
-                         width=min_width)
+                viz.node(
+                    n_id,
+                    shape="box",
+                    label=n.activity,
+                    fontsize=font_size,
+                    width=min_width,
+                )
             if n.selfloop:
                 viz.edge(n_id, n_id)
 
     elif isinstance(n, BPMN.StartEvent):
-        with importlib.resources.path("pm4py.visualization.powl.variants.icons", "play.svg") as gimg:
+        with importlib.resources.path(
+            "pm4py.visualization.powl.variants.icons", "play.svg"
+        ) as gimg:
             start_image = str(gimg)
-            viz.node(n_id, image=start_image, label="", shape="none", width='0.35',
-                     height='0.35', fixedsize="true", style='filled', fillcolor=node_color)
+            viz.node(
+                n_id,
+                image=start_image,
+                label="",
+                shape="none",
+                width="0.35",
+                height="0.35",
+                fixedsize="true",
+                style="filled",
+                fillcolor=node_color,
+            )
     elif isinstance(n, BPMN.EndEvent):
-        with importlib.resources.path("pm4py.visualization.powl.variants.icons", "end.svg") as gimg:
+        with importlib.resources.path(
+            "pm4py.visualization.powl.variants.icons", "end.svg"
+        ) as gimg:
             end_image = str(gimg)
-            viz.node(n_id, image=end_image, label="", shape="none", width='0.35',
-                     height='0.35', fixedsize="true", style='filled', fillcolor=node_color)
+            viz.node(
+                n_id,
+                image=end_image,
+                label="",
+                shape="none",
+                width="0.35",
+                height="0.35",
+                fixedsize="true",
+                style="filled",
+                fillcolor=node_color,
+            )
     elif isinstance(n, BPMN.ParallelGateway):
-        viz.node(n_id, label="", shape="square", style="filled", fillcolor=silent_node_color, width='0.3',
-                 height='0.3')
+        viz.node(
+            n_id,
+            label="",
+            shape="square",
+            style="filled",
+            fillcolor=silent_node_color,
+            width="0.3",
+            height="0.3",
+        )
     elif isinstance(n, SplitExclusiveGateway):
-        with importlib.resources.path("pm4py.visualization.powl.variants.icons", "gate.svg") as gimg:
+        with importlib.resources.path(
+            "pm4py.visualization.powl.variants.icons", "gate.svg"
+        ) as gimg:
             xor_image = str(gimg)
-            viz.node(n_id, label="", shape="diamond", style="filled", fillcolor="lightgreen",
-                     width='0.4', height='0.4', fixedsize="true", image=xor_image)
+            viz.node(
+                n_id,
+                label="",
+                shape="diamond",
+                style="filled",
+                fillcolor="lightgreen",
+                width="0.4",
+                height="0.4",
+                fixedsize="true",
+                image=xor_image,
+            )
     elif isinstance(n, JoinExclusiveGateway):
-        with importlib.resources.path("pm4py.visualization.powl.variants.icons", "gate.svg") as gimg:
+        with importlib.resources.path(
+            "pm4py.visualization.powl.variants.icons", "gate.svg"
+        ) as gimg:
             xor_image = str(gimg)
-            viz.node(n_id, label="", shape="diamond", style="filled", fillcolor="orange",
-                     width='0.4', height='0.4', fixedsize="true", image=xor_image)
+            viz.node(
+                n_id,
+                label="",
+                shape="diamond",
+                style="filled",
+                fillcolor="orange",
+                width="0.4",
+                height="0.4",
+                fixedsize="true",
+                image=xor_image,
+            )
     elif isinstance(n, BPMN.ExclusiveGateway):
-        with importlib.resources.path("pm4py.visualization.powl.variants.icons", "gate.svg") as gimg:
+        with importlib.resources.path(
+            "pm4py.visualization.powl.variants.icons", "gate.svg"
+        ) as gimg:
             xor_image = str(gimg)
-        viz.node(n_id, label="", shape="diamond", style="filled", fillcolor=node_color,
-                 width='0.4', height='0.4', fixedsize="true", image=xor_image)
+        viz.node(
+            n_id,
+            label="",
+            shape="diamond",
+            style="filled",
+            fillcolor=node_color,
+            width="0.4",
+            height="0.4",
+            fixedsize="true",
+            image=xor_image,
+        )
     else:
         raise Exception("Unexpected instance of class " + str(type(n)) + "!")
 
 
-def apply(powl: POWL, parameters: Optional[Dict[Any, Any]] = None) -> graphviz.Digraph:
+def apply(
+    powl: POWL, parameters: Optional[Dict[Any, Any]] = None
+) -> graphviz.Digraph:
     if parameters is None:
         parameters = {}
 
-    enable_graph_title = exec_utils.get_param_value(Parameters.ENABLE_GRAPH_TITLE, parameters, constants.DEFAULT_ENABLE_GRAPH_TITLES)
-    graph_title = exec_utils.get_param_value(Parameters.GRAPH_TITLE, parameters, "POWL Model")
+    enable_graph_title = exec_utils.get_param_value(
+        Parameters.ENABLE_GRAPH_TITLE,
+        parameters,
+        constants.DEFAULT_ENABLE_GRAPH_TITLES,
+    )
+    graph_title = exec_utils.get_param_value(
+        Parameters.GRAPH_TITLE, parameters, "POWL Model"
+    )
 
     pn_2, init_2, final_2 = powl_to_pn(powl)
     bpmn_graph = to_bpmn(pn_2, init_2, final_2)
@@ -191,25 +315,37 @@ def apply(powl: POWL, parameters: Optional[Dict[Any, Any]] = None) -> graphviz.D
     rankdir = "LR"
     bgcolor = constants.DEFAULT_BGCOLOR
 
-    filename = tempfile.NamedTemporaryFile(suffix='.gv')
-    viz = Digraph("", filename=filename.name, engine='dot', graph_attr={'bgcolor': bgcolor})
-    viz.graph_attr['rankdir'] = rankdir
+    filename = tempfile.NamedTemporaryFile(suffix=".gv")
+    viz = Digraph(
+        "",
+        filename=filename.name,
+        engine="dot",
+        graph_attr={"bgcolor": bgcolor},
+    )
+    viz.graph_attr["rankdir"] = rankdir
 
     if enable_graph_title:
-        viz.attr(label='<<FONT POINT-SIZE="20">'+graph_title+'</FONT>>', labelloc="top")
+        viz.attr(
+            label='<<FONT POINT-SIZE="20">' + graph_title + "</FONT>>",
+            labelloc="top",
+        )
 
     gateway_edges = {}
 
     for e in edges:
-        if isinstance(e[0], BPMN.ParallelGateway) or isinstance(e[0], BPMN.ParallelGateway):
+        if isinstance(e[0], BPMN.ParallelGateway) or isinstance(
+            e[0], BPMN.ParallelGateway
+        ):
             if e[0] not in gateway_edges:
-                gateway_edges[e[0]] = {'in': [], 'out': []}
-            gateway_edges[e[0]]['out'].append(e[1])
+                gateway_edges[e[0]] = {"in": [], "out": []}
+            gateway_edges[e[0]]["out"].append(e[1])
             continue
-        if isinstance(e[1], BPMN.ParallelGateway) or isinstance(e[1], BPMN.ParallelGateway):
+        if isinstance(e[1], BPMN.ParallelGateway) or isinstance(
+            e[1], BPMN.ParallelGateway
+        ):
             if e[1] not in gateway_edges:
-                gateway_edges[e[1]] = {'in': [], 'out': []}
-            gateway_edges[e[1]]['in'].append(e[0])
+                gateway_edges[e[1]] = {"in": [], "out": []}
+            gateway_edges[e[1]]["in"].append(e[0])
             continue
 
     for node in nodes:
@@ -222,7 +358,7 @@ def apply(powl: POWL, parameters: Optional[Dict[Any, Any]] = None) -> graphviz.D
 
         viz.edge(n_id_1, n_id_2)
 
-    viz.attr(overlap='false')
+    viz.attr(overlap="false")
 
     viz.format = "svg"
 
@@ -230,8 +366,22 @@ def apply(powl: POWL, parameters: Optional[Dict[Any, Any]] = None) -> graphviz.D
 
 
 class FrequencyTask(BPMN.Task):
-    def __init__(self, name, properties, id="", in_arcs=None, out_arcs=None, process=None):
-        super().__init__(id=id, name=name, in_arcs=in_arcs, out_arcs=out_arcs, process=process)
+    def __init__(
+        self,
+        name,
+        properties,
+        id="",
+        in_arcs=None,
+        out_arcs=None,
+        process=None,
+    ):
+        super().__init__(
+            id=id,
+            name=name,
+            in_arcs=in_arcs,
+            out_arcs=out_arcs,
+            process=process,
+        )
         self.activity = properties["activity"]
         self.skippable = properties["skippable"]
         self.selfloop = properties["selfloop"]
@@ -272,24 +422,38 @@ def to_bpmn(net, im, fm):
     for trans in net.transitions:
         if trans.label is None:
             if len(trans.in_arcs) > 1:
-                node = BPMN.ParallelGateway(gateway_direction=BPMN.Gateway.Direction.CONVERGING)
+                node = BPMN.ParallelGateway(
+                    gateway_direction=BPMN.Gateway.Direction.CONVERGING
+                )
             elif len(trans.out_arcs) > 1:
-                node = BPMN.ParallelGateway(gateway_direction=BPMN.Gateway.Direction.DIVERGING)
+                node = BPMN.ParallelGateway(
+                    gateway_direction=BPMN.Gateway.Direction.DIVERGING
+                )
             else:
-                node = BPMN.ExclusiveGateway(gateway_direction=BPMN.Gateway.Direction.UNSPECIFIED)
+                node = BPMN.ExclusiveGateway(
+                    gateway_direction=BPMN.Gateway.Direction.UNSPECIFIED
+                )
             bpmn_graph.add_node(node)
             entering_dictio[trans] = node
             exiting_dictio[trans] = node
         else:
             if len(trans.in_arcs) > 1:
-                entering_node = BPMN.ParallelGateway(gateway_direction=BPMN.Gateway.Direction.CONVERGING)
+                entering_node = BPMN.ParallelGateway(
+                    gateway_direction=BPMN.Gateway.Direction.CONVERGING
+                )
             else:
-                entering_node = BPMN.ExclusiveGateway(gateway_direction=BPMN.Gateway.Direction.UNSPECIFIED)
+                entering_node = BPMN.ExclusiveGateway(
+                    gateway_direction=BPMN.Gateway.Direction.UNSPECIFIED
+                )
 
             if len(trans.out_arcs) > 1:
-                exiting_node = BPMN.ParallelGateway(gateway_direction=BPMN.Gateway.Direction.DIVERGING)
+                exiting_node = BPMN.ParallelGateway(
+                    gateway_direction=BPMN.Gateway.Direction.DIVERGING
+                )
             else:
-                exiting_node = BPMN.ExclusiveGateway(gateway_direction=BPMN.Gateway.Direction.UNSPECIFIED)
+                exiting_node = BPMN.ExclusiveGateway(
+                    gateway_direction=BPMN.Gateway.Direction.UNSPECIFIED
+                )
 
             task = FrequencyTask(name=trans.label, properties=trans.properties)
             bpmn_graph.add_node(task)
@@ -301,14 +465,20 @@ def to_bpmn(net, im, fm):
             exiting_dictio[trans] = exiting_node
 
     for arc in net.arcs:
-        bpmn_graph.add_flow(BPMN.SequenceFlow(exiting_dictio[arc.source], entering_dictio[arc.target]))
+        bpmn_graph.add_flow(
+            BPMN.SequenceFlow(
+                exiting_dictio[arc.source], entering_dictio[arc.target]
+            )
+        )
 
     start_node = BPMN.StartEvent(name="start", isInterrupting=True)
     end_node = BPMN.NormalEndEvent(name="end")
     bpmn_graph.add_node(start_node)
     bpmn_graph.add_node(end_node)
     for place in im:
-        bpmn_graph.add_flow(BPMN.SequenceFlow(start_node, entering_dictio[place]))
+        bpmn_graph.add_flow(
+            BPMN.SequenceFlow(start_node, entering_dictio[place])
+        )
     for place in fm:
         bpmn_graph.add_flow(BPMN.SequenceFlow(exiting_dictio[place], end_node))
 
@@ -344,6 +514,6 @@ def find_concurrent_groups(nodes, edges):
 def add_concurrent_subgraphs(graph, concurrent_elements):
     for group in concurrent_elements:
         with graph.subgraph() as s:
-            s.attr(rank='same')
+            s.attr(rank="same")
             for n in group:
                 s.node(str(id(n)))

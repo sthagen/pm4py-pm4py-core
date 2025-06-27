@@ -48,7 +48,9 @@ def apply(dfg, output_path, variant=DEFAULT_VARIANT, parameters=None):
     parameters
         Variant-specific parameters
     """
-    exec_utils.get_variant(variant).apply(dfg, output_path, parameters=parameters)
+    exec_utils.get_variant(variant).apply(
+        dfg, output_path, parameters=parameters
+    )
 
 
 def serialize(dfg, variant=DEFAULT_VARIANT, parameters=None):
@@ -73,4 +75,6 @@ def serialize(dfg, variant=DEFAULT_VARIANT, parameters=None):
     if parameters is None:
         parameters = {}
 
-    return exec_utils.get_variant(variant).export_as_string(dfg, parameters=parameters)
+    return exec_utils.get_variant(variant).export_as_string(
+        dfg, parameters=parameters
+    )

@@ -71,28 +71,56 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     if parameters is None:
         parameters = {}
 
-    prefix_or_suffix = exec_utils.get_param_value(Parameters.PREFIX_OR_SUFFIX, parameters, "prefix")
-    index_attribute = exec_utils.get_param_value(Parameters.INDEX_ATTRIBUTE, parameters, "@@index")
-    left_suffix = exec_utils.get_param_value(Parameters.LEFT_SUFFIX, parameters, "_LEFT")
-    right_suffix = exec_utils.get_param_value(Parameters.RIGHT_SUFFIX, parameters, "_RIGHT")
+    prefix_or_suffix = exec_utils.get_param_value(
+        Parameters.PREFIX_OR_SUFFIX, parameters, "prefix"
+    )
+    index_attribute = exec_utils.get_param_value(
+        Parameters.INDEX_ATTRIBUTE, parameters, "@@index"
+    )
+    left_suffix = exec_utils.get_param_value(
+        Parameters.LEFT_SUFFIX, parameters, "_LEFT"
+    )
+    right_suffix = exec_utils.get_param_value(
+        Parameters.RIGHT_SUFFIX, parameters, "_RIGHT"
+    )
 
     relations = ocel.relations.copy()
-    relations = pandas_utils.insert_index(relations, index_attribute, reset_index=False, copy_dataframe=False)
-    relations_merged = relations.merge(relations, left_on=ocel.object_id_column, right_on=ocel.object_id_column, suffixes=(left_suffix, right_suffix))
+    relations = pandas_utils.insert_index(
+        relations, index_attribute, reset_index=False, copy_dataframe=False
+    )
+    relations_merged = relations.merge(
+        relations,
+        left_on=ocel.object_id_column,
+        right_on=ocel.object_id_column,
+        suffixes=(left_suffix, right_suffix),
+    )
     if prefix_or_suffix == "prefix":
         relations_merged = relations_merged[
-            relations_merged[index_attribute + left_suffix] > relations_merged[index_attribute + right_suffix]]
+            relations_merged[index_attribute + left_suffix]
+            > relations_merged[index_attribute + right_suffix]
+        ]
     else:
         relations_merged = relations_merged[
-            relations_merged[index_attribute + left_suffix] < relations_merged[index_attribute + right_suffix]]
-    relations_merged = relations_merged[[ocel.event_id_column+left_suffix, ocel.event_id_column+right_suffix, ocel.object_id_column]]
-    relations_merged = relations_merged[relations_merged[ocel.event_id_column+left_suffix] != relations_merged[ocel.event_id_column+right_suffix]]
-    relations_merged = relations_merged.to_dict('records')
+            relations_merged[index_attribute + left_suffix]
+            < relations_merged[index_attribute + right_suffix]
+        ]
+    relations_merged = relations_merged[
+        [
+            ocel.event_id_column + left_suffix,
+            ocel.event_id_column + right_suffix,
+            ocel.object_id_column,
+        ]
+    ]
+    relations_merged = relations_merged[
+        relations_merged[ocel.event_id_column + left_suffix]
+        != relations_merged[ocel.event_id_column + right_suffix]
+    ]
+    relations_merged = relations_merged.to_dict("records")
 
     ret = {}
     for el in relations_merged:
-        e1 = el[ocel.event_id_column+left_suffix]
-        e2 = el[ocel.event_id_column+right_suffix]
+        e1 = el[ocel.event_id_column + left_suffix]
+        e2 = el[ocel.event_id_column + right_suffix]
         obj = el[ocel.object_id_column]
         if e1 not in ret:
             ret[e1] = {}

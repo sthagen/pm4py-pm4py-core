@@ -33,7 +33,9 @@ class Parameters(Enum):
     OBJECT_TYPE = ocel_constants.PARAM_OBJECT_TYPE
 
 
-def get_objects_ot_count(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, Dict[str, int]]:
+def get_objects_ot_count(
+    ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None
+) -> Dict[str, Dict[str, int]]:
     """
     Counts for each event the number of related objects per type
 
@@ -55,9 +57,15 @@ def get_objects_ot_count(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None
     if parameters is None:
         parameters = {}
 
-    event_id = exec_utils.get_param_value(Parameters.EVENT_ID, parameters, ocel.event_id_column)
-    object_id = exec_utils.get_param_value(Parameters.OBJECT_ID, parameters, ocel.object_id_column)
-    object_type = exec_utils.get_param_value(Parameters.OBJECT_TYPE, parameters, ocel.object_type_column)
+    event_id = exec_utils.get_param_value(
+        Parameters.EVENT_ID, parameters, ocel.event_id_column
+    )
+    object_id = exec_utils.get_param_value(
+        Parameters.OBJECT_ID, parameters, ocel.object_id_column
+    )
+    object_type = exec_utils.get_param_value(
+        Parameters.OBJECT_TYPE, parameters, ocel.object_type_column
+    )
 
     ref0 = ocel.relations.groupby(event_id)[object_type].agg(list).to_dict()
     ref = {x: Counter(y) for x, y in ref0.items()}

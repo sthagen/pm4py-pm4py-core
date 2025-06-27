@@ -50,8 +50,11 @@ class DeclareStreamingConformance(StreamingAlgorithm):
             for activities, _params in activities_dict.items():
                 if isinstance(activities, str):
                     activities = (activities,)
-                constraints[template_type][activities] = self._create_automaton_for_constraint(template_type,
-                                                                                               activities)
+                constraints[template_type][activities] = (
+                    self._create_automaton_for_constraint(
+                        template_type, activities
+                    )
+                )
         return constraints
 
     # Automaton construction methods start here
@@ -59,9 +62,7 @@ class DeclareStreamingConformance(StreamingAlgorithm):
     def _dummy_automaton(self):
         return {
             "initial_state": {"name": "init"},
-            "states": {
-                "init": {"on_event": lambda a, e, s: ("init", False)}
-            }
+            "states": {"init": {"on_event": lambda a, e, s: ("init", False)}},
         }
 
     def _existence_automaton(self, A):
@@ -77,8 +78,8 @@ class DeclareStreamingConformance(StreamingAlgorithm):
             "initial_state": {"name": "init"},
             "states": {
                 "init": {"on_event": on_event_init},
-                "seen": {"on_event": on_event_seen}
-            }
+                "seen": {"on_event": on_event_seen},
+            },
         }
 
     def _absence_automaton(self, A):
@@ -91,8 +92,8 @@ class DeclareStreamingConformance(StreamingAlgorithm):
             "initial_state": {"name": "init"},
             "states": {
                 "init": {"on_event": on_event_init},
-                "violated": {"on_event": lambda a, e, s: ("violated", False)}
-            }
+                "violated": {"on_event": lambda a, e, s: ("violated", False)},
+            },
         }
 
     def _exactly_one_automaton(self, A):
@@ -111,8 +112,8 @@ class DeclareStreamingConformance(StreamingAlgorithm):
             "states": {
                 "init": {"on_event": on_event_init},
                 "seen_once": {"on_event": on_event_seen_once},
-                "violated": {"on_event": lambda a, e, s: ("violated", False)}
-            }
+                "violated": {"on_event": lambda a, e, s: ("violated", False)},
+            },
         }
 
     def _init_automaton(self, A):
@@ -131,8 +132,8 @@ class DeclareStreamingConformance(StreamingAlgorithm):
             "states": {
                 "init": {"on_event": on_event_init},
                 "ok": {"on_event": lambda a, e, s: ("ok", False)},
-                "violated": {"on_event": lambda a, e, s: ("violated", False)}
-            }
+                "violated": {"on_event": lambda a, e, s: ("violated", False)},
+            },
         }
 
     def _responded_existence_automaton(self, A, B):
@@ -146,8 +147,12 @@ class DeclareStreamingConformance(StreamingAlgorithm):
             return ("init", False)
 
         return {
-            "initial_state": {"name": "init", "A_seen": False, "B_seen": False},
-            "states": {"init": {"on_event": on_event_init}}
+            "initial_state": {
+                "name": "init",
+                "A_seen": False,
+                "B_seen": False,
+            },
+            "states": {"init": {"on_event": on_event_init}},
         }
 
     def _coexistence_automaton(self, A, B):
@@ -160,8 +165,12 @@ class DeclareStreamingConformance(StreamingAlgorithm):
             return ("init", False)
 
         return {
-            "initial_state": {"name": "init", "A_seen": False, "B_seen": False},
-            "states": {"init": {"on_event": on_event_init}}
+            "initial_state": {
+                "name": "init",
+                "A_seen": False,
+                "B_seen": False,
+            },
+            "states": {"init": {"on_event": on_event_init}},
         }
 
     def _response_automaton(self, A, B):
@@ -177,7 +186,7 @@ class DeclareStreamingConformance(StreamingAlgorithm):
 
         return {
             "initial_state": {"name": "init", "pending_As": 0},
-            "states": {"init": {"on_event": on_event_init}}
+            "states": {"init": {"on_event": on_event_init}},
         }
 
     def _precedence_automaton(self, A, B):
@@ -193,8 +202,8 @@ class DeclareStreamingConformance(StreamingAlgorithm):
             "initial_state": {"name": "init", "A_occurred": False},
             "states": {
                 "init": {"on_event": on_event_init},
-                "violated": {"on_event": lambda a, e, s: ("violated", False)}
-            }
+                "violated": {"on_event": lambda a, e, s: ("violated", False)},
+            },
         }
 
     def _succession_automaton(self, A, B):
@@ -212,11 +221,15 @@ class DeclareStreamingConformance(StreamingAlgorithm):
             return ("init", False)
 
         return {
-            "initial_state": {"name": "init", "A_seen": False, "pending_As": 0},
+            "initial_state": {
+                "name": "init",
+                "A_seen": False,
+                "pending_As": 0,
+            },
             "states": {
                 "init": {"on_event": on_event_init},
-                "violated": {"on_event": lambda a, e, s: ("violated", False)}
-            }
+                "violated": {"on_event": lambda a, e, s: ("violated", False)},
+            },
         }
 
     def _altresponse_automaton(self, A, B):
@@ -234,8 +247,8 @@ class DeclareStreamingConformance(StreamingAlgorithm):
             "initial_state": {"name": "init", "waiting_for_B": False},
             "states": {
                 "init": {"on_event": on_event_init},
-                "violated": {"on_event": lambda a, e, s: ("violated", False)}
-            }
+                "violated": {"on_event": lambda a, e, s: ("violated", False)},
+            },
         }
 
     def _altprecedence_automaton(self, A, B):
@@ -253,8 +266,8 @@ class DeclareStreamingConformance(StreamingAlgorithm):
             "initial_state": {"name": "init", "waiting_for_A": True},
             "states": {
                 "init": {"on_event": on_event_init},
-                "violated": {"on_event": lambda a, e, s: ("violated", False)}
-            }
+                "violated": {"on_event": lambda a, e, s: ("violated", False)},
+            },
         }
 
     def _altsuccession_automaton(self, A, B):
@@ -277,11 +290,15 @@ class DeclareStreamingConformance(StreamingAlgorithm):
             return ("init", False)
 
         return {
-            "initial_state": {"name": "init", "waiting_for_B": False, "waiting_for_A": True},
+            "initial_state": {
+                "name": "init",
+                "waiting_for_B": False,
+                "waiting_for_A": True,
+            },
             "states": {
                 "init": {"on_event": on_event_init},
-                "violated": {"on_event": lambda a, e, s: ("violated", False)}
-            }
+                "violated": {"on_event": lambda a, e, s: ("violated", False)},
+            },
         }
 
     def _chainresponse_automaton(self, A, B):
@@ -300,8 +317,8 @@ class DeclareStreamingConformance(StreamingAlgorithm):
             "initial_state": {"name": "init", "expecting_B": False},
             "states": {
                 "init": {"on_event": on_event_init},
-                "violated": {"on_event": lambda a, e, s: ("violated", False)}
-            }
+                "violated": {"on_event": lambda a, e, s: ("violated", False)},
+            },
         }
 
     def _chainprecedence_automaton(self, A, B):
@@ -317,8 +334,8 @@ class DeclareStreamingConformance(StreamingAlgorithm):
             "initial_state": {"name": "init", "last": None},
             "states": {
                 "init": {"on_event": on_event_init},
-                "violated": {"on_event": lambda a, e, s: ("violated", False)}
-            }
+                "violated": {"on_event": lambda a, e, s: ("violated", False)},
+            },
         }
 
     def _chainsuccession_automaton(self, A, B):
@@ -339,11 +356,15 @@ class DeclareStreamingConformance(StreamingAlgorithm):
             return ("init", False)
 
         return {
-            "initial_state": {"name": "init", "expecting_B": False, "last": None},
+            "initial_state": {
+                "name": "init",
+                "expecting_B": False,
+                "last": None,
+            },
             "states": {
                 "init": {"on_event": on_event_init},
-                "violated": {"on_event": lambda a, e, s: ("violated", False)}
-            }
+                "violated": {"on_event": lambda a, e, s: ("violated", False)},
+            },
         }
 
     def _noncoexistence_automaton(self, A, B):
@@ -360,11 +381,15 @@ class DeclareStreamingConformance(StreamingAlgorithm):
             return ("init", False)
 
         return {
-            "initial_state": {"name": "init", "A_seen": False, "B_seen": False},
+            "initial_state": {
+                "name": "init",
+                "A_seen": False,
+                "B_seen": False,
+            },
             "states": {
                 "init": {"on_event": on_event_init},
-                "violated": {"on_event": lambda a, e, s: ("violated", False)}
-            }
+                "violated": {"on_event": lambda a, e, s: ("violated", False)},
+            },
         }
 
     def _nonsuccession_automaton(self, A, B):
@@ -380,8 +405,8 @@ class DeclareStreamingConformance(StreamingAlgorithm):
             "initial_state": {"name": "init", "A_occurred": False},
             "states": {
                 "init": {"on_event": on_event_init},
-                "violated": {"on_event": lambda a, e, s: ("violated", False)}
-            }
+                "violated": {"on_event": lambda a, e, s: ("violated", False)},
+            },
         }
 
     def _nonchainsuccession_automaton(self, A, B):
@@ -390,7 +415,7 @@ class DeclareStreamingConformance(StreamingAlgorithm):
             lA = s.get("last_was_A", False)
             if lA and act == B:
                 return ("violated", True)
-            lA = (act == A)
+            lA = act == A
             s["last_was_A"] = lA
             return ("init", False)
 
@@ -398,8 +423,8 @@ class DeclareStreamingConformance(StreamingAlgorithm):
             "initial_state": {"name": "init", "last_was_A": False},
             "states": {
                 "init": {"on_event": on_event_init},
-                "violated": {"on_event": lambda a, e, s: ("violated", False)}
-            }
+                "violated": {"on_event": lambda a, e, s: ("violated", False)},
+            },
         }
 
     def _create_automaton_for_constraint(self, template_type, activities):
@@ -412,7 +437,9 @@ class DeclareStreamingConformance(StreamingAlgorithm):
         elif template_type == "init":
             return self._init_automaton(activities[0])
         elif template_type == "responded_existence":
-            return self._responded_existence_automaton(activities[0], activities[1])
+            return self._responded_existence_automaton(
+                activities[0], activities[1]
+            )
         elif template_type == "coexistence":
             return self._coexistence_automaton(activities[0], activities[1])
         elif template_type == "response":
@@ -430,15 +457,21 @@ class DeclareStreamingConformance(StreamingAlgorithm):
         elif template_type == "chainresponse":
             return self._chainresponse_automaton(activities[0], activities[1])
         elif template_type == "chainprecedence":
-            return self._chainprecedence_automaton(activities[0], activities[1])
+            return self._chainprecedence_automaton(
+                activities[0], activities[1]
+            )
         elif template_type == "chainsuccession":
-            return self._chainsuccession_automaton(activities[0], activities[1])
+            return self._chainsuccession_automaton(
+                activities[0], activities[1]
+            )
         elif template_type == "noncoexistence":
             return self._noncoexistence_automaton(activities[0], activities[1])
         elif template_type == "nonsuccession":
             return self._nonsuccession_automaton(activities[0], activities[1])
         elif template_type == "nonchainsuccession":
-            return self._nonchainsuccession_automaton(activities[0], activities[1])
+            return self._nonchainsuccession_automaton(
+                activities[0], activities[1]
+            )
         else:
             return self._dummy_automaton()
 
@@ -447,15 +480,13 @@ class DeclareStreamingConformance(StreamingAlgorithm):
         self._total_events += 1
 
         if case_id not in self._cases:
-            case_data = {
-                "constraints_state": {},
-                "deviations": 0,
-                "events": 0
-            }
+            case_data = {"constraints_state": {}, "deviations": 0, "events": 0}
             for template_type, constraints_dict in self._constraints.items():
                 for activities, automaton in constraints_dict.items():
                     state_data = dict(automaton["initial_state"])
-                    case_data["constraints_state"][(template_type, activities)] = (state_data["name"], state_data)
+                    case_data["constraints_state"][
+                        (template_type, activities)
+                    ] = (state_data["name"], state_data)
             self._cases[case_id] = case_data
 
         self._cases[case_id]["events"] += 1
@@ -463,12 +494,17 @@ class DeclareStreamingConformance(StreamingAlgorithm):
         deviations_in_this_event = 0
         violated_constraints = []
 
-        for (template_type, activities), (state_name, state_data) in current_case_data["constraints_state"].items():
+        for (template_type, activities), (
+            state_name,
+            state_data,
+        ) in current_case_data["constraints_state"].items():
             automaton = self._constraints[template_type][activities]
             current_state = automaton["states"][state_name]
             on_event = current_state["on_event"]
             new_state_name, violated = on_event(automaton, event, state_data)
-            current_case_data["constraints_state"][(template_type, activities)] = (new_state_name, state_data)
+            current_case_data["constraints_state"][
+                (template_type, activities)
+            ] = (new_state_name, state_data)
             if violated:
                 deviations_in_this_event += 1
                 violated_constraints.append((template_type, activities))
@@ -489,7 +525,7 @@ class DeclareStreamingConformance(StreamingAlgorithm):
             "total_events_processed": self._total_events,
             "total_deviations": self._total_deviations,
             "deviations_per_time": self._deviations_per_time,
-            "cases": {}
+            "cases": {},
         }
         for c_id, c_data in self._cases.items():
             constraints_state = {}
@@ -498,7 +534,7 @@ class DeclareStreamingConformance(StreamingAlgorithm):
             result["cases"][c_id] = {
                 "events": c_data["events"],
                 "deviations": c_data["deviations"],
-                "constraints_state": constraints_state
+                "constraints_state": constraints_state,
             }
         return result
 

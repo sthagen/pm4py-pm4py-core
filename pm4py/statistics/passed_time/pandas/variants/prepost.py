@@ -42,7 +42,11 @@ class Parameters(Enum):
     WORKCALENDAR = "workcalendar"
 
 
-def apply(df: pd.DataFrame, activity: str, parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, Any]:
+def apply(
+    df: pd.DataFrame,
+    activity: str,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Dict[str, Any]:
     """
     Gets the time passed from each preceding activity and to each succeeding activity
 
@@ -66,22 +70,45 @@ def apply(df: pd.DataFrame, activity: str, parameters: Optional[Dict[Any, Any]] 
     if parameters is None:
         parameters = {}
 
-    case_id_glue = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME)
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters, None)
+    case_id_glue = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME
+    )
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY, parameters, None
+    )
 
-    business_hours = exec_utils.get_param_value(Parameters.BUSINESS_HOURS, parameters, False)
-    business_hours_slots = exec_utils.get_param_value(Parameters.BUSINESS_HOUR_SLOTS, parameters, constants.DEFAULT_BUSINESS_HOUR_SLOTS)
+    business_hours = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOURS, parameters, False
+    )
+    business_hours_slots = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOUR_SLOTS,
+        parameters,
+        constants.DEFAULT_BUSINESS_HOUR_SLOTS,
+    )
 
-    workcalendar = exec_utils.get_param_value(Parameters.WORKCALENDAR, parameters, constants.DEFAULT_BUSINESS_HOURS_WORKCALENDAR)
+    workcalendar = exec_utils.get_param_value(
+        Parameters.WORKCALENDAR,
+        parameters,
+        constants.DEFAULT_BUSINESS_HOURS_WORKCALENDAR,
+    )
 
-    [dfg_frequency, dfg_performance] = pandas.get_dfg_graph(df, measure="both", activity_key=activity_key,
-                                           case_id_glue=case_id_glue, timestamp_key=timestamp_key,
-                                                            start_timestamp_key=start_timestamp_key,
-                                                            business_hours=business_hours,
-                                                            business_hours_slot=business_hours_slots,
-                                                            workcalendar=workcalendar)
+    [dfg_frequency, dfg_performance] = pandas.get_dfg_graph(
+        df,
+        measure="both",
+        activity_key=activity_key,
+        case_id_glue=case_id_glue,
+        timestamp_key=timestamp_key,
+        start_timestamp_key=start_timestamp_key,
+        business_hours=business_hours,
+        business_hours_slot=business_hours_slots,
+        workcalendar=workcalendar,
+    )
 
     pre = []
     sum_perf_post = 0.0
@@ -92,12 +119,28 @@ def apply(df: pd.DataFrame, activity: str, parameters: Optional[Dict[Any, Any]] 
 
     for entry in dfg_performance.keys():
         if entry[1] == activity:
-            pre.append([entry[0], float(dfg_performance[entry]), int(dfg_frequency[entry])])
-            sum_perf_pre = sum_perf_pre + float(dfg_performance[entry]) * float(dfg_frequency[entry])
+            pre.append(
+                [
+                    entry[0],
+                    float(dfg_performance[entry]),
+                    int(dfg_frequency[entry]),
+                ]
+            )
+            sum_perf_pre = sum_perf_pre + float(
+                dfg_performance[entry]
+            ) * float(dfg_frequency[entry])
             sum_acti_pre = sum_acti_pre + float(dfg_frequency[entry])
         if entry[0] == activity:
-            post.append([entry[1], float(dfg_performance[entry]), int(dfg_frequency[entry])])
-            sum_perf_post = sum_perf_post + float(dfg_performance[entry]) * float(dfg_frequency[entry])
+            post.append(
+                [
+                    entry[1],
+                    float(dfg_performance[entry]),
+                    int(dfg_frequency[entry]),
+                ]
+            )
+            sum_perf_post = sum_perf_post + float(
+                dfg_performance[entry]
+            ) * float(dfg_frequency[entry])
             sum_acti_post = sum_acti_post + float(dfg_frequency[entry])
 
     perf_acti_pre = 0.0
@@ -107,4 +150,9 @@ def apply(df: pd.DataFrame, activity: str, parameters: Optional[Dict[Any, Any]] 
     if sum_acti_post > 0:
         perf_acti_post = sum_perf_post / sum_acti_post
 
-    return {"pre": pre, "post": post, "post_avg_perf": perf_acti_post, "pre_avg_perf": perf_acti_pre}
+    return {
+        "pre": pre,
+        "post": post,
+        "post_avg_perf": perf_acti_post,
+        "pre_avg_perf": perf_acti_pre,
+    }

@@ -36,7 +36,10 @@ class Parameters(Enum):
     NO_TRACES = "num_traces"
 
 
-def apply(tree: ProcessTree, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> EventLog:
+def apply(
+    tree: ProcessTree,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> EventLog:
     """
     Gets the top-bottom playout of a process tree
 
@@ -57,8 +60,12 @@ def apply(tree: ProcessTree, parameters: Optional[Dict[Union[str, Parameters], A
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    no_traces = exec_utils.get_param_value(Parameters.NO_TRACES, parameters, 1000)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    no_traces = exec_utils.get_param_value(
+        Parameters.NO_TRACES, parameters, 1000
+    )
 
     execution_sequences = get_num_ex_sequences(tree, no_traces)
 

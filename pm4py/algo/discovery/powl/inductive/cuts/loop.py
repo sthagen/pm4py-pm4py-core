@@ -32,11 +32,15 @@ from pm4py.objects.process_tree.obj import Operator
 class POWLLoopCut(LoopCut, ABC, Generic[T]):
 
     @classmethod
-    def operator(cls, parameters: Optional[Dict[str, Any]] = None) -> OperatorPOWL:
+    def operator(
+        cls, parameters: Optional[Dict[str, Any]] = None
+    ) -> OperatorPOWL:
         raise Exception("This function should not be called!")
 
     @classmethod
-    def apply(cls, obj: T, parameters: Optional[Dict[str, Any]] = None) -> Optional[Tuple[POWL, List[T]]]:
+    def apply(
+        cls, obj: T, parameters: Optional[Dict[str, Any]] = None
+    ) -> Optional[Tuple[POWL, List[T]]]:
         g = cls.holds(obj, parameters)
         if g is None:
             return g

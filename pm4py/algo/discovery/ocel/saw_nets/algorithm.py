@@ -31,7 +31,11 @@ class Variants(Enum):
     CLASSIC = classic
 
 
-def apply(ocel: OCEL, variant=Variants.CLASSIC, parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, Any]:
+def apply(
+    ocel: OCEL,
+    variant=Variants.CLASSIC,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Dict[str, Any]:
     """
     Discovers a SAW net representing the behavior of the provided object-centric event log.
 

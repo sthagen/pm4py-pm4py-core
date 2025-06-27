@@ -54,30 +54,49 @@ def apply(conn, parameters: Optional[Dict[Any, Any]] = None) -> pd.DataFrame:
 
     import pm4py
 
-    connection_string = exec_utils.get_param_value(Parameters.CONNECTION_STRING, parameters, None)
+    connection_string = exec_utils.get_param_value(
+        Parameters.CONNECTION_STRING, parameters, None
+    )
 
     if conn is None:
         import pyodbc
+
         conn = pyodbc.connect(connection_string)
 
     prefix = exec_utils.get_param_value(Parameters.PREFIX, parameters, "")
 
     curs = conn.cursor()
 
-    query = """
+    query = (
+        """
     SELECT * FROM
-    (SELECT MANDT || '-' || BUKRS || '-' || GJAHR || '-' || BELNR AS "case:concept:name", 'Create Financial Document - ' || BLART AS "concept:name", CPUDT || ' ' || CPUTM AS "time:timestamp", USNAM AS "org:resource", BLART FROM """+prefix+"""BKPF
+    (SELECT MANDT || '-' || BUKRS || '-' || GJAHR || '-' || BELNR AS "case:concept:name", 'Create Financial Document - ' || BLART AS "concept:name", CPUDT || ' ' || CPUTM AS "time:timestamp", USNAM AS "org:resource", BLART FROM """
+        + prefix
+        + """BKPF
     UNION
-    SELECT MANDT || '-' || BUKRS || '-' || GJAHR || '-' || AUGBL AS "case:concept:name", 'Clear Customer Document' AS "concept:name", AUGDT || ' 235958' AS "time:timestamp", NULL AS "org:resource", NULL AS BLART FROM """+prefix+"""BSAD
+    SELECT MANDT || '-' || BUKRS || '-' || GJAHR || '-' || AUGBL AS "case:concept:name", 'Clear Customer Document' AS "concept:name", AUGDT || ' 235958' AS "time:timestamp", NULL AS "org:resource", NULL AS BLART FROM """
+        + prefix
+        + """BSAD
     UNION
-    SELECT MANDT || '-' || BUKRS || '-' || GJAHR || '-' || AUGBL AS "case:concept:name", 'Clear Vendor Document' AS "concept:name", AUGDT || ' 235959' AS "time:timestamp", NULL AS "org:resource", NULL AS BLART FROM """+prefix+"""BSAK)
+    SELECT MANDT || '-' || BUKRS || '-' || GJAHR || '-' || AUGBL AS "case:concept:name", 'Clear Vendor Document' AS "concept:name", AUGDT || ' 235959' AS "time:timestamp", NULL AS "org:resource", NULL AS BLART FROM """
+        + prefix
+        + """BSAK)
     ORDER BY "case:concept:name", "time:timestamp";
     """
-    columns = ["case:concept:name", "concept:name", "time:timestamp", "org:resource", "BLART"]
+    )
+    columns = [
+        "case:concept:name",
+        "concept:name",
+        "time:timestamp",
+        "org:resource",
+        "BLART",
+    ]
 
     curs.execute(query)
     dataframe = curs.fetchall()
-    dataframe = pandas_utils.instantiate_dataframe_from_records(dataframe, columns=columns)
+    dataframe = pandas_utils.instantiate_dataframe_from_records(
+        dataframe, columns=columns
+    )
     dataframe = pm4py.format_dataframe(dataframe)
 
     curs.close()

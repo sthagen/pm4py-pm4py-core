@@ -36,8 +36,9 @@ SCIPY = "scipy"
 CVXOPT_SOLVER_CUSTOM_ALIGN = "cvxopt_solver_custom_align"
 CVXOPT_SOLVER_CUSTOM_ALIGN_ILP = "cvxopt_solver_custom_align_ilp"
 
-# max allowed heuristics value (27/10/2019, due to the numerical instability of some of our solvers)
-MAX_ALLOWED_HEURISTICS = 10 ** 15
+# max allowed heuristics value (27/10/2019, due to the numerical
+# instability of some of our solvers)
+MAX_ALLOWED_HEURISTICS = 10**15
 
 VERSIONS_APPLY = {}
 VERSIONS_GET_PRIM_OBJ = {}
@@ -89,7 +90,9 @@ if importlib.util.find_spec("cvxopt"):
 
     DEFAULT_LP_SOLVER_VARIANT = CVXOPT_SOLVER_CUSTOM_ALIGN
 
-def apply(c, Aub, bub, Aeq, beq, parameters=None, variant=DEFAULT_LP_SOLVER_VARIANT):
+def apply(
+    c, Aub, bub, Aeq, beq, parameters=None, variant=DEFAULT_LP_SOLVER_VARIANT
+):
     """
     Gets the overall solution of the problem
 
@@ -115,10 +118,14 @@ def apply(c, Aub, bub, Aeq, beq, parameters=None, variant=DEFAULT_LP_SOLVER_VARI
     sol
         Solution of the LP problem by the given algorithm
     """
-    return VERSIONS_APPLY[variant](c, Aub, bub, Aeq, beq, parameters=parameters)
+    return VERSIONS_APPLY[variant](
+        c, Aub, bub, Aeq, beq, parameters=parameters
+    )
 
 
-def get_prim_obj_from_sol(sol, parameters=None, variant=DEFAULT_LP_SOLVER_VARIANT):
+def get_prim_obj_from_sol(
+    sol, parameters=None, variant=DEFAULT_LP_SOLVER_VARIANT
+):
     """
     Gets the primal objective from the solution of the LP problem
 
@@ -139,7 +146,9 @@ def get_prim_obj_from_sol(sol, parameters=None, variant=DEFAULT_LP_SOLVER_VARIAN
     return VERSIONS_GET_PRIM_OBJ[variant](sol, parameters=parameters)
 
 
-def get_points_from_sol(sol, parameters=None, variant=DEFAULT_LP_SOLVER_VARIANT):
+def get_points_from_sol(
+    sol, parameters=None, variant=DEFAULT_LP_SOLVER_VARIANT
+):
     """
     Gets the points from the solution
 

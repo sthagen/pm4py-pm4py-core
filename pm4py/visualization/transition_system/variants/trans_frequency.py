@@ -41,27 +41,52 @@ class Parameters(Enum):
 
 def get_perc(total_events, arc_events):
     if total_events > 0:
-        return " " + str(total_events) + " / %.2f %%" % (100.0 * arc_events / total_events)
+        return (
+            " "
+            + str(total_events)
+            + " / %.2f %%" % (100.0 * arc_events / total_events)
+        )
     return " 0 / 0.00 %"
 
 
-def apply(tsys: TransitionSystem, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> graphviz.Digraph:
+def apply(
+    tsys: TransitionSystem,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> graphviz.Digraph:
     if parameters is None:
         parameters = {}
 
-    image_format = exec_utils.get_param_value(Parameters.FORMAT, parameters, "png")
-    bgcolor = exec_utils.get_param_value(Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR)
+    image_format = exec_utils.get_param_value(
+        Parameters.FORMAT, parameters, "png"
+    )
+    bgcolor = exec_utils.get_param_value(
+        Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR
+    )
 
-    enable_graph_title = exec_utils.get_param_value(Parameters.ENABLE_GRAPH_TITLE, parameters, constants.DEFAULT_ENABLE_GRAPH_TITLES)
-    graph_title = exec_utils.get_param_value(Parameters.GRAPH_TITLE, parameters, "Transition System")
+    enable_graph_title = exec_utils.get_param_value(
+        Parameters.ENABLE_GRAPH_TITLE,
+        parameters,
+        constants.DEFAULT_ENABLE_GRAPH_TITLES,
+    )
+    graph_title = exec_utils.get_param_value(
+        Parameters.GRAPH_TITLE, parameters, "Transition System"
+    )
 
-    filename = tempfile.NamedTemporaryFile(suffix='.gv')
+    filename = tempfile.NamedTemporaryFile(suffix=".gv")
     filename.close()
 
-    viz = Digraph(tsys.name, filename=filename.name, engine='dot', graph_attr={'bgcolor': bgcolor})
+    viz = Digraph(
+        tsys.name,
+        filename=filename.name,
+        engine="dot",
+        graph_attr={"bgcolor": bgcolor},
+    )
 
     if enable_graph_title:
-        viz.attr(label='<<FONT POINT-SIZE="20">'+graph_title+'</FONT>>', labelloc="top")
+        viz.attr(
+            label='<<FONT POINT-SIZE="20">' + graph_title + "</FONT>>",
+            labelloc="top",
+        )
 
     states_dictio = {}
 
@@ -80,7 +105,9 @@ def apply(tsys: TransitionSystem, parameters: Optional[Dict[Union[str, Parameter
 
         fillcolor = "white"
 
-        if sum_ingoing != len(s.data["ingoing_events"]) or sum_outgoing != len(s.data["outgoing_events"]):
+        if sum_ingoing != len(s.data["ingoing_events"]) or sum_outgoing != len(
+            s.data["outgoing_events"]
+        ):
             fillcolor = "red"
 
         taillabel = get_perc(sum_ingoing, len(s.data["ingoing_events"]))
@@ -88,14 +115,30 @@ def apply(tsys: TransitionSystem, parameters: Optional[Dict[Union[str, Parameter
 
         label = "IN=" + taillabel + "\n" + str(s.name) + "\nOUT=" + headlabel
 
-        viz.node(node_uuid, label=label, fontsize="10", style="filled", fillcolor=fillcolor)
+        viz.node(
+            node_uuid,
+            label=label,
+            fontsize="10",
+            style="filled",
+            fillcolor=fillcolor,
+        )
 
     for t in tsys.transitions:
-        viz.edge(states_dictio[id(t.from_state)], states_dictio[id(t.to_state)], fontsize="8", label=str(t.name),
-                 taillabel=get_perc(len(t.from_state.data["outgoing_events"]), len(t.data["events"])),
-                 headlabel=get_perc(len(t.to_state.data["ingoing_events"]), len(t.data["events"])))
+        viz.edge(
+            states_dictio[id(t.from_state)],
+            states_dictio[id(t.to_state)],
+            fontsize="8",
+            label=str(t.name),
+            taillabel=get_perc(
+                len(t.from_state.data["outgoing_events"]),
+                len(t.data["events"]),
+            ),
+            headlabel=get_perc(
+                len(t.to_state.data["ingoing_events"]), len(t.data["events"])
+            ),
+        )
 
-    viz.attr(overlap='false')
+    viz.attr(overlap="false")
 
     viz.format = image_format.replace("html", "plain-ext")
 

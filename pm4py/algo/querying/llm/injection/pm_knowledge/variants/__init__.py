@@ -19,4 +19,7 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.algo.querying.llm.injection.pm_knowledge.variants import ocel20, traditional
+from pm4py.algo.querying.llm.injection.pm_knowledge.variants import (
+    ocel20,
+    traditional,
+)

@@ -44,7 +44,11 @@ class ConfOutputs(Enum):
     IS_FOOTPRINTS_FIT = "is_footprints_fit"
 
 
-def apply(log_footprints: Dict[str, Any], model_footprints: Dict[str, Any], parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, Any]:
+def apply(
+    log_footprints: Dict[str, Any],
+    model_footprints: Dict[str, Any],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Dict[str, Any]:
     """
     Apply footprints conformance between a log footprints object
     and a model footprints object
@@ -68,23 +72,50 @@ def apply(log_footprints: Dict[str, Any], model_footprints: Dict[str, Any], para
 
     if type(log_footprints) is list:
         raise Exception(
-            "it is possible to apply this variant only on overall log footprints, not trace-by-trace footprints!")
+            "it is possible to apply this variant only on overall log footprints, not trace-by-trace footprints!"
+        )
 
-    log_configurations = log_footprints[Outputs.SEQUENCE.value].union(log_footprints[Outputs.PARALLEL.value])
-    model_configurations = model_footprints[Outputs.SEQUENCE.value].union(model_footprints[Outputs.PARALLEL.value])
+    log_configurations = log_footprints[Outputs.SEQUENCE.value].union(
+        log_footprints[Outputs.PARALLEL.value]
+    )
+    model_configurations = model_footprints[Outputs.SEQUENCE.value].union(
+        model_footprints[Outputs.PARALLEL.value]
+    )
 
     ret = {}
-    ret[ConfOutputs.FOOTPRINTS.value] = set(x for x in log_configurations if x not in model_configurations)
-    ret[ConfOutputs.START_ACTIVITIES.value] = set(x for x in log_footprints[Outputs.START_ACTIVITIES.value] if
-                                                  x not in model_footprints[
-                                                      Outputs.START_ACTIVITIES.value]) if Outputs.START_ACTIVITIES.value in model_footprints else set()
-    ret[ConfOutputs.END_ACTIVITIES.value] = set(
-        x for x in log_footprints[Outputs.END_ACTIVITIES.value] if x not in model_footprints[
-            Outputs.END_ACTIVITIES.value]) if Outputs.END_ACTIVITIES.value in model_footprints else set()
-    ret[ConfOutputs.MIN_LENGTH_FIT.value] = log_footprints[Outputs.MIN_TRACE_LENGTH.value] >= model_footprints[
-        Outputs.MIN_TRACE_LENGTH.value] if Outputs.MIN_TRACE_LENGTH.value in log_footprints and Outputs.MIN_TRACE_LENGTH.value in model_footprints else True
-    ret[ConfOutputs.IS_FOOTPRINTS_FIT.value] = len(ret[ConfOutputs.FOOTPRINTS.value]) == 0 and len(
-        ret[ConfOutputs.START_ACTIVITIES.value]) == 0 and len(
-        ret[ConfOutputs.END_ACTIVITIES.value]) == 0 and ret[ConfOutputs.MIN_LENGTH_FIT.value]
+    ret[ConfOutputs.FOOTPRINTS.value] = set(
+        x for x in log_configurations if x not in model_configurations
+    )
+    ret[ConfOutputs.START_ACTIVITIES.value] = (
+        set(
+            x
+            for x in log_footprints[Outputs.START_ACTIVITIES.value]
+            if x not in model_footprints[Outputs.START_ACTIVITIES.value]
+        )
+        if Outputs.START_ACTIVITIES.value in model_footprints
+        else set()
+    )
+    ret[ConfOutputs.END_ACTIVITIES.value] = (
+        set(
+            x
+            for x in log_footprints[Outputs.END_ACTIVITIES.value]
+            if x not in model_footprints[Outputs.END_ACTIVITIES.value]
+        )
+        if Outputs.END_ACTIVITIES.value in model_footprints
+        else set()
+    )
+    ret[ConfOutputs.MIN_LENGTH_FIT.value] = (
+        log_footprints[Outputs.MIN_TRACE_LENGTH.value]
+        >= model_footprints[Outputs.MIN_TRACE_LENGTH.value]
+        if Outputs.MIN_TRACE_LENGTH.value in log_footprints
+        and Outputs.MIN_TRACE_LENGTH.value in model_footprints
+        else True
+    )
+    ret[ConfOutputs.IS_FOOTPRINTS_FIT.value] = (
+        len(ret[ConfOutputs.FOOTPRINTS.value]) == 0
+        and len(ret[ConfOutputs.START_ACTIVITIES.value]) == 0
+        and len(ret[ConfOutputs.END_ACTIVITIES.value]) == 0
+        and ret[ConfOutputs.MIN_LENGTH_FIT.value]
+    )
 
     return ret

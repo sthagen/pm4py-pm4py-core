@@ -172,10 +172,17 @@ def find_role_similarity(roles, i, j, parameters=None):
         Similarity measure
     """
     num = get_sum_from_dictio_values(
-        find_multiset_intersection(roles[i][1], roles[j][1], normalize=True, parameters=parameters),
-        parameters=parameters)
+        find_multiset_intersection(
+            roles[i][1], roles[j][1], normalize=True, parameters=parameters
+        ),
+        parameters=parameters,
+    )
     den = get_sum_from_dictio_values(
-        find_multiset_union(roles[i][1], roles[j][1], normalize=True, parameters=parameters), parameters=parameters)
+        find_multiset_union(
+            roles[i][1], roles[j][1], normalize=True, parameters=parameters
+        ),
+        parameters=parameters,
+    )
 
     return num / den
 
@@ -196,15 +203,32 @@ def aggregate_roles_iteration(roles, parameters=None):
     agg_roles
         (Partially aggregated) roles
     """
-    threshold = exec_utils.get_param_value(Parameters.ROLES_THRESHOLD_PARAMETER, parameters, 0.65)
+    threshold = exec_utils.get_param_value(
+        Parameters.ROLES_THRESHOLD_PARAMETER, parameters, 0.65
+    )
 
     sim = []
 
     for i in range(len(roles)):
         for j in range(i + 1, len(roles)):
-            sim.append((i, j, roles[i][0], roles[j][0], -find_role_similarity(roles, i, j, parameters=parameters)))
+            sim.append(
+                (
+                    i,
+                    j,
+                    roles[i][0],
+                    roles[j][0],
+                    -find_role_similarity(roles, i, j, parameters=parameters),
+                )
+            )
 
-    sim = sorted(sim, key=lambda x: (x[-1], constants.DEFAULT_VARIANT_SEP.join(x[-3]), constants.DEFAULT_VARIANT_SEP.join(x[-2])))
+    sim = sorted(
+        sim,
+        key=lambda x: (
+            x[-1],
+            constants.DEFAULT_VARIANT_SEP.join(x[-3]),
+            constants.DEFAULT_VARIANT_SEP.join(x[-2]),
+        ),
+    )
 
     found_feasible = False
 
@@ -223,7 +247,9 @@ def aggregate_roles_iteration(roles, parameters=None):
 
             roles.append([total_set_act, total_set_res])
 
-            roles = sorted(roles, key=lambda x: constants.DEFAULT_VARIANT_SEP.join(x[0]))
+            roles = sorted(
+                roles, key=lambda x: constants.DEFAULT_VARIANT_SEP.join(x[0])
+            )
 
             found_feasible = True
 
@@ -248,7 +274,9 @@ def aggregate_roles_algorithm(roles, parameters=None):
     """
     found_feasible = True
     while found_feasible:
-        roles, found_feasible = aggregate_roles_iteration(roles, parameters=parameters)
+        roles, found_feasible = aggregate_roles_iteration(
+            roles, parameters=parameters
+        )
 
     return roles
 
@@ -288,11 +316,27 @@ def get_initial_roles(res_act_couples, parameters=None):
     for act in roles0:
         roles.append([[act], roles0[act]])
 
-    roles = sorted(roles, key=lambda x: (len(x[0]), len(x[1]), constants.DEFAULT_VARIANT_SEP.join(sorted(x[0]))), reverse=True)
+    roles = sorted(
+        roles,
+        key=lambda x: (
+            len(x[0]),
+            len(x[1]),
+            constants.DEFAULT_VARIANT_SEP.join(sorted(x[0])),
+        ),
+        reverse=True,
+    )
 
     roles = aggregate_roles_algorithm(roles, parameters=parameters)
 
-    roles = sorted(roles, key=lambda x: (len(x[0]), len(x[1]), constants.DEFAULT_VARIANT_SEP.join(sorted(x[0]))), reverse=True)
+    roles = sorted(
+        roles,
+        key=lambda x: (
+            len(x[0]),
+            len(x[1]),
+            constants.DEFAULT_VARIANT_SEP.join(sorted(x[0])),
+        ),
+        reverse=True,
+    )
 
     return roles
 

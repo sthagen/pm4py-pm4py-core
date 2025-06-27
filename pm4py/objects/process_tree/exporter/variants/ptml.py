@@ -96,7 +96,9 @@ def export_ptree_tree(tree, parameters=None):
             third_children = ProcessTree(operator=None, label=None)
             third_children.parent = node
             node.children.append(third_children)
-            nodes_dict[(id(third_children), third_children)] = str(uuid.uuid4())
+            nodes_dict[(id(third_children), third_children)] = str(
+                uuid.uuid4()
+            )
 
     # repeat twice (structure has changed)
     nodes = get_list_nodes_from_tree(tree, parameters=parameters)
@@ -162,7 +164,9 @@ def export_tree_as_string(tree, parameters=None):
     if parameters is None:
         parameters = {}
 
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING)
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING
+    )
 
     # gets the XML tree
     tree = export_ptree_tree(tree, parameters=parameters)
@@ -186,7 +190,9 @@ def apply(tree, output_path, parameters=None):
     if parameters is None:
         parameters = {}
 
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING)
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING
+    )
 
     # gets the XML tree
     tree = export_ptree_tree(tree, parameters=parameters)

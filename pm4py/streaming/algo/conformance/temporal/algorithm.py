@@ -31,8 +31,11 @@ class Variants(Enum):
     CLASSIC = classic
 
 
-def apply(temporal_profile: typing.TemporalProfile, variant=Variants.CLASSIC,
-          parameters: Optional[Dict[Any, Any]] = None):
+def apply(
+    temporal_profile: typing.TemporalProfile,
+    variant=Variants.CLASSIC,
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     """
     Initialize the streaming conformance checking
 
@@ -54,4 +57,6 @@ def apply(temporal_profile: typing.TemporalProfile, variant=Variants.CLASSIC,
          - Parameters.CASE_DICT_ID => the identifier of the case dictionary
          - Parameters.DEV_DICT_ID => the identifier of the deviations dictionary
     """
-    return exec_utils.get_variant(variant).apply(temporal_profile, parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        temporal_profile, parameters=parameters
+    )

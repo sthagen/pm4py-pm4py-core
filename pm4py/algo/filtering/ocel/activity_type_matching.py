@@ -35,8 +35,11 @@ class Parameters(Enum):
     TEMP_SEPARATOR = "temp_separator"
 
 
-def apply(ocel: OCEL, correspondence_dict: Dict[str, Collection[str]],
-          parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
+def apply(
+    ocel: OCEL,
+    correspondence_dict: Dict[str, Collection[str]],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> OCEL:
     """
     Filters an object-centric event log keeping only the specified object types
     with the specified activity set (filters out the rest).
@@ -67,10 +70,18 @@ def apply(ocel: OCEL, correspondence_dict: Dict[str, Collection[str]],
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, ocel.event_activity)
-    object_type_column = exec_utils.get_param_value(Parameters.OBJECT_TYPE, parameters, ocel.object_type_column)
-    temp_column = exec_utils.get_param_value(Parameters.TEMP_COLUMN, parameters, "@@temp_column")
-    temp_separator = exec_utils.get_param_value(Parameters.TEMP_SEPARATOR, parameters, "@#@#")
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, ocel.event_activity
+    )
+    object_type_column = exec_utils.get_param_value(
+        Parameters.OBJECT_TYPE, parameters, ocel.object_type_column
+    )
+    temp_column = exec_utils.get_param_value(
+        Parameters.TEMP_COLUMN, parameters, "@@temp_column"
+    )
+    temp_separator = exec_utils.get_param_value(
+        Parameters.TEMP_SEPARATOR, parameters, "@#@#"
+    )
 
     ocel = deepcopy(ocel)
 
@@ -79,9 +90,15 @@ def apply(ocel: OCEL, correspondence_dict: Dict[str, Collection[str]],
         for act in correspondence_dict[ot]:
             inv_dict.add(act + temp_separator + ot)
 
-    ocel.relations[temp_column] = ocel.relations[activity_key] + temp_separator + ocel.relations[object_type_column]
+    ocel.relations[temp_column] = (
+        ocel.relations[activity_key]
+        + temp_separator
+        + ocel.relations[object_type_column]
+    )
     ocel.relations = ocel.relations[ocel.relations[temp_column].isin(inv_dict)]
 
     del ocel.relations[temp_column]
 
-    return filtering_utils.propagate_relations_filtering(ocel, parameters=parameters)
+    return filtering_utils.propagate_relations_filtering(
+        ocel, parameters=parameters
+    )

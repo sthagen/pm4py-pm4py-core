@@ -32,18 +32,28 @@ class Parameters(Enum):
 
 
 class PandasTraceWrapper(Sequence):
-    def __init__(self, dataframe: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None):
+    def __init__(
+        self,
+        dataframe: pd.DataFrame,
+        parameters: Optional[Dict[Any, Any]] = None,
+    ):
         if parameters is None:
             parameters = {}
 
         self.parameters = parameters
         self.dataframe = dataframe
-        self.case_attribute_prefix = exec_utils.get_param_value(Parameters.CASE_ATTRIBUTE_PREFIX, parameters,
-                                                                constants.CASE_ATTRIBUTE_PREFIX)
+        self.case_attribute_prefix = exec_utils.get_param_value(
+            Parameters.CASE_ATTRIBUTE_PREFIX,
+            parameters,
+            constants.CASE_ATTRIBUTE_PREFIX,
+        )
 
         self.attributes = self.dataframe.loc[0].to_dict()
-        self.attributes = {x.split(self.case_attribute_prefix)[-1]: y for x, y in self.attributes.items() if
-                           x.startswith(self.case_attribute_prefix)}
+        self.attributes = {
+            x.split(self.case_attribute_prefix)[-1]: y
+            for x, y in self.attributes.items()
+            if x.startswith(self.case_attribute_prefix)
+        }
 
     def __getitem__(self, key):
         if type(key) is slice:
@@ -55,28 +65,37 @@ class PandasTraceWrapper(Sequence):
         return self.dataframe.loc[key].to_dict()
 
     def __iter__(self):
-        return iter(self.dataframe.to_dict('records'))
+        return iter(self.dataframe.to_dict("records"))
 
     def __len__(self):
         return len(self.dataframe)
 
     def _get_list(self):
-        return self.dataframe.to_dict('records')
+        return self.dataframe.to_dict("records")
 
     _list = property(_get_list)
 
 
 class PandasLogWrapper(Sequence):
-    # permits to iterate over a Pandas dataframe and access its Traces object *without* a conversion to EventLog
-    def __init__(self, dataframe: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None):
+    # permits to iterate over a Pandas dataframe and access its Traces object
+    # *without* a conversion to EventLog
+    def __init__(
+        self,
+        dataframe: pd.DataFrame,
+        parameters: Optional[Dict[Any, Any]] = None,
+    ):
         if parameters is None:
             parameters = {}
 
         self.parameters = parameters
-        self.case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
+        self.case_id_key = exec_utils.get_param_value(
+            Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+        )
         self.dataframe = dataframe
 
-        self.grouped_dataframe = self.dataframe.groupby(self.case_id_key).groups
+        self.grouped_dataframe = self.dataframe.groupby(
+            self.case_id_key
+        ).groups
         self.keys = list(self.grouped_dataframe)
 
         self.attributes = {}
@@ -92,17 +111,31 @@ class PandasLogWrapper(Sequence):
             sli = slice(start, stop, key.step)
             ret = []
             for x in self.keys[sli]:
-                ret.append(PandasTraceWrapper(self.dataframe.loc[self.grouped_dataframe[x]].copy().reset_index(),
-                                  parameters=self.parameters))
+                ret.append(
+                    PandasTraceWrapper(
+                        self.dataframe.loc[self.grouped_dataframe[x]]
+                        .copy()
+                        .reset_index(),
+                        parameters=self.parameters,
+                    )
+                )
             return ret
         key = key % len(self.grouped_dataframe)
-        return PandasTraceWrapper(self.dataframe.loc[self.grouped_dataframe[self.keys[key]]].copy().reset_index(),
-                                  parameters=self.parameters)
+        return PandasTraceWrapper(
+            self.dataframe.loc[self.grouped_dataframe[self.keys[key]]]
+            .copy()
+            .reset_index(),
+            parameters=self.parameters,
+        )
 
     def __iter__(self):
         for key in self.keys:
-            yield PandasTraceWrapper(self.dataframe.loc[self.grouped_dataframe[key]].copy().reset_index(),
-                                     parameters=self.parameters)
+            yield PandasTraceWrapper(
+                self.dataframe.loc[self.grouped_dataframe[key]]
+                .copy()
+                .reset_index(),
+                parameters=self.parameters,
+            )
 
     def __len__(self):
         return len(self.grouped_dataframe)
@@ -110,8 +143,14 @@ class PandasLogWrapper(Sequence):
     def _get_list(self):
         ret = []
         for key in self.keys:
-            ret.append(PandasTraceWrapper(self.dataframe.loc[self.grouped_dataframe[key]].copy().reset_index(),
-                                     parameters=self.parameters))
+            ret.append(
+                PandasTraceWrapper(
+                    self.dataframe.loc[self.grouped_dataframe[key]]
+                    .copy()
+                    .reset_index(),
+                    parameters=self.parameters,
+                )
+            )
         return ret
 
     _list = property(_get_list)

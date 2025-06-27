@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -45,16 +45,22 @@ class Parameters(Enum):
     PETRI_SEMANTICS = "petri_semantics"
     ADD_ONLY_IF_FM_IS_REACHED = "add_only_if_fm_is_reached"
     FM_LEQ_ACCEPTED = "fm_leq_accepted"
-    INITIAL_TIMESTAMP = "initial_timestamp"
-    INITIAL_CASE_ID = "initial_case_id"
 
 
-def apply_playout(net, initial_marking, no_traces=100, max_trace_length=100,
-                  initial_timestamp=10000000, initial_case_id=0,
-                  case_id_key=xes_constants.DEFAULT_TRACEID_KEY,
-                  activity_key=xes_constants.DEFAULT_NAME_KEY, timestamp_key=xes_constants.DEFAULT_TIMESTAMP_KEY,
-                  final_marking=None, return_visited_elements=False, semantics=petri_net.semantics.ClassicSemantics(),
-                  add_only_if_fm_is_reached=False, fm_leq_accepted=False):
+def apply_playout(
+    net,
+    initial_marking,
+    no_traces=100,
+    max_trace_length=100,
+    case_id_key=xes_constants.DEFAULT_TRACEID_KEY,
+    activity_key=xes_constants.DEFAULT_NAME_KEY,
+    timestamp_key=xes_constants.DEFAULT_TIMESTAMP_KEY,
+    final_marking=None,
+    return_visited_elements=False,
+    semantics=petri_net.semantics.ClassicSemantics(),
+    add_only_if_fm_is_reached=False,
+    fm_leq_accepted=False,
+):
     """
     Do the playout of a Petrinet generating a log
 
@@ -68,10 +74,6 @@ def apply_playout(net, initial_marking, no_traces=100, max_trace_length=100,
         Number of traces to generate
     max_trace_length
         Maximum number of events per trace (do break)
-    initial_timestamp
-        Increased timestamp from 1970 for the first event
-    initial_case_id
-        Case id of the first event
     case_id_key
         Trace attribute that is the case ID
     activity_key
@@ -88,7 +90,7 @@ def apply_playout(net, initial_marking, no_traces=100, max_trace_length=100,
         Accepts traces ending in a marking that is a superset of the final marking
     """
     # assigns to each event an increased timestamp from 1970
-    curr_timestamp = initial_timestamp
+    curr_timestamp = 10000000
     all_visited_elements = []
 
     i = 0
@@ -101,7 +103,8 @@ def apply_playout(net, initial_marking, no_traces=100, max_trace_length=100,
                 break
 
             if len(all_visited_elements) == 0:
-                # likely, the final marking is not reachable, therefore terminate here the playout
+                # likely, the final marking is not reachable, therefore
+                # terminate here the playout
                 break
 
         visited_elements = []
@@ -111,10 +114,16 @@ def apply_playout(net, initial_marking, no_traces=100, max_trace_length=100,
         while len(visible_transitions_visited) < max_trace_length:
             visited_elements.append(marking)
 
-            if not semantics.enabled_transitions(net, marking):  # supports nets with possible deadlocks
+            if not semantics.enabled_transitions(
+                net, marking
+            ):  # supports nets with possible deadlocks
                 break
             all_enabled_trans = semantics.enabled_transitions(net, marking)
-            if final_marking is not None and final_marking <= marking and (final_marking == marking or fm_leq_accepted):
+            if (
+                final_marking is not None
+                and final_marking <= marking
+                and (final_marking == marking or fm_leq_accepted)
+            ):
                 trans = choice(list(all_enabled_trans.union({None})))
             else:
                 trans = choice(list(all_enabled_trans))
@@ -143,12 +152,17 @@ def apply_playout(net, initial_marking, no_traces=100, max_trace_length=100,
 
     for index, visited_elements in enumerate(all_visited_elements):
         trace = log_instance.Trace()
-        trace.attributes[case_id_key] = str(index+initial_case_id)
+        trace.attributes[case_id_key] = str(index)
         for element in visited_elements:
-            if type(element) is PetriNet.Transition and element.label is not None:
+            if (
+                type(element) is PetriNet.Transition
+                and element.label is not None
+            ):
                 event = log_instance.Event()
                 event[activity_key] = element.label
-                event[timestamp_key] = strpfromiso.fix_naivety(datetime.datetime.fromtimestamp(curr_timestamp))
+                event[timestamp_key] = strpfromiso.fix_naivety(
+                    datetime.datetime.fromtimestamp(curr_timestamp)
+                )
                 trace.append(event)
                 # increases by 1 second
                 curr_timestamp += 1
@@ -157,8 +171,12 @@ def apply_playout(net, initial_marking, no_traces=100, max_trace_length=100,
     return log
 
 
-def apply(net: PetriNet, initial_marking: Marking, final_marking: Marking = None,
-          parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> EventLog:
+def apply(
+    net: PetriNet,
+    initial_marking: Marking,
+    final_marking: Marking = None,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> EventLog:
     """
     Do the playout of a Petrinet generating a log
 
@@ -174,32 +192,55 @@ def apply(net: PetriNet, initial_marking: Marking, final_marking: Marking = None
         Parameters of the algorithm:
             Parameters.NO_TRACES -> Number of traces of the log to generate
             Parameters.MAX_TRACE_LENGTH -> Maximum trace length
-            Parameters.INITIAL_TIMESTAMP -> The first event is set with INITIAL_TIMESTAMP increased from 1970
-            Parameters.INITIAL_CASE_ID -> Numeric case id for the first trace
             Parameters.PETRI_SEMANTICS -> Petri net semantics to be used (default: petri_nets.semantics.ClassicSemantics())
             Parameters.ADD_ONLY_IF_FM_IS_REACHED -> adds the case only if the final marking is reached
             Parameters.FM_LEQ_ACCEPTED -> Accepts traces ending in a marking that is a superset of the final marking
     """
     if parameters is None:
         parameters = {}
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, xes_constants.DEFAULT_TRACEID_KEY)
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    no_traces = exec_utils.get_param_value(Parameters.NO_TRACES, parameters, 1000)
-    max_trace_length = exec_utils.get_param_value(Parameters.MAX_TRACE_LENGTH, parameters, 1000)
-    initial_timestamp = exec_utils.get_param_value(Parameters.INITIAL_TIMESTAMP, parameters, 10000000)
-    initial_case_id = exec_utils.get_param_value(Parameters.INITIAL_CASE_ID, parameters, 0)
-    return_visited_elements = exec_utils.get_param_value(Parameters.RETURN_VISITED_ELEMENTS, parameters, False)
-    semantics = exec_utils.get_param_value(Parameters.PETRI_SEMANTICS, parameters, petri_net.semantics.ClassicSemantics())
-    add_only_if_fm_is_reached = exec_utils.get_param_value(Parameters.ADD_ONLY_IF_FM_IS_REACHED, parameters, False)
-    fm_leq_accepted = exec_utils.get_param_value(Parameters.FM_LEQ_ACCEPTED, parameters, False)
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, xes_constants.DEFAULT_TRACEID_KEY
+    )
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    no_traces = exec_utils.get_param_value(
+        Parameters.NO_TRACES, parameters, 1000
+    )
+    max_trace_length = exec_utils.get_param_value(
+        Parameters.MAX_TRACE_LENGTH, parameters, 1000
+    )
+    return_visited_elements = exec_utils.get_param_value(
+        Parameters.RETURN_VISITED_ELEMENTS, parameters, False
+    )
+    semantics = exec_utils.get_param_value(
+        Parameters.PETRI_SEMANTICS,
+        parameters,
+        petri_net.semantics.ClassicSemantics(),
+    )
+    add_only_if_fm_is_reached = exec_utils.get_param_value(
+        Parameters.ADD_ONLY_IF_FM_IS_REACHED, parameters, False
+    )
+    fm_leq_accepted = exec_utils.get_param_value(
+        Parameters.FM_LEQ_ACCEPTED, parameters, False
+    )
 
-    return apply_playout(net, initial_marking, max_trace_length=max_trace_length,
-                         initial_timestamp=initial_timestamp,
-                         initial_case_id=initial_case_id,
-                         no_traces=no_traces,
-                         case_id_key=case_id_key, activity_key=activity_key, timestamp_key=timestamp_key,
-                         final_marking=final_marking, return_visited_elements=return_visited_elements,
-                         semantics=semantics, add_only_if_fm_is_reached=add_only_if_fm_is_reached,
-                         fm_leq_accepted=fm_leq_accepted)
+    return apply_playout(
+        net,
+        initial_marking,
+        max_trace_length=max_trace_length,
+        no_traces=no_traces,
+        case_id_key=case_id_key,
+        activity_key=activity_key,
+        timestamp_key=timestamp_key,
+        final_marking=final_marking,
+        return_visited_elements=return_visited_elements,
+        semantics=semantics,
+        add_only_if_fm_is_reached=add_only_if_fm_is_reached,
+        fm_leq_accepted=fm_leq_accepted,
+    )

@@ -24,7 +24,12 @@ from pm4py.objects.ocel.obj import OCEL
 from typing import Optional, Dict, Any
 
 
-def apply(ocel: OCEL, child_obj_type: str, parent_obj_type: str, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
+def apply(
+    ocel: OCEL,
+    child_obj_type: str,
+    parent_obj_type: str,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> OCEL:
     """
     Inserts an object attribute pointing to the parent of a child object,
     by looking at the related objects of the events of the log.
@@ -49,9 +54,17 @@ def apply(ocel: OCEL, child_obj_type: str, parent_obj_type: str, parameters: Opt
     if parameters is None:
         parameters = {}
 
-    ev_lf = ocel.relations.groupby(ocel.event_id_column)[ocel.object_id_column].agg(list).to_dict()
-    obj_types = ocel.objects[[ocel.object_id_column, ocel.object_type_column]].to_dict("records")
-    obj_types = {x[ocel.object_id_column]: x[ocel.object_type_column] for x in obj_types}
+    ev_lf = (
+        ocel.relations.groupby(ocel.event_id_column)[ocel.object_id_column]
+        .agg(list)
+        .to_dict()
+    )
+    obj_types = ocel.objects[
+        [ocel.object_id_column, ocel.object_type_column]
+    ].to_dict("records")
+    obj_types = {
+        x[ocel.object_id_column]: x[ocel.object_type_column] for x in obj_types
+    }
     parents = {}
 
     for ev_id, lif in ev_lf.items():
@@ -62,9 +75,11 @@ def apply(ocel: OCEL, child_obj_type: str, parent_obj_type: str, parameters: Opt
                         parents[obj_id] = obj_id_2
 
     col = ocel.objects[ocel.object_id_column].map(parents)
-    if parent_obj_type+"ID" not in ocel.objects.columns:
-        ocel.objects[parent_obj_type+"ID"] = col
+    if parent_obj_type + "ID" not in ocel.objects.columns:
+        ocel.objects[parent_obj_type + "ID"] = col
     else:
-        ocel.objects[parent_obj_type+"ID"] = ocel.objects[parent_obj_type+"ID"].fillna(col)
+        ocel.objects[parent_obj_type + "ID"] = ocel.objects[
+            parent_obj_type + "ID"
+        ].fillna(col)
 
     return ocel

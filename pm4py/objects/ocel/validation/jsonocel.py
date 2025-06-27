@@ -24,7 +24,9 @@ import importlib.util
 
 def apply(input_path, validation_path, parameters=None):
     if not importlib.util.find_spec("jsonschema"):
-        raise Exception("please install jsonschema in order to validate a JSONOCEL file.")
+        raise Exception(
+            "please install jsonschema in order to validate a JSONOCEL file."
+        )
 
     import json
     import jsonschema

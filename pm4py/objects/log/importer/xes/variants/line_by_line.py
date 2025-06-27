@@ -51,7 +51,9 @@ def __fetch_param_value(param, params):
     return params[param] if param in params else param.value
 
 
-def read_attribute_key_value(tag, content, date_parser, values_dict, set_attributes_to_read):
+def read_attribute_key_value(
+    tag, content, date_parser, values_dict, set_attributes_to_read
+):
     """
     Reads an attribute from the line of the log
 
@@ -107,7 +109,9 @@ def read_attribute_key_value(tag, content, date_parser, values_dict, set_attribu
     return key, value
 
 
-def import_log_from_file_object(f, encoding, file_size=sys.maxsize, parameters=None):
+def import_log_from_file_object(
+    f, encoding, file_size=sys.maxsize, parameters=None
+):
     """
     Import a log object from a (XML) file object
 
@@ -138,15 +142,30 @@ def import_log_from_file_object(f, encoding, file_size=sys.maxsize, parameters=N
     values_dict = {}
     date_parser = dt_parser.get()
 
-    set_attributes_to_read = exec_utils.get_param_value(Parameters.SET_ATTRIBUTES_TO_READ, parameters, None)
-    max_no_traces_to_import = exec_utils.get_param_value(Parameters.MAX_TRACES, parameters, sys.maxsize)
-    timestamp_sort = exec_utils.get_param_value(Parameters.TIMESTAMP_SORT, parameters, False)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    reverse_sort = exec_utils.get_param_value(Parameters.REVERSE_SORT, parameters, False)
+    set_attributes_to_read = exec_utils.get_param_value(
+        Parameters.SET_ATTRIBUTES_TO_READ, parameters, None
+    )
+    max_no_traces_to_import = exec_utils.get_param_value(
+        Parameters.MAX_TRACES, parameters, sys.maxsize
+    )
+    timestamp_sort = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_SORT, parameters, False
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    reverse_sort = exec_utils.get_param_value(
+        Parameters.REVERSE_SORT, parameters, False
+    )
 
-    skip_bytes = exec_utils.get_param_value(Parameters.SKIP_BYTES, parameters, False)
-    max_bytes_to_read = exec_utils.get_param_value(Parameters.MAX_BYTES, parameters, sys.maxsize)
+    skip_bytes = exec_utils.get_param_value(
+        Parameters.SKIP_BYTES, parameters, False
+    )
+    max_bytes_to_read = exec_utils.get_param_value(
+        Parameters.MAX_BYTES, parameters, sys.maxsize
+    )
 
     if file_size > max_bytes_to_read:
         skip_bytes = file_size - max_bytes_to_read
@@ -159,14 +178,19 @@ def import_log_from_file_object(f, encoding, file_size=sys.maxsize, parameters=N
     f.seek(skip_bytes)
 
     for line in f:
-        content = line.decode(encoding).split("\"")
+        content = line.decode(encoding).split('"')
         if len(content) > 0:
             tag = content[0].split("<")[-1]
             if trace is not None:
                 if event is not None:
                     if len(content) == 5:
-                        key, value = read_attribute_key_value(tag, content, date_parser, values_dict,
-                                                              set_attributes_to_read)
+                        key, value = read_attribute_key_value(
+                            tag,
+                            content,
+                            date_parser,
+                            values_dict,
+                            set_attributes_to_read,
+                        )
                         if value is not None:
                             event[key] = value
                     elif tag.startswith("/event"):
@@ -175,8 +199,13 @@ def import_log_from_file_object(f, encoding, file_size=sys.maxsize, parameters=N
                 elif tag.startswith("event"):
                     event = Event()
                 elif len(content) == 5:
-                    key, value = read_attribute_key_value(tag, content, date_parser, values_dict,
-                                                          set_attributes_to_read)
+                    key, value = read_attribute_key_value(
+                        tag,
+                        content,
+                        date_parser,
+                        values_dict,
+                        set_attributes_to_read,
+                    )
                     if value is not None:
                         trace.attributes[key] = value
                 elif tag.startswith("/trace"):
@@ -189,20 +218,34 @@ def import_log_from_file_object(f, encoding, file_size=sys.maxsize, parameters=N
                 trace = Trace()
 
     if timestamp_sort:
-        log = sorting.sort_timestamp(log, timestamp_key=timestamp_key, reverse_sort=reverse_sort)
+        log = sorting.sort_timestamp(
+            log, timestamp_key=timestamp_key, reverse_sort=reverse_sort
+        )
 
     # sets the activity key as default classifier in the log's properties
-    log.properties[constants.PARAMETER_CONSTANT_ACTIVITY_KEY] = xes_constants.DEFAULT_NAME_KEY
-    log.properties[constants.PARAMETER_CONSTANT_ATTRIBUTE_KEY] = xes_constants.DEFAULT_NAME_KEY
+    log.properties[constants.PARAMETER_CONSTANT_ACTIVITY_KEY] = (
+        xes_constants.DEFAULT_NAME_KEY
+    )
+    log.properties[constants.PARAMETER_CONSTANT_ATTRIBUTE_KEY] = (
+        xes_constants.DEFAULT_NAME_KEY
+    )
     # sets the default timestamp key
-    log.properties[constants.PARAMETER_CONSTANT_TIMESTAMP_KEY] = xes_constants.DEFAULT_TIMESTAMP_KEY
+    log.properties[constants.PARAMETER_CONSTANT_TIMESTAMP_KEY] = (
+        xes_constants.DEFAULT_TIMESTAMP_KEY
+    )
     # sets the default resource key
-    log.properties[constants.PARAMETER_CONSTANT_RESOURCE_KEY] = xes_constants.DEFAULT_RESOURCE_KEY
+    log.properties[constants.PARAMETER_CONSTANT_RESOURCE_KEY] = (
+        xes_constants.DEFAULT_RESOURCE_KEY
+    )
     # sets the default transition key
-    log.properties[constants.PARAMETER_CONSTANT_TRANSITION_KEY] = xes_constants.DEFAULT_TRANSITION_KEY
+    log.properties[constants.PARAMETER_CONSTANT_TRANSITION_KEY] = (
+        xes_constants.DEFAULT_TRANSITION_KEY
+    )
     # sets the default group key
-    log.properties[constants.PARAMETER_CONSTANT_GROUP_KEY] = xes_constants.DEFAULT_GROUP_KEY
-    
+    log.properties[constants.PARAMETER_CONSTANT_GROUP_KEY] = (
+        xes_constants.DEFAULT_GROUP_KEY
+    )
+
     return log
 
 
@@ -235,7 +278,9 @@ def import_log(filename, parameters=None):
     if parameters is None:
         parameters = {}
 
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING)
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING
+    )
 
     is_compressed = filename.endswith(".gz")
     file_size = os.stat(filename).st_size
@@ -245,7 +290,9 @@ def import_log(filename, parameters=None):
     else:
         f = open(filename, "rb")
 
-    log = import_log_from_file_object(f, encoding, file_size=file_size, parameters=parameters)
+    log = import_log_from_file_object(
+        f, encoding, file_size=file_size, parameters=parameters
+    )
 
     f.close()
 
@@ -280,9 +327,13 @@ def import_from_string(log_string, parameters=None):
     if parameters is None:
         parameters = {}
 
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING)
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING
+    )
 
-    decompress_serialization = exec_utils.get_param_value(Parameters.DECOMPRESS_SERIALIZATION, parameters, False)
+    decompress_serialization = exec_utils.get_param_value(
+        Parameters.DECOMPRESS_SERIALIZATION, parameters, False
+    )
 
     if type(log_string) is str:
         log_string = log_string.encode(constants.DEFAULT_ENCODING)

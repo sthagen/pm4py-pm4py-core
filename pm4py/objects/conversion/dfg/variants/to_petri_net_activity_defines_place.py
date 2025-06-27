@@ -27,8 +27,8 @@ from pm4py.util import exec_utils
 
 
 class Parameters(Enum):
-    START_ACTIVITIES = 'start_activities'
-    END_ACTIVITIES = 'end_activities'
+    START_ACTIVITIES = "start_activities"
+    END_ACTIVITIES = "end_activities"
 
 
 PARAM_KEY_START_ACTIVITIES = Parameters.START_ACTIVITIES
@@ -50,11 +50,16 @@ def apply(dfg, parameters=None):
         parameters = {}
 
     dfg = dfg
-    start_activities = exec_utils.get_param_value(Parameters.START_ACTIVITIES, parameters,
-                                                  dfg_utils.infer_start_activities(
-                                                      dfg))
-    end_activities = exec_utils.get_param_value(Parameters.END_ACTIVITIES, parameters,
-                                                dfg_utils.infer_end_activities(dfg))
+    start_activities = exec_utils.get_param_value(
+        Parameters.START_ACTIVITIES,
+        parameters,
+        dfg_utils.infer_start_activities(dfg),
+    )
+    end_activities = exec_utils.get_param_value(
+        Parameters.END_ACTIVITIES,
+        parameters,
+        dfg_utils.infer_end_activities(dfg),
+    )
     activities = dfg_utils.get_activities_from_dfg(dfg)
 
     net = PetriNet("")

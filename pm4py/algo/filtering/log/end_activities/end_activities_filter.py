@@ -36,7 +36,11 @@ class Parameters(Enum):
     POSITIVE = "positive"
 
 
-def apply(log: EventLog, admitted_end_activities: List[str], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> EventLog:
+def apply(
+    log: EventLog,
+    admitted_end_activities: List[str],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> EventLog:
     """
     Filter the log on the specified end activities
 
@@ -57,24 +61,47 @@ def apply(log: EventLog, admitted_end_activities: List[str], parameters: Optiona
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    attribute_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, DEFAULT_NAME_KEY)
-    positive = exec_utils.get_param_value(Parameters.POSITIVE, parameters, True)
+    attribute_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, DEFAULT_NAME_KEY
+    )
+    positive = exec_utils.get_param_value(
+        Parameters.POSITIVE, parameters, True
+    )
 
     if positive:
-        filtered_log = [trace for trace in log if trace and trace[-1][attribute_key] in admitted_end_activities]
+        filtered_log = [
+            trace
+            for trace in log
+            if trace and trace[-1][attribute_key] in admitted_end_activities
+        ]
     else:
-        filtered_log = [trace for trace in log if trace and trace[-1][attribute_key] not in admitted_end_activities]
+        filtered_log = [
+            trace
+            for trace in log
+            if trace
+            and trace[-1][attribute_key] not in admitted_end_activities
+        ]
 
-    return EventLog(filtered_log, attributes=log.attributes, extensions=log.extensions, classifiers=log.classifiers,
-                    omni_present=log.omni_present, properties=log.properties)
+    return EventLog(
+        filtered_log,
+        attributes=log.attributes,
+        extensions=log.extensions,
+        classifiers=log.classifiers,
+        omni_present=log.omni_present,
+        properties=log.properties,
+    )
 
 
-def filter_log_by_end_activities(end_activities, variants, vc, threshold, activity_key="concept:name"):
+def filter_log_by_end_activities(
+    end_activities, variants, vc, threshold, activity_key="concept:name"
+):
     """
     Keep only variants of the log with an end activity which number of occurrences is above the threshold
-    
+
     Parameters
     ----------
     end_activities
@@ -87,7 +114,7 @@ def filter_log_by_end_activities(end_activities, variants, vc, threshold, activi
         Cutting threshold (remove variants having end attributes which number of occurrences is below the threshold
     activity_key
         (If specified) Specify the activity key in the log (default concept:name)
-    
+
     Returns
     ----------
     filtered_log

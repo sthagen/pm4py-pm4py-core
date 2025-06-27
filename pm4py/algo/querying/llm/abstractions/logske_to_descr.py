@@ -50,18 +50,24 @@ def get_model_implementation():
     return implementation
 
 
-def apply(lsk: Dict[str, Any], parameters: Optional[Dict[Any, Any]] = None) -> str:
+def apply(
+    lsk: Dict[str, Any], parameters: Optional[Dict[Any, Any]] = None
+) -> str:
     if parameters is None:
         parameters = {}
 
-    include_header = exec_utils.get_param_value(Parameters.INCLUDE_HEADER, parameters, True)
+    include_header = exec_utils.get_param_value(
+        Parameters.INCLUDE_HEADER, parameters, True
+    )
 
     ret = ["\n"]
 
     if include_header:
         ret.append(get_model_description())
         ret.append("\n\n")
-        ret.append("I have a Log Skeleton process model containing the following declarative constraints:\n\n")
+        ret.append(
+            "I have a Log Skeleton process model containing the following declarative constraints:\n\n"
+        )
 
     # equivalence
     ret.append("Equivalence: ")
@@ -90,14 +96,19 @@ def apply(lsk: Dict[str, Any], parameters: Optional[Dict[Any, Any]] = None) -> s
     # activity occurrences
     ret.append("Activity Occurrences: ")
     for constr, occs in lsk["activ_freq"].items():
-        ret.append(" " + str(constr) + ": " + ", ".join(sorted([str(x) for x in occs])) + ";")
+        ret.append(
+            " "
+            + str(constr)
+            + ": "
+            + ", ".join(sorted([str(x) for x in occs]))
+            + ";"
+        )
     ret.append("\n\n")
 
     # directly-follows
     ret.append("Directly-Follows Constraints: ")
     for constr in lsk["directly_follows"]:
-        ret.append(" "+str(constr))
+        ret.append(" " + str(constr))
     ret.append("\n\n")
 
     return "".join(ret)
-

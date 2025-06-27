@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,7 +19,10 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.algo.analysis.woflan.place_invariants.uniform_invariant import apply as compute_uniform_invariants
+from pm4py.algo.analysis.woflan.place_invariants.uniform_invariant import (
+    apply as compute_uniform_invariants,
+)
+
 
 def apply(net):
     """
@@ -27,7 +30,7 @@ def apply(net):
     :param net: Petri Net for which S-components should be computed
     :return: A list of S-components
     """
-    uniform_invariants=compute_uniform_invariants(net)
+    uniform_invariants = compute_uniform_invariants(net)
     return compute_s_components(net, uniform_invariants)
 
 
@@ -69,7 +72,9 @@ def compute_s_components(net, p_invariants):
             for el in s_component:
                 if el in net.transitions:
                     places_before = [arc.source for arc in el.in_arcs]
-                    comparison_before = compare_lists(s_component, places_before)
+                    comparison_before = compare_lists(
+                        s_component, places_before
+                    )
                     places_after = [arc.target for arc in el.out_arcs]
                     comparison_after = compare_lists(s_component, places_after)
                     if comparison_before != 1:
@@ -82,6 +87,7 @@ def compute_s_components(net, p_invariants):
                 s_components.append(set(s_component))
     return s_components
 
+
 def compute_uncovered_places_in_component(s_components, net):
     """
     We check for uncovered places
@@ -89,7 +95,7 @@ def compute_uncovered_places_in_component(s_components, net):
     :param net: Petri Net representation of PM4Py
     :return: List of uncovered places
     """
-    place_list=sorted(list(net.places), key=lambda x: x.name)
+    place_list = sorted(list(net.places), key=lambda x: x.name)
     for component in s_components:
         for el in component:
             if el in place_list:

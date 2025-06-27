@@ -24,7 +24,13 @@ import time
 from lxml import etree, objectify
 
 from pm4py.objects.petri_net.utils import final_marking
-from pm4py.objects.petri_net.obj import PetriNet, Marking, ResetNet, InhibitorNet, ResetInhibitorNet
+from pm4py.objects.petri_net.obj import (
+    PetriNet,
+    Marking,
+    ResetNet,
+    InhibitorNet,
+    ResetInhibitorNet,
+)
 from pm4py.objects.petri_net.utils.petri_utils import add_arc_from_to
 from pm4py.objects.petri_net import properties as petri_properties
 from pm4py.util import constants, exec_utils
@@ -61,7 +67,9 @@ def import_net(input_file_path, parameters=None):
     if parameters is None:
         parameters = {}
 
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, None)
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, None
+    )
 
     parser = etree.XMLParser(remove_comments=True, encoding=encoding)
 
@@ -97,6 +105,10 @@ def import_net_from_string(petri_string, parameters=None):
     if parameters is None:
         parameters = {}
 
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING
+    )
+
     if type(petri_string) is str:
         petri_string = petri_string.encode(constants.DEFAULT_ENCODING)
 
@@ -121,10 +133,14 @@ def import_net_from_xml_object(root, parameters=None):
     if parameters is None:
         parameters = {}
 
-    auto_guess_final_marking = exec_utils.get_param_value(Parameters.AUTO_GUESS_FINAL_MARKING, parameters, True)
-    return_stochastic_information = exec_utils.get_param_value(Parameters.RETURN_STOCHASTIC_MAP, parameters, False)
+    auto_guess_final_marking = exec_utils.get_param_value(
+        Parameters.AUTO_GUESS_FINAL_MARKING, parameters, True
+    )
+    return_stochastic_information = exec_utils.get_param_value(
+        Parameters.RETURN_STOCHASTIC_MAP, parameters, False
+    )
 
-    net = PetriNet('imported_' + str(time.time()))
+    net = PetriNet("imported_" + str(time.time()))
     marking = Marking()
     fmarking = None
 
@@ -164,28 +180,36 @@ def import_net_from_xml_object(root, parameters=None):
                 place_name = place_id
                 number = 0
                 for child2 in child:
-                    if child2.tag.endswith('name'):
+                    if child2.tag.endswith("name"):
                         for child3 in child2:
                             if child3.text:
                                 place_name = child3.text
-                    if child2.tag.endswith('initialMarking'):
+                    if child2.tag.endswith("initialMarking"):
                         for child3 in child2:
                             if child3.tag.endswith("text"):
                                 number = int(child3.text)
-                    if child2.tag.endswith('graphics'):
+                    if child2.tag.endswith("graphics"):
                         for child3 in child2:
-                            if child3.tag.endswith('position'):
+                            if child3.tag.endswith("position"):
                                 position_X = float(child3.get("x"))
                                 position_Y = float(child3.get("y"))
                             elif child3.tag.endswith("dimension"):
                                 dimension_X = float(child3.get("x"))
                                 dimension_Y = float(child3.get("y"))
                 places_dict[place_id] = PetriNet.Place(place_id)
-                places_dict[place_id].properties[constants.PLACE_NAME_TAG] = place_name
+                places_dict[place_id].properties[
+                    constants.PLACE_NAME_TAG
+                ] = place_name
                 net.places.add(places_dict[place_id])
-                if position_X is not None and position_Y is not None and dimension_X is not None and dimension_Y is not None:
-                    places_dict[place_id].properties[constants.LAYOUT_INFORMATION_PETRI] = (
-                        (position_X, position_Y), (dimension_X, dimension_Y))
+                if (
+                    position_X is not None
+                    and position_Y is not None
+                    and dimension_X is not None
+                    and dimension_Y is not None
+                ):
+                    places_dict[place_id].properties[
+                        constants.LAYOUT_INFORMATION_PETRI
+                    ] = ((position_X, position_Y), (dimension_X, dimension_Y))
                 if number > 0:
                     marking[places_dict[place_id]] = number
                 del place_name
@@ -203,7 +227,9 @@ def import_net_from_xml_object(root, parameters=None):
                 trans_properties = {}
                 trans_guard = child.get("guard")
                 if trans_guard is not None:
-                    trans_properties[petri_properties.TRANS_GUARD] = trans_guard
+                    trans_properties[petri_properties.TRANS_GUARD] = (
+                        trans_guard
+                    )
 
                 random_variable = None
 
@@ -249,22 +275,39 @@ def import_net_from_xml_object(root, parameters=None):
                                     if value.lower() == "true":
                                         trans_visible = False
 
-                            from pm4py.objects.random_variables.random_variable import RandomVariable
+                            from pm4py.objects.random_variables.random_variable import (
+                                RandomVariable, )
 
                             random_variable = RandomVariable()
-                            random_variable.read_from_string(distribution_type, distribution_parameters)
+                            random_variable.read_from_string(
+                                distribution_type, distribution_parameters
+                            )
                             random_variable.set_priority(priority)
                             random_variable.set_weight(weight)
                     elif child2.tag.endswith(petri_properties.WRITE_VARIABLE):
                         # property for data Petri nets
-                        if petri_properties.WRITE_VARIABLE not in trans_properties:
-                            trans_properties[petri_properties.WRITE_VARIABLE] = []
-                        trans_properties[petri_properties.WRITE_VARIABLE].append(child2.text)
+                        if (
+                            petri_properties.WRITE_VARIABLE
+                            not in trans_properties
+                        ):
+                            trans_properties[
+                                petri_properties.WRITE_VARIABLE
+                            ] = []
+                        trans_properties[
+                            petri_properties.WRITE_VARIABLE
+                        ].append(child2.text)
                     elif child2.tag.endswith(petri_properties.READ_VARIABLE):
                         # property for data Petri nets
-                        if petri_properties.READ_VARIABLE not in trans_properties:
-                            trans_properties[petri_properties.READ_VARIABLE] = []
-                        trans_properties[petri_properties.READ_VARIABLE].append(child2.text)
+                        if (
+                            petri_properties.READ_VARIABLE
+                            not in trans_properties
+                        ):
+                            trans_properties[
+                                petri_properties.READ_VARIABLE
+                            ] = []
+                        trans_properties[
+                            petri_properties.READ_VARIABLE
+                        ].append(child2.text)
 
                 # 15/02/2021: the name associated in the PNML to invisible transitions was lost.
                 # at least save that as property.
@@ -273,19 +316,33 @@ def import_net_from_xml_object(root, parameters=None):
                 else:
                     trans_label = None
 
-                trans_dict[trans_id] = PetriNet.Transition(trans_id, trans_label)
-                trans_dict[trans_id].properties[constants.TRANS_NAME_TAG] = trans_name
+                trans_dict[trans_id] = PetriNet.Transition(
+                    trans_id, trans_label
+                )
+                trans_dict[trans_id].properties[
+                    constants.TRANS_NAME_TAG
+                ] = trans_name
                 for prop in trans_properties:
-                    trans_dict[trans_id].properties[prop] = trans_properties[prop]
+                    trans_dict[trans_id].properties[prop] = trans_properties[
+                        prop
+                    ]
                 net.transitions.add(trans_dict[trans_id])
 
                 if random_variable is not None:
-                    trans_dict[trans_id].properties[constants.STOCHASTIC_DISTRIBUTION] = random_variable
+                    trans_dict[trans_id].properties[
+                        constants.STOCHASTIC_DISTRIBUTION
+                    ] = random_variable
                     stochastic_map[trans_dict[trans_id]] = random_variable
 
-                if position_X is not None and position_Y is not None and dimension_X is not None and dimension_Y is not None:
-                    trans_dict[trans_id].properties[constants.LAYOUT_INFORMATION_PETRI] = (
-                        (position_X, position_Y), (dimension_X, dimension_Y))
+                if (
+                    position_X is not None
+                    and position_Y is not None
+                    and dimension_X is not None
+                    and dimension_Y is not None
+                ):
+                    trans_dict[trans_id].properties[
+                        constants.LAYOUT_INFORMATION_PETRI
+                    ] = ((position_X, position_Y), (dimension_X, dimension_Y))
 
     if page is not None:
         for child in page:
@@ -307,25 +364,63 @@ def import_net_from_xml_object(root, parameters=None):
                                 arc_type = text_element.text
 
                 if arc_source in places_dict and arc_target in trans_dict:
-                    if arc_type == petri_properties.INHIBITOR_ARC and not isinstance(net, InhibitorNet):
+                    if (
+                        arc_type == petri_properties.INHIBITOR_ARC
+                        and not isinstance(net, InhibitorNet)
+                    ):
                         if isinstance(net, ResetNet):
-                            net = ResetInhibitorNet(name=net.name, places=net.places, transitions=net.transitions, arcs=net.arcs, properties=net.properties)
+                            net = ResetInhibitorNet(
+                                name=net.name,
+                                places=net.places,
+                                transitions=net.transitions,
+                                arcs=net.arcs,
+                                properties=net.properties,
+                            )
                         else:
-                            net = InhibitorNet(name=net.name, places=net.places, transitions=net.transitions, arcs=net.arcs, properties=net.properties)
-                    if arc_type == petri_properties.RESET_ARC and not isinstance(net, ResetNet):
+                            net = InhibitorNet(
+                                name=net.name,
+                                places=net.places,
+                                transitions=net.transitions,
+                                arcs=net.arcs,
+                                properties=net.properties,
+                            )
+                    if (
+                        arc_type == petri_properties.RESET_ARC
+                        and not isinstance(net, ResetNet)
+                    ):
                         if isinstance(net, InhibitorNet):
-                            net = ResetInhibitorNet(name=net.name, places=net.places,
-                                                    transitions=net.transitions, arcs=net.arcs,
-                                                    properties=net.properties)
+                            net = ResetInhibitorNet(
+                                name=net.name,
+                                places=net.places,
+                                transitions=net.transitions,
+                                arcs=net.arcs,
+                                properties=net.properties,
+                            )
                         else:
-                            net = ResetNet(name=net.name, places=net.places,
-                                           transitions=net.transitions, arcs=net.arcs,
-                                           properties=net.properties)
-                    a = add_arc_from_to(places_dict[arc_source], trans_dict[arc_target], net, weight=arc_weight, type=arc_type)
+                            net = ResetNet(
+                                name=net.name,
+                                places=net.places,
+                                transitions=net.transitions,
+                                arcs=net.arcs,
+                                properties=net.properties,
+                            )
+                    a = add_arc_from_to(
+                        places_dict[arc_source],
+                        trans_dict[arc_target],
+                        net,
+                        weight=arc_weight,
+                        type=arc_type,
+                    )
                     for prop in arc_properties:
                         a.properties[prop] = arc_properties[prop]
                 elif arc_target in places_dict and arc_source in trans_dict:
-                    a = add_arc_from_to(trans_dict[arc_source], places_dict[arc_target], net, weight=arc_weight, type=arc_type)
+                    a = add_arc_from_to(
+                        trans_dict[arc_source],
+                        places_dict[arc_target],
+                        net,
+                        weight=arc_weight,
+                        type=arc_type,
+                    )
                     for prop in arc_properties:
                         a.properties[prop] = arc_properties[prop]
 
@@ -348,7 +443,9 @@ def import_net_from_xml_object(root, parameters=None):
             for child2 in child:
                 if child2.tag.endswith("name"):
                     variable_name = child2.text
-            net.properties[petri_properties.VARIABLES].append({"type": variable_type, "name": variable_name})
+            net.properties[petri_properties.VARIABLES].append(
+                {"type": variable_type, "name": variable_name}
+            )
 
     if fmarking is None:
         if auto_guess_final_marking:
@@ -356,7 +453,9 @@ def import_net_from_xml_object(root, parameters=None):
             fmarking = final_marking.discover_final_marking(net)
         else:
             if constants.SHOW_INTERNAL_WARNINGS:
-                warnings.warn("the Petri net has been imported without a specified final marking. Please create it using the method pm4py.generate_marking")
+                warnings.warn(
+                    "the Petri net has been imported without a specified final marking. Please create it using the method pm4py.generate_marking"
+                )
 
     if return_stochastic_information:
         return net, marking, fmarking, stochastic_map

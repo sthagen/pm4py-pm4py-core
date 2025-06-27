@@ -56,7 +56,11 @@ def exact_match_minimum_average(l1, l2):
                 G.add_edge(i, len(l1) + j, weight=(l2[j] - l1[i]))
             else:
                 G.add_edge(i, len(l1) + j, weight=sys.maxsize)
-    matching0 = {x: y for x, y in nx_utils.minimum_weight_full_matching(G).items() if x < len(l1)}
+    matching0 = {
+        x: y
+        for x, y in nx_utils.minimum_weight_full_matching(G).items()
+        if x < len(l1)
+    }
     matching = []
     for k1, k2 in matching0.items():
         v1 = l1[k1]

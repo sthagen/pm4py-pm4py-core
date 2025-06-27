@@ -32,7 +32,12 @@ class Variants(Enum):
     OCEL20 = ocel20
 
 
-def apply(ocel: OCEL, target_path: str, variant=Variants.CLASSIC, parameters: Optional[Dict[Any, Any]] = None):
+def apply(
+    ocel: OCEL,
+    target_path: str,
+    variant=Variants.CLASSIC,
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     """
     Exports an object-centric event log to a XML-OCEL file.
 

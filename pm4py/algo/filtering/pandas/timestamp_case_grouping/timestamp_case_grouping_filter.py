@@ -34,7 +34,10 @@ class Parameters(Enum):
     FILTER_TYPE = "filter_type"
 
 
-def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[Dict[Any, Any]] = None) -> pd.DataFrame:
+def apply(
+    log_obj: Union[EventLog, EventStream, pd.DataFrame],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> pd.DataFrame:
     """
     Groups the events of the same case happening at the same timestamp,
     providing option to keep the first event of each group, keep the last event of each group, create an event
@@ -62,12 +65,26 @@ def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame], parameters: Optio
     if parameters is None:
         parameters = {}
 
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    filter_type = exec_utils.get_param_value(Parameters.FILTER_TYPE, parameters, "first")
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    filter_type = exec_utils.get_param_value(
+        Parameters.FILTER_TYPE, parameters, "first"
+    )
 
-    log_obj = log_converter.apply(log_obj, variant=log_converter.Variants.TO_DATA_FRAME, parameters=parameters)
+    log_obj = log_converter.apply(
+        log_obj,
+        variant=log_converter.Variants.TO_DATA_FRAME,
+        parameters=parameters,
+    )
     gdf = log_obj.groupby([case_id_key, timestamp_key], sort=False)
 
     ret = None
@@ -77,7 +94,11 @@ def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame], parameters: Optio
         ret = gdf.last()
     elif filter_type == "concat":
         ret = gdf.first()
-        ret[activity_key] = gdf[activity_key].agg(list).apply(lambda x: " & ".join(sorted(list(x))))
+        ret[activity_key] = (
+            gdf[activity_key]
+            .agg(list)
+            .apply(lambda x: " & ".join(sorted(list(x))))
+        )
 
     ret = ret.reset_index()
     return ret

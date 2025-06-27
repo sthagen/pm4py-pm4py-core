@@ -55,18 +55,33 @@ class OcelFlattsDistributor(object):
         if parameters is None:
             parameters = {}
 
-        self.activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters,
-                                                       xes_constants.DEFAULT_NAME_KEY)
-        self.case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-        self.timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                                        xes_constants.DEFAULT_TIMESTAMP_KEY)
-        self.ocel_activity = exec_utils.get_param_value(Parameters.OCEL_ACTIVITY_KEY, parameters,
-                                                        ocel_constants.DEFAULT_EVENT_ACTIVITY)
-        self.ocel_timestamp = exec_utils.get_param_value(Parameters.OCEL_TIMESTAMP_KEY, parameters,
-                                                         ocel_constants.DEFAULT_EVENT_TIMESTAMP)
+        self.activity_key = exec_utils.get_param_value(
+            Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+        )
+        self.case_id_key = exec_utils.get_param_value(
+            Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+        )
+        self.timestamp_key = exec_utils.get_param_value(
+            Parameters.TIMESTAMP_KEY,
+            parameters,
+            xes_constants.DEFAULT_TIMESTAMP_KEY,
+        )
+        self.ocel_activity = exec_utils.get_param_value(
+            Parameters.OCEL_ACTIVITY_KEY,
+            parameters,
+            ocel_constants.DEFAULT_EVENT_ACTIVITY,
+        )
+        self.ocel_timestamp = exec_utils.get_param_value(
+            Parameters.OCEL_TIMESTAMP_KEY,
+            parameters,
+            ocel_constants.DEFAULT_EVENT_TIMESTAMP,
+        )
 
-        self.ot_prefix = exec_utils.get_param_value(Parameters.OCEL_TYPE_PREFIX, parameters,
-                                                    ocel_constants.DEFAULT_OBJECT_TYPE_PREFIX_EXTENDED)
+        self.ot_prefix = exec_utils.get_param_value(
+            Parameters.OCEL_TYPE_PREFIX,
+            parameters,
+            ocel_constants.DEFAULT_OBJECT_TYPE_PREFIX_EXTENDED,
+        )
         self.flattened_stream_listeners = {}
 
     def register(self, object_type: str, live_event_stream: LiveEventStream):
@@ -94,13 +109,19 @@ class OcelFlattsDistributor(object):
         event
             OCEL event (obtained for example using the ocel_iterator)
         """
-        base_event = {x: y for x, y in event.items() if not x.startswith(self.ot_prefix)}
+        base_event = {
+            x: y for x, y in event.items() if not x.startswith(self.ot_prefix)
+        }
         base_event[self.activity_key] = base_event[self.ocel_activity]
         base_event[self.timestamp_key] = base_event[self.ocel_timestamp]
         del base_event[self.ocel_activity]
         del base_event[self.ocel_timestamp]
 
-        ev_objects = {x.split(self.ot_prefix)[1]: y for x, y in event.items() if x.startswith(self.ot_prefix)}
+        ev_objects = {
+            x.split(self.ot_prefix)[1]: y
+            for x, y in event.items()
+            if x.startswith(self.ot_prefix)
+        }
 
         for ot in ev_objects:
             if ot in self.flattened_stream_listeners:

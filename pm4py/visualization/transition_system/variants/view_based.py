@@ -37,7 +37,10 @@ class Parameters(Enum):
     GRAPH_TITLE = "graph_title"
 
 
-def apply(tsys: TransitionSystem, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> graphviz.Digraph:
+def apply(
+    tsys: TransitionSystem,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> graphviz.Digraph:
     """
     Get visualization of a Transition System
 

@@ -35,7 +35,10 @@ class Parameters(Enum):
     EVENT_ATTRIBUTES_AS_NODES = "event_attributes_as_nodes"
 
 
-def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[Dict[Any, Any]] = None):
+def apply(
+    log_obj: Union[EventLog, EventStream, pd.DataFrame],
+    parameters: Optional[Dict[Any, Any]] = None,
+):
     """
     Converts an event log object to a NetworkX DiGraph object.
     The nodes of the graph are the events, the cases (and possibly the attributes of the log).
@@ -63,10 +66,18 @@ def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame], parameters: Optio
     if parameters is None:
         parameters = {}
 
-    include_df = exec_utils.get_param_value(Parameters.INCLUDE_DF, parameters, True)
-    case_id_attribute = exec_utils.get_param_value(Parameters.CASE_ID_ATTRIBUTE, parameters, "concept:name")
-    other_case_attributes_as_nodes = exec_utils.get_param_value(Parameters.OTHER_CASE_ATTRIBUTES_AS_NODES, parameters, None)
-    event_attributes_as_nodes = exec_utils.get_param_value(Parameters.EVENT_ATTRIBUTES_AS_NODES, parameters, None)
+    include_df = exec_utils.get_param_value(
+        Parameters.INCLUDE_DF, parameters, True
+    )
+    case_id_attribute = exec_utils.get_param_value(
+        Parameters.CASE_ID_ATTRIBUTE, parameters, "concept:name"
+    )
+    other_case_attributes_as_nodes = exec_utils.get_param_value(
+        Parameters.OTHER_CASE_ATTRIBUTES_AS_NODES, parameters, None
+    )
+    event_attributes_as_nodes = exec_utils.get_param_value(
+        Parameters.EVENT_ATTRIBUTES_AS_NODES, parameters, None
+    )
 
     parameters["stream_postprocessing"] = True
     log_obj = to_event_log.apply(log_obj, parameters=parameters)
@@ -79,7 +90,7 @@ def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame], parameters: Optio
     nx_digraph = nx_utils.DiGraph()
 
     for case in log_obj:
-        case_id = "CASE="+str(case.attributes[case_id_attribute])
+        case_id = "CASE=" + str(case.attributes[case_id_attribute])
         dct_case = {"type": "CASE"}
         for att in case.attributes:
             dct_case[att] = case.attributes[att]
@@ -90,7 +101,12 @@ def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame], parameters: Optio
             for att in event:
                 dct_ev[att] = event[att]
 
-            ev_id = "EVENT="+str(case.attributes[case_id_attribute])+"_"+str(index)
+            ev_id = (
+                "EVENT="
+                + str(case.attributes[case_id_attribute])
+                + "_"
+                + str(index)
+            )
             nx_digraph.add_node(ev_id, attr=dct_ev)
             nx_digraph.add_edge(ev_id, case_id, attr={"type": "BELONGS_TO"})
 
@@ -98,13 +114,29 @@ def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame], parameters: Optio
                 if ev_att in event:
                     node_id = event[ev_att]
                     if node_id not in nx_digraph.nodes:
-                        nx_digraph.add_node(node_id, attr={"type": "ATTRIBUTE_NODE"})
-                    nx_digraph.add_edge(ev_id, node_id, attr={"type": "ATTRIBUTE_EDGE", "name": ev_att})
+                        nx_digraph.add_node(
+                            node_id, attr={"type": "ATTRIBUTE_NODE"}
+                        )
+                    nx_digraph.add_edge(
+                        ev_id,
+                        node_id,
+                        attr={"type": "ATTRIBUTE_EDGE", "name": ev_att},
+                    )
 
         if include_df:
-            for index in range(len(case)-1):
-                curr_ev = "EVENT="+str(case.attributes[case_id_attribute])+"_"+str(index)
-                next_ev = "EVENT="+str(case.attributes[case_id_attribute])+"_"+str(index+1)
+            for index in range(len(case) - 1):
+                curr_ev = (
+                    "EVENT="
+                    + str(case.attributes[case_id_attribute])
+                    + "_"
+                    + str(index)
+                )
+                next_ev = (
+                    "EVENT="
+                    + str(case.attributes[case_id_attribute])
+                    + "_"
+                    + str(index + 1)
+                )
 
                 nx_digraph.add_edge(curr_ev, next_ev, attr={"type": "DF"})
 
@@ -112,7 +144,13 @@ def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame], parameters: Optio
             if case_att in case.attributes:
                 node_id = case.attributes[case_att]
                 if node_id not in nx_digraph.nodes:
-                    nx_digraph.add_node(node_id, attr={"type": "ATTRIBUTE_NODE"})
-                nx_digraph.add_edge(case_id, node_id, attr={"type": "ATTRIBUTE_EDGE", "name": case_att})
+                    nx_digraph.add_node(
+                        node_id, attr={"type": "ATTRIBUTE_NODE"}
+                    )
+                nx_digraph.add_edge(
+                    case_id,
+                    node_id,
+                    attr={"type": "ATTRIBUTE_EDGE", "name": case_att},
+                )
 
     return nx_digraph

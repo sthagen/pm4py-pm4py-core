@@ -40,8 +40,10 @@ class Parameters(Enum):
     MIN_BATCH_SIZE = "min_batch_size"
 
 
-def apply(log: pd.DataFrame, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> List[
-    Tuple[Tuple[str, str], int, Dict[str, Any]]]:
+def apply(
+    log: pd.DataFrame,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> List[Tuple[Tuple[str, str], int, Dict[str, Any]]]:
     """
     Provided a Pandas dataframe, returns
     a list having as elements the activity-resources with the batches that are detected, divided in:
@@ -84,16 +86,34 @@ def apply(log: pd.DataFrame, parameters: Optional[Dict[Union[str, Parameters], A
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    resource_key = exec_utils.get_param_value(Parameters.RESOURCE_KEY, parameters, xes_constants.DEFAULT_RESOURCE_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters,
-                                                     timestamp_key)
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    event_id_key = exec_utils.get_param_value(Parameters.EVENT_ID_KEY, parameters, constants.DEFAULT_INDEX_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    resource_key = exec_utils.get_param_value(
+        Parameters.RESOURCE_KEY, parameters, xes_constants.DEFAULT_RESOURCE_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY, parameters, timestamp_key
+    )
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    event_id_key = exec_utils.get_param_value(
+        Parameters.EVENT_ID_KEY, parameters, constants.DEFAULT_INDEX_KEY
+    )
 
-    attributes_to_consider = {activity_key, resource_key, start_timestamp_key, timestamp_key, case_id_key}
+    attributes_to_consider = {
+        activity_key,
+        resource_key,
+        start_timestamp_key,
+        timestamp_key,
+        case_id_key,
+    }
     log_contains_evidkey = event_id_key in log
     if log_contains_evidkey:
         attributes_to_consider.add(event_id_key)
@@ -106,9 +126,13 @@ def apply(log: pd.DataFrame, parameters: Optional[Dict[Union[str, Parameters], A
     log[timestamp_key] = pandas_utils.convert_to_seconds(log[timestamp_key])
     if start_timestamp_key != timestamp_key:
         # see the aforementioned explanation.
-        log[start_timestamp_key] = pandas_utils.convert_to_seconds(log[start_timestamp_key])
+        log[start_timestamp_key] = pandas_utils.convert_to_seconds(
+            log[start_timestamp_key]
+        )
 
-    actres_grouping0 = log.groupby([activity_key, resource_key]).agg(list).to_dict()
+    actres_grouping0 = (
+        log.groupby([activity_key, resource_key]).agg(list).to_dict()
+    )
     start_timestamps = actres_grouping0[start_timestamp_key]
     complete_timestamps = actres_grouping0[timestamp_key]
     cases = actres_grouping0[case_id_key]

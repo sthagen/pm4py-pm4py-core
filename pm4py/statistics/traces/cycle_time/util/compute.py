@@ -62,7 +62,7 @@ def cycle_time(events: List[Tuple[float, float]], num_instances: int) -> float:
         this_et = events[i][1]
 
         if this_st > et:
-            production_time += (et - st)
+            production_time += et - st
             st = this_st
 
         et = max(et, this_et)

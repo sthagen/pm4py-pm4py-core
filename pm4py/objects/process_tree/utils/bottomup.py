@@ -109,7 +109,9 @@ def get_max_rem_dict(tree, parameters=None):
 
     max_rem_dict = {}
     for i in range(len(bottomup)):
-        max_rem_dict[bottomup[i]] = max_length_dict[tree] - max_length_dict[bottomup[i]]
+        max_rem_dict[bottomup[i]] = (
+            max_length_dict[tree] - max_length_dict[bottomup[i]]
+        )
 
     return max_rem_dict
 
@@ -141,7 +143,9 @@ def get_min_rem_dict(tree, parameters=None):
 
     min_rem_dict = {}
     for i in range(len(bottomup)):
-        min_rem_dict[bottomup[i]] = min_length_dict[tree] - min_length_dict[bottomup[i]]
+        min_rem_dict[bottomup[i]] = (
+            min_length_dict[tree] - min_length_dict[bottomup[i]]
+        )
 
     return min_rem_dict
 
@@ -169,7 +173,11 @@ def get_max_length_dict(node, max_length_dict, num_nodes, avoid_loops=False):
             max_length_dict[node] = 1
     elif node.operator == Operator.XOR:
         max_length_dict[node] = max(max_length_dict[x] for x in node.children)
-    elif node.operator == Operator.PARALLEL or node.operator == Operator.SEQUENCE or node.operator == Operator.OR:
+    elif (
+        node.operator == Operator.PARALLEL
+        or node.operator == Operator.SEQUENCE
+        or node.operator == Operator.OR
+    ):
         max_length_dict[node] = sum(max_length_dict[x] for x in node.children)
     elif node.operator == Operator.LOOP:
         if avoid_loops:
@@ -199,7 +207,11 @@ def get_min_length_dict(node, min_length_dict):
             min_length_dict[node] = 1
     elif node.operator == Operator.XOR:
         min_length_dict[node] = min(min_length_dict[x] for x in node.children)
-    elif node.operator == Operator.PARALLEL or node.operator == Operator.SEQUENCE or node.operator == Operator.OR:
+    elif (
+        node.operator == Operator.PARALLEL
+        or node.operator == Operator.SEQUENCE
+        or node.operator == Operator.OR
+    ):
         min_length_dict[node] = sum(min_length_dict[x] for x in node.children)
     elif node.operator == Operator.LOOP:
         min_length_dict[node] = min_length_dict[node.children[0]]
@@ -240,7 +252,7 @@ def get_bottomup_nodes(tree, parameters=None):
         if parent is not None and parent not in bottomup:
             is_ok = True
             for child in parent.children:
-                if not child in bottomup:
+                if child not in bottomup:
                     is_ok = False
                     break
             if is_ok:

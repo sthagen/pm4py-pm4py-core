@@ -23,8 +23,12 @@ from pm4py.statistics.end_activities.pandas.get import get_end_activities
 from pm4py.util.constants import CASE_CONCEPT_NAME
 from pm4py.util import xes_constants as xes
 from pm4py.util.xes_constants import DEFAULT_NAME_KEY
-from pm4py.util.constants import PARAMETER_CONSTANT_CASEID_KEY, PARAMETER_CONSTANT_ACTIVITY_KEY, GROUPED_DATAFRAME, \
-    RETURN_EA_COUNT_DICT_AUTOFILTER
+from pm4py.util.constants import (
+    PARAMETER_CONSTANT_CASEID_KEY,
+    PARAMETER_CONSTANT_ACTIVITY_KEY,
+    GROUPED_DATAFRAME,
+    RETURN_EA_COUNT_DICT_AUTOFILTER,
+)
 from enum import Enum
 from pm4py.util import exec_utils
 from copy import copy
@@ -41,7 +45,11 @@ class Parameters(Enum):
     RETURN_EA_COUNT = RETURN_EA_COUNT_DICT_AUTOFILTER
 
 
-def apply(df: pd.DataFrame, values: List[str], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> pd.DataFrame:
+def apply(
+    df: pd.DataFrame,
+    values: List[str],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> pd.DataFrame:
     """
     Filter dataframe on end activities
 
@@ -66,17 +74,37 @@ def apply(df: pd.DataFrame, values: List[str], parameters: Optional[Dict[Union[s
     if parameters is None:
         parameters = {}
 
-    case_id_glue = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME)
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, DEFAULT_NAME_KEY)
-    grouped_df = exec_utils.get_param_value(Parameters.GROUP_DATAFRAME, parameters, None)
-    positive = exec_utils.get_param_value(Parameters.POSITIVE, parameters, True)
+    case_id_glue = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME
+    )
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, DEFAULT_NAME_KEY
+    )
+    grouped_df = exec_utils.get_param_value(
+        Parameters.GROUP_DATAFRAME, parameters, None
+    )
+    positive = exec_utils.get_param_value(
+        Parameters.POSITIVE, parameters, True
+    )
 
-    return filter_df_on_end_activities(df, values, case_id_glue=case_id_glue, activity_key=activity_key,
-                                       positive=positive, grouped_df=grouped_df)
+    return filter_df_on_end_activities(
+        df,
+        values,
+        case_id_glue=case_id_glue,
+        activity_key=activity_key,
+        positive=positive,
+        grouped_df=grouped_df,
+    )
 
 
-def filter_df_on_end_activities(df, values, case_id_glue=CASE_CONCEPT_NAME,
-                                activity_key=xes.DEFAULT_NAME_KEY, grouped_df=None, positive=True):
+def filter_df_on_end_activities(
+    df,
+    values,
+    case_id_glue=CASE_CONCEPT_NAME,
+    activity_key=xes.DEFAULT_NAME_KEY,
+    grouped_df=None,
+    positive=True,
+):
     """
     Filter dataframe on end activities
 
@@ -108,13 +136,20 @@ def filter_df_on_end_activities(df, values, case_id_glue=CASE_CONCEPT_NAME,
         ret = df[i1.isin(i2)]
     else:
         ret = df[~i1.isin(i2)]
-    ret.attrs = copy(df.attrs) if hasattr(df, 'attrs') else {}
+    ret.attrs = copy(df.attrs) if hasattr(df, "attrs") else {}
     return ret
 
 
-def filter_df_on_end_activities_nocc(df, nocc, ea_count0=None, case_id_glue=CASE_CONCEPT_NAME,
-                                     grouped_df=None,
-                                     activity_key=xes.DEFAULT_NAME_KEY, return_dict=False, most_common_variant=None):
+def filter_df_on_end_activities_nocc(
+    df,
+    nocc,
+    ea_count0=None,
+    case_id_glue=CASE_CONCEPT_NAME,
+    grouped_df=None,
+    activity_key=xes.DEFAULT_NAME_KEY,
+    return_dict=False,
+    most_common_variant=None,
+):
     """
     Filter dataframe on end activities number of occurrences
 
@@ -146,19 +181,29 @@ def filter_df_on_end_activities_nocc(df, nocc, ea_count0=None, case_id_glue=CASE
             parameters = {
                 Parameters.CASE_ID_KEY: case_id_glue,
                 Parameters.ACTIVITY_KEY: activity_key,
-                Parameters.GROUP_DATAFRAME: grouped_df
+                Parameters.GROUP_DATAFRAME: grouped_df,
             }
             ea_count0 = get_end_activities(df, parameters=parameters)
-        ea_count = [k for k, v in ea_count0.items() if
-                    v >= nocc or (len(most_common_variant) > 0 and k == most_common_variant[-1])]
-        ea_count_dict = {k: v for k, v in ea_count0.items() if
-                         v >= nocc or (len(most_common_variant) > 0 and k == most_common_variant[-1])}
+        ea_count = [
+            k
+            for k, v in ea_count0.items()
+            if v >= nocc
+            or (len(most_common_variant) > 0 and k == most_common_variant[-1])
+        ]
+        ea_count_dict = {
+            k: v
+            for k, v in ea_count0.items()
+            if v >= nocc
+            or (len(most_common_variant) > 0 and k == most_common_variant[-1])
+        }
         if len(ea_count) < len(ea_count0):
-            first_eve_df = first_eve_df[first_eve_df[activity_key].isin(ea_count)]
+            first_eve_df = first_eve_df[
+                first_eve_df[activity_key].isin(ea_count)
+            ]
             i1 = df.set_index(case_id_glue).index
             i2 = first_eve_df.index
             ret = df[i1.isin(i2)]
-            ret.attrs = copy(df.attrs) if hasattr(df, 'attrs') else {}
+            ret.attrs = copy(df.attrs) if hasattr(df, "attrs") else {}
             if return_dict:
                 return ret, ea_count_dict
             return ret

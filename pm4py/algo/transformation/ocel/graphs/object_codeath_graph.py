@@ -23,7 +23,9 @@ from pm4py.objects.ocel.obj import OCEL
 from typing import Optional, Dict, Any, Set, Tuple
 
 
-def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Set[Tuple[str, str]]:
+def apply(
+    ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None
+) -> Set[Tuple[str, str]]:
     """
     Calculates the object codeath graph.
 
@@ -48,7 +50,11 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> Set[Tuple[
     graph = set()
 
     ordered_events = ocel.events[ocel.event_id_column].to_numpy().tolist()
-    ev_rel_obj = ocel.relations.groupby(ocel.event_id_column)[ocel.object_id_column].agg(list).to_dict()
+    ev_rel_obj = (
+        ocel.relations.groupby(ocel.event_id_column)[ocel.object_id_column]
+        .agg(list)
+        .to_dict()
+    )
     set_objects = set()
 
     ordered_events.reverse()

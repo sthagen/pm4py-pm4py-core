@@ -33,7 +33,10 @@ class Parameters(Enum):
     FILTER_TYPE = "filter_type"
 
 
-def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[Dict[Any, Any]] = None) -> pd.DataFrame:
+def apply(
+    log_obj: Union[EventLog, EventStream, pd.DataFrame],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> pd.DataFrame:
     """
     Groups the consecutive events of the same case having the same activity, providing option to keep the first/last event of each group
 
@@ -57,13 +60,23 @@ def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame], parameters: Optio
     if parameters is None:
         parameters = {}
 
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    filter_type = exec_utils.get_param_value(Parameters.FILTER_TYPE, parameters, "first")
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    filter_type = exec_utils.get_param_value(
+        Parameters.FILTER_TYPE, parameters, "first"
+    )
 
-    dataframe = log_converter.apply(log_obj, variant=log_converter.Variants.TO_DATA_FRAME, parameters=parameters).copy()
+    dataframe = log_converter.apply(
+        log_obj,
+        variant=log_converter.Variants.TO_DATA_FRAME,
+        parameters=parameters,
+    ).copy()
     dataframe["@@extra1"] = dataframe[case_id_key] + dataframe[activity_key]
-    utility_df = (dataframe["@@extra1"] != dataframe["@@extra1"].shift())
+    utility_df = dataframe["@@extra1"] != dataframe["@@extra1"].shift()
     utility_df = utility_df.fillna(False).cumsum()
     gdf = dataframe.groupby(utility_df, sort=False)
 

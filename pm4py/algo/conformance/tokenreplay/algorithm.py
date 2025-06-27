@@ -33,14 +33,22 @@ class Variants(Enum):
     TOKEN_REPLAY = token_replay
     BACKWARDS = backwards
 
+
 VERSIONS = {Variants.TOKEN_REPLAY, Variants.BACKWARDS}
 DEFAULT_VARIANT = Variants.TOKEN_REPLAY
 
 
-def apply(log: Union[EventLog, EventStream, pd.DataFrame], net: PetriNet, initial_marking: Marking, final_marking: Marking, parameters: Optional[Dict[Any, Any]] = None, variant=DEFAULT_VARIANT) -> typing.ListAlignments:
+def apply(
+    log: Union[EventLog, EventStream, pd.DataFrame],
+    net: PetriNet,
+    initial_marking: Marking,
+    final_marking: Marking,
+    parameters: Optional[Dict[Any, Any]] = None,
+    variant=DEFAULT_VARIANT,
+) -> typing.ListAlignments:
     """
     Method to apply token-based replay
-    
+
     Parameters
     -----------
     log
@@ -61,11 +69,17 @@ def apply(log: Union[EventLog, EventStream, pd.DataFrame], net: PetriNet, initia
     """
     if parameters is None:
         parameters = {}
-    return exec_utils.get_variant(variant).apply(log, net, initial_marking,
-                             final_marking, parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        log, net, initial_marking, final_marking, parameters=parameters
+    )
 
 
-def get_diagnostics_dataframe(log: Union[EventLog, EventStream, pd.DataFrame], tbr_output: typing.ListAlignments, variant=DEFAULT_VARIANT, parameters: Optional[Dict[Any, Any]] = None) -> pd.DataFrame:
+def get_diagnostics_dataframe(
+    log: Union[EventLog, EventStream, pd.DataFrame],
+    tbr_output: typing.ListAlignments,
+    variant=DEFAULT_VARIANT,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> pd.DataFrame:
     """
     Gets the results of token-based replay in a dataframe
 
@@ -88,4 +102,6 @@ def get_diagnostics_dataframe(log: Union[EventLog, EventStream, pd.DataFrame], t
     if parameters is None:
         parameters = {}
 
-    return exec_utils.get_variant(variant).get_diagnostics_dataframe(log, tbr_output, parameters=parameters)
+    return exec_utils.get_variant(variant).get_diagnostics_dataframe(
+        log, tbr_output, parameters=parameters
+    )

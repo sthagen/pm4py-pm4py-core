@@ -50,7 +50,9 @@ def generate_random_string(N):
     random_string
         Random string
     """
-    return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(N))
+    return "".join(
+        random.choice(string.ascii_uppercase + string.digits) for _ in range(N)
+    )
 
 
 def get_random_operator():
@@ -73,7 +75,9 @@ def get_random_operator():
         return Operator.PARALLEL
 
 
-def apply(parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> ProcessTree:
+def apply(
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None
+) -> ProcessTree:
     """
     Generate a process tree
 
@@ -95,13 +99,22 @@ def apply(parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Pro
         parameters = {}
 
     rec_depth = exec_utils.get_param_value(Parameters.REC_DEPTH, parameters, 0)
-    min_rec_depth = exec_utils.get_param_value(Parameters.MIN_REC_DEPTH, parameters, 1)
-    max_rec_depth = exec_utils.get_param_value(Parameters.MAX_REC_DEPTH, parameters, 3)
-    prob_leaf = exec_utils.get_param_value(Parameters.PROB_LEAF, parameters, 0.25)
+    min_rec_depth = exec_utils.get_param_value(
+        Parameters.MIN_REC_DEPTH, parameters, 1
+    )
+    max_rec_depth = exec_utils.get_param_value(
+        Parameters.MAX_REC_DEPTH, parameters, 3
+    )
+    prob_leaf = exec_utils.get_param_value(
+        Parameters.PROB_LEAF, parameters, 0.25
+    )
 
-    next_parameters = {Parameters.REC_DEPTH: rec_depth + 1, Parameters.MIN_REC_DEPTH: min_rec_depth,
-                       Parameters.MAX_REC_DEPTH: max_rec_depth,
-                       Parameters.PROB_LEAF: prob_leaf}
+    next_parameters = {
+        Parameters.REC_DEPTH: rec_depth + 1,
+        Parameters.MIN_REC_DEPTH: min_rec_depth,
+        Parameters.MAX_REC_DEPTH: max_rec_depth,
+        Parameters.PROB_LEAF: prob_leaf,
+    }
 
     is_leaf = False
 
@@ -116,7 +129,9 @@ def apply(parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Pro
         current_tree = ProcessTree(label=generate_random_string(6))
     elif rec_depth == 0:
         current_tree = ProcessTree(operator=Operator.SEQUENCE)
-        start = ProcessTree(label=generate_random_string(6), parent=current_tree)
+        start = ProcessTree(
+            label=generate_random_string(6), parent=current_tree
+        )
         current_tree.children.append(start)
         node = apply(parameters=next_parameters)
         node.parent = current_tree

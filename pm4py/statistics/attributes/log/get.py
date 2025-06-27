@@ -65,7 +65,11 @@ def __add_left_0(stri: str, target_length: int) -> str:
     return stri
 
 
-def get_events_distribution(log: EventLog, distr_type: str = "days_month", parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Tuple[List[str], List[int]]:
+def get_events_distribution(
+    log: EventLog,
+    distr_type: str = "days_month",
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Tuple[List[str], List[int]]:
     """
     Gets the distribution of the events in the specified dimension
 
@@ -94,9 +98,13 @@ def get_events_distribution(log: EventLog, distr_type: str = "days_month", param
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY)
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY
+    )
 
     timestamp_values = []
     for trace in log:
@@ -113,7 +121,9 @@ def get_events_distribution(log: EventLog, distr_type: str = "days_month", param
         all_values = Counter({i: 0 for i in range(1, 13)})
     elif distr_type == "years":
         values = Counter(x.year for x in timestamp_values)
-        all_values = Counter({i: 0 for i in range(min(values), max(values)+1)})
+        all_values = Counter(
+            {i: 0 for i in range(min(values), max(values) + 1)}
+        )
     elif distr_type == "hours":
         values = Counter(x.hour for x in timestamp_values)
         all_values = Counter({i: 0 for i in range(0, 24)})
@@ -132,8 +142,15 @@ def get_events_distribution(log: EventLog, distr_type: str = "days_month", param
     values = sorted([(__add_left_0(str(x), 2), y) for x, y in values.items()])
 
     if distr_type == "days_week":
-        mapping = {"00": "Monday", "01": "Tuesday", "02": "Wednesday", "03": "Thursday", "04": "Friday",
-                   "05": "Saturday", "06": "Sunday"}
+        mapping = {
+            "00": "Monday",
+            "01": "Tuesday",
+            "02": "Wednesday",
+            "03": "Thursday",
+            "04": "Friday",
+            "05": "Saturday",
+            "06": "Sunday",
+        }
         values = [(mapping[x[0]], x[1]) for x in values]
 
     return [x[0] for x in values], [x[1] for x in values]
@@ -188,7 +205,11 @@ def get_all_event_attributes_from_log(log: EventLog) -> Set[str]:
     return all_attributes
 
 
-def get_attribute_values(log: EventLog, attribute_key: str, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[Any, int]:
+def get_attribute_values(
+    log: EventLog,
+    attribute_key: str,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[Any, int]:
     """
     Get the attribute values of the log for the specified attribute along with their count
 
@@ -206,12 +227,16 @@ def get_attribute_values(log: EventLog, attribute_key: str, parameters: Optional
     attributes
         Dictionary of attributes associated with their count
     """
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
     if parameters is None:
         parameters = {}
 
-    keep_once_per_case = exec_utils.get_param_value(Parameters.KEEP_ONCE_PER_CASE, parameters, False)
+    keep_once_per_case = exec_utils.get_param_value(
+        Parameters.KEEP_ONCE_PER_CASE, parameters, False
+    )
 
     attribute_values = {}
 
@@ -228,7 +253,11 @@ def get_attribute_values(log: EventLog, attribute_key: str, parameters: Optional
     return attribute_values
 
 
-def get_trace_attribute_values(log: EventLog, attribute_key: str, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[Any, int]:
+def get_trace_attribute_values(
+    log: EventLog,
+    attribute_key: str,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[Any, int]:
     """
     Get the attribute values of the log for the specified attribute along with their count
 
@@ -249,7 +278,9 @@ def get_trace_attribute_values(log: EventLog, attribute_key: str, parameters: Op
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
     attributes = {}
 
@@ -293,11 +324,15 @@ def get_kde_numeric_attribute(log, attribute, parameters=None):
     this_parameters["deepcopy"] = False
     this_parameters["include_case_attributes"] = False
 
-    event_log = log_conversion.apply(log, variant=log_conversion.TO_EVENT_STREAM, parameters=this_parameters)
+    event_log = log_conversion.apply(
+        log, variant=log_conversion.TO_EVENT_STREAM, parameters=this_parameters
+    )
 
     values = [event[attribute] for event in event_log if attribute in event]
 
-    return attributes_common.get_kde_numeric_attribute(values, parameters=parameters)
+    return attributes_common.get_kde_numeric_attribute(
+        values, parameters=parameters
+    )
 
 
 def get_kde_numeric_attribute_json(log, attribute, parameters=None):
@@ -330,14 +365,20 @@ def get_kde_numeric_attribute_json(log, attribute, parameters=None):
     this_parameters["deepcopy"] = False
     this_parameters["include_case_attributes"] = False
 
-    event_log = log_conversion.apply(log, variant=log_conversion.TO_EVENT_STREAM, parameters=this_parameters)
+    event_log = log_conversion.apply(
+        log, variant=log_conversion.TO_EVENT_STREAM, parameters=this_parameters
+    )
 
     values = [event[attribute] for event in event_log if attribute in event]
 
-    return attributes_common.get_kde_numeric_attribute_json(values, parameters=parameters)
+    return attributes_common.get_kde_numeric_attribute_json(
+        values, parameters=parameters
+    )
 
 
-def get_kde_date_attribute(log, attribute=DEFAULT_TIMESTAMP_KEY, parameters=None):
+def get_kde_date_attribute(
+    log, attribute=DEFAULT_TIMESTAMP_KEY, parameters=None
+):
     """
     Gets the KDE estimation for the distribution of a date attribute values
 
@@ -366,14 +407,24 @@ def get_kde_date_attribute(log, attribute=DEFAULT_TIMESTAMP_KEY, parameters=None
     this_parameters["deepcopy"] = False
     this_parameters["include_case_attributes"] = False
 
-    event_log = log_conversion.apply(log, variant=log_conversion.TO_EVENT_STREAM, parameters=this_parameters)
+    event_log = log_conversion.apply(
+        log, variant=log_conversion.TO_EVENT_STREAM, parameters=this_parameters
+    )
 
-    values = [strpfromiso.fix_naivety(event[attribute]) for event in event_log if attribute in event]
+    values = [
+        strpfromiso.fix_naivety(event[attribute])
+        for event in event_log
+        if attribute in event
+    ]
 
-    return attributes_common.get_kde_date_attribute(values, parameters=parameters)
+    return attributes_common.get_kde_date_attribute(
+        values, parameters=parameters
+    )
 
 
-def get_kde_date_attribute_json(log, attribute=DEFAULT_TIMESTAMP_KEY, parameters=None):
+def get_kde_date_attribute_json(
+    log, attribute=DEFAULT_TIMESTAMP_KEY, parameters=None
+):
     """
     Gets the KDE estimation for the distribution of a date attribute values
     (expressed as JSON)
@@ -403,8 +454,16 @@ def get_kde_date_attribute_json(log, attribute=DEFAULT_TIMESTAMP_KEY, parameters
     this_parameters["deepcopy"] = False
     this_parameters["include_case_attributes"] = False
 
-    event_log = log_conversion.apply(log, variant=log_conversion.TO_EVENT_STREAM, parameters=this_parameters)
+    event_log = log_conversion.apply(
+        log, variant=log_conversion.TO_EVENT_STREAM, parameters=this_parameters
+    )
 
-    values = [strpfromiso.fix_naivety(event[attribute]) for event in event_log if attribute in event]
+    values = [
+        strpfromiso.fix_naivety(event[attribute])
+        for event in event_log
+        if attribute in event
+    ]
 
-    return attributes_common.get_kde_date_attribute_json(values, parameters=parameters)
+    return attributes_common.get_kde_date_attribute_json(
+        values, parameters=parameters
+    )

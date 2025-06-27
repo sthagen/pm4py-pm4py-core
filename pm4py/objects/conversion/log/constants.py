@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,14 +19,14 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-TO_TRACE_LOG = 'to_event_log'
-TO_EVENT_LOG = 'to_event_log'
-TO_EVENT_STREAM = 'to_event_stream'
-TO_DATAFRAME = 'to_dataframe'
-FROM_DATAFRAME = 'from_dataframe'
+TO_TRACE_LOG = "to_event_log"
+TO_EVENT_LOG = "to_event_log"
+TO_EVENT_STREAM = "to_event_stream"
+TO_DATAFRAME = "to_dataframe"
+FROM_DATAFRAME = "from_dataframe"
 
-DF_TO_EVENT_LOG_1V = 'df_to_event_log_1v'
-DF_TO_EVENT_LOG_NV = 'df_to_event_log_nv'
+DF_TO_EVENT_LOG_1V = "df_to_event_log_1v"
+DF_TO_EVENT_LOG_NV = "df_to_event_log_nv"
 
 DEEPCOPY = "deepcopy"
 STREAM_POSTPROCESSING = "stream_postprocessing"

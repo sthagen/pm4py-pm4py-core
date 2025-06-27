@@ -46,9 +46,19 @@ def get_c_matrix(PS_matrix, duration_matrix, activities, activities_counter):
     C_matrix = np.zeros((len(activities), len(activities)))
     for i in range(len(activities)):
         for j in range(len(activities)):
-            val = duration_matrix[i, j] / PS_matrix[i, j] * 1 / (
-                min(activities_counter[activities[i]], activities_counter[activities[j]])) if PS_matrix[
-                                                                                                  i, j] > 0 else 0
+            val = (
+                duration_matrix[i, j]
+                / PS_matrix[i, j]
+                * 1
+                / (
+                    min(
+                        activities_counter[activities[i]],
+                        activities_counter[activities[j]],
+                    )
+                )
+                if PS_matrix[i, j] > 0
+                else 0
+            )
             if val == 0:
                 val = 100000000000
             C_matrix[i, j] = val
@@ -77,11 +87,25 @@ def resolve_LP(C_matrix, duration_matrix, activities, activities_counter):
     performance_dfg
         Performance DFG (containing the estimated performance for the arcs)
     """
-    edges = [(i, j) for i in range(len(activities)) for j in range(len(activities))]
-    c = [C_matrix[i, j] for i in range(len(activities)) for j in range(len(activities))]
-    edges_sources = {i: [z for z in range(len(edges)) if edges[z][0] == i] for i in range(len(activities))}
-    edges_targets = {j: [z for z in range(len(edges)) if edges[z][1] == j] for j in range(len(activities))}
-    activities_occurrences = {i: activities_counter[activities[i]] for i in range(len(activities))}
+    edges = [
+        (i, j) for i in range(len(activities)) for j in range(len(activities))
+    ]
+    c = [
+        C_matrix[i, j]
+        for i in range(len(activities))
+        for j in range(len(activities))
+    ]
+    edges_sources = {
+        i: [z for z in range(len(edges)) if edges[z][0] == i]
+        for i in range(len(activities))
+    }
+    edges_targets = {
+        j: [z for z in range(len(edges)) if edges[z][1] == j]
+        for j in range(len(activities))
+    }
+    activities_occurrences = {
+        i: activities_counter[activities[i]] for i in range(len(activities))
+    }
     Aeq = []
     beq = []
     for i in range(len(activities)):
@@ -122,7 +146,11 @@ def resolve_LP(C_matrix, duration_matrix, activities, activities_counter):
     bub = np.asmatrix(bub).transpose().astype(np.float64)
 
     use_cvxopt = False
-    if solver.DEFAULT_LP_SOLVER_VARIANT == solver.CVXOPT_SOLVER_CUSTOM_ALIGN or solver.DEFAULT_LP_SOLVER_VARIANT == solver.CVXOPT_SOLVER_CUSTOM_ALIGN_ILP:
+    if (
+        solver.DEFAULT_LP_SOLVER_VARIANT == solver.CVXOPT_SOLVER_CUSTOM_ALIGN
+        or solver.DEFAULT_LP_SOLVER_VARIANT
+        == solver.CVXOPT_SOLVER_CUSTOM_ALIGN_ILP
+    ):
         use_cvxopt = True
 
     if use_cvxopt:
@@ -134,8 +162,12 @@ def resolve_LP(C_matrix, duration_matrix, activities, activities_counter):
         Aeq = matrix(Aeq)
         beq = matrix(beq)
 
-    res = solver.apply(c, Aub, bub, Aeq, beq, variant=solver.DEFAULT_LP_SOLVER_VARIANT)
-    points = solver.get_points_from_sol(res, variant=solver.DEFAULT_LP_SOLVER_VARIANT)
+    res = solver.apply(
+        c, Aub, bub, Aeq, beq, variant=solver.DEFAULT_LP_SOLVER_VARIANT
+    )
+    points = solver.get_points_from_sol(
+        res, variant=solver.DEFAULT_LP_SOLVER_VARIANT
+    )
     points = [round(p) for p in points]
 
     dfg = {}
@@ -144,8 +176,9 @@ def resolve_LP(C_matrix, duration_matrix, activities, activities_counter):
     for idx, p in enumerate(points):
         if p > 0:
             dfg[(activities[edges[idx][0]], activities[edges[idx][1]])] = p
-            performance_dfg[(activities[edges[idx][0]], activities[edges[idx][1]])] = duration_matrix[
-                edges[idx][0], edges[idx][1]]
+            performance_dfg[
+                (activities[edges[idx][0]], activities[edges[idx][1]])
+            ] = duration_matrix[edges[idx][0], edges[idx][1]]
     return dfg, performance_dfg
 
 
@@ -170,6 +203,7 @@ def match_return_avg_time(ai, aj, exact=False):
 
     if exact:
         from pm4py.statistics.util import times_bipartite_matching
+
         matching = times_bipartite_matching.exact_match_minimum_average(ai, aj)
         ret_exact = mean([x[1] - x[0] for x in matching]) if matching else 0
         return ret_exact

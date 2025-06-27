@@ -34,16 +34,27 @@ class Parameters(Enum):
     SUBCASE_CONCAT_STR = "subcase_concat_str"
 
 
-def __fix_trace_attributes(trace_attributes, idx, rel_count, case_id_key, subcase_concat_str):
+def __fix_trace_attributes(
+    trace_attributes, idx, rel_count, case_id_key, subcase_concat_str
+):
     trace_attributes = copy(trace_attributes)
     if case_id_key in trace_attributes:
-        trace_attributes[case_id_key] = trace_attributes[case_id_key] + subcase_concat_str + str(rel_count)
+        trace_attributes[case_id_key] = (
+            trace_attributes[case_id_key] + subcase_concat_str + str(rel_count)
+        )
     else:
-        trace_attributes[case_id_key] = str(idx) + subcase_concat_str + str(rel_count)
+        trace_attributes[case_id_key] = (
+            str(idx) + subcase_concat_str + str(rel_count)
+        )
     return trace_attributes
 
 
-def apply(log: EventLog, act1: Union[str, List[str]], act2: Union[str, List[str]], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> EventLog:
+def apply(
+    log: EventLog,
+    act1: Union[str, List[str]],
+    act2: Union[str, List[str]],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> EventLog:
     """
     Given an event log, filters all the subtraces going from an event with activity "act1" to an event with
     activity "act2"
@@ -68,17 +79,35 @@ def apply(log: EventLog, act1: Union[str, List[str]], act2: Union[str, List[str]
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, xes_constants.DEFAULT_TRACEID_KEY)
-    subcase_concat_str = exec_utils.get_param_value(Parameters.SUBCASE_CONCAT_STR, parameters, "##@@")
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, xes_constants.DEFAULT_TRACEID_KEY
+    )
+    subcase_concat_str = exec_utils.get_param_value(
+        Parameters.SUBCASE_CONCAT_STR, parameters, "##@@"
+    )
 
-    act1_comparison = lambda x: (x == act1) if type(act1) is str else (x in act1)
-    act2_comparison = lambda x: (x == act2) if type(act2) is str else (x in act2)
+    def act1_comparison(x): return (
+        (x == act1) if type(act1) is str else (x in act1)
+    )
 
-    filtered_log = EventLog(attributes=log.attributes, extensions=log.extensions, omni_present=log.omni_present,
-                            classifiers=log.classifiers, properties=log.properties)
+    def act2_comparison(x): return (
+        (x == act2) if type(act2) is str else (x in act2)
+    )
+
+    filtered_log = EventLog(
+        attributes=log.attributes,
+        extensions=log.extensions,
+        omni_present=log.omni_present,
+        classifiers=log.classifiers,
+        properties=log.properties,
+    )
 
     for idx, trace in enumerate(log):
         act1_encountered = False
@@ -87,10 +116,19 @@ def apply(log: EventLog, act1: Union[str, List[str]], act2: Union[str, List[str]
         rel_count = 0
         i = 0
         while i < len(trace):
-            if not act1_encountered and act1_comparison(trace[i][activity_key]):
+            if not act1_encountered and act1_comparison(
+                trace[i][activity_key]
+            ):
                 act1_encountered = True
-                filt_trace = Trace(attributes=__fix_trace_attributes(trace.attributes, idx, rel_count, case_id_key,
-                                                                     subcase_concat_str))
+                filt_trace = Trace(
+                    attributes=__fix_trace_attributes(
+                        trace.attributes,
+                        idx,
+                        rel_count,
+                        case_id_key,
+                        subcase_concat_str,
+                    )
+                )
                 filt_trace.append(trace[i])
             elif act1_encountered and act2_comparison(trace[i][activity_key]):
                 filt_trace.append(trace[i])
@@ -98,13 +136,22 @@ def apply(log: EventLog, act1: Union[str, List[str]], act2: Union[str, List[str]
                 rel_count += 1
                 if act1 != act2:
                     # if the between filter is applied between two activities A and B, with A different from B,
-                    # then the filter should stop until the next occurrence of A
+                    # then the filter should stop until the next occurrence of
+                    # A
                     act1_encountered = False
                     filt_trace = None
                 else:
-                    # otherwise, if A = B, then it continues outputting the events to a new subcase
-                    filt_trace = Trace(attributes=__fix_trace_attributes(trace.attributes, idx, rel_count, case_id_key,
-                                                                         subcase_concat_str))
+                    # otherwise, if A = B, then it continues outputting the
+                    # events to a new subcase
+                    filt_trace = Trace(
+                        attributes=__fix_trace_attributes(
+                            trace.attributes,
+                            idx,
+                            rel_count,
+                            case_id_key,
+                            subcase_concat_str,
+                        )
+                    )
                     filt_trace.append(trace[i])
 
             elif filt_trace is not None:

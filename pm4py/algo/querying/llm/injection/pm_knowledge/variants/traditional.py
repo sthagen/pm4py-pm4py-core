@@ -24,7 +24,10 @@ from typing import Optional, Dict, Any, Union
 from sqlite3 import Connection as SQ3_Connection
 
 
-def apply(db: Union[pd.DataFrame, SQ3_Connection], parameters: Optional[Dict[Any, Any]] = None) -> str:
+def apply(
+    db: Union[pd.DataFrame, SQ3_Connection],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> str:
     """
     Provides a string containing the required process mining domain knowledge for traditional process mining structures
     (in order for the LLM to produce meaningful queries).

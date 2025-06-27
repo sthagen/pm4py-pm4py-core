@@ -35,7 +35,10 @@ class Parameters(Enum):
     MAX_LEN = "max_len"
 
 
-def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[Dict[Any, Any]] = None) -> str:
+def apply(
+    log_obj: Union[EventLog, EventStream, pd.DataFrame],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> str:
     """
     Given a log object, returns a representation of the (last) events of a stream corresponding to the log object.
 
@@ -58,11 +61,22 @@ def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame], parameters: Optio
         parameters = {}
 
     parameters["stream_postprocessing"] = True
-    event_stream = log_converter.apply(log_obj, variant=log_converter.Variants.TO_EVENT_STREAM, parameters=parameters)._list
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    response_header = exec_utils.get_param_value(Parameters.RESPONSE_HEADER, parameters, True)
-    max_len = exec_utils.get_param_value(Parameters.MAX_LEN, parameters, constants.OPENAI_MAX_LEN)
+    event_stream = log_converter.apply(
+        log_obj,
+        variant=log_converter.Variants.TO_EVENT_STREAM,
+        parameters=parameters,
+    )._list
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    response_header = exec_utils.get_param_value(
+        Parameters.RESPONSE_HEADER, parameters, True
+    )
+    max_len = exec_utils.get_param_value(
+        Parameters.MAX_LEN, parameters, constants.OPENAI_MAX_LEN
+    )
 
     event_stream.sort(key=lambda x: x[timestamp_key], reverse=True)
 
@@ -83,5 +97,5 @@ def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame], parameters: Optio
         interet.append(stru)
 
     interet.reverse()
-    ret = ret+interet+["\n"]
+    ret = ret + interet + ["\n"]
     return "\n".join(ret)

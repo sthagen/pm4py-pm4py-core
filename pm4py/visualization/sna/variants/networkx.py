@@ -47,7 +47,7 @@ def get_temp_file_name(format):
     format
         Format of the target image
     """
-    filename = tempfile.NamedTemporaryFile(suffix='.' + format)
+    filename = tempfile.NamedTemporaryFile(suffix="." + format)
     filename.close()
 
     return filename.name
@@ -75,7 +75,9 @@ def apply(sna: SNA, parameters=None):
     if parameters is None:
         parameters = {}
 
-    weight_threshold = exec_utils.get_param_value(Parameters.WEIGHT_THRESHOLD, parameters, 0)
+    weight_threshold = exec_utils.get_param_value(
+        Parameters.WEIGHT_THRESHOLD, parameters, 0
+    )
     format = exec_utils.get_param_value(Parameters.FORMAT, parameters, "png")
 
     directed = sna.is_directed
@@ -87,16 +89,20 @@ def apply(sna: SNA, parameters=None):
     else:
         graph = nx_utils.Graph()
 
-    connections = {x for x, y in sna.connections.items() if y >= weight_threshold}
+    connections = {
+        x for x, y in sna.connections.items() if y >= weight_threshold
+    }
 
     graph.add_edges_from(connections)
 
     current_backend = copy(matplotlib.get_backend())
-    matplotlib.use('Agg')
+    matplotlib.use("Agg")
     from matplotlib import pyplot
 
     pyplot.clf()
-    nx.draw(graph, node_size=500, with_labels=True, pos=nx.circular_layout(graph))
+    nx.draw(
+        graph, node_size=500, with_labels=True, pos=nx.circular_layout(graph)
+    )
     pyplot.savefig(temp_file_name, bbox_inches="tight")
     pyplot.clf()
 
@@ -123,8 +129,9 @@ def view(temp_file_name, parameters=None):
         if constants.DEFAULT_GVIZ_VIEW == "matplotlib_view":
             import matplotlib.pyplot as plt
             import matplotlib.image as mpimg
+
             img = mpimg.imread(temp_file_name)
-            plt.axis('off')
+            plt.axis("off")
             plt.tight_layout(pad=0, w_pad=0, h_pad=0)
             plt.imshow(img)
             plt.show()

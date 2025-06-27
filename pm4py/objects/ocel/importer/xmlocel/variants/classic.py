@@ -84,17 +84,36 @@ def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
     o2o = []
     obj_type_dict = {}
 
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, None)
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, None
+    )
 
-    event_id = exec_utils.get_param_value(Parameters.EVENT_ID, parameters, constants.DEFAULT_EVENT_ID)
-    event_activity = exec_utils.get_param_value(Parameters.EVENT_ACTIVITY, parameters, constants.DEFAULT_EVENT_ACTIVITY)
-    event_timestamp = exec_utils.get_param_value(Parameters.EVENT_TIMESTAMP, parameters,
-                                                 constants.DEFAULT_EVENT_TIMESTAMP)
-    object_id = exec_utils.get_param_value(Parameters.OBJECT_ID, parameters, constants.DEFAULT_OBJECT_ID)
-    object_type = exec_utils.get_param_value(Parameters.OBJECT_TYPE, parameters, constants.DEFAULT_OBJECT_TYPE)
-    internal_index = exec_utils.get_param_value(Parameters.INTERNAL_INDEX, parameters, constants.DEFAULT_INTERNAL_INDEX)
-    qualifier_field = exec_utils.get_param_value(Parameters.QUALIFIER, parameters, constants.DEFAULT_QUALIFIER)
-    changed_field = exec_utils.get_param_value(Parameters.CHANGED_FIELD, parameters, constants.DEFAULT_CHNGD_FIELD)
+    event_id = exec_utils.get_param_value(
+        Parameters.EVENT_ID, parameters, constants.DEFAULT_EVENT_ID
+    )
+    event_activity = exec_utils.get_param_value(
+        Parameters.EVENT_ACTIVITY, parameters, constants.DEFAULT_EVENT_ACTIVITY
+    )
+    event_timestamp = exec_utils.get_param_value(
+        Parameters.EVENT_TIMESTAMP,
+        parameters,
+        constants.DEFAULT_EVENT_TIMESTAMP,
+    )
+    object_id = exec_utils.get_param_value(
+        Parameters.OBJECT_ID, parameters, constants.DEFAULT_OBJECT_ID
+    )
+    object_type = exec_utils.get_param_value(
+        Parameters.OBJECT_TYPE, parameters, constants.DEFAULT_OBJECT_TYPE
+    )
+    internal_index = exec_utils.get_param_value(
+        Parameters.INTERNAL_INDEX, parameters, constants.DEFAULT_INTERNAL_INDEX
+    )
+    qualifier_field = exec_utils.get_param_value(
+        Parameters.QUALIFIER, parameters, constants.DEFAULT_QUALIFIER
+    )
+    changed_field = exec_utils.get_param_value(
+        Parameters.CHANGED_FIELD, parameters, constants.DEFAULT_CHNGD_FIELD
+    )
 
     date_parser = dt_parsing.parser.get()
 
@@ -118,29 +137,49 @@ def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
                     if child2.get("key") == "id":
                         eve_id = child2.get("value")
                     elif child2.get("key") == "timestamp":
-                        eve_timestamp = parse_xml(child2.get("value"), child2.tag.lower(), date_parser)
+                        eve_timestamp = parse_xml(
+                            child2.get("value"),
+                            child2.tag.lower(),
+                            date_parser,
+                        )
                     elif child2.get("key") == "activity":
                         eve_activity = child2.get("value")
                     elif child2.get("key") == "omap":
                         for child3 in child2:
                             objref = child3.get("value")
-                            qualifier = child3.get("qualifier") if "qualifier" in child3.keys() else None
+                            qualifier = (
+                                child3.get("qualifier")
+                                if "qualifier" in child3.keys()
+                                else None
+                            )
                             eve_omap[objref] = qualifier
                     elif child2.get("key") == "vmap":
                         for child3 in child2:
                             key = child3.get("key")
-                            value = parse_xml(child3.get("value"), child3.tag.lower(),
-                                                                    date_parser)
+                            value = parse_xml(
+                                child3.get("value"),
+                                child3.tag.lower(),
+                                date_parser,
+                            )
                             eve_vmap[key] = value
 
-                event_dict = {event_id: eve_id, event_activity: eve_activity, event_timestamp: eve_timestamp}
+                event_dict = {
+                    event_id: eve_id,
+                    event_activity: eve_activity,
+                    event_timestamp: eve_timestamp,
+                }
                 for k, v in eve_vmap.items():
                     event_dict[k] = v
                 events.append(event_dict)
 
                 for obj in eve_omap:
-                    rel_dict = {event_id: eve_id, event_activity: eve_activity, event_timestamp: eve_timestamp,
-                                object_id: obj, qualifier_field: eve_omap[obj]}
+                    rel_dict = {
+                        event_id: eve_id,
+                        event_activity: eve_activity,
+                        event_timestamp: eve_timestamp,
+                        object_id: obj,
+                        qualifier_field: eve_omap[obj],
+                    }
                     relations.append(rel_dict)
         elif child.tag.lower().endswith("objects"):
             for object in child:
@@ -155,9 +194,16 @@ def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
                     elif child2.get("key") == "ovmap":
                         for child3 in child2:
                             key = child3.get("key")
-                            value = parse_xml(child3.get("value"), child3.tag.lower(),
-                                                                     date_parser)
-                            timestamp = child3.get("timestamp") if "timestamp" in child3.keys() else None
+                            value = parse_xml(
+                                child3.get("value"),
+                                child3.tag.lower(),
+                                date_parser,
+                            )
+                            timestamp = (
+                                child3.get("timestamp")
+                                if "timestamp" in child3.keys()
+                                else None
+                            )
                             obj_ovmap.append((key, value, timestamp))
                 dct = {object_id: obj_id, object_type: obj_type}
                 for el in obj_ovmap:
@@ -176,19 +222,35 @@ def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
                 source = rel.get("source")
                 target = rel.get("target")
                 qualifier = rel.get("qualifier")
-                o2o.append({object_id: source, object_id+"_2": target, qualifier_field: qualifier})
+                o2o.append(
+                    {
+                        object_id: source,
+                        object_id + "_2": target,
+                        qualifier_field: qualifier,
+                    }
+                )
 
     for rel in relations:
         rel[object_type] = obj_type_dict[rel[object_id]]
 
     events = pandas_utils.instantiate_dataframe(events) if events else None
     objects = pandas_utils.instantiate_dataframe(objects) if objects else None
-    relations = pandas_utils.instantiate_dataframe(relations) if relations else None
+    relations = (
+        pandas_utils.instantiate_dataframe(relations) if relations else None
+    )
     o2o = pandas_utils.instantiate_dataframe(o2o) if o2o else None
-    object_changes = pandas_utils.instantiate_dataframe(object_changes) if object_changes else None
+    object_changes = (
+        pandas_utils.instantiate_dataframe(object_changes)
+        if object_changes
+        else None
+    )
 
-    events = pandas_utils.insert_index(events, internal_index, reset_index=False, copy_dataframe=False)
-    relations = pandas_utils.insert_index(relations, internal_index, reset_index=False, copy_dataframe=False)
+    events = pandas_utils.insert_index(
+        events, internal_index, reset_index=False, copy_dataframe=False
+    )
+    relations = pandas_utils.insert_index(
+        relations, internal_index, reset_index=False, copy_dataframe=False
+    )
 
     events = events.sort_values([event_timestamp, internal_index])
     relations = relations.sort_values([event_timestamp, internal_index])
@@ -198,7 +260,15 @@ def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
 
     globals = {}
 
-    ocel = OCEL(events=events, objects=objects, relations=relations, globals=globals, o2o=o2o, object_changes=object_changes, parameters=parameters)
+    ocel = OCEL(
+        events=events,
+        objects=objects,
+        relations=relations,
+        globals=globals,
+        o2o=o2o,
+        object_changes=object_changes,
+        parameters=parameters,
+    )
     ocel = ocel_consistency.apply(ocel, parameters=parameters)
     ocel = filtering_utils.propagate_relations_filtering(ocel)
 

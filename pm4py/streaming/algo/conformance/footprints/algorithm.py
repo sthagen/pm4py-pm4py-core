@@ -46,4 +46,6 @@ def apply(footprints, variant=Variants.CLASSIC, parameters=None):
     fp_check_obj
         Footprints conformance checking object
     """
-    return exec_utils.get_variant(variant).apply(footprints, parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        footprints, parameters=parameters
+    )

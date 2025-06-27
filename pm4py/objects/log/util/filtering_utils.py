@@ -23,6 +23,7 @@ from pm4py.statistics.variants.log import get as variants_module
 from pm4py.objects.log.obj import EventLog, Trace, Event
 from copy import copy
 
+
 def keep_one_trace_per_variant(log, parameters=None):
     """
     Keeps only one trace per variant (does not matter for basic inductive miner)

@@ -55,23 +55,38 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     data = []
     feature_names = []
 
-    ordered_objects = parameters["ordered_objects"] if "ordered_objects" in parameters else ocel.objects[
-        ocel.object_id_column].to_numpy()
+    ordered_objects = (
+        parameters["ordered_objects"]
+        if "ordered_objects" in parameters
+        else ocel.objects[ocel.object_id_column].to_numpy()
+    )
 
-    object_num_attributes = exec_utils.get_param_value(Parameters.OBJECT_NUM_ATTRIBUTES, parameters, None)
+    object_num_attributes = exec_utils.get_param_value(
+        Parameters.OBJECT_NUM_ATTRIBUTES, parameters, None
+    )
 
     if object_num_attributes is not None:
-        feature_names = feature_names + ["@@event_num_"+x for x in object_num_attributes]
+        feature_names = feature_names + [
+            "@@event_num_" + x for x in object_num_attributes
+        ]
 
         attr_values = {}
         for attr in object_num_attributes:
-            values = ocel.objects[[ocel.object_id_column, attr]].dropna(subset=[attr]).to_dict("records")
+            values = (
+                ocel.objects[[ocel.object_id_column, attr]]
+                .dropna(subset=[attr])
+                .to_dict("records")
+            )
             values = {x[ocel.object_id_column]: x[attr] for x in values}
             attr_values[attr] = values
 
         for obj in ordered_objects:
             data.append([])
             for attr in object_num_attributes:
-                data[-1].append(float(attr_values[attr][obj]) if obj in attr_values[attr] else 0.0)
+                data[-1].append(
+                    float(attr_values[attr][obj])
+                    if obj in attr_values[attr]
+                    else 0.0
+                )
 
     return data, feature_names

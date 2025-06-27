@@ -39,7 +39,12 @@ class Parameters(Enum):
     SORT_LOG_REQUIRED = "sort_log_required"
 
 
-def apply(log: EventLog, list_activities: List[str], sample_size: int, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[str, Any]:
+def apply(
+    log: EventLog,
+    list_activities: List[str],
+    sample_size: int,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[str, Any]:
     """
     Finds the disconnected performance spectrum provided a log
     and a list of activities
@@ -65,30 +70,56 @@ def apply(log: EventLog, list_activities: List[str], sample_size: int, parameter
     if parameters is None:
         parameters = {}
 
-    sort_log_required = exec_utils.get_param_value(Parameters.SORT_LOG_REQUIRED, parameters, True)
+    sort_log_required = exec_utils.get_param_value(
+        Parameters.SORT_LOG_REQUIRED, parameters, True
+    )
 
-    all_acti_combs = set(tuple(list_activities[j:j + i]) for i in range(2, len(list_activities) + 1) for j in
-                         range(0, len(list_activities) - i + 1))
-    two_acti_combs = set((list_activities[i], list_activities[i + 1]) for i in range(len(list_activities) - 1))
+    all_acti_combs = set(
+        tuple(list_activities[j: j + i])
+        for i in range(2, len(list_activities) + 1)
+        for j in range(0, len(list_activities) - i + 1)
+    )
+    two_acti_combs = set(
+        (list_activities[i], list_activities[i + 1])
+        for i in range(len(list_activities) - 1)
+    )
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes.DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes.DEFAULT_TIMESTAMP_KEY)
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, xes.DEFAULT_TRACEID_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes.DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY, parameters, xes.DEFAULT_TIMESTAMP_KEY
+    )
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, xes.DEFAULT_TRACEID_KEY
+    )
 
     parameters[Parameters.ATTRIBUTE_KEY] = activity_key
-    log = basic_filter.filter_log_events_attr(log, list_activities, parameters=parameters)
+    log = basic_filter.filter_log_events_attr(
+        log, list_activities, parameters=parameters
+    )
     if sort_log_required:
         log = sorting.sort_timestamp_log(log, timestamp_key=timestamp_key)
 
     points = []
     for trace in log:
-        matches = [(i, i + 1) for i in range(len(trace) - 1) if
-                   (trace[i][activity_key], trace[i + 1][activity_key]) in two_acti_combs]
+        matches = [
+            (i, i + 1)
+            for i in range(len(trace) - 1)
+            if (trace[i][activity_key], trace[i + 1][activity_key])
+            in two_acti_combs
+        ]
 
         i = 0
         while i < len(matches) - 1:
-            matchAct = (trace[mi][activity_key] for mi in (matches[i] + matches[i + 1][1:]))
-            if matches[i][-1] == matches[i + 1][0] and matchAct in all_acti_combs:
+            matchAct = (
+                trace[mi][activity_key]
+                for mi in (matches[i] + matches[i + 1][1:])
+            )
+            if (
+                matches[i][-1] == matches[i + 1][0]
+                and matchAct in all_acti_combs
+            ):
                 matches[i] = matches[i] + matches[i + 1][1:]
                 del matches[i + 1]
                 i = 0
@@ -97,14 +128,26 @@ def apply(log: EventLog, list_activities: List[str], sample_size: int, parameter
 
         if matches:
             matches = set(matches)
-            timest_comb = [{'points': [(trace[i][activity_key], trace[i][timestamp_key].timestamp()) for i in match]}
-                           for match in matches]
+            timest_comb = [
+                {
+                    "points": [
+                        (
+                            trace[i][activity_key],
+                            trace[i][timestamp_key].timestamp(),
+                        )
+                        for i in match
+                    ]
+                }
+                for match in matches
+            ]
             for p in timest_comb:
-                p['case_id'] = trace.attributes[case_id_key]
+                p["case_id"] = trace.attributes[case_id_key]
 
             points += timest_comb
 
-    points = sorted(points, key=lambda x: min(x['points'], key=lambda x: x[1])[1])
+    points = sorted(
+        points, key=lambda x: min(x["points"], key=lambda x: x[1])[1]
+    )
 
     if len(points) > sample_size:
         points = points_subset.pick_chosen_points_list(sample_size, points)

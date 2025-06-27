@@ -25,7 +25,9 @@ from pm4py.util import xes_constants, constants, pandas_utils
 import pandas as pd
 from typing import Dict, Optional, Any, Tuple
 from pm4py.util.business_hours import soj_time_business_hours_diff
-from pm4py.algo.discovery.ocel.link_analysis.variants import classic as link_analysis
+from pm4py.algo.discovery.ocel.link_analysis.variants import (
+    classic as link_analysis,
+)
 
 
 class Parameters(Enum):
@@ -45,8 +47,9 @@ class Parameters(Enum):
     EDGE_REFERENCE = "edge_reference"
 
 
-def build_network_analysis_from_link_analysis(merged_df: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None) -> \
-Dict[Tuple[str, str], Dict[str, Any]]:
+def build_network_analysis_from_link_analysis(
+    merged_df: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None
+) -> Dict[Tuple[str, str], Dict[str, Any]]:
     """
     Builds the network analysis from the results of the link analysis (internal method)
 
@@ -84,30 +87,80 @@ Dict[Tuple[str, str], Dict[str, Any]]:
     if parameters is None:
         parameters = {}
 
-    node_column_source = exec_utils.get_param_value(Parameters.NODE_COLUMN_SOURCE, parameters, xes_constants.DEFAULT_RESOURCE_KEY)
-    node_column_target = exec_utils.get_param_value(Parameters.NODE_COLUMN_TARGET, parameters, xes_constants.DEFAULT_RESOURCE_KEY)
-    edge_column = exec_utils.get_param_value(Parameters.EDGE_COLUMN, parameters, xes_constants.DEFAULT_NAME_KEY)
-    edge_reference = exec_utils.get_param_value(Parameters.EDGE_REFERENCE, parameters, "_out")
-    timestamp_column = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                                  xes_constants.DEFAULT_TIMESTAMP_KEY)
-    timestamp_diff_column = exec_utils.get_param_value(Parameters.TIMESTAMP_DIFF_COLUMN, parameters, "@@timestamp_diff")
+    node_column_source = exec_utils.get_param_value(
+        Parameters.NODE_COLUMN_SOURCE,
+        parameters,
+        xes_constants.DEFAULT_RESOURCE_KEY,
+    )
+    node_column_target = exec_utils.get_param_value(
+        Parameters.NODE_COLUMN_TARGET,
+        parameters,
+        xes_constants.DEFAULT_RESOURCE_KEY,
+    )
+    edge_column = exec_utils.get_param_value(
+        Parameters.EDGE_COLUMN, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    edge_reference = exec_utils.get_param_value(
+        Parameters.EDGE_REFERENCE, parameters, "_out"
+    )
+    timestamp_column = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    timestamp_diff_column = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_DIFF_COLUMN, parameters, "@@timestamp_diff"
+    )
 
-    include_performance = exec_utils.get_param_value(Parameters.INCLUDE_PERFORMANCE, parameters, False)
-    business_hours = exec_utils.get_param_value(Parameters.BUSINESS_HOURS, parameters, False)
-    business_hours_slots = exec_utils.get_param_value(Parameters.BUSINESS_HOUR_SLOTS, parameters, constants.DEFAULT_BUSINESS_HOUR_SLOTS)
+    include_performance = exec_utils.get_param_value(
+        Parameters.INCLUDE_PERFORMANCE, parameters, False
+    )
+    business_hours = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOURS, parameters, False
+    )
+    business_hours_slots = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOUR_SLOTS,
+        parameters,
+        constants.DEFAULT_BUSINESS_HOUR_SLOTS,
+    )
 
     edges = {}
 
     if business_hours:
         merged_df[timestamp_diff_column] = merged_df.apply(
-            lambda x: soj_time_business_hours_diff(x[timestamp_column + "_out"], x[timestamp_column + "_in"],
-                                                   business_hours_slots), axis=1)
+            lambda x: soj_time_business_hours_diff(
+                x[timestamp_column + "_out"],
+                x[timestamp_column + "_in"],
+                business_hours_slots,
+            ),
+            axis=1,
+        )
 
     else:
-        merged_df[timestamp_diff_column] = pandas_utils.get_total_seconds(merged_df[timestamp_column + "_in"] - merged_df[timestamp_column + "_out"])
+        merged_df[timestamp_diff_column] = pandas_utils.get_total_seconds(
+            merged_df[timestamp_column + "_in"]
+            - merged_df[timestamp_column + "_out"]
+        )
 
-    edges0 = merged_df.dropna(subset=[node_column_source + "_out", node_column_target + "_in", edge_column + edge_reference], how="any").groupby([node_column_source + "_out", node_column_target + "_in", edge_column + edge_reference])[
-        timestamp_diff_column].agg(list).to_dict()
+    edges0 = (
+        merged_df.dropna(
+            subset=[
+                node_column_source + "_out",
+                node_column_target + "_in",
+                edge_column + edge_reference,
+            ],
+            how="any",
+        )
+        .groupby(
+            [
+                node_column_source + "_out",
+                node_column_target + "_in",
+                edge_column + edge_reference,
+            ]
+        )[timestamp_diff_column]
+        .agg(list)
+        .to_dict()
+    )
 
     for e0 in edges0:
         edge = (e0[0], e0[1])
@@ -123,8 +176,9 @@ Dict[Tuple[str, str], Dict[str, Any]]:
     return edges
 
 
-def apply(dataframe: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None) -> Dict[
-    Tuple[str, str], Dict[str, Any]]:
+def apply(
+    dataframe: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None
+) -> Dict[Tuple[str, str], Dict[str, Any]]:
     """
     Performs the network analysis on the provided dataframe
 
@@ -166,25 +220,65 @@ def apply(dataframe: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None) 
     if parameters is None:
         parameters = {}
 
-    sorting_column = exec_utils.get_param_value(Parameters.SORTING_COLUMN, parameters,
-                                                xes_constants.DEFAULT_TIMESTAMP_KEY)
-    index_key = exec_utils.get_param_value(Parameters.INDEX_KEY, parameters, constants.DEFAULT_INDEX_KEY)
-    timestamp_column = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                                  xes_constants.DEFAULT_TIMESTAMP_KEY)
-    in_column = exec_utils.get_param_value(Parameters.IN_COLUMN, parameters, constants.CASE_CONCEPT_NAME)
-    out_column = exec_utils.get_param_value(Parameters.OUT_COLUMN, parameters, constants.CASE_CONCEPT_NAME)
-    node_column_source = exec_utils.get_param_value(Parameters.NODE_COLUMN_SOURCE, parameters, xes_constants.DEFAULT_RESOURCE_KEY)
-    node_column_target = exec_utils.get_param_value(Parameters.NODE_COLUMN_TARGET, parameters, xes_constants.DEFAULT_RESOURCE_KEY)
-    edge_column = exec_utils.get_param_value(Parameters.EDGE_COLUMN, parameters, xes_constants.DEFAULT_NAME_KEY)
+    sorting_column = exec_utils.get_param_value(
+        Parameters.SORTING_COLUMN,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    index_key = exec_utils.get_param_value(
+        Parameters.INDEX_KEY, parameters, constants.DEFAULT_INDEX_KEY
+    )
+    timestamp_column = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    in_column = exec_utils.get_param_value(
+        Parameters.IN_COLUMN, parameters, constants.CASE_CONCEPT_NAME
+    )
+    out_column = exec_utils.get_param_value(
+        Parameters.OUT_COLUMN, parameters, constants.CASE_CONCEPT_NAME
+    )
+    node_column_source = exec_utils.get_param_value(
+        Parameters.NODE_COLUMN_SOURCE,
+        parameters,
+        xes_constants.DEFAULT_RESOURCE_KEY,
+    )
+    node_column_target = exec_utils.get_param_value(
+        Parameters.NODE_COLUMN_TARGET,
+        parameters,
+        xes_constants.DEFAULT_RESOURCE_KEY,
+    )
+    edge_column = exec_utils.get_param_value(
+        Parameters.EDGE_COLUMN, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
 
-    dataframe = dataframe[list({timestamp_column, in_column, out_column, node_column_source, node_column_target, edge_column, sorting_column})]
+    dataframe = dataframe[
+        list(
+            {
+                timestamp_column,
+                in_column,
+                out_column,
+                node_column_source,
+                node_column_target,
+                edge_column,
+                sorting_column,
+            }
+        )
+    ]
 
-    parameters_la = {link_analysis.Parameters.OUT_COLUMN: out_column, link_analysis.Parameters.IN_COLUMN: in_column,
-                     link_analysis.Parameters.INDEX_COLUMN: index_key,
-                     link_analysis.Parameters.SORTING_COLUMN: sorting_column,
-                     link_analysis.Parameters.LOOK_FORWARD: True, link_analysis.Parameters.KEEP_FIRST_OCCURRENCE: True,
-                     link_analysis.Parameters.PROPAGATE: False}
+    parameters_la = {
+        link_analysis.Parameters.OUT_COLUMN: out_column,
+        link_analysis.Parameters.IN_COLUMN: in_column,
+        link_analysis.Parameters.INDEX_COLUMN: index_key,
+        link_analysis.Parameters.SORTING_COLUMN: sorting_column,
+        link_analysis.Parameters.LOOK_FORWARD: True,
+        link_analysis.Parameters.KEEP_FIRST_OCCURRENCE: True,
+        link_analysis.Parameters.PROPAGATE: False,
+    }
 
     merged_df = link_analysis.apply(dataframe, parameters=parameters_la)
 
-    return build_network_analysis_from_link_analysis(merged_df, parameters=parameters)
+    return build_network_analysis_from_link_analysis(
+        merged_df, parameters=parameters
+    )

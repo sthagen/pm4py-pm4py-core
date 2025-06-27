@@ -48,7 +48,14 @@ class Parameters(Enum):
     PARAM_MAX_THREAD_EXECUTION_TIME = "max_thread_exec_time"
 
 
-def get_map_from_log_and_net(log, net, initial_marking, final_marking, force_distribution=None, parameters=None):
+def get_map_from_log_and_net(
+    log,
+    net,
+    initial_marking,
+    final_marking,
+    force_distribution=None,
+    parameters=None,
+):
     """
     Get transition stochastic distribution map given the log and the Petri net
 
@@ -79,15 +86,29 @@ def get_map_from_log_and_net(log, net, initial_marking, final_marking, force_dis
     if parameters is None:
         parameters = {}
 
-    token_replay_variant = exec_utils.get_param_value(Parameters.TOKEN_REPLAY_VARIANT, parameters,
-                                                      executor.Variants.TOKEN_REPLAY)
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
+    token_replay_variant = exec_utils.get_param_value(
+        Parameters.TOKEN_REPLAY_VARIANT,
+        parameters,
+        executor.Variants.TOKEN_REPLAY,
+    )
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
 
-    parameters_variants = {constants.PARAMETER_CONSTANT_ACTIVITY_KEY: activity_key}
-    variants_idx = variants_module.get_variants_from_log_trace_idx(log, parameters=parameters_variants)
-    variants = variants_module.convert_variants_trace_idx_to_trace_obj(log, variants_idx)
+    parameters_variants = {
+        constants.PARAMETER_CONSTANT_ACTIVITY_KEY: activity_key
+    }
+    variants_idx = variants_module.get_variants_from_log_trace_idx(
+        log, parameters=parameters_variants
+    )
+    variants = variants_module.convert_variants_trace_idx_to_trace_obj(
+        log, variants_idx
+    )
 
     parameters_tr = copy(parameters)
     parameters_tr[token_replay.Parameters.ACTIVITY_KEY] = activity_key
@@ -96,27 +117,47 @@ def get_map_from_log_and_net(log, net, initial_marking, final_marking, force_dis
     parameters_ses = copy(parameters)
 
     # do the replay
-    aligned_traces = executor.apply(log, net, initial_marking, final_marking, variant=token_replay_variant,
-                                        parameters=parameters_tr)
+    aligned_traces = executor.apply(
+        log,
+        net,
+        initial_marking,
+        final_marking,
+        variant=token_replay_variant,
+        parameters=parameters_tr,
+    )
 
-    element_statistics = performance_map.single_element_statistics(log, net, initial_marking,
-                                                                   aligned_traces, variants_idx,
-                                                                   activity_key=activity_key,
-                                                                   timestamp_key=timestamp_key,
-                                                                   parameters=parameters_ses)
+    element_statistics = performance_map.single_element_statistics(
+        log,
+        net,
+        initial_marking,
+        aligned_traces,
+        variants_idx,
+        activity_key=activity_key,
+        timestamp_key=timestamp_key,
+        parameters=parameters_ses,
+    )
 
     for el in element_statistics:
-        if type(el) is PetriNet.Transition and "performance" in element_statistics[el]:
+        if (
+            type(el) is PetriNet.Transition
+            and "performance" in element_statistics[el]
+        ):
             values = element_statistics[el]["performance"]
 
             rand = RandomVariable()
-            rand.calculate_parameters(values, force_distribution=force_distribution)
+            rand.calculate_parameters(
+                values, force_distribution=force_distribution
+            )
 
-            no_of_times_enabled = element_statistics[el]['no_of_times_enabled']
-            no_of_times_activated = element_statistics[el]['no_of_times_activated']
+            no_of_times_enabled = element_statistics[el]["no_of_times_enabled"]
+            no_of_times_activated = element_statistics[el][
+                "no_of_times_activated"
+            ]
 
             if no_of_times_enabled > 0:
-                rand.set_weight(float(no_of_times_activated) / float(no_of_times_enabled))
+                rand.set_weight(
+                    float(no_of_times_activated) / float(no_of_times_enabled)
+                )
             else:
                 rand.set_weight(0.0)
 

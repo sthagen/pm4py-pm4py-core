@@ -31,8 +31,13 @@ class Variants(Enum):
     CLASSIC = classic
 
 
-def build(net: PetriNet, im: Marking, fm: Marking, variant=Variants.CLASSIC,
-          parameters: Optional[Dict[Any, Any]] = None) -> Any:
+def build(
+    net: PetriNet,
+    im: Marking,
+    fm: Marking,
+    variant=Variants.CLASSIC,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Any:
     """
     Builds the marking equation out of a Petri net
 
@@ -56,10 +61,16 @@ def build(net: PetriNet, im: Marking, fm: Marking, variant=Variants.CLASSIC,
         - Parameters.A => (if provided) the A numpy matrix of the incidence matrix
         - Parameters.FULL_BOOTSTRAP_REQUIRED => The preset/postset of places/transitions need to be inserted
     """
-    return exec_utils.get_variant(variant).build(net, im, fm, parameters=parameters)
+    return exec_utils.get_variant(variant).build(
+        net, im, fm, parameters=parameters
+    )
 
 
-def get_h_value(solver: Any, variant=Variants.CLASSIC, parameters: Optional[Dict[Any, Any]] = None) -> int:
+def get_h_value(
+    solver: Any,
+    variant=Variants.CLASSIC,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> int:
     """
     Gets the heuristics value from the marking equation
 
@@ -73,4 +84,6 @@ def get_h_value(solver: Any, variant=Variants.CLASSIC, parameters: Optional[Dict
     parameters
         Possible parameters of the algorithm
     """
-    return exec_utils.get_variant(variant).get_h_value(solver, parameters=parameters)
+    return exec_utils.get_variant(variant).get_h_value(
+        solver, parameters=parameters
+    )

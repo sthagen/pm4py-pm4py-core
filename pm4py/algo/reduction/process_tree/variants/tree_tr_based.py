@@ -47,7 +47,12 @@ class Parameters(Enum):
     ACTIVITY_KEY = constants.PARAMETER_CONSTANT_ACTIVITY_KEY
 
 
-def apply(tree: ProcessTree, trace: Trace, parameters: Optional[Dict[Any, Any]] = None, **kwargs) -> ProcessTree:
+def apply(
+    tree: ProcessTree,
+    trace: Trace,
+    parameters: Optional[Dict[Any, Any]] = None,
+    **kwargs
+) -> ProcessTree:
     """
     Reduce a process tree replacing the skippable elements that have empty intersection with the
     trace.
@@ -69,11 +74,15 @@ def apply(tree: ProcessTree, trace: Trace, parameters: Optional[Dict[Any, Any]] 
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
     activities = set(x[activity_key] for x in trace)
 
     tree = deepcopy(tree)
-    from pm4py.algo.discovery.footprints.tree.variants import bottomup as footprints
+    from pm4py.algo.discovery.footprints.tree.variants import (
+        bottomup as footprints,
+    )
 
     bottomup_nodes = bottomup.get_bottomup_nodes(tree)
     fps = footprints.get_all_footprints(tree)
@@ -82,7 +91,11 @@ def apply(tree: ProcessTree, trace: Trace, parameters: Optional[Dict[Any, Any]] 
     return reduce(bottomup_nodes, fps, activities)
 
 
-def reduce(bottomup_nodes: List[ProcessTree], fps: Dict[str, Any], activities: Set[str]) -> ProcessTree:
+def reduce(
+    bottomup_nodes: List[ProcessTree],
+    fps: Dict[str, Any],
+    activities: Set[str],
+) -> ProcessTree:
     """
     Reduce a process tree replacing the skippable elements that have empty intersection with the
     trace.

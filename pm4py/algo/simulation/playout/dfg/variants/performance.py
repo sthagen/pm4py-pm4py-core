@@ -70,8 +70,12 @@ def dict_based_choice(dct: Dict[str, float]) -> str:
         return list(choice(X, 1, p=Y))[0]
 
 
-def apply(frequency_dfg: Dict[Tuple[str, str], int], start_activities: Dict[str, int], end_activities: Dict[str, int],
-          parameters: Optional[Dict[Any, Any]] = None) -> EventLog:
+def apply(
+    frequency_dfg: Dict[Tuple[str, str], int],
+    start_activities: Dict[str, int],
+    end_activities: Dict[str, int],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> EventLog:
     """
     Simulates a log out with the transition probabilities provided by the frequency DFG,
     and the time deltas provided by the performance DFG
@@ -101,17 +105,40 @@ def apply(frequency_dfg: Dict[Tuple[str, str], int], start_activities: Dict[str,
     if parameters is None:
         parameters = {}
 
-    num_traces = exec_utils.get_param_value(Parameters.NUM_TRACES, parameters, 1000)
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, xes_constants.DEFAULT_TRACEID_KEY)
-    case_arrival_rate = exec_utils.get_param_value(Parameters.CASE_ARRIVAL_RATE, parameters, 1)
-    performance_dfg = copy(exec_utils.get_param_value(Parameters.PERFORMANCE_DFG, parameters, None))
+    num_traces = exec_utils.get_param_value(
+        Parameters.NUM_TRACES, parameters, 1000
+    )
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, xes_constants.DEFAULT_TRACEID_KEY
+    )
+    case_arrival_rate = exec_utils.get_param_value(
+        Parameters.CASE_ARRIVAL_RATE, parameters, 1
+    )
+    performance_dfg = copy(
+        exec_utils.get_param_value(
+            Parameters.PERFORMANCE_DFG, parameters, None
+        )
+    )
     frequency_dfg = copy(frequency_dfg)
 
-    artificial_start_activity = exec_utils.get_param_value(Parameters.PARAM_ARTIFICIAL_START_ACTIVITY, parameters, constants.DEFAULT_ARTIFICIAL_START_ACTIVITY)
-    artificial_end_activity = exec_utils.get_param_value(Parameters.PARAM_ARTIFICIAL_END_ACTIVITY, parameters, constants.DEFAULT_ARTIFICIAL_END_ACTIVITY)
+    artificial_start_activity = exec_utils.get_param_value(
+        Parameters.PARAM_ARTIFICIAL_START_ACTIVITY,
+        parameters,
+        constants.DEFAULT_ARTIFICIAL_START_ACTIVITY,
+    )
+    artificial_end_activity = exec_utils.get_param_value(
+        Parameters.PARAM_ARTIFICIAL_END_ACTIVITY,
+        parameters,
+        constants.DEFAULT_ARTIFICIAL_END_ACTIVITY,
+    )
 
     for sa in start_activities:
         frequency_dfg[(artificial_start_activity, sa)] = start_activities[sa]
@@ -129,7 +156,8 @@ def apply(frequency_dfg: Dict[Tuple[str, str], int], start_activities: Dict[str,
 
     if performance_dfg is None:
         raise Exception(
-            "performance DFG simulation requires the Parameters.PERFORMANCE_DFG ('performance_dfg') parameter specification.")
+            "performance DFG simulation requires the Parameters.PERFORMANCE_DFG ('performance_dfg') parameter specification."
+        )
 
     log = EventLog()
     curr_st = 10000000
@@ -150,7 +178,14 @@ def apply(frequency_dfg: Dict[Tuple[str, str], int], start_activities: Dict[str,
             perf = 0 if perf == 0 else exponential(perf)
             curr_t += perf
             curr_act = next_act
-            eve = Event({activity_key: curr_act, timestamp_key: strpfromiso.fix_naivety(datetime.fromtimestamp(curr_t))})
+            eve = Event(
+                {
+                    activity_key: curr_act,
+                    timestamp_key: strpfromiso.fix_naivety(
+                        datetime.fromtimestamp(curr_t)
+                    ),
+                }
+            )
             trace.append(eve)
 
     return log

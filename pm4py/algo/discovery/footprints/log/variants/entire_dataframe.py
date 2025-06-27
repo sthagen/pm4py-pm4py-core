@@ -55,7 +55,10 @@ DEFAULT_SORT_REQUIRED = True
 DEFAULT_INDEX_KEY = "@@index"
 
 
-def apply(df: pd.DataFrame, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[str, Any]:
+def apply(
+    df: pd.DataFrame,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[str, Any]:
     """
     Discovers a footprint object from a dataframe
     (the footprints of the dataframe are returned)
@@ -75,33 +78,60 @@ def apply(df: pd.DataFrame, parameters: Optional[Dict[Union[str, Parameters], An
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    caseid_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               None)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    sort_required = exec_utils.get_param_value(Parameters.SORT_REQUIRED, parameters, DEFAULT_SORT_REQUIRED)
-    index_key = exec_utils.get_param_value(Parameters.INDEX_KEY, parameters, DEFAULT_INDEX_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    caseid_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY, parameters, None
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    sort_required = exec_utils.get_param_value(
+        Parameters.SORT_REQUIRED, parameters, DEFAULT_SORT_REQUIRED
+    )
+    index_key = exec_utils.get_param_value(
+        Parameters.INDEX_KEY, parameters, DEFAULT_INDEX_KEY
+    )
 
     df = df[[caseid_key, activity_key, timestamp_key]]
     if sort_required:
         df = pandas_utils.insert_index(df, index_key)
         if start_timestamp_key is not None:
-            df = df.sort_values([caseid_key, start_timestamp_key, timestamp_key, index_key])
+            df = df.sort_values(
+                [caseid_key, start_timestamp_key, timestamp_key, index_key]
+            )
         else:
             df = df.sort_values([caseid_key, timestamp_key, index_key])
 
     grouped_df = df.groupby(caseid_key)
-    dfg = df_statistics.get_dfg_graph(df, measure="frequency", activity_key=activity_key, case_id_glue=caseid_key,
-                                      timestamp_key=timestamp_key, sort_caseid_required=False,
-                                      sort_timestamp_along_case_id=False, start_timestamp_key=start_timestamp_key)
+    dfg = df_statistics.get_dfg_graph(
+        df,
+        measure="frequency",
+        activity_key=activity_key,
+        case_id_glue=caseid_key,
+        timestamp_key=timestamp_key,
+        sort_caseid_required=False,
+        sort_timestamp_along_case_id=False,
+        start_timestamp_key=start_timestamp_key,
+    )
     activities = set(pandas_utils.format_unique(df[activity_key].unique()))
-    start_activities = set(pandas_utils.format_unique(grouped_df.first()[activity_key].unique()))
-    end_activities = set(pandas_utils.format_unique(grouped_df.last()[activity_key].unique()))
+    start_activities = set(
+        pandas_utils.format_unique(grouped_df.first()[activity_key].unique())
+    )
+    end_activities = set(
+        pandas_utils.format_unique(grouped_df.last()[activity_key].unique())
+    )
 
     parallel = {(x, y) for (x, y) in dfg if (y, x) in dfg}
-    sequence = set(causal_discovery.apply(dfg, causal_discovery.Variants.CAUSAL_ALPHA))
+    sequence = set(
+        causal_discovery.apply(dfg, causal_discovery.Variants.CAUSAL_ALPHA)
+    )
 
     ret = {}
     ret[Outputs.DFG.value] = dfg

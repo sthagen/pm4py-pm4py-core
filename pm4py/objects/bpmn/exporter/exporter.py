@@ -51,7 +51,9 @@ def apply(bpmn_graph, target_path, variant=DEFAULT_VARIANT, parameters=None):
     if parameters is None:
         parameters = {}
 
-    return exec_utils.get_variant(variant).apply(bpmn_graph, target_path, parameters=parameters)
+    return exec_utils.get_variant(variant).apply(
+        bpmn_graph, target_path, parameters=parameters
+    )
 
 
 def serialize(bpmn_graph, variant=DEFAULT_VARIANT, parameters=None):
@@ -76,4 +78,6 @@ def serialize(bpmn_graph, variant=DEFAULT_VARIANT, parameters=None):
     if parameters is None:
         parameters = {}
 
-    return exec_utils.get_variant(variant).get_xml_string(bpmn_graph, parameters=parameters)
+    return exec_utils.get_variant(variant).get_xml_string(
+        bpmn_graph, parameters=parameters
+    )

@@ -51,7 +51,9 @@ class Parameters(Enum):
     ALPHA = "alpha"
 
 
-def __transform_log_to_matrix(log: EventLog, activities: List[str], activity_key: str):
+def __transform_log_to_matrix(
+    log: EventLog, activities: List[str], activity_key: str
+):
     """
     Internal method
     Transforms the event log in a numeric matrix that is used to construct the linear problem.
@@ -69,7 +71,9 @@ def __transform_log_to_matrix(log: EventLog, activities: List[str], activity_key
     return matr
 
 
-def __manage_solution(sol, added_places, explored_solutions, net, activities, trans_map):
+def __manage_solution(
+    sol, added_places, explored_solutions, net, activities, trans_map
+):
     """
     Internal method.
     Manages the solution of the linear problem and possibly adds it as a place of the Petri net
@@ -82,8 +86,8 @@ def __manage_solution(sol, added_places, explored_solutions, net, activities, tr
             added_places.add(tuple(sol))
             sol = np.array(sol)
 
-            x0 = np.array(sol[:len(activities)])
-            y0 = np.array(sol[len(activities):2 * len(activities)])
+            x0 = np.array(sol[: len(activities)])
+            y0 = np.array(sol[len(activities): 2 * len(activities)])
 
             if max(x0) > 0 and max(y0) > 0:
                 place = PetriNet.Place(str(len(net.places)))
@@ -91,13 +95,19 @@ def __manage_solution(sol, added_places, explored_solutions, net, activities, tr
                 i = 0
                 while i < len(activities):
                     if sol[i] == 1:
-                        petri_utils.add_arc_from_to(trans_map[activities[i]], place, net)
+                        petri_utils.add_arc_from_to(
+                            trans_map[activities[i]], place, net
+                        )
                     i = i + 1
                 while i < 2 * len(activities):
                     if sol[i] == 1:
-                        petri_utils.add_arc_from_to(place, trans_map[activities[i - len(activities)]], net)
+                        petri_utils.add_arc_from_to(
+                            place,
+                            trans_map[activities[i - len(activities)]],
+                            net,
+                        )
                     i = i + 1
-            vec = x0.tolist() + (y0-1).tolist() + [sol[-1]]
+            vec = x0.tolist() + (y0 - 1).tolist() + [sol[-1]]
             b = sol[-1] - 1 + x0.sum()
 
             explored_solutions.add((tuple(vec), b))
@@ -107,7 +117,10 @@ def __manage_solution(sol, added_places, explored_solutions, net, activities, tr
     return None, None
 
 
-def apply(log0: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[Dict[Any, Any]] = None) -> Tuple[PetriNet, Marking, Marking]:
+def apply(
+    log0: Union[EventLog, EventStream, pd.DataFrame],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Tuple[PetriNet, Marking, Marking]:
     """
     Discovers a Petri net using the ILP miner.
 
@@ -136,24 +149,52 @@ def apply(log0: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    artificial_start_activity = exec_utils.get_param_value(Parameters.PARAM_ARTIFICIAL_START_ACTIVITY, parameters,
-                                                           constants.DEFAULT_ARTIFICIAL_START_ACTIVITY)
-    artificial_end_activity = exec_utils.get_param_value(Parameters.PARAM_ARTIFICIAL_END_ACTIVITY, parameters,
-                                                         constants.DEFAULT_ARTIFICIAL_END_ACTIVITY)
-    show_progress_bar = exec_utils.get_param_value(Parameters.SHOW_PROGRESS_BAR, parameters, constants.SHOW_PROGRESS_BAR)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    artificial_start_activity = exec_utils.get_param_value(
+        Parameters.PARAM_ARTIFICIAL_START_ACTIVITY,
+        parameters,
+        constants.DEFAULT_ARTIFICIAL_START_ACTIVITY,
+    )
+    artificial_end_activity = exec_utils.get_param_value(
+        Parameters.PARAM_ARTIFICIAL_END_ACTIVITY,
+        parameters,
+        constants.DEFAULT_ARTIFICIAL_END_ACTIVITY,
+    )
+    show_progress_bar = exec_utils.get_param_value(
+        Parameters.SHOW_PROGRESS_BAR, parameters, constants.SHOW_PROGRESS_BAR
+    )
 
-    log0 = log_converter.apply(log0, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
-    log0 = filtering_utils.keep_one_trace_per_variant(log0, parameters=parameters)
-    log = artificial.insert_artificial_start_end(deepcopy(log0), parameters=parameters)
+    log0 = log_converter.apply(
+        log0,
+        variant=log_converter.Variants.TO_EVENT_LOG,
+        parameters=parameters,
+    )
+    log0 = filtering_utils.keep_one_trace_per_variant(
+        log0, parameters=parameters
+    )
+    log = artificial.insert_artificial_start_end(
+        deepcopy(log0), parameters=parameters
+    )
     # use the ALPHA causal relation if none is provided as parameter
-    causal = exec_utils.get_param_value(Parameters.CAUSAL_RELATION, parameters, causal_discovery.apply(dfg_discovery.apply(log, parameters=parameters)))
-    # noise threshold for the sequence encoding graph (when alpha=1, no filtering is applied; when alpha=0, the greatest filtering is applied)
+    causal = exec_utils.get_param_value(
+        Parameters.CAUSAL_RELATION,
+        parameters,
+        causal_discovery.apply(
+            dfg_discovery.apply(log, parameters=parameters)
+        ),
+    )
+    # noise threshold for the sequence encoding graph (when alpha=1, no
+    # filtering is applied; when alpha=0, the greatest filtering is applied)
     alpha = exec_utils.get_param_value(Parameters.ALPHA, parameters, 1.0)
 
-    activities = sorted(list(set(x[activity_key] for trace in log for x in trace)))
+    activities = sorted(
+        list(set(x[activity_key] for trace in log for x in trace))
+    )
 
-    # check if the causal relation satisfy the criteria for relaxed sound WF-nets
+    # check if the causal relation satisfy the criteria for relaxed sound
+    # WF-nets
     G = nx_utils.DiGraph()
     for ca in causal:
         G.add_edge(ca[0], ca[1])
@@ -161,9 +202,22 @@ def apply(log0: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional
     desc_start = set(nx_utils.descendants(G, artificial_start_activity))
     anc_end = set(nx_utils.ancestors(G, artificial_end_activity))
 
-    if artificial_start_activity in desc_start or artificial_end_activity in anc_end or len(desc_start.union({artificial_start_activity}).difference(activities)) > 0 or len(anc_end.union({artificial_end_activity}).difference(activities)) > 0:
+    if (
+        artificial_start_activity in desc_start
+        or artificial_end_activity in anc_end
+        or len(
+            desc_start.union({artificial_start_activity}).difference(
+                activities
+            )
+        )
+        > 0
+        or len(anc_end.union({artificial_end_activity}).difference(activities))
+        > 0
+    ):
         if constants.SHOW_INTERNAL_WARNINGS:
-            warnings.warn("The conditions needed to ensure a relaxed sound WF-net as output are not satisfied.")
+            warnings.warn(
+                "The conditions needed to ensure a relaxed sound WF-net as output are not satisfied."
+            )
 
     matr = __transform_log_to_matrix(log, activities, activity_key)
 
@@ -179,9 +233,14 @@ def apply(log0: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional
     trans_map = {}
 
     # STEP A) construction of the transitions of the Petri net.
-    # the source and sink place are connected respectively to the artificial start/end activities
+    # the source and sink place are connected respectively to the artificial
+    # start/end activities
     for act in activities:
-        label = act if act not in [artificial_start_activity, artificial_end_activity] else None
+        label = (
+            act
+            if act not in [artificial_start_activity, artificial_end_activity]
+            else None
+        )
         trans_map[act] = PetriNet.Transition(act, label)
         net.transitions.add(trans_map[act])
 
@@ -196,7 +255,7 @@ def apply(log0: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional
         trace = matr[j]
         trace_occ = log0[j].attributes["@@num_traces"]
         for i in range(len(trace)):
-            prev = -trace[i-1] if i > 0 else np.zeros(len(activities))
+            prev = -trace[i - 1] if i > 0 else np.zeros(len(activities))
             curr = trace[i]
             prev = tuple(prev)
             curr = tuple(curr)
@@ -205,11 +264,13 @@ def apply(log0: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional
             if curr not in seq_enc_graph[prev]:
                 seq_enc_graph[prev][curr] = 0
             seq_enc_graph[prev][curr] += trace_occ
-    max_child_seq_enc_graph = {x: max(y.values()) for x, y in seq_enc_graph.items()}
+    max_child_seq_enc_graph = {
+        x: max(y.values()) for x, y in seq_enc_graph.items()
+    }
 
     # STEP C) construction of the base linear problem
     # which will be 'extended' in each step
-    c = np.zeros(2*len(activities))
+    c = np.zeros(2 * len(activities))
     Aub = []
     bub = []
     Aeq = []
@@ -220,21 +281,25 @@ def apply(log0: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional
 
     for trace in matr:
         for i in range(len(trace)):
-            row1 = -trace[i-1] if i > 0 else np.zeros(len(activities))
+            row1 = -trace[i - 1] if i > 0 else np.zeros(len(activities))
             row2 = trace[i]
             prev = tuple(row1)
             curr = tuple(row2)
 
-            if seq_enc_graph[prev][curr] >= (1-alpha) * max_child_seq_enc_graph[prev]:
+            if (
+                seq_enc_graph[prev][curr]
+                >= (1 - alpha) * max_child_seq_enc_graph[prev]
+            ):
                 row = row1.tolist() + row2.tolist() + [-1]
-                if i < len(trace)-1:
+                if i < len(trace) - 1:
                     if tuple(row) not in added_rows_Aub:
                         added_rows_Aub.add(tuple(row))
                         Aub.append(row)
                         bub.append(0)
                 else:
                     if tuple(row) not in added_rows_Aeq:
-                        # deviation 1: impose that the place is empty at the end of every trace of the log
+                        # deviation 1: impose that the place is empty at the
+                        # end of every trace of the log
                         added_rows_Aeq.add(tuple(row))
                         Aeq.append(row)
                         beq.append(0)
@@ -245,15 +310,15 @@ def apply(log0: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional
                 # break not only the current node but all his children
                 break
 
-    Aub.append([-1] * (2*len(activities)) + [0])
+    Aub.append([-1] * (2 * len(activities)) + [0])
     bub.append(-1)
 
-    for i in range(2*len(activities)+1):
-        row1 = [0] * (2*len(activities)+1)
+    for i in range(2 * len(activities) + 1):
+        row1 = [0] * (2 * len(activities) + 1)
         row1[i] = -1
         Aub.append(row1)
         bub.append(0)
-        row2 = [0] * (2*len(activities)+1)
+        row2 = [0] * (2 * len(activities) + 1)
         row2[i] = 1
         Aub.append(row2)
         bub.append(1)
@@ -266,16 +331,24 @@ def apply(log0: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional
     c = c.tolist()
     c.append(1)
 
-    integrality = [1] * (2*len(activities)+1)
+    integrality = [1] * (2 * len(activities) + 1)
 
     ite = 0
     added_places = set()
     explored_solutions = set()
 
     progress = None
-    if importlib.util.find_spec("tqdm") and show_progress_bar and len(causal) > 1:
+    if (
+        importlib.util.find_spec("tqdm")
+        and show_progress_bar
+        and len(causal) > 1
+    ):
         from tqdm.auto import tqdm
-        progress = tqdm(total=len(causal), desc="discovering Petri net using ILP miner, completed causal relations :: ")
+
+        progress = tqdm(
+            total=len(causal),
+            desc="discovering Petri net using ILP miner, completed causal relations :: ",
+        )
 
     # STEP D) explore all the causal relations in the log
     # to find places
@@ -283,18 +356,28 @@ def apply(log0: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional
         Aeq1 = copy(Aeq)
         beq1 = copy(beq)
 
-        const1 = [0] * (2*len(activities) + 1)
+        const1 = [0] * (2 * len(activities) + 1)
         const1[activities.index(ca[0])] = 1
         Aeq1.append(const1)
         beq1.append(1)
 
-        const2 = [0] * (2*len(activities) + 1)
+        const2 = [0] * (2 * len(activities) + 1)
         const2[len(activities) + activities.index(ca[1])] = 1
         Aeq1.append(const2)
         beq1.append(1)
 
-        sol = lp_solver.apply(c, Aub, bub, Aeq1, beq1, variant=lp_solver.SCIPY, parameters={"integrality": integrality})
-        __manage_solution(sol, added_places, explored_solutions, net, activities, trans_map)
+        sol = lp_solver.apply(
+            c,
+            Aub,
+            bub,
+            Aeq1,
+            beq1,
+            variant=lp_solver.SCIPY,
+            parameters={"integrality": integrality},
+        )
+        __manage_solution(
+            sol, added_places, explored_solutions, net, activities, trans_map
+        )
 
         ite += 1
 
@@ -305,7 +388,6 @@ def apply(log0: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional
     if progress is not None:
         progress.close()
     del progress
-
 
     # here, we also implement the extensive research for places (closing the LP space to previous solutions)
     # as described in the paper (possible STEP D)
@@ -324,7 +406,8 @@ def apply(log0: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional
         if ite >= 25:
             break"""
 
-    # STEP E) apply the reduction on the implicit places and on the invisible transitions
+    # STEP E) apply the reduction on the implicit places and on the invisible
+    # transitions
     net, im, fm = murata.apply_reduction(net, im, fm)
     net = reduction.apply_simple_reduction(net)
 

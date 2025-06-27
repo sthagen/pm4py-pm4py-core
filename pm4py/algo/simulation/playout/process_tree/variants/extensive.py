@@ -45,8 +45,16 @@ class Parameters(Enum):
     RETURN_SET_STRINGS = "return_set_strings"
 
 
-def get_playout_leaf(node, playout_dictio, min_trace_length, max_trace_length, max_loop_occ, min_rem_dict, max_rem_dict,
-                     max_limit_num_traces):
+def get_playout_leaf(
+    node,
+    playout_dictio,
+    min_trace_length,
+    max_trace_length,
+    max_loop_occ,
+    min_rem_dict,
+    max_rem_dict,
+    max_limit_num_traces,
+):
     """
     Performs the playout of a leaf (activity or invisible), returning the traces  allowed by the tree
     """
@@ -60,8 +68,16 @@ def get_playout_leaf(node, playout_dictio, min_trace_length, max_trace_length, m
             playout_dictio[node][TRACES].add((node.label,))
 
 
-def get_playout_xor(node, playout_dictio, min_trace_length, max_trace_length, max_loop_occ, min_rem_dict, max_rem_dict,
-                    max_limit_num_traces):
+def get_playout_xor(
+    node,
+    playout_dictio,
+    min_trace_length,
+    max_trace_length,
+    max_loop_occ,
+    min_rem_dict,
+    max_rem_dict,
+    max_limit_num_traces,
+):
     """
     Performs the playout of a XOR node, returning the traces allowed by the tree
     """
@@ -137,7 +153,9 @@ def flatten(x):
     return ret
 
 
-def get_sequential_compositions_children(traces, min_trace_length, max_trace_length, mr, mar, max_limit_num_traces):
+def get_sequential_compositions_children(
+    traces, min_trace_length, max_trace_length, mr, mar, max_limit_num_traces
+):
     """
     Returns alls the possible sequential combinations between
     the children of a tree
@@ -172,15 +190,33 @@ def get_sequential_compositions_children(traces, min_trace_length, max_trace_len
     return curr
 
 
-def get_playout_parallel(node, playout_dictio, min_trace_length, max_trace_length, max_loop_occ, min_rem_dict,
-                         max_rem_dict, max_limit_num_traces):
+def get_playout_parallel(
+    node,
+    playout_dictio,
+    min_trace_length,
+    max_trace_length,
+    max_loop_occ,
+    min_rem_dict,
+    max_rem_dict,
+    max_limit_num_traces,
+):
     """
     Performs the playout of an AND node, returning the traces allowed by the tree
     """
     mr = min_rem_dict[node]
     mar = max_rem_dict[node]
-    traces = list(sorted(playout_dictio[x][TRACES], key=lambda x: len(x)) for x in node.children)
-    sequential_compositions = get_sequential_compositions_children(traces, min_trace_length, max_trace_length, mr, mar, max_limit_num_traces)
+    traces = list(
+        sorted(playout_dictio[x][TRACES], key=lambda x: len(x))
+        for x in node.children
+    )
+    sequential_compositions = get_sequential_compositions_children(
+        traces,
+        min_trace_length,
+        max_trace_length,
+        mr,
+        mar,
+        max_limit_num_traces,
+    )
     final_traces = list()
     for x in sequential_compositions:
         if len(final_traces) >= max_limit_num_traces:
@@ -188,7 +224,9 @@ def get_playout_parallel(node, playout_dictio, min_trace_length, max_trace_lengt
         to_visit = [[[]] + [len(y) for y in x]]
         while len(to_visit) > 0:
             curr = to_visit.pop(0)
-            possible_choices = [i - 1 for i in range(1, len(curr)) if curr[i] > 0]
+            possible_choices = [
+                i - 1 for i in range(1, len(curr)) if curr[i] > 0
+            ]
             for j in possible_choices:
                 new = list(curr)
                 new[0] = list(new[0])
@@ -202,31 +240,61 @@ def get_playout_parallel(node, playout_dictio, min_trace_length, max_trace_lengt
     playout_dictio[node] = {TRACES: set(final_traces)}
 
 
-def get_playout_sequence(node, playout_dictio, min_trace_length, max_trace_length, max_loop_occ, min_rem_dict,
-                         max_rem_dict, max_limit_num_traces):
+def get_playout_sequence(
+    node,
+    playout_dictio,
+    min_trace_length,
+    max_trace_length,
+    max_loop_occ,
+    min_rem_dict,
+    max_rem_dict,
+    max_limit_num_traces,
+):
     """
     Performs the playout of a sequence node, returning the traces allowed by the tree
     """
     mr = min_rem_dict[node]
     mar = max_rem_dict[node]
     final_traces = set()
-    traces = list(sorted(playout_dictio[x][TRACES], key=lambda x: len(x)) for x in node.children)
-    sequential_compositions = get_sequential_compositions_children(traces, min_trace_length, max_trace_length, mr, mar, max_limit_num_traces)
+    traces = list(
+        sorted(playout_dictio[x][TRACES], key=lambda x: len(x))
+        for x in node.children
+    )
+    sequential_compositions = get_sequential_compositions_children(
+        traces,
+        min_trace_length,
+        max_trace_length,
+        mr,
+        mar,
+        max_limit_num_traces,
+    )
     for x in sequential_compositions:
         final_traces.add(tuple(flatten(x)))
     playout_dictio[node] = {TRACES: final_traces}
 
 
-def get_playout_loop(node, playout_dictio, min_trace_length, max_trace_length, max_loop_occ, min_rem_dict, max_rem_dict,
-                     max_limit_num_traces):
+def get_playout_loop(
+    node,
+    playout_dictio,
+    min_trace_length,
+    max_trace_length,
+    max_loop_occ,
+    min_rem_dict,
+    max_rem_dict,
+    max_limit_num_traces,
+):
     """
     Performs the playout of a loop node, returning the traces allowed by the tree
     """
     mr = min_rem_dict[node]
     mar = max_rem_dict[node]
     final_traces = set()
-    do_traces = sorted(list(playout_dictio[node.children[0]][TRACES]), key=lambda x: len(x))
-    redo_traces = sorted(list(playout_dictio[node.children[1]][TRACES]), key=lambda x: len(x))
+    do_traces = sorted(
+        list(playout_dictio[node.children[0]][TRACES]), key=lambda x: len(x)
+    )
+    redo_traces = sorted(
+        list(playout_dictio[node.children[1]][TRACES]), key=lambda x: len(x)
+    )
     min_do_trace = min(len(x) for x in do_traces) if do_traces else 0
     to_visit = list((x, 0, 0) for x in do_traces)
     closed = set()
@@ -265,29 +333,80 @@ def get_playout_loop(node, playout_dictio, min_trace_length, max_trace_length, m
     playout_dictio[node] = {TRACES: final_traces}
 
 
-def get_playout(node, playout_dictio, min_trace_length, max_trace_length, max_loop_occ, min_rem_dict, max_rem_dict,
-                max_limit_num_traces):
+def get_playout(
+    node,
+    playout_dictio,
+    min_trace_length,
+    max_trace_length,
+    max_loop_occ,
+    min_rem_dict,
+    max_rem_dict,
+    max_limit_num_traces,
+):
     """
     Performs a playout of an ode of the process tree, given the type
     """
     if len(node.children) == 0:
-        get_playout_leaf(node, playout_dictio, min_trace_length, max_trace_length, max_loop_occ, min_rem_dict,
-                         max_rem_dict, max_limit_num_traces)
+        get_playout_leaf(
+            node,
+            playout_dictio,
+            min_trace_length,
+            max_trace_length,
+            max_loop_occ,
+            min_rem_dict,
+            max_rem_dict,
+            max_limit_num_traces,
+        )
     elif node.operator == Operator.XOR:
-        get_playout_xor(node, playout_dictio, min_trace_length, max_trace_length, max_loop_occ, min_rem_dict,
-                        max_rem_dict, max_limit_num_traces)
+        get_playout_xor(
+            node,
+            playout_dictio,
+            min_trace_length,
+            max_trace_length,
+            max_loop_occ,
+            min_rem_dict,
+            max_rem_dict,
+            max_limit_num_traces,
+        )
     elif node.operator == Operator.PARALLEL:
-        get_playout_parallel(node, playout_dictio, min_trace_length, max_trace_length, max_loop_occ, min_rem_dict,
-                             max_rem_dict, max_limit_num_traces)
+        get_playout_parallel(
+            node,
+            playout_dictio,
+            min_trace_length,
+            max_trace_length,
+            max_loop_occ,
+            min_rem_dict,
+            max_rem_dict,
+            max_limit_num_traces,
+        )
     elif node.operator == Operator.SEQUENCE:
-        get_playout_sequence(node, playout_dictio, min_trace_length, max_trace_length, max_loop_occ, min_rem_dict,
-                             max_rem_dict, max_limit_num_traces)
+        get_playout_sequence(
+            node,
+            playout_dictio,
+            min_trace_length,
+            max_trace_length,
+            max_loop_occ,
+            min_rem_dict,
+            max_rem_dict,
+            max_limit_num_traces,
+        )
     elif node.operator == Operator.LOOP:
-        get_playout_loop(node, playout_dictio, min_trace_length, max_trace_length, max_loop_occ, min_rem_dict,
-                         max_rem_dict, max_limit_num_traces)
+        get_playout_loop(
+            node,
+            playout_dictio,
+            min_trace_length,
+            max_trace_length,
+            max_loop_occ,
+            min_rem_dict,
+            max_rem_dict,
+            max_limit_num_traces,
+        )
 
 
-def apply(tree: ProcessTree, parameters : Optional[Dict[Union[str, Parameters], Any]] = None) -> EventLog:
+def apply(
+    tree: ProcessTree,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> EventLog:
     """
     Performs an extensive playout of the process tree
 
@@ -310,28 +429,56 @@ def apply(tree: ProcessTree, parameters : Optional[Dict[Union[str, Parameters], 
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
     # to save memory in the returned log, allocate each activity once. to know the list of activities of the
     # process tree, use the footprints module
     fp_tree = fp_discovery.apply(tree, parameters=parameters)
     activities = fp_tree["activities"]
     activities = {act: Event({activity_key: act}) for act in activities}
 
-    min_allowed_trace_length = bottomup_discovery.get_min_trace_length(tree, parameters=parameters)
-    min_trace_length = exec_utils.get_param_value(Parameters.MIN_TRACE_LENGTH, parameters, 1)
-    max_trace_length = exec_utils.get_param_value(Parameters.MAX_TRACE_LENGTH, parameters, min_allowed_trace_length)
-    max_loop_occ = exec_utils.get_param_value(Parameters.MAX_LOOP_OCC, parameters, int(max_trace_length / 2))
-    max_limit_num_traces = exec_utils.get_param_value(Parameters.MAX_LIMIT_NUM_TRACES, parameters, 100000)
-    return_set_strings = exec_utils.get_param_value(Parameters.RETURN_SET_STRINGS, parameters, False)
+    min_allowed_trace_length = bottomup_discovery.get_min_trace_length(
+        tree, parameters=parameters
+    )
+    min_trace_length = exec_utils.get_param_value(
+        Parameters.MIN_TRACE_LENGTH, parameters, 1
+    )
+    max_trace_length = exec_utils.get_param_value(
+        Parameters.MAX_TRACE_LENGTH, parameters, min_allowed_trace_length
+    )
+    max_loop_occ = exec_utils.get_param_value(
+        Parameters.MAX_LOOP_OCC, parameters, int(max_trace_length / 2)
+    )
+    max_limit_num_traces = exec_utils.get_param_value(
+        Parameters.MAX_LIMIT_NUM_TRACES, parameters, 100000
+    )
+    return_set_strings = exec_utils.get_param_value(
+        Parameters.RETURN_SET_STRINGS, parameters, False
+    )
 
-    bottomup = bottomup_discovery.get_bottomup_nodes(tree, parameters=parameters)
-    min_rem_dict = bottomup_discovery.get_min_rem_dict(tree, parameters=parameters)
-    max_rem_dict = bottomup_discovery.get_max_rem_dict(tree, parameters=parameters)
+    bottomup = bottomup_discovery.get_bottomup_nodes(
+        tree, parameters=parameters
+    )
+    min_rem_dict = bottomup_discovery.get_min_rem_dict(
+        tree, parameters=parameters
+    )
+    max_rem_dict = bottomup_discovery.get_max_rem_dict(
+        tree, parameters=parameters
+    )
 
     playout_dictio = {}
     for i in range(len(bottomup)):
-        get_playout(bottomup[i], playout_dictio, min_trace_length, max_trace_length, max_loop_occ, min_rem_dict,
-                    max_rem_dict, max_limit_num_traces)
+        get_playout(
+            bottomup[i],
+            playout_dictio,
+            min_trace_length,
+            max_trace_length,
+            max_loop_occ,
+            min_rem_dict,
+            max_rem_dict,
+            max_limit_num_traces,
+        )
     tree_playout_traces = playout_dictio[tree][TRACES]
 
     if return_set_strings:

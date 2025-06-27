@@ -25,11 +25,11 @@ from pm4py.objects.process_tree.obj import Operator as pt_opt
 
 
 def apply(tree, parameters=None):
-    '''
+    """
     Only supports loops with 2 children!
     :param tree:
     :return:
-    '''
+    """
     net = obj.PetriNet(name=str(tree))
     if len(tree.children) == 0:
         pn_util.add_transition(net, label=tree.label, name=str(id(tree)))
@@ -43,7 +43,7 @@ def apply(tree, parameters=None):
             pt_opt.SEQUENCE: construct_sequence_pattern,
             pt_opt.XOR: construct_xor_pattern,
             pt_opt.PARALLEL: construct_and_pattern,
-            pt_opt.LOOP: construct_loop_pattern
+            pt_opt.LOOP: construct_loop_pattern,
         }
         net, ini, fin = switch[tree.operator](net, sub_nets)
     if tree.parent is None:
@@ -82,8 +82,12 @@ def construct_sequence_pattern(net, sub_nets):
     for i in range(len(sub_nets) + 1):
         places[i] = pn_util.add_place(net)
     for i in range(len(sub_nets)):
-        pn_util.add_arc_from_to(places[i], _get_src_transition(sub_nets[i]), net)
-        pn_util.add_arc_from_to(_get_sink_transition(sub_nets[i]), places[i + 1], net)
+        pn_util.add_arc_from_to(
+            places[i], _get_src_transition(sub_nets[i]), net
+        )
+        pn_util.add_arc_from_to(
+            _get_sink_transition(sub_nets[i]), places[i + 1], net
+        )
     src = pn_util.add_transition(net)
     pn_util.add_arc_from_to(src, places[0], net)
     sink = pn_util.add_transition(net)
@@ -118,7 +122,7 @@ def construct_and_pattern(net, sub_nets):
 
 
 def construct_loop_pattern(net, sub_nets):
-    assert (len(sub_nets) == 2)
+    assert len(sub_nets) == 2
     p_s = pn_util.add_place(net)
     p_t = pn_util.add_place(net)
     pn_util.add_arc_from_to(p_s, _get_src_transition(sub_nets[0]), net)

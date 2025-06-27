@@ -35,7 +35,12 @@ CLASSIC = Variants.CLASSIC
 DEFAULT_VARIANT = Variants.CLASSIC
 
 
-def apply(obj: Union[EventLog, Trace, pd.DataFrame], model: Dict[str, Any], variant=DEFAULT_VARIANT, parameters: Optional[Dict[Any, Any]] = None) -> List[Set[Any]]:
+def apply(
+    obj: Union[EventLog, Trace, pd.DataFrame],
+    model: Dict[str, Any],
+    variant=DEFAULT_VARIANT,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> List[Set[Any]]:
     """
     Apply log-skeleton based conformance checking given an event log/trace
     and a log-skeleton model
@@ -65,12 +70,21 @@ def apply(obj: Union[EventLog, Trace, pd.DataFrame], model: Dict[str, Any], vari
         parameters = {}
 
     if type(obj) is Trace:
-        return exec_utils.get_variant(variant).apply_trace(obj, model, parameters=parameters)
+        return exec_utils.get_variant(variant).apply_trace(
+            obj, model, parameters=parameters
+        )
     else:
-        return exec_utils.get_variant(variant).apply_log(obj, model, parameters=parameters)
+        return exec_utils.get_variant(variant).apply_log(
+            obj, model, parameters=parameters
+        )
 
 
-def apply_from_variants_list(var_list: List[List[str]], model: Dict[str, Any], variant=DEFAULT_VARIANT, parameters: Optional[Dict[Any, Any]] = None) -> List[Set[Any]]:
+def apply_from_variants_list(
+    var_list: List[List[str]],
+    model: Dict[str, Any],
+    variant=DEFAULT_VARIANT,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> List[Set[Any]]:
     """
     Performs conformance checking using the log skeleton,
     applying it from a list of variants
@@ -95,10 +109,17 @@ def apply_from_variants_list(var_list: List[List[str]], model: Dict[str, Any], v
     if parameters is None:
         parameters = {}
 
-    return exec_utils.get_variant(variant).apply_from_variants_list(var_list, model, parameters=parameters)
+    return exec_utils.get_variant(variant).apply_from_variants_list(
+        var_list, model, parameters=parameters
+    )
 
 
-def get_diagnostics_dataframe(log: EventLog, conf_result: List[Set[Any]], variant=DEFAULT_VARIANT, parameters: Optional[Dict[Any, Any]] = None) -> pd.DataFrame:
+def get_diagnostics_dataframe(
+    log: EventLog,
+    conf_result: List[Set[Any]],
+    variant=DEFAULT_VARIANT,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> pd.DataFrame:
     """
     Gets the diagnostics dataframe from a log and the results
     of log skeleton-based conformance checking
@@ -118,4 +139,6 @@ def get_diagnostics_dataframe(log: EventLog, conf_result: List[Set[Any]], varian
     if parameters is None:
         parameters = {}
 
-    return exec_utils.get_variant(variant).get_diagnostics_dataframe(log, conf_result, parameters=parameters)
+    return exec_utils.get_variant(variant).get_diagnostics_dataframe(
+        log, conf_result, parameters=parameters
+    )

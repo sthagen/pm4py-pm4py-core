@@ -46,7 +46,9 @@ def apply(input_file_path, variant=PNML, parameters=None):
         Variant of the algorithm to use, possible values:
             - Variants.PNML
     """
-    return exec_utils.get_variant(variant).import_net(input_file_path, parameters=parameters)
+    return exec_utils.get_variant(variant).import_net(
+        input_file_path, parameters=parameters
+    )
 
 
 def deserialize(petri_string, variant=PNML, parameters=None):
@@ -63,4 +65,6 @@ def deserialize(petri_string, variant=PNML, parameters=None):
     parameters
         Other parameters of the algorithm
     """
-    return exec_utils.get_variant(variant).import_net_from_string(petri_string, parameters=parameters)
+    return exec_utils.get_variant(variant).import_net_from_string(
+        petri_string, parameters=parameters
+    )

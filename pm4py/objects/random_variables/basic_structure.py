@@ -113,7 +113,11 @@ class BasicStructureRandomVariable(object):
         repr
             Representation of the current object
         """
-        return self.get_distribution_type() + " " + self.get_distribution_parameters()
+        return (
+            self.get_distribution_type()
+            + " "
+            + self.get_distribution_parameters()
+        )
 
     def __repr__(self):
         """
@@ -124,7 +128,11 @@ class BasicStructureRandomVariable(object):
         repr
             Representation of the current object
         """
-        return self.get_distribution_type() + " " + self.get_distribution_parameters()
+        return (
+            self.get_distribution_type()
+            + " "
+            + self.get_distribution_parameters()
+        )
 
     def get_value(self):
         """

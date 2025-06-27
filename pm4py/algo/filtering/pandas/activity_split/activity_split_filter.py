@@ -35,8 +35,11 @@ class Parameters(Enum):
     CUT_MODE = "cut_mode"
 
 
-def apply(df: pd.DataFrame, activity: Union[str, List[str]],
-          parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> pd.DataFrame:
+def apply(
+    df: pd.DataFrame,
+    activity: Union[str, List[str]],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> pd.DataFrame:
     """
     Splits the cases of a log (Pandas dataframe) into subcases based on the provision of an activity.
     There are as many subcases as many occurrences of a given activity occur.
@@ -92,17 +95,29 @@ def apply(df: pd.DataFrame, activity: Union[str, List[str]],
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    subcase_concat_str = exec_utils.get_param_value(Parameters.SUBCASE_CONCAT_STR, parameters, "##@@")
-    cut_mode = exec_utils.get_param_value(Parameters.CUT_MODE, parameters, "this")
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    subcase_concat_str = exec_utils.get_param_value(
+        Parameters.SUBCASE_CONCAT_STR, parameters, "##@@"
+    )
+    cut_mode = exec_utils.get_param_value(
+        Parameters.CUT_MODE, parameters, "this"
+    )
 
-    act_equal = lambda x: x == activity if type(activity) is str else x in activity
+    def act_equal(x): return (
+        x == activity if type(activity) is str else x in activity
+    )
 
     df = df.copy()
     cases = df[case_id_key].to_numpy()
     activities = df[activity_key].to_numpy()
-    c_unq, c_ind, c_counts = np.unique(cases, return_index=True, return_counts=True)
+    c_unq, c_ind, c_counts = np.unique(
+        cases, return_index=True, return_counts=True
+    )
     res = []
 
     i = 0

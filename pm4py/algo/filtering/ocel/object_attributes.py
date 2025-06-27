@@ -32,7 +32,11 @@ class Parameters(Enum):
     POSITIVE = "positive"
 
 
-def apply(ocel: OCEL, values: Collection[Any], parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
+def apply(
+    ocel: OCEL,
+    values: Collection[Any],
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> OCEL:
     """
     Filters the object-centric event log on the provided object attributes values
 
@@ -55,8 +59,12 @@ def apply(ocel: OCEL, values: Collection[Any], parameters: Optional[Dict[Any, An
     if parameters is None:
         parameters = {}
 
-    attribute_key = exec_utils.get_param_value(Parameters.ATTRIBUTE_KEY, parameters, ocel.object_type_column)
-    positive = exec_utils.get_param_value(Parameters.POSITIVE, parameters, True)
+    attribute_key = exec_utils.get_param_value(
+        Parameters.ATTRIBUTE_KEY, parameters, ocel.object_type_column
+    )
+    positive = exec_utils.get_param_value(
+        Parameters.POSITIVE, parameters, True
+    )
 
     ocel = copy(ocel)
     if positive:
@@ -64,4 +72,6 @@ def apply(ocel: OCEL, values: Collection[Any], parameters: Optional[Dict[Any, An
     else:
         ocel.objects = ocel.objects[~ocel.objects[attribute_key].isin(values)]
 
-    return filtering_utils.propagate_object_filtering(ocel, parameters=parameters)
+    return filtering_utils.propagate_object_filtering(
+        ocel, parameters=parameters
+    )

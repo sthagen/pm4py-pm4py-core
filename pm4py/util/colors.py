@@ -66,7 +66,11 @@ def get_transitions_color(count_move_on_model, count_fit):
     color
         Color associated to the transition
     """
-    factor = int(255.0 * float(count_fit) / float(count_move_on_model + count_fit + 0.00001))
+    factor = int(
+        255.0
+        * float(count_fit)
+        / float(count_move_on_model + count_fit + 0.00001)
+    )
     first = get_corr_hex(int(factor / 16))
     second = get_corr_hex(factor % 16)
     return "#FF" + first + second + first + second

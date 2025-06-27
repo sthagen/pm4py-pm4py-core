@@ -39,11 +39,17 @@ class Parameters(Enum):
     WORKCALENDAR = "workcalendar"
 
 
-def apply(log: Union[EventLog, EventStream], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[Tuple[str, str], float]:
+def apply(
+    log: Union[EventLog, EventStream],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[Tuple[str, str], float]:
     return performance(log, parameters=parameters)
 
 
-def performance(log: Union[EventLog, EventStream], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[Tuple[str, str], float]:
+def performance(
+    log: Union[EventLog, EventStream],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[Tuple[str, str], float]:
     """
     Measure performance between couples of attributes in the DFG graph
 
@@ -77,30 +83,77 @@ def performance(log: Union[EventLog, EventStream], parameters: Optional[Dict[Uni
         parameters = {}
 
     from statistics import mean, median, stdev
-    
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_util.DEFAULT_NAME_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters,
-                                                     xes_util.DEFAULT_TIMESTAMP_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes_util.DEFAULT_TIMESTAMP_KEY)
-    aggregation_measure = exec_utils.get_param_value(Parameters.AGGREGATION_MEASURE, parameters, "mean")
 
-    business_hours = exec_utils.get_param_value(Parameters.BUSINESS_HOURS, parameters, False)
-    business_hours_slots = exec_utils.get_param_value(Parameters.BUSINESS_HOUR_SLOTS, parameters, constants.DEFAULT_BUSINESS_HOUR_SLOTS)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_util.DEFAULT_NAME_KEY
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_util.DEFAULT_TIMESTAMP_KEY,
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY, parameters, xes_util.DEFAULT_TIMESTAMP_KEY
+    )
+    aggregation_measure = exec_utils.get_param_value(
+        Parameters.AGGREGATION_MEASURE, parameters, "mean"
+    )
 
-    workcalendar = exec_utils.get_param_value(Parameters.WORKCALENDAR, parameters, constants.DEFAULT_BUSINESS_HOURS_WORKCALENDAR)
+    business_hours = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOURS, parameters, False
+    )
+    business_hours_slots = exec_utils.get_param_value(
+        Parameters.BUSINESS_HOUR_SLOTS,
+        parameters,
+        constants.DEFAULT_BUSINESS_HOUR_SLOTS,
+    )
+
+    workcalendar = exec_utils.get_param_value(
+        Parameters.WORKCALENDAR,
+        parameters,
+        constants.DEFAULT_BUSINESS_HOURS_WORKCALENDAR,
+    )
 
     if business_hours:
-        dfgs0 = map((lambda t: [
-            ((t[i - 1][activity_key], t[i][activity_key]),
-             max(0, BusinessHours(t[i - 1][timestamp_key],
-                                  t[i][start_timestamp_key],
-                                  business_hour_slots=business_hours_slots, workcalendar=workcalendar).get_seconds()))
-            for i in range(1, len(t))]), log)
+        dfgs0 = map(
+            (
+                lambda t: [
+                    (
+                        (t[i - 1][activity_key], t[i][activity_key]),
+                        max(
+                            0,
+                            BusinessHours(
+                                t[i - 1][timestamp_key],
+                                t[i][start_timestamp_key],
+                                business_hour_slots=business_hours_slots,
+                                workcalendar=workcalendar,
+                            ).get_seconds(),
+                        ),
+                    )
+                    for i in range(1, len(t))
+                ]
+            ),
+            log,
+        )
     else:
-        dfgs0 = map((lambda t: [
-            ((t[i - 1][activity_key], t[i][activity_key]),
-             max(0, (t[i][start_timestamp_key] - t[i - 1][timestamp_key]).total_seconds()))
-            for i in range(1, len(t))]), log)
+        dfgs0 = map(
+            (
+                lambda t: [
+                    (
+                        (t[i - 1][activity_key], t[i][activity_key]),
+                        max(
+                            0,
+                            (
+                                t[i][start_timestamp_key]
+                                - t[i - 1][timestamp_key]
+                            ).total_seconds(),
+                        ),
+                    )
+                    for i in range(1, len(t))
+                ]
+            ),
+            log,
+        )
     ret0 = {}
     for el in dfgs0:
         for couple in el:
@@ -122,8 +175,14 @@ def performance(log: Union[EventLog, EventStream], parameters: Optional[Dict[Uni
         elif aggregation_measure == "raw_values":
             ret[key] = ret0[key]
         elif aggregation_measure == "all":
-            ret[key] = {"median": median(ret0[key]), "min": min(ret0[key]), "max": max(ret0[key]),
-                        "stdev": stdev(ret0[key]) if len(ret0[key]) > 1 else 0, "sum": sum(ret0[key]), "mean": mean(ret0[key])}
+            ret[key] = {
+                "median": median(ret0[key]),
+                "min": min(ret0[key]),
+                "max": max(ret0[key]),
+                "stdev": stdev(ret0[key]) if len(ret0[key]) > 1 else 0,
+                "sum": sum(ret0[key]),
+                "mean": mean(ret0[key]),
+            }
         else:
             ret[key] = mean(ret0[key])
 

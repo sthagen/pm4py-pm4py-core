@@ -23,7 +23,11 @@ from enum import Enum
 
 from pm4py.util import exec_utils
 from pm4py.util import xes_constants as xes
-from pm4py.util.constants import PARAMETER_CONSTANT_ATTRIBUTE_KEY, PARAMETER_CONSTANT_TIMESTAMP_KEY, DEFAULT_VARIANT_SEP
+from pm4py.util.constants import (
+    PARAMETER_CONSTANT_ATTRIBUTE_KEY,
+    PARAMETER_CONSTANT_TIMESTAMP_KEY,
+    DEFAULT_VARIANT_SEP,
+)
 import sys
 
 from typing import Optional, Dict, Any, Union, Tuple, List
@@ -40,7 +44,11 @@ class Parameters(Enum):
     MAX_PERFORMANCE = "max_performance"
 
 
-def apply(log: EventLog, paths: List[Tuple[str, str]], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> EventLog:
+def apply(
+    log: EventLog,
+    paths: List[Tuple[str, str]],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> EventLog:
     """
     Apply a filter on traces containing / not containing a path
 
@@ -63,12 +71,24 @@ def apply(log: EventLog, paths: List[Tuple[str, str]], parameters: Optional[Dict
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    attribute_key = exec_utils.get_param_value(Parameters.ATTRIBUTE_KEY, parameters, xes.DEFAULT_NAME_KEY)
-    positive = exec_utils.get_param_value(Parameters.POSITIVE, parameters, True)
-    filtered_log = EventLog(list(), attributes=log.attributes, extensions=log.extensions, classifiers=log.classifiers,
-                            omni_present=log.omni_present, properties=log.properties)
+    attribute_key = exec_utils.get_param_value(
+        Parameters.ATTRIBUTE_KEY, parameters, xes.DEFAULT_NAME_KEY
+    )
+    positive = exec_utils.get_param_value(
+        Parameters.POSITIVE, parameters, True
+    )
+    filtered_log = EventLog(
+        list(),
+        attributes=log.attributes,
+        extensions=log.extensions,
+        classifiers=log.classifiers,
+        omni_present=log.omni_present,
+        properties=log.properties,
+    )
     for trace in log:
         found = False
         for i in range(len(trace) - 1):
@@ -81,7 +101,11 @@ def apply(log: EventLog, paths: List[Tuple[str, str]], parameters: Optional[Dict
     return filtered_log
 
 
-def apply_performance(log: EventLog, provided_path: Tuple[str, str], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> EventLog:
+def apply_performance(
+    log: EventLog,
+    provided_path: Tuple[str, str],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> EventLog:
     """
     Filters the cases of an event log where there is at least one occurrence of the provided path
     occurring in the defined timedelta range.
@@ -108,21 +132,42 @@ def apply_performance(log: EventLog, provided_path: Tuple[str, str], parameters:
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    attribute_key = exec_utils.get_param_value(Parameters.ATTRIBUTE_KEY, parameters, xes.DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes.DEFAULT_TIMESTAMP_KEY)
-    min_performance = exec_utils.get_param_value(Parameters.MIN_PERFORMANCE, parameters, 0)
-    max_performance = exec_utils.get_param_value(Parameters.MAX_PERFORMANCE, parameters, sys.maxsize)
-    positive = exec_utils.get_param_value(Parameters.POSITIVE, parameters, True)
-    filtered_log = EventLog(list(), attributes=log.attributes, extensions=log.extensions, classifiers=log.classifiers,
-                            omni_present=log.omni_present, properties=log.properties)
+    attribute_key = exec_utils.get_param_value(
+        Parameters.ATTRIBUTE_KEY, parameters, xes.DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY, parameters, xes.DEFAULT_TIMESTAMP_KEY
+    )
+    min_performance = exec_utils.get_param_value(
+        Parameters.MIN_PERFORMANCE, parameters, 0
+    )
+    max_performance = exec_utils.get_param_value(
+        Parameters.MAX_PERFORMANCE, parameters, sys.maxsize
+    )
+    positive = exec_utils.get_param_value(
+        Parameters.POSITIVE, parameters, True
+    )
+    filtered_log = EventLog(
+        list(),
+        attributes=log.attributes,
+        extensions=log.extensions,
+        classifiers=log.classifiers,
+        omni_present=log.omni_present,
+        properties=log.properties,
+    )
     for trace in log:
         found = False
         for i in range(len(trace) - 1):
             path = (trace[i][attribute_key], trace[i + 1][attribute_key])
             if path == provided_path:
-                timediff = trace[i + 1][timestamp_key].timestamp() - trace[i][timestamp_key].timestamp()
+                timediff = (
+                    trace[i + 1][timestamp_key].timestamp()
+                    - trace[i][timestamp_key].timestamp()
+                )
                 if min_performance <= timediff <= max_performance:
                     found = True
                     break
@@ -153,7 +198,11 @@ def get_paths_from_log(log, attribute_key="concept:name"):
     for trace in log:
         for i in range(0, len(trace) - 1):
             if attribute_key in trace[i] and attribute_key in trace[i + 1]:
-                path = trace[i][attribute_key] + DEFAULT_VARIANT_SEP + trace[i + 1][attribute_key]
+                path = (
+                    trace[i][attribute_key]
+                    + DEFAULT_VARIANT_SEP
+                    + trace[i + 1][attribute_key]
+                )
                 if path not in paths:
                     paths[path] = 0
                 paths[path] = paths[path] + 1
@@ -206,7 +255,9 @@ def get_paths_threshold(plist, decreasing_factor):
     return threshold
 
 
-def filter_log_by_paths(log, paths, variants, vc, threshold, attribute_key="concept:name"):
+def filter_log_by_paths(
+    log, paths, variants, vc, threshold, attribute_key="concept:name"
+):
     """
     Keep only paths which number of occurrences is above the threshold (or they belong to the first variant)
 
@@ -232,12 +283,22 @@ def filter_log_by_paths(log, paths, variants, vc, threshold, attribute_key="conc
     """
     log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG)
 
-    filtered_log = EventLog(list(), attributes=log.attributes, extensions=log.extensions, classifiers=log.classifiers,
-                            omni_present=log.omni_present, properties=log.properties)
+    filtered_log = EventLog(
+        list(),
+        attributes=log.attributes,
+        extensions=log.extensions,
+        classifiers=log.classifiers,
+        omni_present=log.omni_present,
+        properties=log.properties,
+    )
     fvft = variants[vc[0][0]][0]
     fvp = set()
     for i in range(0, len(fvft) - 1):
-        path = fvft[i][attribute_key] + DEFAULT_VARIANT_SEP + fvft[i + 1][attribute_key]
+        path = (
+            fvft[i][attribute_key]
+            + DEFAULT_VARIANT_SEP
+            + fvft[i + 1][attribute_key]
+        )
         fvp.add(path)
     for trace in log:
         new_trace = Trace()
@@ -249,7 +310,11 @@ def filter_log_by_paths(log, paths, variants, vc, threshold, attribute_key="conc
                 if j >= len(trace):
                     break
                 if attribute_key in trace[j] and attribute_key in trace[j + 1]:
-                    path = trace[j][attribute_key] + DEFAULT_VARIANT_SEP + trace[j + 1][attribute_key]
+                    path = (
+                        trace[j][attribute_key]
+                        + DEFAULT_VARIANT_SEP
+                        + trace[j + 1][attribute_key]
+                    )
                     if path in paths:
                         if path in fvp or paths[path] >= threshold:
                             new_trace.append(trace[j])

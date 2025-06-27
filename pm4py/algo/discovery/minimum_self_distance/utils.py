@@ -33,9 +33,12 @@ class Parameters(Enum):
     ACTIVITY_KEY = constants.PARAMETER_CONSTANT_ACTIVITY_KEY
 
 
-def derive_msd_witnesses(log: EventLog, msd: Optional[Dict[Any, int]] = None,
-                         parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[str, Set[str]]:
-    '''
+def derive_msd_witnesses(
+    log: EventLog,
+    msd: Optional[Dict[Any, int]] = None,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[str, Set[str]]:
+    """
     This function derives the minimum self distance witnesses.
     The self distance of a in <a> is infinity, of a in <a,a> is 0, in <a,b,a> is 1, etc.
     The minimum self distance is the minimal observed self distance value in the event log.
@@ -56,10 +59,13 @@ def derive_msd_witnesses(log: EventLog, msd: Optional[Dict[Any, int]] = None,
     -------
     Dictionary mapping each activity to a set of witnesses.
 
-    '''
-    log = converter.apply(log, variant=converter.Variants.TO_EVENT_LOG, parameters=parameters)
-    act_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters,
-                                         xes_constants.DEFAULT_NAME_KEY)
+    """
+    log = converter.apply(
+        log, variant=converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
+    act_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
     alphabet = pm4py.get_event_attribute_values(log, act_key)
     msd = msd if msd is not None else msd_algo.apply(log, parameters)
     log = list(map(lambda t: list(map(lambda e: e[act_key], t)), log))
@@ -74,6 +80,6 @@ def derive_msd_witnesses(log: EventLog, msd: Optional[Dict[Any, int]] = None,
                 indices = [i for i, x in enumerate(t) if x == a]
                 for i in range(len(indices) - 1):
                     if indices[i + 1] - indices[i] - 1 == msd[a]:
-                        for b in t[indices[i] + 1:indices[i + 1]]:
+                        for b in t[indices[i] + 1: indices[i + 1]]:
                             witnesses[a].add(b)
     return witnesses

@@ -96,8 +96,12 @@ def apply(bpmn_graph, parameters=None):
     from pm4py.objects.bpmn.obj import BPMN
 
     use_id = exec_utils.get_param_value(Parameters.USE_ID, parameters, False)
-    return_flow_trans_map = exec_utils.get_param_value(Parameters.RETURN_FLOW_TRANS_MAP, parameters, False)
-    enable_reduction = exec_utils.get_param_value(Parameters.ENABLE_REDUCTION, parameters, True)
+    return_flow_trans_map = exec_utils.get_param_value(
+        Parameters.RETURN_FLOW_TRANS_MAP, parameters, False
+    )
+    enable_reduction = exec_utils.get_param_value(
+        Parameters.ENABLE_REDUCTION, parameters, True
+    )
 
     if return_flow_trans_map:
         enable_reduction = False
@@ -138,28 +142,45 @@ def apply(bpmn_graph, parameters=None):
             source = flow.get_source()
             target = flow.get_target()
             place = PetriNet.Place(str(flow.get_id()))
-            if isinstance(source, BPMN.InclusiveGateway) and source_count[source] > 1:
+            if (
+                isinstance(source, BPMN.InclusiveGateway)
+                and source_count[source] > 1
+            ):
                 inclusive_gateway_exit.add(place.name)
-            elif isinstance(target, BPMN.InclusiveGateway) and target_count[target] > 1:
+            elif (
+                isinstance(target, BPMN.InclusiveGateway)
+                and target_count[target] > 1
+            ):
                 inclusive_gateway_entry.add(place.name)
 
     # remove possible places that are both in inclusive_gateway_exit and inclusive_gateway_entry,
     # because we do not need to add invisibles in this situation
-    incl_gat_set_inters = inclusive_gateway_entry.intersection(inclusive_gateway_exit)
-    inclusive_gateway_exit = inclusive_gateway_exit.difference(incl_gat_set_inters)
-    inclusive_gateway_entry = inclusive_gateway_entry.difference(incl_gat_set_inters)
+    incl_gat_set_inters = inclusive_gateway_entry.intersection(
+        inclusive_gateway_exit
+    )
+    inclusive_gateway_exit = inclusive_gateway_exit.difference(
+        incl_gat_set_inters
+    )
+    inclusive_gateway_entry = inclusive_gateway_entry.difference(
+        incl_gat_set_inters
+    )
 
     nodes_entering = {}
     nodes_exiting = {}
     trans_map = {}
 
     for node in bpmn_graph.get_nodes():
-        if isinstance(node, BPMN.Task) or isinstance(node, BPMN.StartEvent) or isinstance(node, BPMN.EndEvent) or \
-                isinstance(node, BPMN.ExclusiveGateway) or isinstance(node, BPMN.ParallelGateway) or \
-                isinstance(node, BPMN.InclusiveGateway):
-            if not node in source_count:
+        if (
+            isinstance(node, BPMN.Task)
+            or isinstance(node, BPMN.StartEvent)
+            or isinstance(node, BPMN.EndEvent)
+            or isinstance(node, BPMN.ExclusiveGateway)
+            or isinstance(node, BPMN.ParallelGateway)
+            or isinstance(node, BPMN.InclusiveGateway)
+        ):
+            if node not in source_count:
                 source_count[node] = 0
-            if not node in target_count:
+            if node not in target_count:
                 target_count[node] = 0
 
             entry_place = PetriNet.Place("ent_" + str(node.get_id()))
@@ -169,18 +190,28 @@ def apply(bpmn_graph, parameters=None):
             if use_id:
                 label = str(node.get_id())
             else:
-                label = str(node.get_name()) if isinstance(node, BPMN.Task) else None
+                label = (
+                    str(node.get_name())
+                    if isinstance(node, BPMN.Task)
+                    else None
+                )
                 if not label:
                     label = None
-            transition = PetriNet.Transition(name=str(node.get_id()), label=label)
+            transition = PetriNet.Transition(
+                name=str(node.get_id()), label=label
+            )
             net.transitions.add(transition)
             trans_map[node] = [transition]
             add_arc_from_to(entry_place, transition, net)
             add_arc_from_to(transition, exiting_place, net)
 
-            if isinstance(node, BPMN.ParallelGateway) or isinstance(node, BPMN.InclusiveGateway):
+            if isinstance(node, BPMN.ParallelGateway) or isinstance(
+                node, BPMN.InclusiveGateway
+            ):
                 if source_count[node] > 1:
-                    exiting_object = PetriNet.Transition(str(uuid.uuid4()), None)
+                    exiting_object = PetriNet.Transition(
+                        str(uuid.uuid4()), None
+                    )
                     net.transitions.add(exiting_object)
                     add_arc_from_to(exiting_place, exiting_object, net)
                     trans_map[node].append(exiting_object)
@@ -188,7 +219,9 @@ def apply(bpmn_graph, parameters=None):
                     exiting_object = exiting_place
 
                 if target_count[node] > 1:
-                    entering_object = PetriNet.Transition(str(uuid.uuid4()), None)
+                    entering_object = PetriNet.Transition(
+                        str(uuid.uuid4()), None
+                    )
                     net.transitions.add(entering_object)
                     add_arc_from_to(entering_object, entry_place, net)
                     trans_map[node].append(entering_object)
@@ -215,7 +248,10 @@ def apply(bpmn_graph, parameters=None):
 
     for flow in bpmn_graph.get_flows():
         if isinstance(flow, BPMN.SequenceFlow):
-            if flow.get_source() in nodes_exiting and flow.get_target() in nodes_entering:
+            if (
+                flow.get_source() in nodes_exiting
+                and flow.get_target() in nodes_entering
+            ):
                 source_object = nodes_exiting[flow.get_source()]
                 target_object = nodes_entering[flow.get_target()]
 
@@ -249,19 +285,31 @@ def apply(bpmn_graph, parameters=None):
         for pl1 in inclusive_gateway_exit:
             if pl1 in keys:
                 output_places = sorted(
-                    [(x, len(y)) for x, y in all_shortest_paths[pl1][1].items() if x in inclusive_gateway_entry],
-                    key=lambda x: x[1])
+                    [
+                        (x, len(y))
+                        for x, y in all_shortest_paths[pl1][1].items()
+                        if x in inclusive_gateway_entry
+                    ],
+                    key=lambda x: x[1],
+                )
                 if output_places:
                     inv_trans = PetriNet.Transition(str(uuid.uuid4()), None)
                     net.transitions.add(inv_trans)
                     add_arc_from_to(inv_places[pl1], inv_trans, net)
-                    add_arc_from_to(inv_trans, inv_places[output_places[0][0]], net)
+                    add_arc_from_to(
+                        inv_trans, inv_places[output_places[0][0]], net
+                    )
 
     if enable_reduction:
         reduction.apply_simple_reduction(net)
 
     for place in list(net.places):
-        if len(place.in_arcs) == 0 and len(place.out_arcs) == 0 and not place in im and not place in fm:
+        if (
+            len(place.in_arcs) == 0
+            and len(place.out_arcs) == 0
+            and place not in im
+            and place not in fm
+        ):
             remove_place(net, place)
 
     if return_flow_trans_map:

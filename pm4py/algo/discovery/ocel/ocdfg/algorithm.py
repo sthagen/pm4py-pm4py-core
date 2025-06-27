@@ -30,7 +30,11 @@ class Variants(Enum):
     CLASSIC = classic
 
 
-def apply(ocel: OCEL, variant=Variants.CLASSIC, parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, Any]:
+def apply(
+    ocel: OCEL,
+    variant=Variants.CLASSIC,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Dict[str, Any]:
     """
     Discovers an OC-DFG model from an object-centric event log
     Reference paper:

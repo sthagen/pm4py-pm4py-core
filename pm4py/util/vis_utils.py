@@ -30,7 +30,9 @@ MAX_EDGE_PENWIDTH_GRAPHVIZ = 2.6
 MIN_EDGE_PENWIDTH_GRAPHVIZ = 1.0
 
 
-def human_readable_stat(timedelta, stat_locale: Optional[Dict[str, str]] = None) -> str:
+def human_readable_stat(
+    timedelta, stat_locale: Optional[Dict[str, str]] = None
+) -> str:
     """
     Transform a timedelta into a human readable string
 
@@ -71,7 +73,9 @@ def human_readable_stat(timedelta, stat_locale: Optional[Dict[str, str]] = None)
         if c > 0:
             return str(c) + stat_locale.get("millisecond", "ms")
         else:
-            return str(int(float(timedelta) * 10**9)) + stat_locale.get("nanosecond", "ns")
+            return str(int(float(timedelta) * 10**9)) + stat_locale.get(
+                "nanosecond", "ns"
+            )
 
 
 def get_arc_penwidth(arc_measure, min_arc_measure, max_arc_measure):
@@ -93,8 +97,11 @@ def get_arc_penwidth(arc_measure, min_arc_measure, max_arc_measure):
     penwidth
         Current arc width in the graph
     """
-    return MIN_EDGE_PENWIDTH_GRAPHVIZ + (MAX_EDGE_PENWIDTH_GRAPHVIZ - MIN_EDGE_PENWIDTH_GRAPHVIZ) * (
-            arc_measure - min_arc_measure) / (max_arc_measure - min_arc_measure + 0.00001)
+    return MIN_EDGE_PENWIDTH_GRAPHVIZ + (
+        MAX_EDGE_PENWIDTH_GRAPHVIZ - MIN_EDGE_PENWIDTH_GRAPHVIZ
+    ) * (arc_measure - min_arc_measure) / (
+        max_arc_measure - min_arc_measure + 0.00001
+    )
 
 
 def get_trans_freq_color(trans_count, min_trans_count, max_trans_count):
@@ -115,7 +122,12 @@ def get_trans_freq_color(trans_count, min_trans_count, max_trans_count):
     color
         Frequency color for visible transition
     """
-    trans_base_color = int(255 - 100 * (trans_count - min_trans_count) / (max_trans_count - min_trans_count + 0.00001))
+    trans_base_color = int(
+        255
+        - 100
+        * (trans_count - min_trans_count)
+        / (max_trans_count - min_trans_count + 0.00001)
+    )
     trans_base_color_hex = str(hex(trans_base_color))[2:].upper()
     return "#" + trans_base_color_hex + trans_base_color_hex + "FF"
 
@@ -182,8 +194,10 @@ def view_image_in_jupyter(file_name):
         Name of the file
     """
     from IPython.display import Image
+
     image = Image(file_name)
     from IPython.display import display
+
     return display(image)
 
 
@@ -196,12 +210,12 @@ def open_opsystem_image_viewer(file_name):
     file_name
         Name of the file
     """
-    if sys.platform.startswith('darwin'):
-        subprocess.call(('open', file_name))
-    elif os.name == 'nt':  # For Windows
+    if sys.platform.startswith("darwin"):
+        subprocess.call(("open", file_name))
+    elif os.name == "nt":  # For Windows
         os.startfile(file_name)
-    elif os.name == 'posix':  # For Linux, Mac, etc.
-        subprocess.call(('xdg-open', file_name))
+    elif os.name == "posix":  # For Linux, Mac, etc.
+        subprocess.call(("xdg-open", file_name))
 
 
 def get_corr_hex(num):
@@ -241,18 +255,20 @@ def value_to_color(val, min_value, max_value):
 
     # Function to interpolate between two colors
     def interpolate_color(val, color1, color2):
-        return tuple(int(color1[i] + (color2[i] - color1[i]) * val) for i in range(3))
+        return tuple(
+            int(color1[i] + (color2[i] - color1[i]) * val) for i in range(3)
+        )
 
     # Blue to red color gradient
     blue = (0, 0, 255)  # RGB for blue
-    red = (255, 0, 0)   # RGB for red
+    red = (255, 0, 0)  # RGB for red
 
     # Map normalized values to colors
     color = interpolate_color(val, blue, red)
 
     # Convert RGB colors to hexadecimal format
     def rgb_to_hex(rgb):
-        return '#{:02x}{:02x}{:02x}'.format(rgb[0], rgb[1], rgb[2])
+        return "#{:02x}{:02x}{:02x}".format(rgb[0], rgb[1], rgb[2])
 
     hex_color = rgb_to_hex(color)
 

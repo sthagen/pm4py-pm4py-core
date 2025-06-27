@@ -32,7 +32,9 @@ class Parameters:
 
 
 def normalized_levensthein(s1, s2):
-    return float(string_distance.levenshtein(s1, s2)) / float(max(len(s1), len(s2)))
+    return float(string_distance.levenshtein(s1, s2)) / float(
+        max(len(s1), len(s2))
+    )
 
 
 def get_act_correspondence(activities, parameters=None):
@@ -52,8 +54,16 @@ def encode_two_languages(lang1, lang2, parameters=None):
     if parameters is None:
         parameters = {}
 
-    all_activities = sorted(list(set(y for x in lang1 for y in x).union(set(y for x in lang2 for y in x))))
-    acts_corresp = get_act_correspondence(all_activities, parameters=parameters)
+    all_activities = sorted(
+        list(
+            set(y for x in lang1 for y in x).union(
+                set(y for x in lang2 for y in x)
+            )
+        )
+    )
+    acts_corresp = get_act_correspondence(
+        all_activities, parameters=parameters
+    )
 
     enc1 = {}
     enc2 = {}
@@ -94,7 +104,11 @@ class EMDCalculator:
     """
 
     @staticmethod
-    def emd(first_histogram: np.ndarray, second_histogram: np.ndarray, distance_matrix: np.ndarray) -> float:
+    def emd(
+        first_histogram: np.ndarray,
+        second_histogram: np.ndarray,
+        distance_matrix: np.ndarray,
+    ) -> float:
         """
         Compute the Earth Mover's Distance given two histograms and a distance matrix.
 
@@ -116,7 +130,9 @@ class EMDCalculator:
         sum1 = np.sum(first_histogram)
         sum2 = np.sum(second_histogram)
         if not np.isclose(sum1, sum2):
-            raise ValueError("Histograms must sum to the same total for EMD calculation.")
+            raise ValueError(
+                "Histograms must sum to the same total for EMD calculation."
+            )
 
         n = len(first_histogram)
         m = len(second_histogram)
@@ -157,22 +173,29 @@ class EMDCalculator:
 
         # Solve the LP:
         # minimize c^T x subject to A_eq x = b_eq and x >= 0
-        res = linprog(c, A_eq=A_eq, b_eq=b_eq, bounds=bounds, method='highs')
+        res = linprog(c, A_eq=A_eq, b_eq=b_eq, bounds=bounds, method="highs")
 
         if res.status != 0:
-            raise ValueError(f"Linear programming failed. Status: {res.status}, Message: {res.message}")
+            raise ValueError(
+                f"Linear programming failed. Status: {
+                    res.status}, Message: {
+                    res.message}")
 
         # The optimal value is the EMD
         return res.fun
 
 
-def apply(lang1: Dict[List[str], float],
-          lang2: Dict[List[str], float],
-          parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> float:
+def apply(
+    lang1: Dict[List[str], float],
+    lang2: Dict[List[str], float],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> float:
     if parameters is None:
         parameters = {}
 
-    distance_function = exec_utils.get_param_value(Parameters.STRING_DISTANCE, parameters, normalized_levensthein)
+    distance_function = exec_utils.get_param_value(
+        Parameters.STRING_DISTANCE, parameters, normalized_levensthein
+    )
 
     enc1, enc2 = encode_two_languages(lang1, lang2, parameters=parameters)
 

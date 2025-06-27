@@ -34,8 +34,10 @@ class Parameters(Enum):
     KEEP_FIRST_FOLLOWING = "keep_first_following"
 
 
-def apply(interval_log: IMDataStructureUVCL, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Dict[
-    Tuple[str, str], int]:
+def apply(
+    interval_log: IMDataStructureUVCL,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Dict[Tuple[str, str], int]:
     if parameters is None:
         parameters = {}
 

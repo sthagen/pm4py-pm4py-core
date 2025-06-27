@@ -24,7 +24,9 @@ from pm4py.objects.petri_net.obj import PetriNet
 from typing import Optional, Dict, Any
 
 
-def apply(petri_net: PetriNet, parameters: Optional[Dict[Any, Any]] = None) -> float:
+def apply(
+    petri_net: PetriNet, parameters: Optional[Dict[Any, Any]] = None
+) -> float:
     """
     Computes the extended Cardoso metric as described in the paper:
 

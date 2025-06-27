@@ -33,7 +33,9 @@ class Parameters(Enum):
     TABLE_NAME = "table_name"
 
 
-def apply(db: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None) -> str:
+def apply(
+    db: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None
+) -> str:
     """
     Provides a string containing the required database knowledge for DuckDB querying
     (in order for the LLM to produce meaningful queries).
@@ -58,19 +60,43 @@ def apply(db: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None) -> str:
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
-    case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    resource_key = exec_utils.get_param_value(Parameters.RESOURCE_KEY, parameters, xes_constants.DEFAULT_RESOURCE_KEY)
-    table_name = exec_utils.get_param_value(Parameters.TABLE_NAME, parameters, "dataframe")
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    case_id_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    resource_key = exec_utils.get_param_value(
+        Parameters.RESOURCE_KEY, parameters, xes_constants.DEFAULT_RESOURCE_KEY
+    )
+    table_name = exec_utils.get_param_value(
+        Parameters.TABLE_NAME, parameters, "dataframe"
+    )
 
-    descr = """
+    descr = (
+        """
 The underlying database engine is DuckDB.
-The table is called """+table_name+""".
+The table is called """
+        + table_name
+        + """.
 Each row of the table is corresponding to an event, along with its attributes. There is no separate table containing the process variant.
-Please consider the following information: the case identifier is called '"""+case_id_key+"""', the activity is stored inside the attribute '"""+activity_key+"""', the timestamp is stored inside the attribute '"""+timestamp_key+"""', the resource is stored inside the attribute '"""+resource_key+"""'.
+Please consider the following information: the case identifier is called '"""
+        + case_id_key
+        + """', the activity is stored inside the attribute '"""
+        + activity_key
+        + """', the timestamp is stored inside the attribute '"""
+        + timestamp_key
+        + """', the resource is stored inside the attribute '"""
+        + resource_key
+        + """'.
 You should use the EPOCH function of DuckDB to get the timestamp from the date.
 The events are already sorted by timestamp, moreover you cannot use ORDER BY inside a concatenation operator.
     """
+    )
 
     return descr

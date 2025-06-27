@@ -25,7 +25,9 @@ from pm4py.objects.log.obj import EventLog
 from pm4py.objects.conversion.log import converter as log_converter
 
 
-def apply(log: EventLog, activity: str, parameters: Optional[Dict[Any, Any]] = None) -> Dict[str, Any]:
+def apply(
+    log: EventLog, activity: str, parameters: Optional[Dict[Any, Any]] = None
+) -> Dict[str, Any]:
     """
     Gets the time passed from each preceding activity and to each succeeding activity
 
@@ -49,7 +51,9 @@ def apply(log: EventLog, activity: str, parameters: Optional[Dict[Any, Any]] = N
     if parameters is None:
         parameters = {}
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
     dfg_frequency = native.native(log, parameters=parameters)
     dfg_performance = performance.performance(log, parameters=parameters)
@@ -63,12 +67,28 @@ def apply(log: EventLog, activity: str, parameters: Optional[Dict[Any, Any]] = N
 
     for entry in dfg_performance.keys():
         if entry[1] == activity:
-            pre.append([entry[0], float(dfg_performance[entry]), int(dfg_frequency[entry])])
-            sum_perf_pre = sum_perf_pre + float(dfg_performance[entry]) * float(dfg_frequency[entry])
+            pre.append(
+                [
+                    entry[0],
+                    float(dfg_performance[entry]),
+                    int(dfg_frequency[entry]),
+                ]
+            )
+            sum_perf_pre = sum_perf_pre + float(
+                dfg_performance[entry]
+            ) * float(dfg_frequency[entry])
             sum_acti_pre = sum_acti_pre + float(dfg_frequency[entry])
         if entry[0] == activity:
-            post.append([entry[1], float(dfg_performance[entry]), int(dfg_frequency[entry])])
-            sum_perf_post = sum_perf_post + float(dfg_performance[entry]) * float(dfg_frequency[entry])
+            post.append(
+                [
+                    entry[1],
+                    float(dfg_performance[entry]),
+                    int(dfg_frequency[entry]),
+                ]
+            )
+            sum_perf_post = sum_perf_post + float(
+                dfg_performance[entry]
+            ) * float(dfg_frequency[entry])
             sum_acti_post = sum_acti_post + float(dfg_frequency[entry])
 
     perf_acti_pre = 0.0
@@ -78,4 +98,9 @@ def apply(log: EventLog, activity: str, parameters: Optional[Dict[Any, Any]] = N
     if sum_acti_post > 0:
         perf_acti_post = sum_perf_post / sum_acti_post
 
-    return {"pre": pre, "post": post, "post_avg_perf": perf_acti_post, "pre_avg_perf": perf_acti_pre}
+    return {
+        "pre": pre,
+        "post": post,
+        "post_avg_perf": perf_acti_post,
+        "pre_avg_perf": perf_acti_pre,
+    }

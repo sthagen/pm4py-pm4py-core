@@ -52,18 +52,26 @@ def export_line_by_line(dfg, parameters=None):
     if parameters is None:
         parameters = {}
 
-    start_activities = exec_utils.get_param_value(Parameters.START_ACTIVITIES, parameters,
-                                                  Counter(dfg_utils.infer_start_activities(dfg)))
-    end_activities = exec_utils.get_param_value(Parameters.END_ACTIVITIES, parameters,
-                                                Counter(dfg_utils.infer_end_activities(dfg)))
+    start_activities = exec_utils.get_param_value(
+        Parameters.START_ACTIVITIES,
+        parameters,
+        Counter(dfg_utils.infer_start_activities(dfg)),
+    )
+    end_activities = exec_utils.get_param_value(
+        Parameters.END_ACTIVITIES,
+        parameters,
+        Counter(dfg_utils.infer_end_activities(dfg)),
+    )
 
     if len(start_activities) == 0:
         raise Exception(
-            "error: impossible to determine automatically the start activities from the DFG. Please specify them manually through the START_ACTIVITIES parameter")
+            "error: impossible to determine automatically the start activities from the DFG. Please specify them manually through the START_ACTIVITIES parameter"
+        )
 
     if len(end_activities) == 0:
         raise Exception(
-            "error: impossible to determine automatically the end activities from the DFG. Please specify them manually through the END_ACTIVITIES parameter")
+            "error: impossible to determine automatically the end activities from the DFG. Please specify them manually through the END_ACTIVITIES parameter"
+        )
 
     activities = list(set(x[0] for x in dfg).union(set(x[1] for x in dfg)))
 
@@ -80,7 +88,11 @@ def export_line_by_line(dfg, parameters=None):
         yield "%dx%d\n" % (activities.index(act), count)
 
     for el, count in dfg.items():
-        yield "%d>%dx%d\n" % (activities.index(el[0]), activities.index(el[1]), count)
+        yield "%d>%dx%d\n" % (
+            activities.index(el[0]),
+            activities.index(el[1]),
+            count,
+        )
 
 
 def apply(dfg, output_path, parameters=None):
@@ -102,7 +114,9 @@ def apply(dfg, output_path, parameters=None):
     if parameters is None:
         parameters = {}
 
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING)
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING
+    )
 
     F = open(output_path, "wb")
     for row in export_line_by_line(dfg, parameters=parameters):
@@ -132,7 +146,9 @@ def export_as_string(dfg, parameters=None):
     if parameters is None:
         parameters = {}
 
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING)
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING
+    )
 
     ret = []
     for row in export_line_by_line(dfg, parameters=parameters):

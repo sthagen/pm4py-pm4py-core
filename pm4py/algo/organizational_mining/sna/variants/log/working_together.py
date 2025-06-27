@@ -38,7 +38,10 @@ class Parameters(Enum):
     METRIC_NORMALIZATION = "metric_normalization"
 
 
-def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> SNA:
+def apply(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> SNA:
     """
     Calculates the Working Together metric
 
@@ -59,15 +62,29 @@ def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]]
     if parameters is None:
         parameters = {}
 
-    resource_key = exec_utils.get_param_value(Parameters.RESOURCE_KEY, parameters, xes.DEFAULT_RESOURCE_KEY)
+    resource_key = exec_utils.get_param_value(
+        Parameters.RESOURCE_KEY, parameters, xes.DEFAULT_RESOURCE_KEY
+    )
 
-    parameters_variants = {variants_filter.Parameters.ACTIVITY_KEY: resource_key,
-                           variants_filter.Parameters.ATTRIBUTE_KEY: resource_key}
-    variants_occ = {x: len(y) for x, y in variants_filter.get_variants(log, parameters=parameters_variants).items()}
+    parameters_variants = {
+        variants_filter.Parameters.ACTIVITY_KEY: resource_key,
+        variants_filter.Parameters.ATTRIBUTE_KEY: resource_key,
+    }
+    variants_occ = {
+        x: len(y)
+        for x, y in variants_filter.get_variants(
+            log, parameters=parameters_variants
+        ).items()
+    }
     variants_resources = list(variants_occ.keys())
-    resources = [variants_util.get_activities_from_variant(y) for y in variants_resources]
+    resources = [
+        variants_util.get_activities_from_variant(y)
+        for y in variants_resources
+    ]
 
-    flat_list = sorted(list(set([item for sublist in resources for item in sublist])))
+    flat_list = sorted(
+        list(set([item for sublist in resources for item in sublist]))
+    )
 
     connections = Counter()
 
@@ -80,7 +97,11 @@ def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]]
             res_i = flat_list.index(ord_res_list[i])
             for j in range(i + 1, len(ord_res_list)):
                 res_j = flat_list.index(ord_res_list[j])
-                connections[(flat_list[res_i], flat_list[res_j])] += float(variants_occ[rvj]) / float(len(log))
-                connections[(flat_list[res_j], flat_list[res_i])] += float(variants_occ[rvj]) / float(len(log))
+                connections[(flat_list[res_i], flat_list[res_j])] += float(
+                    variants_occ[rvj]
+                ) / float(len(log))
+                connections[(flat_list[res_j], flat_list[res_i])] += float(
+                    variants_occ[rvj]
+                ) / float(len(log))
 
     return SNA(dict(connections), False)

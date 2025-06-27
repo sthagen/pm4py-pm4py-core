@@ -55,9 +55,15 @@ def get_xml_string(bpmn_graph, parameters=None):
     if parameters is None:
         parameters = {}
 
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING)
-    enble_bpmn_plane_exporting = exec_utils.get_param_value(Parameters.ENABLE_BPMN_PLANE_EXPORTING, parameters, True)
-    enable_incoming_outgoing_exporting = exec_utils.get_param_value(Parameters.ENABLE_INCOMING_OUTGOING_EXPORTING, parameters, True)
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, constants.DEFAULT_ENCODING
+    )
+    enble_bpmn_plane_exporting = exec_utils.get_param_value(
+        Parameters.ENABLE_BPMN_PLANE_EXPORTING, parameters, True
+    )
+    enable_incoming_outgoing_exporting = exec_utils.get_param_value(
+        Parameters.ENABLE_INCOMING_OUTGOING_EXPORTING, parameters, True
+    )
 
     layout = bpmn_graph.get_layout()
 
@@ -65,7 +71,9 @@ def get_xml_string(bpmn_graph, parameters=None):
     from xml.dom import minidom
 
     definitions = ET.Element("bpmn:definitions")
-    definitions.set("xmlns:bpmn", "http://www.omg.org/spec/BPMN/20100524/MODEL")
+    definitions.set(
+        "xmlns:bpmn", "http://www.omg.org/spec/BPMN/20100524/MODEL"
+    )
     definitions.set("xmlns:bpmndi", "http://www.omg.org/spec/BPMN/20100524/DI")
     definitions.set("xmlns:omgdc", "http://www.omg.org/spec/DD/20100524/DC")
     definitions.set("xmlns:omgdi", "http://www.omg.org/spec/DD/20100524/DI")
@@ -86,35 +94,68 @@ def get_xml_string(bpmn_graph, parameters=None):
         all_processes.add(flow.get_process())
 
     if len(all_processes) > 1:
-        # when several swimlanes exist, their elements should be annexed to the same BPMN plane
-        collaboration_nodes = [x for x in bpmn_graph.get_nodes() if isinstance(x, BPMN.Collaboration)]
+        # when several swimlanes exist, their elements should be annexed to the
+        # same BPMN plane
+        collaboration_nodes = [
+            x
+            for x in bpmn_graph.get_nodes()
+            if isinstance(x, BPMN.Collaboration)
+        ]
         if collaboration_nodes:
             bpmn_plane_id = collaboration_nodes[0].get_id()
 
-        process_collaboration = ET.SubElement(definitions, "bpmn:collaboration", {"id": bpmn_plane_id})
+        process_collaboration = ET.SubElement(
+            definitions, "bpmn:collaboration", {"id": bpmn_plane_id}
+        )
 
-        participant_nodes = [x for x in bpmn_graph.get_nodes() if isinstance(x, BPMN.Participant)]
+        participant_nodes = [
+            x
+            for x in bpmn_graph.get_nodes()
+            if isinstance(x, BPMN.Participant)
+        ]
         if participant_nodes:
             for process in participant_nodes:
-                ET.SubElement(process_collaboration, "bpmn:participant", {"id": process.get_id(), "name": process.get_name(), "processRef": "id" + process.process_ref})
+                ET.SubElement(
+                    process_collaboration,
+                    "bpmn:participant",
+                    {
+                        "id": process.get_id(),
+                        "name": process.get_name(),
+                        "processRef": "id" + process.process_ref,
+                    },
+                )
                 all_processes.add(process.process_ref)
     else:
         bpmn_plane_id = "id" + list(all_processes)[0]
 
     for process in all_processes:
         if process != bpmn_plane_id:
-            p = ET.SubElement(definitions, "bpmn:process",
-                              {"id": "id" + process, "isClosed": "false", "isExecutable": "false",
-                               "processType": "None"})
+            p = ET.SubElement(
+                definitions,
+                "bpmn:process",
+                {
+                    "id": "id" + process,
+                    "isClosed": "false",
+                    "isExecutable": "false",
+                    "processType": "None",
+                },
+            )
             process_process[process] = p
         elif process_collaboration is not None:
             process_process[process] = process_collaboration
 
-    diagram = ET.SubElement(definitions, "bpmndi:BPMNDiagram", {"id": "id" + str(uuid.uuid4()), "name": "diagram"})
+    diagram = ET.SubElement(
+        definitions,
+        "bpmndi:BPMNDiagram",
+        {"id": "id" + str(uuid.uuid4()), "name": "diagram"},
+    )
 
     if enble_bpmn_plane_exporting:
-        plane = ET.SubElement(diagram, "bpmndi:BPMNPlane",
-                                  {"bpmnElement": bpmn_plane_id, "id": "id" + str(uuid.uuid4())})
+        plane = ET.SubElement(
+            diagram,
+            "bpmndi:BPMNPlane",
+            {"bpmnElement": bpmn_plane_id, "id": "id" + str(uuid.uuid4())},
+        )
         for process in all_processes:
             process_planes[process] = plane
 
@@ -122,69 +163,157 @@ def get_xml_string(bpmn_graph, parameters=None):
             process = node.get_process()
 
             if process != bpmn_plane_id:
-                node_shape = ET.SubElement(process_planes[process], "bpmndi:BPMNShape",
-                                           {"bpmnElement": node.get_id(), "id": node.get_id() + "_gui"})
-                node_shape_layout = ET.SubElement(node_shape, "omgdc:Bounds",
-                                                  {"height": str(layout.get(node).get_height()), "width": str(layout.get(node).get_width()),
-                                                   "x": str(layout.get(node).get_x()),
-                                                   "y": str(layout.get(node).get_y())})
+                node_shape = ET.SubElement(
+                    process_planes[process],
+                    "bpmndi:BPMNShape",
+                    {
+                        "bpmnElement": node.get_id(),
+                        "id": node.get_id() + "_gui",
+                    },
+                )
+                node_shape_layout = ET.SubElement(
+                    node_shape,
+                    "omgdc:Bounds",
+                    {
+                        "height": str(layout.get(node).get_height()),
+                        "width": str(layout.get(node).get_width()),
+                        "x": str(layout.get(node).get_x()),
+                        "y": str(layout.get(node).get_y()),
+                    },
+                )
 
         for flow in bpmn_graph.get_flows():
             process = flow.get_process()
 
-            flow_shape = ET.SubElement(process_planes[process], "bpmndi:BPMNEdge",
-                                       {"bpmnElement": "id" + str(flow.get_id()),
-                                        "id": "id" + str(flow.get_id()) + "_gui"})
+            flow_shape = ET.SubElement(
+                process_planes[process],
+                "bpmndi:BPMNEdge",
+                {
+                    "bpmnElement": "id" + str(flow.get_id()),
+                    "id": "id" + str(flow.get_id()) + "_gui",
+                },
+            )
             for x, y in layout.get(flow).get_waypoints():
-                waypoint = ET.SubElement(flow_shape, "omgdi:waypoint", {"x": str(x), "y": str(y)})
+                waypoint = ET.SubElement(
+                    flow_shape, "omgdi:waypoint", {"x": str(x), "y": str(y)}
+                )
 
     for node in bpmn_graph.get_nodes():
         process = process_process[node.get_process()]
 
         if isinstance(node, BPMN.TextAnnotation):
-            annotation = ET.SubElement(process, "bpmn:textAnnotation", {"id": node.get_id()})
+            annotation = ET.SubElement(
+                process, "bpmn:textAnnotation", {"id": node.get_id()}
+            )
             text = ET.SubElement(annotation, "bpmn:text")
             text.text = node.text
         elif isinstance(node, BPMN.StartEvent):
             isInterrupting = "true" if node.get_isInterrupting() else "false"
-            parallelMultiple = "true" if node.get_parallelMultiple() else "false"
-            task = ET.SubElement(process, "bpmn:startEvent",
-                                 {"id": node.get_id(), "isInterrupting": isInterrupting, "name": node.get_name(),
-                                  "parallelMultiple": parallelMultiple})
+            parallelMultiple = (
+                "true" if node.get_parallelMultiple() else "false"
+            )
+            task = ET.SubElement(
+                process,
+                "bpmn:startEvent",
+                {
+                    "id": node.get_id(),
+                    "isInterrupting": isInterrupting,
+                    "name": node.get_name(),
+                    "parallelMultiple": parallelMultiple,
+                },
+            )
         elif isinstance(node, BPMN.EndEvent):
-            task = ET.SubElement(process, "bpmn:endEvent", {"id": node.get_id(), "name": node.get_name()})
+            task = ET.SubElement(
+                process,
+                "bpmn:endEvent",
+                {"id": node.get_id(), "name": node.get_name()},
+            )
         elif isinstance(node, BPMN.IntermediateCatchEvent):
-            task = ET.SubElement(process, "bpmn:intermediateCatchEvent", {"id": node.get_id(), "name": node.get_name()})
-            messageEventDefinition = ET.SubElement(task, "bpmn:messageEventDefinition")
+            task = ET.SubElement(
+                process,
+                "bpmn:intermediateCatchEvent",
+                {"id": node.get_id(), "name": node.get_name()},
+            )
+            messageEventDefinition = ET.SubElement(
+                task, "bpmn:messageEventDefinition"
+            )
         elif isinstance(node, BPMN.IntermediateThrowEvent):
-            task = ET.SubElement(process, "bpmn:intermediateThrowEvent", {"id": node.get_id(), "name": node.get_name()})
+            task = ET.SubElement(
+                process,
+                "bpmn:intermediateThrowEvent",
+                {"id": node.get_id(), "name": node.get_name()},
+            )
         elif isinstance(node, BPMN.BoundaryEvent):
-            task = ET.SubElement(process, "bpmn:boundaryEvent", {"id": node.get_id(), "name": node.get_name()})
+            task = ET.SubElement(
+                process,
+                "bpmn:boundaryEvent",
+                {"id": node.get_id(), "name": node.get_name()},
+            )
         elif isinstance(node, BPMN.Task):
             if isinstance(node, BPMN.UserTask):
-                task = ET.SubElement(process, "bpmn:userTask", {"id": node.get_id(), "name": node.get_name()})
+                task = ET.SubElement(
+                    process,
+                    "bpmn:userTask",
+                    {"id": node.get_id(), "name": node.get_name()},
+                )
             elif isinstance(node, BPMN.SendTask):
-                task = ET.SubElement(process, "bpmn:sendTask", {"id": node.get_id(), "name": node.get_name()})
+                task = ET.SubElement(
+                    process,
+                    "bpmn:sendTask",
+                    {"id": node.get_id(), "name": node.get_name()},
+                )
             else:
-                task = ET.SubElement(process, "bpmn:task", {"id": node.get_id(), "name": node.get_name()})
+                task = ET.SubElement(
+                    process,
+                    "bpmn:task",
+                    {"id": node.get_id(), "name": node.get_name()},
+                )
         elif isinstance(node, BPMN.SubProcess):
-            task = ET.SubElement(process, "bpmn:subProcess", {"id": node.get_id(), "name": node.get_name()})
+            task = ET.SubElement(
+                process,
+                "bpmn:subProcess",
+                {"id": node.get_id(), "name": node.get_name()},
+            )
         elif isinstance(node, BPMN.ExclusiveGateway):
-            task = ET.SubElement(process, "bpmn:exclusiveGateway",
-                                 {"id": node.get_id(), "gatewayDirection": node.get_gateway_direction().value,
-                                  "name": node.get_name()})
+            task = ET.SubElement(
+                process,
+                "bpmn:exclusiveGateway",
+                {
+                    "id": node.get_id(),
+                    "gatewayDirection": node.get_gateway_direction().value,
+                    "name": node.get_name(),
+                },
+            )
         elif isinstance(node, BPMN.ParallelGateway):
-            task = ET.SubElement(process, "bpmn:parallelGateway",
-                                 {"id": node.get_id(), "gatewayDirection": node.get_gateway_direction().value,
-                                  "name": node.get_name()})
+            task = ET.SubElement(
+                process,
+                "bpmn:parallelGateway",
+                {
+                    "id": node.get_id(),
+                    "gatewayDirection": node.get_gateway_direction().value,
+                    "name": node.get_name(),
+                },
+            )
         elif isinstance(node, BPMN.InclusiveGateway):
-            task = ET.SubElement(process, "bpmn:inclusiveGateway",
-                                 {"id": node.get_id(), "gatewayDirection": node.get_gateway_direction().value,
-                                  "name": node.get_name()})
+            task = ET.SubElement(
+                process,
+                "bpmn:inclusiveGateway",
+                {
+                    "id": node.get_id(),
+                    "gatewayDirection": node.get_gateway_direction().value,
+                    "name": node.get_name(),
+                },
+            )
         elif isinstance(node, BPMN.EventBasedGateway):
-            task = ET.SubElement(process, "bpmn:eventBasedGateway",
-                                 {"id": node.get_id(), "gatewayDirection": node.get_gateway_direction().value,
-                                  "name": node.get_name()})
+            task = ET.SubElement(
+                process,
+                "bpmn:eventBasedGateway",
+                {
+                    "id": node.get_id(),
+                    "gatewayDirection": node.get_gateway_direction().value,
+                    "name": node.get_name(),
+                },
+            )
 
         if enable_incoming_outgoing_exporting:
             for in_arc in node.get_in_arcs():
@@ -202,18 +331,39 @@ def get_xml_string(bpmn_graph, parameters=None):
         target = flow.get_target()
 
         if isinstance(flow, BPMN.SequenceFlow):
-            flow_xml = ET.SubElement(process, "bpmn:sequenceFlow", {"id": "id" + str(flow.get_id()), "name": flow.get_name(),
-                                                               "sourceRef": str(source.get_id()),
-                                                               "targetRef": str(target.get_id())})
+            flow_xml = ET.SubElement(
+                process,
+                "bpmn:sequenceFlow",
+                {
+                    "id": "id" + str(flow.get_id()),
+                    "name": flow.get_name(),
+                    "sourceRef": str(source.get_id()),
+                    "targetRef": str(target.get_id()),
+                },
+            )
         elif isinstance(flow, BPMN.MessageFlow):
-            flow_xml = ET.SubElement(process, "bpmn:messageFlow", {"id": "id" + str(flow.get_id()), "name": flow.get_name(),
-                                                               "sourceRef": str(source.get_id()),
-                                                               "targetRef": str(target.get_id())})
-
+            flow_xml = ET.SubElement(
+                process,
+                "bpmn:messageFlow",
+                {
+                    "id": "id" + str(flow.get_id()),
+                    "name": flow.get_name(),
+                    "sourceRef": str(source.get_id()),
+                    "targetRef": str(target.get_id()),
+                },
+            )
 
         elif isinstance(flow, BPMN.Association):
-            flow_xml = ET.SubElement(process, "bpmn:association", {"id": "id" + str(flow.get_id()),
-                                                               "sourceRef": str(source.get_id()),
-                                                               "targetRef": str(target.get_id())})
+            flow_xml = ET.SubElement(
+                process,
+                "bpmn:association",
+                {
+                    "id": "id" + str(flow.get_id()),
+                    "sourceRef": str(source.get_id()),
+                    "targetRef": str(target.get_id()),
+                },
+            )
 
-    return minidom.parseString(ET.tostring(definitions)).toprettyxml(encoding=encoding)
+    return minidom.parseString(ET.tostring(definitions)).toprettyxml(
+        encoding=encoding
+    )

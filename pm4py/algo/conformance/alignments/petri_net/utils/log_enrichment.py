@@ -33,7 +33,11 @@ class Parameters(Enum):
     ENABLE_DEEPCOPY = "enable_deepcopy"
 
 
-def apply(log: EventLog, aligned_traces: List[Dict[str, Any]], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> EventLog:
+def apply(
+    log: EventLog,
+    aligned_traces: List[Dict[str, Any]],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> EventLog:
     """
     Enriches a log with the results of the alignment against a model,
     obtained with the parameter 'ret_tuple_as_trans_desc' set to True
@@ -60,16 +64,20 @@ def apply(log: EventLog, aligned_traces: List[Dict[str, Any]], parameters: Optio
     if parameters is None:
         parameters = {}
 
-    target_attribute = exec_utils.get_param_value(Parameters.TARGET_ATTRIBUTE, parameters, "@@transition_id")
-    enable_deepcopy = exec_utils.get_param_value(Parameters.ENABLE_DEEPCOPY, parameters, False)
+    target_attribute = exec_utils.get_param_value(
+        Parameters.TARGET_ATTRIBUTE, parameters, "@@transition_id"
+    )
+    enable_deepcopy = exec_utils.get_param_value(
+        Parameters.ENABLE_DEEPCOPY, parameters, False
+    )
 
     if enable_deepcopy:
         log = deepcopy(log)
 
     for i in range(len(aligned_traces)):
         z = 0
-        for j in range(len(aligned_traces[i]['alignment'])):
-            id_piece = aligned_traces[i]['alignment'][j][0]
+        for j in range(len(aligned_traces[i]["alignment"])):
+            id_piece = aligned_traces[i]["alignment"][j][0]
             if id_piece[0] != align_utils.SKIP:
                 if id_piece[1] != align_utils.SKIP:
                     log[i][z][target_attribute] = id_piece[1]

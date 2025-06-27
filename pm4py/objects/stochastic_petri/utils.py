@@ -46,7 +46,7 @@ def pick_transition(et, smap):
     for ct in wmap:
         list_of_candidates.append(ct)
         if wmap_sv == 0:
-            probability_distribution.append(1.0/float(len(wmap)))
+            probability_distribution.append(1.0 / float(len(wmap)))
         else:
             probability_distribution.append(wmap[ct] / wmap_sv)
     ct = list(choice(et, 1, p=probability_distribution))[0]

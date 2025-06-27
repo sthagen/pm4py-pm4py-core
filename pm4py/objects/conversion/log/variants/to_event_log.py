@@ -45,25 +45,40 @@ def apply(log, parameters=None):
     if type(log) is log_instance.Trace or type(log) is log_instance.EventLog:
         return log
 
-    enable_deepcopy = exec_utils.get_param_value(Parameters.DEEP_COPY, parameters, False)
-    glue = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, pmconstants.CASE_CONCEPT_NAME)
-    case_pref = exec_utils.get_param_value(Parameters.CASE_ATTRIBUTE_PREFIX, parameters,
-                                           "case:")
+    enable_deepcopy = exec_utils.get_param_value(
+        Parameters.DEEP_COPY, parameters, False
+    )
+    glue = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, pmconstants.CASE_CONCEPT_NAME
+    )
+    case_pref = exec_utils.get_param_value(
+        Parameters.CASE_ATTRIBUTE_PREFIX, parameters, "case:"
+    )
 
     if pandas_utils.check_is_pandas_dataframe(log):
         log = to_event_stream.apply(log, parameters=parameters)
 
-    if isinstance(log, log_instance.EventStream) and (not isinstance(log, log_instance.EventLog)):
-        return __transform_event_stream_to_event_log(log, case_glue=glue, include_case_attributes=True,
-                                                     case_attribute_prefix=case_pref, enable_deepcopy=enable_deepcopy)
+    if isinstance(log, log_instance.EventStream) and (
+        not isinstance(log, log_instance.EventLog)
+    ):
+        return __transform_event_stream_to_event_log(
+            log,
+            case_glue=glue,
+            include_case_attributes=True,
+            case_attribute_prefix=case_pref,
+            enable_deepcopy=enable_deepcopy,
+        )
 
     return log
 
 
-def __transform_event_stream_to_event_log(log, case_glue=Parameters.CASE_ID_KEY.value,
-                                          include_case_attributes=True,
-                                          case_attribute_prefix=Parameters.CASE_ATTRIBUTE_PREFIX.value,
-                                          enable_deepcopy=False):
+def __transform_event_stream_to_event_log(
+    log,
+    case_glue=Parameters.CASE_ID_KEY.value,
+    include_case_attributes=True,
+    case_attribute_prefix=Parameters.CASE_ATTRIBUTE_PREFIX.value,
+    enable_deepcopy=False,
+):
     """
     Converts the event stream to an event log
 
@@ -97,7 +112,9 @@ def __transform_event_stream_to_event_log(log, case_glue=Parameters.CASE_ID_KEY.
             if include_case_attributes:
                 for k in event.keys():
                     if k.startswith(case_attribute_prefix):
-                        trace_attr[k.replace(case_attribute_prefix, '')] = event[k]
+                        trace_attr[k.replace(case_attribute_prefix, "")] = (
+                            event[k]
+                        )
                 if xes.DEFAULT_TRACEID_KEY not in trace_attr:
                     trace_attr[xes.DEFAULT_TRACEID_KEY] = glue
             traces[glue] = log_instance.Trace(attributes=trace_attr)
@@ -108,5 +125,11 @@ def __transform_event_stream_to_event_log(log, case_glue=Parameters.CASE_ID_KEY.
                     del event[k]
 
         traces[glue].append(event)
-    return log_instance.EventLog(traces.values(), attributes=log.attributes, classifiers=log.classifiers,
-                                 omni_present=log.omni_present, extensions=log.extensions, properties=log.properties)
+    return log_instance.EventLog(
+        traces.values(),
+        attributes=log.attributes,
+        classifiers=log.classifiers,
+        omni_present=log.omni_present,
+        extensions=log.extensions,
+        properties=log.properties,
+    )

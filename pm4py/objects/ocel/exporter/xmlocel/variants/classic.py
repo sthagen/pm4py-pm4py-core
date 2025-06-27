@@ -53,7 +53,9 @@ def get_type(t0):
         return "string"
 
 
-def apply(ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = None):
+def apply(
+    ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = None
+):
     """
     Exports an object-centric event log to a XML-OCEL file, using LXML.
 
@@ -72,26 +74,54 @@ def apply(ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = N
     if parameters is None:
         parameters = {}
 
-    event_id = exec_utils.get_param_value(Parameters.EVENT_ID, parameters, ocel.event_id_column)
-    object_id = exec_utils.get_param_value(Parameters.OBJECT_ID, parameters, ocel.object_id_column)
-    object_type = exec_utils.get_param_value(Parameters.OBJECT_TYPE, parameters, ocel.object_type_column)
-    encoding = exec_utils.get_param_value(Parameters.ENCODING, parameters, pm4_constants.DEFAULT_ENCODING)
+    event_id = exec_utils.get_param_value(
+        Parameters.EVENT_ID, parameters, ocel.event_id_column
+    )
+    object_id = exec_utils.get_param_value(
+        Parameters.OBJECT_ID, parameters, ocel.object_id_column
+    )
+    object_type = exec_utils.get_param_value(
+        Parameters.OBJECT_TYPE, parameters, ocel.object_type_column
+    )
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, pm4_constants.DEFAULT_ENCODING
+    )
 
     ocel = ocel_consistency.apply(ocel, parameters=parameters)
-    ocel = filtering_utils.propagate_relations_filtering(ocel, parameters=parameters)
+    ocel = filtering_utils.propagate_relations_filtering(
+        ocel, parameters=parameters
+    )
 
-    all_object_types = pandas_utils.format_unique(ocel.objects[object_type].unique())
-    all_attribute_names = attributes_names.get_attribute_names(ocel, parameters=parameters)
-    global_event_items = ocel.globals[
-        constants.OCEL_GLOBAL_EVENT] if constants.OCEL_GLOBAL_EVENT in ocel.globals else constants.DEFAULT_GLOBAL_EVENT
-    global_object_items = ocel.globals[
-        constants.OCEL_GLOBAL_OBJECT] if constants.OCEL_GLOBAL_OBJECT in ocel.globals else constants.DEFAULT_GLOBAL_OBJECT
-    rel_objs = related_objects.related_objects_dct_overall(ocel, parameters=parameters)
+    all_object_types = pandas_utils.format_unique(
+        ocel.objects[object_type].unique()
+    )
+    all_attribute_names = attributes_names.get_attribute_names(
+        ocel, parameters=parameters
+    )
+    global_event_items = (
+        ocel.globals[constants.OCEL_GLOBAL_EVENT]
+        if constants.OCEL_GLOBAL_EVENT in ocel.globals
+        else constants.DEFAULT_GLOBAL_EVENT
+    )
+    global_object_items = (
+        ocel.globals[constants.OCEL_GLOBAL_OBJECT]
+        if constants.OCEL_GLOBAL_OBJECT in ocel.globals
+        else constants.DEFAULT_GLOBAL_OBJECT
+    )
+    rel_objs = related_objects.related_objects_dct_overall(
+        ocel, parameters=parameters
+    )
 
-    ev_cols_dtypes = {x: get_type(str(ocel.events[x].dtype)) for x in ocel.events.columns}
-    ob_cols_dtypes = {x: get_type(str(ocel.objects[x].dtype)) for x in ocel.objects.columns}
+    ev_cols_dtypes = {
+        x: get_type(str(ocel.events[x].dtype)) for x in ocel.events.columns
+    }
+    ob_cols_dtypes = {
+        x: get_type(str(ocel.objects[x].dtype)) for x in ocel.objects.columns
+    }
 
-    events_items, objects_items = clean_dataframes.get_dataframes_from_ocel(ocel, parameters=parameters)
+    events_items, objects_items = clean_dataframes.get_dataframes_from_ocel(
+        ocel, parameters=parameters
+    )
 
     root = etree.Element("log")
 
@@ -141,11 +171,21 @@ def apply(ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = N
         event_item = events_items[i]
         eid = event_item[event_id]
         event_item = {k: v for k, v in event_item.items() if pd.notnull(v)}
-        vmap = {k: v for k, v in event_item.items() if not k.startswith(constants.OCEL_PREFIX)}
-        event_item = {k: v for k, v in event_item.items() if k.startswith(constants.OCEL_PREFIX) and k != event_id}
+        vmap = {
+            k: v
+            for k, v in event_item.items()
+            if not k.startswith(constants.OCEL_PREFIX)
+        }
+        event_item = {
+            k: v
+            for k, v in event_item.items()
+            if k.startswith(constants.OCEL_PREFIX) and k != event_id
+        }
         event_omap_items = rel_objs[eid]
         xml_event_id = etree.SubElement(event, "string")
-        xml_event_id.set("key", constants.OCEL_ID_KEY.split(constants.OCEL_PREFIX)[1])
+        xml_event_id.set(
+            "key", constants.OCEL_ID_KEY.split(constants.OCEL_PREFIX)[1]
+        )
         xml_event_id.set("value", str(eid))
         for k, v in event_item.items():
             typ = ev_cols_dtypes[k]
@@ -175,14 +215,22 @@ def apply(ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = N
         object_item = objects_items[i]
         oid = object_item[object_id]
         xml_object_id = etree.SubElement(object, "string")
-        xml_object_id.set("key", constants.OCEL_ID_KEY.split(constants.OCEL_PREFIX)[1])
+        xml_object_id.set(
+            "key", constants.OCEL_ID_KEY.split(constants.OCEL_PREFIX)[1]
+        )
         xml_object_id.set("value", str(oid))
         xml_object_type = etree.SubElement(object, "string")
         xml_object_type.set("key", object_type.split(constants.OCEL_PREFIX)[1])
         xml_object_type.set("value", object_item[object_type])
         xml_ovmap = etree.SubElement(object, "list")
-        xml_ovmap.set("key", constants.OCEL_OVMAP_KEY.split(constants.OCEL_PREFIX)[1])
-        ovmap = {k: v for k, v in object_item.items() if pd.notnull(v) and not k.startswith(constants.OCEL_PREFIX)}
+        xml_ovmap.set(
+            "key", constants.OCEL_OVMAP_KEY.split(constants.OCEL_PREFIX)[1]
+        )
+        ovmap = {
+            k: v
+            for k, v in object_item.items()
+            if pd.notnull(v) and not k.startswith(constants.OCEL_PREFIX)
+        }
         for k, v in ovmap.items():
             typ = ob_cols_dtypes[k]
             attr = etree.SubElement(xml_ovmap, typ)

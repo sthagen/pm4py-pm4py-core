@@ -42,7 +42,10 @@ class Parameters(Enum):
 DEFAULT_INDEX_KEY = "@@@index"
 
 
-def apply(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> Tuple[Dict[Tuple[str, str], int], Dict[Tuple[str, str], float]]:
+def apply(
+    log: Union[EventLog, EventStream, pd.DataFrame],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> Tuple[Dict[Tuple[str, str], int], Dict[Tuple[str, str], float]]:
     """
     Novel approach of correlation mining, that creates the PS-matrix and the duration matrix
     using the order list of events of each trace of the log
@@ -61,15 +64,22 @@ def apply(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[
     performance_dfg
         Performance DFG (containing the estimated performance for the arcs)
     """
-    traces_list, trace_grouped_list, activities, activities_counter = preprocess_log(log, activities=None,
-                                                                                     activities_counter=None)
+    traces_list, trace_grouped_list, activities, activities_counter = (
+        preprocess_log(log, activities=None, activities_counter=None)
+    )
 
-    PS_matrix, duration_matrix = get_PS_duration_matrix(activities, trace_grouped_list, parameters=parameters)
+    PS_matrix, duration_matrix = get_PS_duration_matrix(
+        activities, trace_grouped_list, parameters=parameters
+    )
 
-    return resolve_lp_get_dfg(PS_matrix, duration_matrix, activities, activities_counter)
+    return resolve_lp_get_dfg(
+        PS_matrix, duration_matrix, activities, activities_counter
+    )
 
 
-def resolve_lp_get_dfg(PS_matrix, duration_matrix, activities, activities_counter):
+def resolve_lp_get_dfg(
+    PS_matrix, duration_matrix, activities, activities_counter
+):
     """
     Resolves a LP problem to get a DFG
 
@@ -91,8 +101,12 @@ def resolve_lp_get_dfg(PS_matrix, duration_matrix, activities, activities_counte
     performance_dfg
         Performance DFG
     """
-    C_matrix = cm_util.get_c_matrix(PS_matrix, duration_matrix, activities, activities_counter)
-    dfg, performance_dfg = cm_util.resolve_LP(C_matrix, duration_matrix, activities, activities_counter)
+    C_matrix = cm_util.get_c_matrix(
+        PS_matrix, duration_matrix, activities, activities_counter
+    )
+    dfg, performance_dfg = cm_util.resolve_LP(
+        C_matrix, duration_matrix, activities, activities_counter
+    )
     return dfg, performance_dfg
 
 
@@ -119,18 +133,30 @@ def get_PS_duration_matrix(activities, trace_grouped_list, parameters=None):
     if parameters is None:
         parameters = {}
 
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters,
-                                                     xes_constants.DEFAULT_TIMESTAMP_KEY)
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
 
-    PS_matrix = get_precede_succeed_matrix(activities, trace_grouped_list, timestamp_key, start_timestamp_key)
-    duration_matrix = get_duration_matrix(activities, trace_grouped_list, timestamp_key, start_timestamp_key)
+    PS_matrix = get_precede_succeed_matrix(
+        activities, trace_grouped_list, timestamp_key, start_timestamp_key
+    )
+    duration_matrix = get_duration_matrix(
+        activities, trace_grouped_list, timestamp_key, start_timestamp_key
+    )
 
     return PS_matrix, duration_matrix
 
 
-def preprocess_log(log, activities=None, activities_counter=None, parameters=None):
+def preprocess_log(
+    log, activities=None, activities_counter=None, parameters=None
+):
     """
     Preprocess the log to get a grouped list of simplified traces (per activity)
 
@@ -159,31 +185,70 @@ def preprocess_log(log, activities=None, activities_counter=None, parameters=Non
     if parameters is None:
         parameters = {}
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
-    timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
-                                               xes_constants.DEFAULT_TIMESTAMP_KEY)
-    start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters,
-                                                     xes_constants.DEFAULT_TIMESTAMP_KEY)
-    caseid_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    index_key = exec_utils.get_param_value(Parameters.INDEX_KEY, parameters, DEFAULT_INDEX_KEY)
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
+    )
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    start_timestamp_key = exec_utils.get_param_value(
+        Parameters.START_TIMESTAMP_KEY,
+        parameters,
+        xes_constants.DEFAULT_TIMESTAMP_KEY,
+    )
+    caseid_key = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
+    )
+    index_key = exec_utils.get_param_value(
+        Parameters.INDEX_KEY, parameters, DEFAULT_INDEX_KEY
+    )
 
     if pandas_utils.check_is_pandas_dataframe(log):
         # keep only the two columns before conversion
-        log = log[list(set([activity_key, timestamp_key, start_timestamp_key, caseid_key]))]
+        log = log[
+            list(
+                set(
+                    [
+                        activity_key,
+                        timestamp_key,
+                        start_timestamp_key,
+                        caseid_key,
+                    ]
+                )
+            )
+        ]
 
-    log = converter.apply(log, variant=converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = converter.apply(
+        log, variant=converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
     traces_list = []
     for trace in log:
         trace_stream = [
-            {activity_key: trace[i][activity_key], timestamp_key: trace[i][timestamp_key].timestamp(),
-             start_timestamp_key: trace[i][start_timestamp_key].timestamp(), index_key: i} for
-            i in range(len(trace))]
-        trace_stream = sorted(trace_stream, key=lambda x: (x[start_timestamp_key], x[timestamp_key], x[index_key]))
+            {
+                activity_key: trace[i][activity_key],
+                timestamp_key: trace[i][timestamp_key].timestamp(),
+                start_timestamp_key: trace[i][start_timestamp_key].timestamp(),
+                index_key: i,
+            }
+            for i in range(len(trace))
+        ]
+        trace_stream = sorted(
+            trace_stream,
+            key=lambda x: (
+                x[start_timestamp_key],
+                x[timestamp_key],
+                x[index_key],
+            ),
+        )
         traces_list.append(trace_stream)
 
     if activities is None:
-        activities = sorted(list(set(y[activity_key] for x in traces_list for y in x)))
+        activities = sorted(
+            list(set(y[activity_key] for x in traces_list for y in x))
+        )
 
     trace_grouped_list = []
     for trace in traces_list:
@@ -194,12 +259,16 @@ def preprocess_log(log, activities=None, activities_counter=None, parameters=Non
         trace_grouped_list.append(gr)
 
     if activities_counter is None:
-        activities_counter = Counter(y[activity_key] for x in traces_list for y in x)
+        activities_counter = Counter(
+            y[activity_key] for x in traces_list for y in x
+        )
 
     return traces_list, trace_grouped_list, activities, activities_counter
 
 
-def get_precede_succeed_matrix(activities, trace_grouped_list, timestamp_key, start_timestamp_key):
+def get_precede_succeed_matrix(
+    activities, trace_grouped_list, timestamp_key, start_timestamp_key
+):
     """
     Calculates the precede succeed matrix
 
@@ -244,7 +313,9 @@ def get_precede_succeed_matrix(activities, trace_grouped_list, timestamp_key, st
     return ret
 
 
-def get_duration_matrix(activities, trace_grouped_list, timestamp_key, start_timestamp_key):
+def get_duration_matrix(
+    activities, trace_grouped_list, timestamp_key, start_timestamp_key
+):
     """
     Calculates the duration matrix
 
@@ -276,8 +347,12 @@ def get_duration_matrix(activities, trace_grouped_list, timestamp_key, start_tim
                     ai = [x[timestamp_key] for x in tr[i]]
                     aj = [x[start_timestamp_key] for x in tr[j]]
                     if ai and aj:
-                        tm0 = cm_util.calculate_time_match_fifo(ai, aj, times0=tm0)
-                        tm1 = cm_util.calculate_time_match_rlifo(ai, aj, times1=tm1)
+                        tm0 = cm_util.calculate_time_match_fifo(
+                            ai, aj, times0=tm0
+                        )
+                        tm1 = cm_util.calculate_time_match_rlifo(
+                            ai, aj, times1=tm1
+                        )
                 td0 = mean([x[1] - x[0] for x in tm0]) if tm0 else 0
                 td1 = mean([x[1] - x[0] for x in tm1]) if tm1 else 0
                 ret[i, j] = min(td0, td1)

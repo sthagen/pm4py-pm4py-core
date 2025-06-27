@@ -37,7 +37,10 @@ class Parameters(Enum):
     ACTIVITY_KEY = constants.PARAMETER_CONSTANT_ACTIVITY_KEY
 
 
-def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) -> List[Role]:
+def apply(
+    log: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> List[Role]:
     """
     Gets the roles (group of different activities done by similar resources)
     out of the log
@@ -57,11 +60,21 @@ def apply(log: EventLog, parameters: Optional[Dict[Union[str, Parameters], Any]]
     if parameters is None:
         parameters = {}
 
-    resource_key = exec_utils.get_param_value(Parameters.RESOURCE_KEY, parameters, xes.DEFAULT_RESOURCE_KEY)
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes.DEFAULT_NAME_KEY)
+    resource_key = exec_utils.get_param_value(
+        Parameters.RESOURCE_KEY, parameters, xes.DEFAULT_RESOURCE_KEY
+    )
+    activity_key = exec_utils.get_param_value(
+        Parameters.ACTIVITY_KEY, parameters, xes.DEFAULT_NAME_KEY
+    )
 
-    stream = log_converter.apply(log, variant=log_converter.TO_EVENT_STREAM, parameters={"deepcopy": False, "include_case_attributes": False})
+    stream = log_converter.apply(
+        log,
+        variant=log_converter.TO_EVENT_STREAM,
+        parameters={"deepcopy": False, "include_case_attributes": False},
+    )
 
-    activity_resource_couples = Counter((event[resource_key], event[activity_key]) for event in stream)
+    activity_resource_couples = Counter(
+        (event[resource_key], event[activity_key]) for event in stream
+    )
 
     return algorithm.apply(activity_resource_couples, parameters=parameters)
