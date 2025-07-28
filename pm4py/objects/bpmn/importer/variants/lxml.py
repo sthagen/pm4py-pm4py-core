@@ -452,6 +452,35 @@ def parse_element(
             bpmn_graph.add_node(event_based_gateway)
             node = event_based_gateway
             nodes_dict[id] = node
+        # FIXED: Moved the flow handling inside the id block
+        elif (
+            tag.endswith("sequenceflow")
+            or tag.endswith("messageflow")
+            or tag.endswith("association")
+        ):
+            seq_flow_id = curr_el.get("id")
+            source_ref = curr_el.get("sourceRef")
+            target_ref = curr_el.get("targetRef")
+            name = (
+                curr_el.get("name").replace("\r", "").replace("\n", "")
+                if "name" in curr_el.attrib
+                else ""
+            )
+            if source_ref is not None and target_ref is not None:
+                incoming_dict[seq_flow_id] = (
+                    target_ref,
+                    process,
+                    tag,
+                    name,
+                    parents,
+                )
+                outgoing_dict[seq_flow_id] = (
+                    source_ref,
+                    process,
+                    tag,
+                    name,
+                    parents,
+                )
     elif tag.endswith("incoming"):  # incoming flow of a node
         name = (
             curr_el.get("name").replace("\r", "").replace("\n", "")
@@ -482,34 +511,6 @@ def parse_element(
                     name,
                     parents,
                 )
-    elif (
-        tag.endswith("sequenceflow")
-        or tag.endswith("messageflow")
-        or tag.endswith("association")
-    ):
-        seq_flow_id = curr_el.get("id")
-        source_ref = curr_el.get("sourceRef")
-        target_ref = curr_el.get("targetRef")
-        name = (
-            curr_el.get("name").replace("\r", "").replace("\n", "")
-            if "name" in curr_el.attrib
-            else ""
-        )
-        if source_ref is not None and target_ref is not None:
-            incoming_dict[seq_flow_id] = (
-                target_ref,
-                process,
-                tag,
-                name,
-                parents,
-            )
-            outgoing_dict[seq_flow_id] = (
-                source_ref,
-                process,
-                tag,
-                name,
-                parents,
-            )
     elif tag.endswith(
         "waypoint"
     ):  # contains information of x, y values of an edge

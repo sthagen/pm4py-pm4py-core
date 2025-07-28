@@ -19,7 +19,7 @@
 | networkx | https://pypi.org/pypi/networkx/json | BSD License | 3.5 |
 | numpy | https://pypi.org/pypi/numpy/json | BSD License | 2.3.1 |
 | packaging | https://pypi.org/pypi/packaging/json | BSD License | 25.0 |
-| pandas | https://pypi.org/pypi/pandas/json | BSD License | 2.3.0 |
+| pandas | https://pypi.org/pypi/pandas/json | BSD License | 2.3.1 |
 | pillow | https://pypi.org/pypi/pillow/json | Unspecified | 11.3.0 |
 | pydotplus | https://pypi.org/pypi/pydotplus/json | MIT License | 2.0.2 |
 | pyparsing | https://pypi.org/pypi/pyparsing/json | MIT License | 3.2.3 |
