@@ -37,11 +37,11 @@ class EmptyTracesUVCL(FallThrough[IMDataStructureUVCL]):
 
     @classmethod
     def apply(
-        cls,
-        obj: IMDataStructureUVCL,
-        pool=None,
-        manager=None,
-        parameters: Optional[Dict[str, Any]] = None,
+            cls,
+            obj: IMDataStructureUVCL,
+            pool=None,
+            manager=None,
+            parameters: Optional[Dict[str, Any]] = None,
     ) -> Optional[Tuple[ProcessTree, List[IMDataStructureUVCL]]]:
         if cls.holds(obj, parameters):
             data_structure = copy(obj.data_structure)
@@ -58,9 +58,9 @@ class EmptyTracesUVCL(FallThrough[IMDataStructureUVCL]):
 
     @classmethod
     def holds(
-        cls,
-        obj: IMDataStructureUVCL,
-        parameters: Optional[Dict[str, Any]] = None,
+            cls,
+            obj: IMDataStructureUVCL,
+            parameters: Optional[Dict[str, Any]] = None,
     ) -> bool:
         return len(list(filter(lambda t: len(t) == 0, obj.data_structure))) > 0
 
@@ -68,23 +68,36 @@ class EmptyTracesUVCL(FallThrough[IMDataStructureUVCL]):
 class EmptyTracesDFG(FallThrough[IMDataStructureDFG]):
     @classmethod
     def apply(
-        cls,
-        obj: IMDataStructureDFG,
-        pool=None,
-        manager=None,
-        parameters: Optional[Dict[str, Any]] = None,
+            cls,
+            obj: IMDataStructureDFG,
+            pool=None,
+            manager=None,
+            parameters: Optional[Dict[str, Any]] = None,
     ) -> Optional[Tuple[ProcessTree, List[IMDataStructureDFG]]]:
         if cls.holds(obj, parameters):
+            # If the DFG itself is empty, the log contains only empty traces -> just τ
+            dfg = obj.data_structure.dfg
+            is_empty = (
+                    len(dfg.graph) == 0
+                    and len(dfg.start_activities) == 0
+                    and len(dfg.end_activities) == 0
+            )
+
+            if is_empty:
+                return ProcessTree(), []
+                # Otherwise, split: XOR(τ, non-empty part)
+
             return ProcessTree(operator=Operator.XOR), [
                 IMDataStructureDFG(InductiveDFG(DFG())),
+                # note: skip intentionally False here; τ is already handled on the XOR
                 IMDataStructureDFG(InductiveDFG(obj.data_structure.dfg)),
             ]
         return None
 
     @classmethod
     def holds(
-        cls,
-        obj: IMDataStructureDFG,
-        parameters: Optional[Dict[str, Any]] = None,
+            cls,
+            obj: IMDataStructureDFG,
+            parameters: Optional[Dict[str, Any]] = None,
     ) -> bool:
         return obj.data_structure.skip
