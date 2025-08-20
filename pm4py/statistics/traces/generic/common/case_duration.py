@@ -61,6 +61,17 @@ def get_kde_caseduration(duration_values, parameters=None):
             Parameters.GRAPH_POINTS, parameters, 200
         )
         duration_values = sorted(duration_values)
+        
+        # Check if we have enough data points for KDE
+        if len(duration_values) < 2:
+            # Return empty or single-point data
+            if len(duration_values) == 0:
+                return [[], []]
+            else:
+                # Single value case - return a simple representation
+                single_val = duration_values[0]
+                return [[single_val], [1.0]]
+        
         density = gaussian_kde(duration_values)
         xs1 = list(
             np.linspace(
