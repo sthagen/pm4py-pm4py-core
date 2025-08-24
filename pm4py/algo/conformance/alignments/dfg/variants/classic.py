@@ -748,3 +748,103 @@ def project_log_on_dfg(
         projected_log.append(projected_trace)
 
     return projected_log
+
+
+def project_alignments_on_dfg(log: Union[EventLog, pd.DataFrame],
+                              dfg: Dict[Tuple[str, str], int],
+                              sa: Dict[str, int],
+                              ea: Dict[str, int],
+                              parameters: Optional[Dict[Union[str,
+                                                              Parameters], Any]] = None,
+                              ) -> Tuple[Dict[Tuple[str, str], Dict[str, int]], Dict[str, Dict[str, int]]]:
+    """
+    Projects alignment results onto the directly-follows graph (DFG) and activity dictionary.
+
+    This method performs a DFG-based alignment between an event log (or DataFrame) and a process model
+    represented by a directly-follows graph. The alignment moves are categorized into three types:
+
+      - SYNC (Synchronous Move): Both the log event and the model activity match.
+      - MM (Model Move): The model activity is executed without a corresponding log event.
+      - LM (Log Move): A log event occurs without a corresponding model activity.
+
+    After computing the alignments using the provided log and DFG (via the `apply_log` function),
+    the method "projects" these results by aggregating:
+
+      - For each DFG edge (transition), the number of SYNC and MM moves.
+      - For each activity, the number of SYNC, MM, and LM moves.
+
+    Parameters
+    ----------
+    log : Union[EventLog, pd.DataFrame]
+        The event log or DataFrame containing the events.
+    dfg : Dict[Tuple[str, str], int]
+        A dictionary representing the directly-follows graph where each key is a tuple of activities
+        (from, to) and each value is the frequency of that transition.
+    sa : Dict[str, int]
+        A dictionary of start activities with their corresponding frequencies.
+    ea : Dict[str, int]
+        A dictionary of end activities with their corresponding frequencies.
+    parameters : Optional[Dict[Union[str, Parameters], Any]], optional
+        Additional parameters to control the alignment process, by default None.
+
+    Returns
+    -------
+    Tuple[Dict[Tuple[str, str], Dict[str, int]], Dict[str, Dict[str, int]]]
+        A tuple containing:
+          - conformance_dfg: A dictionary where each key is an edge (tuple of activities) from the DFG,
+            and the value is a dictionary with keys:
+                'sync' : count of synchronous moves on that edge.
+                'mm'   : count of model moves on that edge.
+          - conformance_activities: A dictionary where each key is an activity and the value is a dictionary
+            with keys:
+                'sync' : count of synchronous moves for the activity.
+                'mm'   : count of model moves for the activity.
+                'lm'   : count of log moves for the activity.
+    """
+    if parameters is None:
+        parameters = {}
+
+    aligned_traces = apply_log(log, dfg, sa, ea, parameters=parameters)
+
+    activities = set(x[0] for x in dfg).union(set(x[1] for x in dfg))
+    conformance_dfg = {x: {"sync": 0, "mm": 0} for x in dfg}
+    activities_conformance = {
+        a: {"sync": 0, "mm": 0, "lm": 0} for a in activities}
+
+    for trace in aligned_traces:
+        trace = trace["alignment"]
+
+        for i in range(len(trace) - 1):
+            move0 = trace[i]
+            move1 = trace[i + 1]
+
+            if move0[1] == ">>":
+                if move0[0] in activities:
+                    activities_conformance[move0[0]]["lm"] += 1
+            elif move0[0] == ">>":
+                if move0[1] in activities:
+                    activities_conformance[move0[1]]["mm"] += 1
+            else:
+                if move0[0] in activities:
+                    activities_conformance[move0[0]]["sync"] += 1
+
+            if i == len(trace) - 1:
+                if move1[1] == ">>":
+                    if move1[0] in activities:
+                        activities_conformance[move1[0]]["lm"] += 1
+                elif move1[0] == ">>":
+                    if move1[1] in activities:
+                        activities_conformance[move1[1]]["mm"] += 1
+                else:
+                    if move1[0] in activities:
+                        activities_conformance[move1[0]]["sync"] += 1
+
+            if (move0[1], move1[1]) in conformance_dfg:
+                is_sync = move0[0] != ">>" and move1[0] != ">>"
+
+                if is_sync:
+                    conformance_dfg[(move0[1], move1[1])]["sync"] += 1
+                else:
+                    conformance_dfg[(move0[1], move1[1])]["mm"] += 1
+
+    return conformance_dfg, activities_conformance

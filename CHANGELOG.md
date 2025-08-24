@@ -1,7 +1,50 @@
 # Changelog of pm4py
 
 
-## pm4py 2.7.16 (2025.02.XX)
+## pm4py 2.7.17 (2025.04.11)
+
+### Added
+* 7d5bc959e15d74a8e4f1ddb2bb8eb8089bfecaf6
+  * calculating edit distance with POT
+* 11450e4b5dcbf81e33804ff371b39d91bd347ebe
+  * significantly revised decision mining
+* 5af9ef45714c9c6df8e9cf6704b05029d82ac587
+  * significantly revised Monte Carlo simulation
+* 339-concept-drift-detection-bose
+  * Concept drift detection (method by Bose)
+* 5489d3bbf1362b324d428663d11a111e22bc5488
+  * process cubes detection
+* 107c2530270168d5eaf826e28244ceb154f16587
+  * using RustXES by default when importing/exporting XES. users is warned.
+
+### Changed
+* cdee940e1825194c54edadb61a69ef97785f46e1
+  * Small update Anthropic connector
+* 7b5d15db8f63e17edee6e8b518bcf998c6dcbe60
+  * increased timeout of requests in LLM module
+* 190cb87688bfb788609c32a5fda074f0d98bdaf3
+  * optimization OCEL CSV importing
+* d816b469348acdb8dc354518bbece4fe31f9e18d
+  * updated footprints algorithm entrypoint
+
+### Deprecated
+
+### Fixed
+* 426d33eac42a5d2a0f142ff10bcbf92fba4ad28f
+  * fixed execution on CUDA dataframes
+* 68ed19a05fe233ffc80ed9074750fb2d647b531a
+  * fixed execution of examples
+* fd73f17c37b619883f039e44e8cb9e83aa8f00e4
+  * revised test
+
+### Removed
+
+### Other
+
+
+---
+
+## pm4py 2.7.16 (2025.03.17)
 
 ### Added
 * c3400ac1f3cc3bc23ff66980f39c7c5c6458d2b7

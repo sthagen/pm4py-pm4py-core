@@ -25,10 +25,12 @@ from pm4py.util.regex import SharedObj, get_new_char
 from pm4py.util import string_distance
 from pm4py.util import exec_utils
 from scipy.optimize import linprog
+import importlib.util
 
 
 class Parameters:
     STRING_DISTANCE = "string_distance"
+    USE_FAST_EMD = "use_fast_emd"  # New parameter to choose between implementations
 
 
 def normalized_levensthein(s1, s2):
@@ -105,9 +107,9 @@ class EMDCalculator:
 
     @staticmethod
     def emd(
-        first_histogram: np.ndarray,
-        second_histogram: np.ndarray,
-        distance_matrix: np.ndarray,
+            first_histogram: np.ndarray,
+            second_histogram: np.ndarray,
+            distance_matrix: np.ndarray,
     ) -> float:
         """
         Compute the Earth Mover's Distance given two histograms and a distance matrix.
@@ -178,23 +180,106 @@ class EMDCalculator:
         if res.status != 0:
             raise ValueError(
                 f"Linear programming failed. Status: {
-                    res.status}, Message: {
-                    res.message}")
+                res.status}, Message: {
+                res.message}")
 
         # The optimal value is the EMD
         return res.fun
 
 
+class POTEMDCalculator:
+    """
+    A faster implementation of EMD using the POT (Python Optimal Transport) library.
+    Falls back to the SciPy implementation if POT is not available.
+
+    Usage:
+    ------
+    emd_value = POTEMDCalculator.emd(first_histogram, second_histogram, distance_matrix)
+    """
+
+    @staticmethod
+    def is_pot_available():
+        """Check if POT (Python Optimal Transport) is available."""
+        return importlib.util.find_spec("ot") is not None
+
+    @staticmethod
+    def emd(
+            first_histogram: np.ndarray,
+            second_histogram: np.ndarray,
+            distance_matrix: np.ndarray,
+    ) -> float:
+        """
+        Compute the Earth Mover's Distance using POT if available, otherwise fall back to SciPy.
+
+        Parameters
+        ----------
+        first_histogram : np.ndarray
+            The first distribution (array of nonnegative numbers).
+        second_histogram : np.ndarray
+            The second distribution (array of nonnegative numbers).
+        distance_matrix : np.ndarray
+            Matrix of distances between points of the two distributions.
+
+        Returns
+        -------
+        float
+            The computed EMD value.
+        """
+        # Check if POT is available
+        if POTEMDCalculator.is_pot_available():
+            try:
+                import ot
+
+                # Normalize histograms to sum to 1.0 if they don't sum to the same value
+                sum1 = np.sum(first_histogram)
+                sum2 = np.sum(second_histogram)
+
+                if not np.isclose(sum1, sum2):
+                    # Normalize both histograms to sum to 1.0
+                    a = first_histogram / sum1
+                    b = second_histogram / sum2
+                else:
+                    a = first_histogram
+                    b = second_histogram
+
+                # Ensure arrays have the right type
+                a = np.asarray(a, dtype=np.float64)
+                b = np.asarray(b, dtype=np.float64)
+                M = np.asarray(distance_matrix, dtype=np.float64)
+
+                # Use POT's EMD computation
+                # Regularized version can be used with reg=1e-3 for efficiency when needed
+                emd_value = ot.emd2(a, b, M)
+
+                return emd_value
+
+            except ImportError:
+                # Fall back to SciPy implementation
+                return EMDCalculator.emd(first_histogram, second_histogram, distance_matrix)
+            except Exception as e:
+                # If POT fails for any reason, fall back to SciPy implementation
+                print(f"POT EMD calculation failed: {str(e)}. Falling back to SciPy implementation.")
+                return EMDCalculator.emd(first_histogram, second_histogram, distance_matrix)
+        else:
+            # Fall back to SciPy implementation
+            return EMDCalculator.emd(first_histogram, second_histogram, distance_matrix)
+
+
 def apply(
-    lang1: Dict[List[str], float],
-    lang2: Dict[List[str], float],
-    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+        lang1: Dict[List[str], float],
+        lang2: Dict[List[str], float],
+        parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
 ) -> float:
     if parameters is None:
         parameters = {}
 
     distance_function = exec_utils.get_param_value(
         Parameters.STRING_DISTANCE, parameters, normalized_levensthein
+    )
+
+    # New parameter to choose between implementations
+    use_fast_emd = exec_utils.get_param_value(
+        Parameters.USE_FAST_EMD, parameters, True
     )
 
     enc1, enc2 = encode_two_languages(lang1, lang2, parameters=parameters)
@@ -212,6 +297,11 @@ def apply(
 
     distance_matrix = np.array(distance_matrix)
 
-    ret = EMDCalculator.emd(first_histogram, second_histogram, distance_matrix)
+    # Choose which EMD implementation to use
+    if use_fast_emd and POTEMDCalculator.is_pot_available():
+        ret = POTEMDCalculator.emd(first_histogram, second_histogram, distance_matrix)
+    else:
+        # Use the original SciPy implementation
+        ret = EMDCalculator.emd(first_histogram, second_histogram, distance_matrix)
 
     return ret

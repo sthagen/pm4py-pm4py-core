@@ -23,7 +23,9 @@ import sys
 from copy import deepcopy, copy
 from enum import Enum
 from typing import Optional, Dict, Any, Union, Tuple
+
 import numpy as np
+import pandas as pd
 
 from pm4py.algo.conformance.alignments.petri_net import algorithm as ali
 from pm4py.algo.conformance.alignments.petri_net.variants import (
@@ -41,7 +43,6 @@ from pm4py.statistics.variants.log import get as variants_module
 from pm4py.util import constants, xes_constants
 from pm4py.util import exec_utils, pandas_utils
 from pm4py.visualization.decisiontree.util import dt_to_string
-import pandas as pd
 
 
 class Parameters(Enum):
@@ -50,115 +51,127 @@ class Parameters(Enum):
 
 
 def create_data_petri_nets_with_decisions(
-    log: Union[EventLog, pd.DataFrame],
-    net: PetriNet,
-    initial_marking: Marking,
-    final_marking: Marking,
+        log: Union[EventLog, pd.DataFrame],
+        net: PetriNet,
+        initial_marking: Marking,
+        final_marking: Marking,
 ) -> Tuple[PetriNet, Marking, Marking]:
     """
-    Given a Petri net, create a data Petri net with the decisions given for each place by the decision
-    mining algorithm
+    Given a Petri net, create a data Petri net with the decisions
+    given for each place by the decision mining algorithm.
 
     Parameters
     ----------------
     log
-        Event log
+        Event log (EventLog or DataFrame).
     net
-        Petri net
+        Petri net.
     initial_marking
-        Initial marking
+        Initial marking of the Petri net.
     final_marking
-        Final marking
+        Final marking of the Petri net.
 
     Returns
     ------------------
     data_petri_net
-        Data petri net
+        Petri net enriched with guards (conditions).
     initial_marking
-        Initial marking (unchanged)
+        Initial marking (unchanged).
     final_marking
-        Final marking (unchanged)
+        Final marking (unchanged).
     """
     all_conditions = {}
     all_variables = {}
+
+    # Attempt to build a decision tree for each place in the net
     for place in net.places:
         try:
-            clf, columns, targets = get_decision_tree(
+            dt_classifier, columns, targets = get_decision_tree(
                 log,
                 net,
                 initial_marking,
                 final_marking,
                 decision_point=place.name,
-                parameters={"labels": False},
+                parameters={"labels": False},  # by default
             )
-            target_classes, variables = dt_to_string.apply(clf, columns)
+            # Convert the scikit-learn tree into string-based conditions
+            target_classes_dict, variables_dict = dt_to_string.apply(
+                dt_classifier, columns
+            )
+            # Remap integer-based classes to the actual transitions
             target_classes = {
-                targets[int(k)]: v for k, v in target_classes.items()
+                targets[int(k)]: v for k, v in target_classes_dict.items()
             }
-            variables = {targets[int(k)]: v for k, v in variables.items()}
-            for k in target_classes.keys():
-                all_conditions[k] = target_classes[k]
-                all_variables[k] = variables[k]
-        except BaseException:
+            variables = {targets[int(k)]: v for k, v in variables_dict.items()}
+
+            # Accumulate results
+            for transition_name in target_classes.keys():
+                all_conditions[transition_name] = target_classes[transition_name]
+                all_variables[transition_name] = variables[transition_name]
+
+        except Exception:
+            # If the decision-tree building fails for some place, ignore it
             pass
-    for trans in net.transitions:
-        if trans.name in all_conditions:
-            trans.properties[petri_properties.TRANS_GUARD] = all_conditions[
-                trans.name
+
+    # Attach discovered guards (conditions) to transitions
+    for transition in net.transitions:
+        if transition.name in all_conditions:
+            transition.properties[petri_properties.TRANS_GUARD] = all_conditions[
+                transition.name
             ]
-            trans.properties[petri_properties.READ_VARIABLE] = all_variables[
-                trans.name
+            transition.properties[petri_properties.READ_VARIABLE] = all_variables[
+                transition.name
             ]
-            trans.properties[petri_properties.WRITE_VARIABLE] = []
+            transition.properties[petri_properties.WRITE_VARIABLE] = []
+
     return net, initial_marking, final_marking
 
 
 def get_decision_tree(
-    log: Union[EventLog, pd.DataFrame],
-    net: PetriNet,
-    initial_marking: Marking,
-    final_marking: Marking,
-    decision_point=None,
-    attributes=None,
-    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+        log: Union[EventLog, pd.DataFrame],
+        net: PetriNet,
+        initial_marking: Marking,
+        final_marking: Marking,
+        decision_point=None,
+        attributes=None,
+        parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
 ) -> Any:
     """
-    Gets a decision tree classifier on a specific point of the model
+    Gets a decision tree classifier on a specific point of the model.
 
     Parameters
     --------------
     log
-        Event log
+        Event log (EventLog or DataFrame).
     net
-        Petri net
+        Petri net.
     initial_marking
-        Initial marking
+        Initial marking.
     final_marking
-        Final marking
+        Final marking.
     decision_point
-        Point of the process in which a decision happens:
-        - if not specified, the method crashes, but provides a list of possible decision points
-        - if specified, the method goes on and produce the decision tree
+        Name of the place in which a decision happens:
+        - if not specified, the method raises an Exception with a list of possible decision points.
     attributes
-        Attributes of the log. If not specified, then an automatic attribute selection
-        is performed.
+        Attributes of the log. If not specified, an automatic attribute selection is performed.
     parameters
-        Parameters of the algorithm
+        Parameters of the algorithm.
 
     Returns
     ---------------
     clf
-        Decision tree
+        Fitted decision tree classifier.
     feature_names
-        The names of the features
+        The names of the features used to fit the classifier.
     classes
-        The classes
+        The classes (i.e., transitions) the classifier distinguishes.
     """
     from pm4py.util import ml_utils
 
     if parameters is None:
         parameters = {}
 
+    # Compute feature matrix X, labels y, and the mapping to actual transitions
     X, y, targets = apply(
         log,
         net,
@@ -169,77 +182,79 @@ def get_decision_tree(
         parameters=parameters,
     )
 
-    dt = ml_utils.DecisionTreeClassifier()
-    dt = dt.fit(X, y)
-    return dt, list(X.columns.values.tolist()), targets
+    # Fit a decision tree classifier
+    dt_classifier = ml_utils.DecisionTreeClassifier()
+    dt_classifier = dt_classifier.fit(X, y)
+
+    # Return the classifier, the feature names, and the classes
+    return dt_classifier, list(X.columns.values.tolist()), targets
 
 
 def apply(
-    log: Union[EventLog, pd.DataFrame],
-    net: PetriNet,
-    initial_marking: Marking,
-    final_marking: Marking,
-    decision_point=None,
-    attributes=None,
-    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+        log: Union[EventLog, pd.DataFrame],
+        net: PetriNet,
+        initial_marking: Marking,
+        final_marking: Marking,
+        decision_point=None,
+        attributes=None,
+        parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
 ) -> Any:
     """
-    Gets the essential information (features, target class and names of the target class)
-    in order to learn a classifier
+    Gets the essential information (features, target class, and names of the target class)
+    in order to learn a classifier.
 
     Parameters
     --------------
     log
-        Event log
+        Event log (EventLog or DataFrame).
     net
-        Petri net
+        Petri net.
     initial_marking
-        Initial marking
+        Initial marking.
     final_marking
-        Final marking
+        Final marking.
     decision_point
-        Point of the process in which a decision happens:
-        - if not specified, the method crashes, but provides a list of possible decision points
-        - if specified, the method goes on and produce the decision tree
+        The name of the place in which a decision happens.
+        - If not specified, raises an Exception with a list of possible places.
     attributes
-        Attributes of the log. If not specified, then an automatic attribute selection
-        is performed.
+        Attributes of the log. If not specified, an automatic attribute selection is performed.
     parameters
-        Parameters of the algorithm
+        Parameters of the algorithm.
 
     Returns
     ---------------
     X
-        features
+        DataFrame of features.
     y
-        Target class
+        Series of encoded target classes (integer).
     class_name
-        Target class names
+        Mapping of integer class -> actual transition name.
     """
-    import pandas as pd
-
     if parameters is None:
         parameters = {}
 
+    # Retrieve parameter about labeling
     labels = exec_utils.get_param_value(Parameters.LABELS, parameters, True)
 
+    # Define the default activity key
     activity_key = exec_utils.get_param_value(
         Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY
     )
+
+    # If decision_point is None, we provide a list of valid places and raise an Exception
     if decision_point is None:
-        decision_points_names = get_decision_points(
-            net, labels=labels, parameters=parameters
-        )
+        decision_points_names = get_decision_points(net, labels=labels, parameters=parameters)
         raise Exception(
-            "please provide decision_point as argument of the method. Possible decision points: ",
-            decision_points_names,
+            "Please provide 'decision_point'. Possible decision points: %s" % list(decision_points_names.keys())
         )
+
+    # If attributes not specified, automatically select them
     if attributes is None:
-        str_tr_attr, str_ev_attr, num_tr_attr, num_ev_attr = (
-            select_attributes_from_log_for_tree(log)
-        )
+        str_tr_attr, str_ev_attr, num_tr_attr, num_ev_attr = select_attributes_from_log_for_tree(log)
         attributes = list(str_ev_attr) + list(num_ev_attr)
-    I, dp = get_decisions_table(
+
+    # Build the main "decisions table" from the log and the Petri net
+    decision_info, _ = get_decisions_table(
         log,
         net,
         initial_marking,
@@ -248,176 +263,274 @@ def apply(
         pre_decision_points=[decision_point],
         parameters=parameters,
     )
-    x_attributes = [a for a in attributes if not a == activity_key]
+
+    # For the chosen decision point, separate attributes (X) and target transitions (y)
+    relevant_data = decision_info[decision_point]
+    x_attributes = [a for a in attributes if a != activity_key]
+
+    # We separate string and numeric attributes to handle get_dummies for strings
     str_attributes = set()
     non_str_attributes = set()
-    x = []
-    x2 = []
-    y = []
-    for el in I[decision_point]:
-        for a, v in el[0].items():
-            if a in x_attributes:
-                if type(v) is str:
-                    str_attributes.add(a)
+
+    # Lists to store intermediate results
+    all_feature_dicts_str = []
+    all_feature_dicts_num = []
+    all_targets = []
+
+    # For each recorded decision, collect attributes
+    for (attr_dict, chosen_transition) in relevant_data:
+        # Identify which attributes are string vs numeric
+        for attr_name, attr_value in attr_dict.items():
+            if attr_name in x_attributes:
+                if isinstance(attr_value, str):
+                    str_attributes.add(attr_name)
                 else:
-                    non_str_attributes.add(a)
-        x.append(
-            {
-                a: v
-                for a, v in el[0].items()
-                if a in x_attributes and type(v) is str
-            }
-        )
-        x2.append(
-            {
-                a: v
-                for a, v in el[0].items()
-                if a in x_attributes and type(v) is not str
-            }
-        )
-        y.append(el[1])
-    X = pandas_utils.instantiate_dataframe(x)
-    X = pd.get_dummies(data=X, columns=list(str_attributes))
-    X2 = pandas_utils.instantiate_dataframe(x2)
-    X = pandas_utils.concat([X, X2], axis=1)
-    Y = pandas_utils.instantiate_dataframe(y, columns=["Name"])
-    Y, targets = encode_target(Y, "Name")
+                    non_str_attributes.add(attr_name)
+
+        # Build two partial dicts:
+        # one for string columns, one for numeric columns
+        all_feature_dicts_str.append({
+            a: v for a, v in attr_dict.items()
+            if a in x_attributes and isinstance(v, str)
+        })
+        all_feature_dicts_num.append({
+            a: v for a, v in attr_dict.items()
+            if a in x_attributes and not isinstance(v, str)
+        })
+
+        # The target is the chosen transition's label/name
+        all_targets.append(chosen_transition)
+
+    # Convert to pandas DataFrame, applying get_dummies to string features
+    df_str = pandas_utils.instantiate_dataframe(all_feature_dicts_str)
+    df_str = pd.get_dummies(data=df_str, columns=list(str_attributes))
+
+    df_num = pandas_utils.instantiate_dataframe(all_feature_dicts_num)
+    X = pd.concat([df_str, df_num], axis=1)
+
+    Y = pd.DataFrame(all_targets, columns=["Name"])
+    Y, targets = encode_target(Y, "Name")  # encode the target transitions
     y = Y["Target"]
+
     return X, y, targets
 
 
 def get_decisions_table(
-    log0,
-    net,
-    initial_marking,
-    final_marking,
-    attributes=None,
-    use_trace_attributes=False,
-    k=1,
-    pre_decision_points=None,
-    trace_attributes=None,
-    parameters=None,
+        log0,
+        net,
+        initial_marking,
+        final_marking,
+        attributes=None,
+        use_trace_attributes=False,
+        k=1,
+        pre_decision_points=None,
+        trace_attributes=None,
+        parameters=None,
 ):
     """
-    Gets a decision table out of a log and an accepting Petri net
+    Builds a decision table out of a log and an accepting Petri net.
+
+    For each place that has multiple outgoing arcs (a "decision point"),
+    we record the attributes that preceded the choice of a particular transition.
 
     Parameters
     -----------------
     log0
-        Event log
+        Event log (EventLog or DataFrame).
     net
-        Petri net
+        Petri net.
     initial_marking
-        Initial marking
+        Initial marking.
     final_marking
-        Final marking
+        Final marking.
     attributes
-        List of attributes which are considered
-        (if not provided, all the attributes are considered)
+        List of event attributes to consider (if not provided, all are considered).
     use_trace_attributes
-        Include trace attributes in the decision table
+        Whether to include trace attributes (e.g., case-level data) in the decision table.
     k
-        Number that determines the number of last activities to take into account
+        Number of last events to look back at for each decision. (Default=1)
     pre_decision_points
-        List of Strings of place Names that have to be considered as decision points.
-        If not provided, the decision points are inferred from the Petri net
+        List of place names that should be considered. If None, the code infers them automatically.
     trace_attributes
-        List of trace attributes to consider
+        List of trace attribute names to consider. If None, all are considered (if use_trace_attributes=True).
     parameters
-        Possible parameters of the algorithm
+        Additional parameters (e.g., {Parameters.LABELS: True/False}).
 
     Returns
     --------------
     I
-        decision table
+        A dictionary keyed by place name. Values are lists of tuples (dict_of_attributes, chosen_transition).
     decision_points
-        The decision points as places of the Petri net, which are the keys of a dictionary
-        having as values the list of transitions that are target
+        The dictionary of decision points (places with multiple outgoing arcs),
+        possibly filtered by `pre_decision_points`.
     """
     if parameters is None:
         parameters = {}
 
-    labels = exec_utils.get_param_value(Parameters.LABELS, parameters, True)
+    # Convert input log to pm4py EventLog if it's a DataFrame
+    log = log_converter.apply(log0, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
 
-    log = deepcopy(log0)
-    log = log_converter.apply(
-        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    # Validate some of the inputs
+    _validate_inputs_for_decision_table(
+        pre_decision_points, attributes, use_trace_attributes, trace_attributes
     )
 
-    if pre_decision_points is not None:
-        if not isinstance(pre_decision_points, list):
-            print(
-                "Error: The parameter pre_decision_points has to be a list of names of the places that have to be considered."
-            )
-            sys.exit()
-        if len(pre_decision_points) == 0:
-            print(
-                "Error: There must be at least one element in the list of pre_decision_points."
-            )
-            sys.exit()
-    if attributes is not None:
-        if not isinstance(attributes, list):
-            print(
-                "Error: The parameter attributes has to be a list of names of event attributes that have to be considered."
-            )
-            sys.exit()
-        if len(attributes) == 0:
-            print(
-                "Error: There must be at least one element in the list of attributes."
-            )
-            sys.exit()
-    if (
-        use_trace_attributes == False
-        and trace_attributes is not None
-        and isinstance(trace_attributes, list)
-    ):
-        print(
-            "Note: Since a list of considerable trace attributes is provided, and use_trace_attributes was set on False, we set it on True"
-        )
-        use_trace_attributes = True
-    if trace_attributes is not None:
-        if not isinstance(trace_attributes, list):
-            print(
-                "Error: The parameter trace_attributes has to be a list of names of trace attributes that have to be considered."
-            )
-            sys.exit()
-        if len(trace_attributes) == 0:
-            print(
-                "Error: There must be at least one element in the list of trace_attributes."
-            )
-            sys.exit()
-
-    # alignment = ali.apply(log, net, initial_marking, final_marking, variant=True, parameters={star.PARAM_ALIGNMENT_RESULT_IS_SYNC_PROD_AWARE:True})
+    # Identify actual decision points
+    # (places that have >=2 outgoing arcs)
     decision_points = get_decision_points(
         net, pre_decision_points=pre_decision_points, parameters=parameters
     )
+    # Also get decision point labels if needed
     decision_points_names = get_decision_points(
-        net,
-        labels=labels,
-        pre_decision_points=pre_decision_points,
-        parameters=parameters,
+        net, labels=True, pre_decision_points=pre_decision_points, parameters=parameters
     )
+
+    # Possibly rename trace/event attributes to avoid collisions
     if use_trace_attributes:
-        # Made to ensure distinguishness between event and trace attributes.
         log = prepare_event_log(log)
         if attributes is not None:
             attributes = prepare_attributes(attributes)
 
+    # If no explicit trace_attributes are given, collect from the log
     if use_trace_attributes and trace_attributes is None:
-        # if no list of trace attributes is provided, we create one
-        trace_attributes = []
-        if use_trace_attributes:
-            for trace in log:
-                trace_attributes += list(trace.attributes)
-        trace_attributes = list(set(trace_attributes))
+        trace_attributes = set()
+        for trace in log:
+            trace_attributes.update(trace.attributes.keys())
+        trace_attributes = list(trace_attributes)
+
+    # If attributes are still None, collect all event attributes from the log
     if attributes is None:
-        # if no list is given, every attribute of the events are considered
-        attributes = []
+        attributes = set()
         for trace in log:
             for event in trace:
-                attributes += list(event.keys())
-    attributes = list(set(attributes))
-    I = get_attributes(
+                attributes.update(list(event.keys()))
+        attributes = list(attributes)
+
+    # Now build the dictionary of decision info
+    # Each key is a place name, and the value is a list of (attributes_dict, chosen_transition)
+    decision_info = _build_decision_info(
+        log,
+        net,
+        initial_marking,
+        final_marking,
+        decision_points,
+        decision_points_names,
+        attributes,
+        use_trace_attributes,
+        trace_attributes,
+        k,
+        parameters,
+    )
+    return (decision_info, decision_points)
+
+
+def prepare_event_log(log):
+    """
+    If trace attributes are considered, we want to differentiate them from event attributes.
+    For trace attributes, we prepend "t_".
+    For event attributes, we prepend "e_".
+
+    This helps avoid collisions when both trace and event attributes share the same name.
+
+    Parameters
+    ----------
+    log : EventLog
+        The original log.
+
+    Returns
+    -------
+    EventLog
+        The modified log with attribute names prefixed.
+    """
+    for trace in log:
+        # Prefix trace attributes with "t_"
+        trace_attrs_copy = dict(trace.attributes)
+        for attribute in trace_attrs_copy:
+            new_key = "t_" + attribute
+            trace.attributes[new_key] = trace.attributes.pop(attribute)
+
+        # Prefix event attributes with "e_"
+        for event in trace:
+            event_attrs_copy = dict(event._dict)
+            for attribute in event_attrs_copy:
+                new_key = "e_" + attribute
+                event._dict[new_key] = event._dict.pop(attribute)
+
+    return log
+
+
+def prepare_attributes(attributes):
+    """
+    If trace attributes are considered, we assume all the user-provided attributes refer to event attributes
+    and prepend "e_" to them.
+
+    Parameters
+    ----------
+    attributes : list
+        List of original attribute names.
+
+    Returns
+    -------
+    list
+        List of attribute names, each prefixed by "e_".
+    """
+    new_attributes = []
+    for attribute in attributes:
+        new_attributes.append("e_" + attribute)
+    return new_attributes
+
+
+def get_decision_points(
+        net, labels=False, pre_decision_points=None, parameters=None
+):
+    """
+    Identifies "decision points" in the net, i.e., places with >= 2 outgoing arcs.
+
+    Parameters
+    ----------
+    net : PetriNet
+        The Petri net under analysis.
+    labels : bool
+        Whether to list the labels of transitions as values rather than the raw transition names.
+    pre_decision_points : list or None
+        If provided, only return decision points that appear in this list (filter).
+    parameters : dict
+        (Unused in this function except for consistency.)
+
+    Returns
+    -------
+    dict
+        A dictionary mapping place_name -> list of outgoing transition names or labels.
+    """
+    if parameters is None:
+        parameters = {}
+
+    # Build a dict {place_name -> [outgoing transitions]}
+    outgoing_dict = {}
+    for place in net.places:
+        outgoing_dict[place.name] = []
+
+    # For each arc that starts from a place, record the target transition
+    for arc in net.arcs:
+        if arc.source in net.places:
+            transition_label = arc.target.label if labels else arc.target.name
+            outgoing_dict[arc.source.name].append(transition_label)
+
+    # Filter only those with >=2 outgoing arcs
+    decision_points = {
+        place_name: trans_list
+        for place_name, trans_list in outgoing_dict.items()
+        if len(trans_list) >= 2
+    }
+
+    # If user gave a specific list of decision points, filter further
+    if pre_decision_points is not None:
+        _check_pre_decision_points(decision_points, pre_decision_points)
+
+    return decision_points
+
+
+def get_attributes(
         log,
         decision_points,
         attributes,
@@ -428,269 +541,384 @@ def get_decisions_table(
         initial_marking,
         final_marking,
         decision_points_names,
-        parameters=parameters,
-    )
-    return (I, decision_points)
-
-
-def prepare_event_log(log):
-    """
-    If trace attributes are considered, it is possible that trace attributes have the same name as event attributes.
-    To tackle this issue, the attributes get renamed.
-    For trace attributes, we add "t_" at the beginning of the dictionary keys.
-    For event attributes, we add "e_" at the beginning of the dict keys.
-    :param log:
-    :return:
-    """
-    for trace in log:
-        attributes = trace.attributes.copy()
-        for attribute in attributes:
-            trace.attributes["t_" + attribute] = trace.attributes.pop(
-                attribute
-            )
-        for event in trace:
-            attributes = event._dict.copy()
-            for attribute in attributes:
-                event._dict["e_" + attribute] = event._dict.pop(attribute)
-    return log
-
-
-def prepare_attributes(attributes):
-    """
-    Method that "e_" in front of every attribute if trace attributes are considered.
-    :param attributes: List of event attributes that the user wants to consider.
-    :return: list of edited attribute names
-    """
-    new_attributes = []
-    for attribute in attributes:
-        new_attributes.append("e_" + attribute)
-    return new_attributes
-
-
-def get_decision_points(
-    net, labels=False, pre_decision_points=None, parameters=None
+        parameters=None,
 ):
     """
-    The goal is to get all decision places. These are places where there are at least two outgoing arcs.
-    :param net: Petri Net where decision points are discovered (places with at least two outgoing arcs)
-    :param labels: If someone wants to get the labels of the transitions after a decision point and not the "ID"
-    :return:
+    For each decision place, this collects the final table of
+    (attributes -> chosen transition) for each occurrence of a decision.
+
+    This function internally uses token-based replay (or alignment for non-fitting traces)
+    to discover the actual transitions that were used from the log.
+    Then, for each place with multiple outgoing arcs, we store the attributes
+    that led to a certain chosen transition.
+
+    Parameters
+    ----------
+    log : EventLog
+        The event log.
+    decision_points : dict
+        Dictionary mapping place_name -> list of possible transitions (IDs/names).
+    attributes : list
+        Attributes to consider from events.
+    use_trace_attributes : bool
+        Whether to consider trace-level attributes as well.
+    trace_attributes : list
+        List of trace-level attributes to consider.
+    k : int
+        Number of events to look back at each decision (the "window size").
+    net : PetriNet
+        The Petri net.
+    initial_marking : Marking
+        Initial marking.
+    final_marking : Marking
+        Final marking.
+    decision_points_names : dict
+        Dictionary mapping place_name -> list of transition labels (if labels=True).
+    parameters : dict
+        Additional parameters (e.g. {Parameters.LABELS: True/False}).
+
+    Returns
+    -------
+    dict
+        A dictionary keyed by place name, with each value a list of tuples:
+        (attributes_dict, chosen_transition).
     """
     if parameters is None:
         parameters = {}
-    counter = {}
-    for place in net.places:
-        counter[place.name] = []
-    for arc in net.arcs:
-        if arc.source in net.places:
-            if labels:
-                counter[arc.source.name].append(arc.target.label)
-            else:
-                counter[arc.source.name].append(arc.target.name)
-    decision_points = {
-        key: val for key, val in counter.items() if len(val) >= 2
-    }
-    i = 0
-    # i counts how many given decision points of the user are detected
-    if pre_decision_points is not None:
-        for el in list(decision_points):
-            if el in pre_decision_points:
-                i += 1
-            else:
-                del decision_points[el]
-        if i == len(pre_decision_points):
-            # print("All given decision points were identified as decision points in the Petri Net.")
-            pass
-        elif i == 0:
-            raise Exception("None of the given points is a decision point.")
-            # sys.exit()
-        else:
-            print(
-                "Not all of the given places were identified as decision points. However, we only take the correct decision points from your list into account."
+
+    # Check if transitions should use .label or .name
+    labels = exec_utils.get_param_value(Parameters.LABELS, parameters, True)
+
+    # Prepare the result structure
+    decision_info = {place_name: [] for place_name in decision_points.keys()}
+
+    # For collecting variants/traces
+    variants_idxs = variants_module.get_variants_from_log_trace_idx(log, parameters=parameters)
+    unique_variants = list(variants_idxs.keys())
+
+    filtered_log = EventLog()
+    for variant_name in variants_idxs:
+        filtered_log.append(log[variants_idxs[variant_name][0]])
+
+    # Token replay over the entire log
+    replay_result = token_replay.apply(
+        filtered_log, net, initial_marking, final_marking, parameters=parameters
+    )
+
+    # For each replayed variant
+    for variant_idx, variant_name in enumerate(unique_variants):
+        # Check if the replayed variant is perfectly fitting or not
+        token_replay_entry = replay_result[variant_idx]
+
+        # For each trace in this variant
+        trace_indices = variants_idxs[variant_name]
+
+        if token_replay_entry["trace_fitness"] == 1.0:
+            # Perfectly fitting; we can simply rely on "activated_transitions"
+            _extract_decisions_perfect_fit(
+                log, trace_indices, token_replay_entry, decision_info,
+                decision_points, decision_points_names, attributes,
+                use_trace_attributes, trace_attributes, k, labels
             )
-    return decision_points
+        else:
+            # Not a perfect fit; we must do alignments for each trace in this variant
+            # (We align only for the first example trace in that variant to get the alignment.)
+            sample_trace_idx = trace_indices[0]
+            sample_trace = log[sample_trace_idx]
+
+            alignment_params = copy(parameters)
+            alignment_params[star.Parameters.PARAM_ALIGNMENT_RESULT_IS_SYNC_PROD_AWARE] = True
+            alignment_info = ali.apply(
+                sample_trace, net, initial_marking, final_marking, parameters=alignment_params
+            )
+
+            # Now apply the same alignment to each trace in the variant
+            for idx in trace_indices:
+                _extract_decisions_alignment(
+                    log, idx, alignment_info, decision_info, decision_points,
+                    attributes, use_trace_attributes, trace_attributes, k, labels
+                )
+
+    return decision_info
 
 
-def simplify_token_replay(replay):
-    variant = {}
-    for element in replay:
-        if tuple(element["activated_transitions"]) not in variant:
-            variant[tuple(element["activated_transitions"])] = True
-    smaller_replay = []
-    for element in replay:
-        if variant[tuple(element["activated_transitions"])]:
-            smaller_replay.append(element)
-            variant[tuple(element["activated_transitions"])] = False
-    return smaller_replay
+def encode_target(df, target_column):
+    """
+    Adds a 'Target' column to df with integer-encoded classes
+    derived from an existing column (target_column).
+
+    Method adapted from:
+    http://chrisstrelioff.ws/sandbox/2015/06/08/decision_trees_in_python_with_scikit_learn_and_pandas.html
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        The DataFrame containing the target_column.
+    target_column : str
+        The name of the column to map to integer classes.
+
+    Returns
+    -------
+    (df_mod, targets)
+        df_mod is the modified DataFrame with a 'Target' column.
+        targets is the list of unique target names in their mapped order.
+    """
+    df_mod = df.copy()
+    unique_targets = pandas_utils.format_unique(df_mod[target_column].unique())
+    map_to_int = {name: n for n, name in enumerate(unique_targets)}
+    df_mod["Target"] = df_mod[target_column].replace(map_to_int)
+    return df_mod, unique_targets
 
 
-def get_attributes(
+# ----------------------------------------------------------------
+#                          HELPERS
+# ----------------------------------------------------------------
+
+def _validate_inputs_for_decision_table(
+        pre_decision_points, attributes, use_trace_attributes, trace_attributes
+):
+    """
+    Internal function to validate the input parameters for get_decisions_table,
+    giving more user-friendly error messages.
+    """
+    # Validate pre_decision_points
+    if pre_decision_points is not None:
+        if not isinstance(pre_decision_points, list):
+            raise ValueError(
+                "pre_decision_points must be a list of place names (strings)."
+            )
+        if len(pre_decision_points) == 0:
+            raise ValueError(
+                "The list pre_decision_points cannot be empty if provided."
+            )
+
+    # Validate attributes
+    if attributes is not None:
+        if not isinstance(attributes, list):
+            raise ValueError(
+                "attributes must be a list of event attribute names (strings)."
+            )
+        if len(attributes) == 0:
+            raise ValueError(
+                "The list attributes cannot be empty if provided."
+            )
+
+    # If trace attributes are provided, force use_trace_attributes=True
+    if trace_attributes is not None:
+        if not isinstance(trace_attributes, list):
+            raise ValueError(
+                "trace_attributes must be a list of trace attribute names (strings)."
+            )
+        if len(trace_attributes) == 0:
+            raise ValueError(
+                "The list trace_attributes cannot be empty if provided."
+            )
+        if not use_trace_attributes:
+            # Warn user, then override
+            print(
+                "Note: 'trace_attributes' list given, but use_trace_attributes=False. "
+                "Enabling use_trace_attributes=True."
+            )
+
+
+def _check_pre_decision_points(decision_points, pre_decision_points):
+    """
+    Checks which pre_decision_points are actually valid (places with >=2 outgoing arcs).
+    Removes from 'decision_points' any place not in 'pre_decision_points',
+    and warns if some user-specified place is not a decision point.
+    """
+    valid_count = 0
+    to_remove = []
+    for dp in list(decision_points.keys()):
+        if dp not in pre_decision_points:
+            to_remove.append(dp)
+        else:
+            valid_count += 1
+
+    # Remove not requested places
+    for dp in to_remove:
+        del decision_points[dp]
+
+    # Warn if none are valid
+    if valid_count == 0:
+        raise Exception("None of the given places is a decision point.")
+
+    # Warn if some were invalid
+    if valid_count < len(pre_decision_points):
+        print(
+            "Warning: Some of the places in pre_decision_points are not actual decision points "
+            "in the Petri net. Only valid ones have been retained."
+        )
+
+
+def _build_decision_info(
+        log,
+        net,
+        initial_marking,
+        final_marking,
+        decision_points,
+        decision_points_names,
+        attributes,
+        use_trace_attributes,
+        trace_attributes,
+        k,
+        parameters
+):
+    """
+    Internal function to orchestrate the extraction of attributes that lead to particular transition choices.
+    Returns a dictionary keyed by place name with a list of (attributes_dict, chosen_transition).
+    """
+    # Token replay or align each trace to find the sequences of transitions.
+    # Then, for each place that has multiple outgoing arcs, store the attributes
+    # that were present before the transition was fired.
+
+    # We re-use get_attributes() because it contains the logic for
+    # collecting attributes from the replay or alignments.
+    return get_attributes(
+        log=log,
+        decision_points=decision_points,
+        attributes=attributes,
+        use_trace_attributes=use_trace_attributes,
+        trace_attributes=trace_attributes,
+        k=k,
+        net=net,
+        initial_marking=initial_marking,
+        final_marking=final_marking,
+        decision_points_names=decision_points_names,
+        parameters=parameters,
+    )
+
+
+def _extract_decisions_perfect_fit(
     log,
+    trace_indices,
+    token_replay_entry,
+    decision_info,
     decision_points,
+    decision_points_names,
     attributes,
     use_trace_attributes,
     trace_attributes,
     k,
-    net,
-    initial_marking,
-    final_marking,
-    decision_points_names,
-    parameters=None,
+    labels
 ):
     """
-    This method aims to construct for each decision place a table where for each decision place a list if given with the
-     label of the later decision and as value the given attributes
-    :param log: Log on which the method is applied
-    :param alignments: Computed alignments for a log and a model
-    :param decision_points: Places that have multiple outgoing arcs
-    :param attributes: Attributes that are considered
-    :param use_trace_attributes: If trace attributes have to be considered or not
-    :param trace_attributes: List of trace attributes that are considered
-    :param k: Taking k last activities into account
-    :return: Dictionary that has as keys the decision places. The value for this key is a list.
-    The content of these lists are tuples. The first element of these tuples is information regrading the attributes,
-    the second element of these tuples is the transition which chosen in a decision.
+    Extract decisions from a token replay entry with trace_fitness == 1.0 (perfect fit),
+    ensuring that we only use attributes known BEFORE firing each transition.
     """
-    if parameters is None:
-        parameters = {}
-    labels = exec_utils.get_param_value(Parameters.LABELS, parameters, True)
+    for trace_index in trace_indices:
+        # We'll keep a rolling window of the last k attributes
+        window_attributes = [None] * k
 
-    I = {}
-    for key in decision_points:
-        I[key] = []
-    A = {}
-    for attri in attributes:
-        A[attri] = None
-    i = 0
-    # first, take a look at the variants
-    variants_idxs = variants_module.get_variants_from_log_trace_idx(
-        log, parameters=parameters
-    )
-    one_variant = []
-    for variant in variants_idxs:
-        one_variant.append(variant)
-        # TODO: Token based replay code mit paramter für nur varianten
-        # einbeziehen ausstatten
-    replay_result = token_replay.apply(
-        log, net, initial_marking, final_marking, parameters=parameters
-    )
-    replay_result = simplify_token_replay(replay_result)
-    count = 0
-    for variant in replay_result:
-        if variant["trace_fitness"] == 1.0:
-            for trace_index in variants_idxs[one_variant[count]]:
-                last_k_list = [None] * k
-                trace = log[trace_index]
-                if use_trace_attributes:
-                    for attribute in trace_attributes:
-                        # can be done here since trace attributes does not
-                        # change for whole trace
-                        A[attribute] = trace.attributes[attribute]
-                j = 0
-                # j is a pointer which points to the current event inside a
-                # trace
-                for transition in variant["activated_transitions"]:
-                    for key, value in decision_points_names.items():
-                        tr_to_str = (
-                            transition.label if labels else transition.name
-                        )
-                        if tr_to_str in value:
-                            for element in last_k_list:
-                                if element is not None:
-                                    I[key].append((element.copy(), tr_to_str))
-                    for attri in attributes:
-                        # print(variant, transition.label, j)
-                        if attri in trace[j]:
-                            # only add the attribute information if it is
-                            # present in the event
-                            A[attri] = trace[j][attri]
-                    # add A to last_k_list. Using modulo to access correct
-                    # entry
-                    last_k_list[j % k] = A.copy()
-                    if transition.label is not None:
-                        if not j + 1 >= len(trace):
-                            # Problem otherwise: If there are tau-transition after the last event related transition,
-                            # the pointer j which points to the current event
-                            # in a trace, gets out of range
-                            j += 1
-        else:
-            example_trace = log[variants_idxs[one_variant[count]][0]]
-            align_parameters = copy(parameters)
-            align_parameters[
-                star.Parameters.PARAM_ALIGNMENT_RESULT_IS_SYNC_PROD_AWARE
-            ] = True
-            alignment = ali.apply(
-                example_trace,
-                net,
-                initial_marking,
-                final_marking,
-                parameters=align_parameters,
-            )["alignment"]
-            for trace_index in variants_idxs[one_variant[count]]:
-                last_k_list = [None] * k
-                trace = log[trace_index]
-                if use_trace_attributes:
-                    for attribute in trace_attributes:
-                        # can be done here since trace attributes does not
-                        # change for whole trace
-                        A[attribute] = trace.attributes[attribute]
-                j = 0
-                for el in alignment:
-                    if el[1][1] != ">>":
-                        # If move in model
-                        for key, value in decision_points.items():
-                            if el[0][1] in value:
-                                for element in last_k_list:
-                                    if element is not None:
-                                        # only add those entries where
-                                        # information is provided
-                                        if el[1][1] is None:
-                                            # for some dt algorithms, the entry
-                                            # None might be a problem, since it
-                                            # is left out later
-                                            I[key].append(
-                                                (element.copy(), el[0][1])
-                                            )
-                                        else:
-                                            I[key].append(
-                                                (element.copy(), el[1][1])
-                                            )
-                    if el[1][0] != ">>" and el[1][1] != ">>":
-                        # If there is a move in log and model
-                        for attri in attributes:
-                            if attri in trace[j]:
-                                # only add the attribute information if it is
-                                # present in the event
-                                A[attri] = trace[j][attri]
-                        # add A to last_k_list. Using modulo to access correct
-                        # entry
-                        last_k_list[j % k] = A.copy()
-                    if el[1][0] != ">>":
-                        # only go to next event in trace if the current event has been aligned
-                        # TODO: Discuss if this is correct or can lead to
-                        # problems
-                        j += 1
-        count += 1
-    return I
+        trace = log[trace_index]
+        # If we use trace attributes, set them once for the entire trace
+        global_attrs = {}
+        if use_trace_attributes and trace_attributes:
+            for attribute in trace_attributes:
+                if attribute in trace.attributes:
+                    global_attrs[attribute] = trace.attributes[attribute]
+
+        # Pointer to the current event in the trace
+        event_idx = 0
+
+        # For each transition in the replay
+        for transition in token_replay_entry["activated_transitions"]:
+            # (1) Store decision with the current window (i.e., no new event has been consumed yet)
+            transition_name_or_label = transition.label if labels else transition.name
+            for place_name, outgoings in decision_points_names.items():
+                if transition_name_or_label in outgoings:
+                    # We have a decision at place_name
+                    for attr_dict in window_attributes:
+                        if attr_dict is not None:
+                            # Record the known attributes for the chosen transition
+                            decision_info[place_name].append(
+                                (attr_dict.copy(), transition_name_or_label)
+                            )
+
+            # (2) If this transition corresponds to a visible event (transition.label != None),
+            #     then consume the *next* event from the log to update the window
+            #     so that it is NOT used to decide the *current* transition.
+            if transition.label is not None and event_idx < len(trace):
+                # Merge global (trace) attributes + event attributes for the next event
+                attr_dict = dict(global_attrs)
+                for attr_name in attributes:
+                    if attr_name in trace[event_idx]:
+                        attr_dict[attr_name] = trace[event_idx][attr_name]
+
+                # Put it in the rolling window
+                window_attributes[event_idx % k] = attr_dict.copy()
+
+                # Advance the pointer to the next event
+                event_idx += 1
 
 
-def encode_target(df, target_column):
-    """Add column to df with integers for the target.
-    Method taken from: http://chrisstrelioff.ws/sandbox/2015/06/08/decision_trees_in_python_with_scikit_learn_and_pandas.html
-    Args
-    ----
-    df -- pandas DataFrame.
-    target_column -- column to map to int, producing
-                     new Target column.
-
-    Returns
-    -------
-    df_mod -- modified DataFrame.
-    targets -- list of target names.
+def _extract_decisions_alignment(
+        log,
+        trace_index,
+        alignment_info,
+        decision_info,
+        decision_points,
+        attributes,
+        use_trace_attributes,
+        trace_attributes,
+        k,
+        labels
+):
     """
-    df_mod = df.copy()
-    targets = pandas_utils.format_unique(df_mod[target_column].unique())
-    map_to_int = {name: n for n, name in enumerate(targets)}
-    df_mod["Target"] = df_mod[target_column].replace(map_to_int)
+    Extract decisions for a single trace using alignment information.
+    """
+    # The alignment is a list of moves, each move is a tuple:
+    # ((model_name, model_label), (log_name, log_label))
+    alignment = alignment_info["alignment"]
+    trace = log[trace_index]
 
-    return (df_mod, targets)
+    # Collect trace-level attributes if requested
+    global_attrs = {}
+    if use_trace_attributes and trace_attributes:
+        for attribute in trace_attributes:
+            if attribute in trace.attributes:
+                global_attrs[attribute] = trace.attributes[attribute]
+
+    # Prepare a rolling window for the last k attributes
+    window_attributes = [None] * k
+
+    # Pointer to the current event in this trace
+    event_idx = 0
+
+    for trans_names, trans_labels in alignment:
+        # Unpack them for clarity
+        log_name, model_name = trans_names
+        log_label, model_label = trans_labels
+
+        # CASE A: If model_name != '>>', we have a move in the *model* (either synchronous or model-only)
+        if model_name != ">>":
+            if labels:
+                chosen_transition = model_label if model_label is not None else model_name
+            else:
+                chosen_transition = model_name
+
+            # Now check if that chosen_transition is in some place's outgoing transitions
+            # If your decision_points dict is keyed by place_name -> [labels],
+            # then you see if chosen_transition is one of those labels
+            for place_name, outgoings in decision_points.items():
+                if model_name in outgoings:
+                    # For each "window" item, store the decision
+                    for attr_dict in window_attributes:
+                        if attr_dict is not None:
+                            # We append a tuple (attribute_dict, chosen_transition)
+                            decision_info[place_name].append((attr_dict.copy(), chosen_transition))
+
+        # CASE B: If log_name != '>>', we consumed an event from the log
+        # => update the rolling window with that event's attributes
+        if log_name != ">>" and event_idx < len(trace):
+            combined_attrs = dict(global_attrs)
+            event_attrs = trace[event_idx]
+
+            # Copy only the specified attributes
+            for attr_name in attributes:
+                if attr_name in event_attrs:
+                    combined_attrs[attr_name] = event_attrs[attr_name]
+
+            # Insert into the rolling window
+            window_attributes[event_idx % k] = combined_attrs
+            event_idx += 1

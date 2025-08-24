@@ -1,6 +1,7 @@
 from dateutil.parser import parse
 from pm4py.objects.log.obj import EventLog, Trace, Event
 from pm4py.util.dt_parsing.variants import strpfromiso
+from pm4py.objects.log.exporter.xes import exporter as xes_exporter
 import pm4py
 import os
 
@@ -68,7 +69,7 @@ def execute_script():
                 event["invoice_lines"].append(item)
             trace.append(event)
 
-    pm4py.write_xes(log, "chinook.xes")
+    xes_exporter.apply(log, "chinook.xes")
     os.remove("chinook.xes")
 
 

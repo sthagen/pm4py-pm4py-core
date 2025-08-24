@@ -128,7 +128,9 @@ from pm4py.filtering import (
     filter_ocel_cc_length,
     filter_ocel_cc_otype,
     filter_ocel_cc_activity,
-    filter_ocel_activities_connected_object_type
+    filter_ocel_activities_connected_object_type,
+    filter_dfg_activities_percentage,
+    filter_dfg_paths_percentage
 )
 from pm4py.discovery import (
     discover_petri_net_alpha,

@@ -23,6 +23,8 @@ __doc__ = """
 The ``pm4py.write`` module contains all functionality related to writing files/objects to disk.
 """
 
+import importlib.util
+
 from pm4py.objects.bpmn.obj import BPMN
 from pm4py.objects.log.obj import EventLog
 from pm4py.objects.ocel.obj import OCEL
@@ -32,6 +34,7 @@ from pm4py.utils import __event_log_deprecation_warning
 import pandas as pd
 from typing import Union, Tuple, Dict, Optional
 from pm4py.util import constants
+from pm4py.utils import __rustxes_usage_warning, __rustxes_non_usage_warning
 from pm4py.util.pandas_utils import (
     check_is_pandas_dataframe,
     check_pandas_dataframe_columns,
@@ -82,7 +85,12 @@ def write_xes(
     parameters["extensions"] = extensions
     parameters["encoding"] = encoding
 
+    if variant_str is None and importlib.util.find_spec("rustxes"):
+        __rustxes_usage_warning()
+        variant_str = "rustxes"
+
     if variant_str is None or variant_str == "line_by_line":
+        __rustxes_non_usage_warning()
         from pm4py.objects.log.exporter.xes import exporter as xes_exporter
         xes_exporter.apply(log, file_path, variant=xes_exporter.Variants.LINE_BY_LINE, parameters=parameters)
     else:
