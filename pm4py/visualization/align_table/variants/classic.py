@@ -69,8 +69,9 @@ def apply(
     variants_idx_list = []
     for variant in variants_idx_dict:
         variants_idx_list.append((variant, variants_idx_dict[variant]))
+    # Deterministic ordering: sort by count (desc) then by variant key (asc)
     variants_idx_list = sorted(
-        variants_idx_list, key=lambda x: len(x[1]), reverse=True
+        variants_idx_list, key=lambda x: (-len(x[1]), x[0])
     )
 
     image_format = exec_utils.get_param_value(

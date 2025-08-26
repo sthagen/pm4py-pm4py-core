@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,9 +19,8 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-
-__name__ = 'pm4py'
-VERSION = '2.7.17'
+__name__ = "pm4py"
+VERSION = "2.7.17"
 __version__ = VERSION
 __doc__ = "Process mining for Python"
 __author__ = "Process Intelligence Solutions (PIS)"

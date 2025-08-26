@@ -137,19 +137,35 @@ def get_base_ocel(json_obj: Any, parameters: Optional[Dict[Any, Any]] = None):
     events = pandas_utils.instantiate_dataframe(events)
     objects = pandas_utils.instantiate_dataframe(objects)
     relations = pandas_utils.instantiate_dataframe(relations)
+    # If there are no relations, ensure the dataframe has the expected schema
+    # to avoid downstream crashes when accessing required columns.
+    if len(relations) == 0:
+        relations = pandas_utils.instantiate_dataframe(
+            {
+                event_id: [],
+                event_activity: [],
+                event_timestamp: [],
+                object_id: [],
+                object_type: [],
+            }
+        )
 
     events = pandas_utils.insert_index(
         events, internal_index, reset_index=False, copy_dataframe=False
     )
-    relations = pandas_utils.insert_index(
-        relations, internal_index, reset_index=False, copy_dataframe=False
-    )
+    # Only add temporary index and sort if there are relations rows
+    if len(relations) > 0:
+        relations = pandas_utils.insert_index(
+            relations, internal_index, reset_index=False, copy_dataframe=False
+        )
 
     events = events.sort_values([event_timestamp, internal_index])
-    relations = relations.sort_values([event_timestamp, internal_index])
+    if len(relations) > 0:
+        relations = relations.sort_values([event_timestamp, internal_index])
 
     del events[internal_index]
-    del relations[internal_index]
+    if internal_index in relations.columns:
+        del relations[internal_index]
 
     globals = {}
     globals[constants.OCEL_GLOBAL_LOG] = json_obj[constants.OCEL_GLOBAL_LOG]
