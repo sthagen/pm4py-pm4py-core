@@ -34,6 +34,7 @@ class Parameters(Enum):
     IMAGE_PATH = "image_path"
     MAX_TOKENS = "max_tokens"
     THINKING_TOKENS = "thinking_tokens"
+    EXTRA_PAYLOAD = "extra_payload"
 
 
 def encode_image(image_path):
@@ -58,6 +59,9 @@ def apply(prompt: str, parameters: Optional[Dict[Any, Any]] = None) -> str:
         Parameters.MAX_TOKENS, parameters, 8192
     )
     thinking_tokens = exec_utils.get_param_value(Parameters.THINKING_TOKENS, parameters, None)
+    extra_payload = exec_utils.get_param_value(
+        Parameters.EXTRA_PAYLOAD, parameters, {}
+    )
     simple_content_specification = image_path is None
 
     if api_url is None:
@@ -109,6 +113,9 @@ def apply(prompt: str, parameters: Optional[Dict[Any, Any]] = None) -> str:
         messages[0]["content"].append(artefact)
 
     payload["messages"] = messages
+
+    if extra_payload:
+        payload.update(extra_payload)
 
     response = requests.post(
         api_url + "messages", headers=headers, json=payload

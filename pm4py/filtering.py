@@ -1735,8 +1735,8 @@ def filter_ocel_objects(
                 object_identifiers
             )
         ]
-    return filtering_utils.propagate_object_filtering(filtered_ocel)
-
+    filtered_ocel = filtering_utils.propagate_object_filtering(filtered_ocel)
+    return filtered_ocel
 
 def filter_ocel_events(
     ocel: OCEL, event_identifiers: Collection[str], positive: bool = True

@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,12 +19,19 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
+from enum import Enum
+from typing import Optional, Dict, Any
 
-from pm4py.objects.ocel.obj import OCEL
 from copy import deepcopy
+from pm4py.objects.ocel.obj import OCEL
+from pm4py.util import exec_utils
 
 
-def apply(ocel: OCEL) -> OCEL:
+class Parameters(Enum):
+    EXCLUDE_OBJECT_TYPES = "exclude_object_types"
+
+
+def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
     """
     Rename objects given their object type, lifecycle start/end timestamps, and lexicographic order,
 
@@ -32,12 +39,27 @@ def apply(ocel: OCEL) -> OCEL:
     -----------------
     ocel
         Object-centric event log
+    parameters
+        Parameters of the algorithm, including:
+        - Parameters.EXCLUDE_OBJECT_TYPES => set/list of object types to exclude from renaming
 
     Returns
     ----------------
     renamed_ocel
         Object-centric event log with renaming
     """
+    if parameters is None:
+        parameters = {}
+
+    exclude_object_types = exec_utils.get_param_value(
+        Parameters.EXCLUDE_OBJECT_TYPES, parameters, set()
+    )
+    # normalize to a Python set for fast membership checks
+    try:
+        exclude_object_types = set(exclude_object_types)
+    except Exception:
+        exclude_object_types = set()
+
     objects_start = (
         ocel.relations.groupby(ocel.object_id_column)[ocel.event_timestamp]
         .first()
@@ -67,26 +89,31 @@ def apply(ocel: OCEL) -> OCEL:
     for ot in keys:
         objects = objects_ot1[ot]
         objects.sort(key=lambda x: (objects_start[x], objects_end[x], x))
-        objects = {
-            objects[i]: ot + "_" + str(i + 1) for i in range(len(objects))
-        }
-        overall_objects.update(objects)
+        if ot in exclude_object_types:
+            # skip renaming for this object type
+            continue
+        mapped = {objects[i]: ot + "_" + str(i + 1) for i in range(len(objects))}
+        overall_objects.update(mapped)
 
     ocel = deepcopy(ocel)
-    ocel.objects[ocel.object_id_column] = ocel.objects[
-        ocel.object_id_column
-    ].map(overall_objects)
-    ocel.relations[ocel.object_id_column] = ocel.relations[
-        ocel.object_id_column
-    ].map(overall_objects)
-    ocel.o2o[ocel.object_id_column] = ocel.o2o[ocel.object_id_column].map(
-        overall_objects
+    # map and keep original IDs for excluded object types
+    oid_col = ocel.object_id_column
+    ocel.objects[oid_col] = ocel.objects[oid_col].map(overall_objects).fillna(
+        ocel.objects[oid_col]
     )
-    ocel.o2o[ocel.object_id_column + "_2"] = ocel.o2o[
-        ocel.object_id_column + "_2"
-    ].map(overall_objects)
-    ocel.object_changes[ocel.object_id_column] = ocel.object_changes[
-        ocel.object_id_column
-    ].map(overall_objects)
+    ocel.relations[oid_col] = ocel.relations[oid_col].map(overall_objects).fillna(
+        ocel.relations[oid_col]
+    )
+    if ocel.o2o is not None:
+        ocel.o2o[oid_col] = ocel.o2o[oid_col].map(overall_objects).fillna(
+            ocel.o2o[oid_col]
+        )
+        ocel.o2o[oid_col + "_2"] = ocel.o2o[oid_col + "_2"].map(overall_objects).fillna(
+            ocel.o2o[oid_col + "_2"]
+        )
+    if ocel.object_changes is not None:
+        ocel.object_changes[oid_col] = ocel.object_changes[oid_col].map(
+            overall_objects
+        ).fillna(ocel.object_changes[oid_col])
 
     return ocel

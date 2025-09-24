@@ -196,13 +196,13 @@ OPENAI_DEFAULT_MODEL = get_param_from_env(
     "PM4PY_OPENAI_DEFAULT_MODEL", "gpt-4.1"
 )
 OPENAI_DEFAULT_VISION_MODEL = get_param_from_env(
-    "PM4PY_OPENAI_DEFAULT_VISION_MODEL", "gpt-4.1"
+    "PM4PY_OPENAI_DEFAULT_VISION_MODEL", "gpt-5"
 )
 ANTHROPIC_DEFAULT_MODEL = get_param_from_env(
-    "PM4PY_ANTHROPIC_DEFAULT_MODEL", "claude-3-7-sonnet-20250219"
+    "PM4PY_ANTHROPIC_DEFAULT_MODEL", "claude-sonnet-4-20250514"
 )
 GOOGLE_DEFAULT_MODEL = get_param_from_env(
-    "PM4PY_GOOGLE_DEFAULT_MODEL", "gemini-2.0-flash"
+    "PM4PY_GOOGLE_DEFAULT_MODEL", "gemini-2.5-flash"
 )
 OPENAI_DEFAULT_STT_MODEL = get_param_from_env(
     "PM4PY_OPENAI_DEFAULT_STT_MODEL", "whisper-1"

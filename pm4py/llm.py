@@ -36,6 +36,7 @@ def openai_query(
     api_key: Optional[str] = None,
     openai_model: Optional[str] = None,
     api_url: Optional[str] = None,
+    extra_payload: Optional[Dict[Any, Any]] = None,
     **kwargs
 ) -> str:
     """
@@ -45,6 +46,7 @@ def openai_query(
     :param api_key: (Optional) OpenAI API key.
     :param openai_model: (Optional) OpenAI model to be used (default: "gpt-3.5-turbo").
     :param api_url: (Optional) OpenAI API URL.
+    :param extra_payload: (Optional) Additional payload fields merged into the request body.
     :param **kwargs: Additional parameters to pass to the OpenAI API.
     :return: The response from the OpenAI API as a string.
 
@@ -62,6 +64,8 @@ def openai_query(
         parameters["api_key"] = api_key
     if openai_model is not None:
         parameters["openai_model"] = openai_model
+    if extra_payload is not None:
+        parameters["extra_payload"] = extra_payload
 
     from pm4py.algo.querying.llm.connectors import openai as perform_query
 
@@ -72,6 +76,7 @@ def google_query(
     prompt: str,
     api_key: Optional[str] = None,
     model: Optional[str] = None,
+    extra_payload: Optional[Dict[Any, Any]] = None,
     **kwargs
 ) -> str:
     """
@@ -80,6 +85,7 @@ def google_query(
     :param prompt: prompt that should be executed
     :param api_key: API key
     :param model: Model to be used (default: gemini-1.5-flash-002)
+    :param extra_payload: (Optional) Additional payload fields merged into the request body.
     :rtype: ``str``
 
     .. code-block:: python3
@@ -94,6 +100,8 @@ def google_query(
         parameters["api_key"] = api_key
     if model is not None:
         parameters["google_model"] = model
+    if extra_payload is not None:
+        parameters["extra_payload"] = extra_payload
 
     from pm4py.algo.querying.llm.connectors import google as perform_query
 
@@ -104,6 +112,7 @@ def anthropic_query(
     prompt: str,
     api_key: Optional[str] = None,
     model: Optional[str] = None,
+    extra_payload: Optional[Dict[Any, Any]] = None,
     **kwargs
 ) -> str:
     """
@@ -112,6 +121,7 @@ def anthropic_query(
     :param prompt: prompt that should be executed
     :param api_key: API key
     :param model: Model to be used (default: claude-3-5-sonnet-20241022)
+    :param extra_payload: (Optional) Additional payload fields merged into the request body.
     :rtype: ``str``
 
     .. code-block:: python3
@@ -126,6 +136,8 @@ def anthropic_query(
         parameters["api_key"] = api_key
     if model is not None:
         parameters["anthropic_model"] = model
+    if extra_payload is not None:
+        parameters["extra_payload"] = extra_payload
 
     from pm4py.algo.querying.llm.connectors import anthropic as perform_query
 

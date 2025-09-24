@@ -26,11 +26,13 @@ The ``pm4py.ocel`` module contains the object-centric process mining features of
 from typing import List, Dict, Collection, Any, Optional, Set, Tuple
 
 import pandas as pd
+import numpy as np
 
 from pm4py.objects.ocel.obj import OCEL
 from pm4py.util import constants, pandas_utils
 import sys
 import random
+import time
 
 
 def ocel_get_object_types(ocel: OCEL) -> List[str]:
@@ -738,8 +740,49 @@ def ocel_add_index_based_timedelta(ocel: OCEL) -> OCEL:
     return ocel
 
 
+def __vectors_to_clusters(keys, vectors, objects):
+    from sklearn.metrics import pairwise_distances
+    D = pairwise_distances(vectors, metric="hamming")
+    A = 1.0 - D
+    np.fill_diagonal(A, 1.0)
+    return D, A
+
+
+def __eqocel_to_keyset(clusters: Dict[str, Collection[OCEL]]):
+    clusters_keys = list(clusters.keys())
+    keyset = []
+    objects = []
+    for c in clusters_keys:
+        keyset.append(set())
+        for i in range(len(c[0])):
+            if i < len(c[0])-1:
+                keyset[-1].add((c[0][i][0], c[0][i + 1][0], "DF"))
+                pass
+            for j in range(1, len(c[0][i])):
+                keyset[-1].add((c[0][i][0], c[0][i][j], "E2O"))
+                pass
+        V = clusters[c]
+        objects.append([])
+        for v in V:
+            objects[-1].append(v.parameters["@@central_object"])
+    return keyset, objects
+
+
+def __eqocel_to_vectors(clusters: Dict[str, Collection[OCEL]]):
+    keyset, objects = __eqocel_to_keyset(clusters)
+    print(keyset)
+    keys = list(set(y for x in keyset for y in x))
+    keys = {x: i for i, x in enumerate(keys)}
+    vectors = [[0] * len(keys) for i in range(len(clusters))]
+    for z, ks in enumerate(keyset):
+        for k in ks:
+            vectors[z][keys[k]] = 1
+
+    return keys, keyset, vectors, objects
+
+
 def cluster_equivalent_ocel(
-    ocel: OCEL, object_type: str, max_objs: int = sys.maxsize
+    ocel: OCEL, object_type: str, max_objs: int = sys.maxsize, exclude_object_types_from_renaming : Optional[Set[str]] = None
 ) -> Dict[str, Collection[OCEL]]:
     """
     Clusters the object-centric event log based on the 'executions' of a single object type.
@@ -770,16 +813,20 @@ def cluster_equivalent_ocel(
         algorithm as ocel_description,
     )
 
+    #aa = time.time_ns()
     lst_ocels = split_ocel_algorithm.apply(
         ocel,
         variant=split_ocel_algorithm.Variants.ANCESTORS_DESCENDANTS,
         parameters={"object_type": object_type, "max_objs": max_objs},
     )
+    #bb = time.time_ns()
+    #print((bb-aa)/10**9)
+
     ret = {}
     for index, oc in enumerate(lst_ocels):
-        oc_ren = rename_objs_ot_tim_lex.apply(oc)
+        oc_ren = rename_objs_ot_tim_lex.apply(oc, parameters={"exclude_object_types": exclude_object_types_from_renaming})
         descr = ocel_description.apply(
-            oc_ren, parameters={"include_timestamps": False}
+            oc_ren, variant=ocel_description.Variants.VARIANT2, parameters={"include_timestamps": False}
         )
         if descr not in ret:
             ret[descr] = []

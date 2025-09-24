@@ -31,6 +31,7 @@ class Parameters(Enum):
     API_KEY = "api_key"
     GOOGLE_MODEL = "google_model"
     IMAGE_PATH = "image_path"
+    EXTRA_PAYLOAD = "extra_payload"
 
 
 def encode_image(image_path):
@@ -52,6 +53,9 @@ def apply(prompt: str, parameters: Optional[Dict[Any, Any]] = None) -> str:
     )
     model = exec_utils.get_param_value(
         Parameters.GOOGLE_MODEL, parameters, constants.GOOGLE_DEFAULT_MODEL
+    )
+    extra_payload = exec_utils.get_param_value(
+        Parameters.EXTRA_PAYLOAD, parameters, {}
     )
 
     headers = {
@@ -77,6 +81,9 @@ def apply(prompt: str, parameters: Optional[Dict[Any, Any]] = None) -> str:
         + ":generateContent?key="
         + api_key
     )
+
+    if extra_payload:
+        payload.update(extra_payload)
 
     response = requests.post(url, headers=headers, json=payload).json()
 

@@ -104,14 +104,18 @@ def apply(
         ):
             G.add_edge(edge[1], edge[0])
 
+    # compute the transitive closure once, then use predecessors/successors
+    nx_env = nx_utils.get_default_nx_environment()
+    tc = nx_env.algorithms.dag.transitive_closure(G)
+
     lst = []
 
     for index, obj in enumerate(objects):
         if index >= max_objs:
             break
 
-        ancestors = nx_utils.ancestors(G, obj)
-        descendants = nx_utils.descendants(G, obj)
+        ancestors = set(tc.predecessors(obj))
+        descendants = set(tc.successors(obj))
         overall_set = ancestors.union(descendants).union({obj})
 
         filtered_ocel = pm4py.filter_ocel_objects(ocel, overall_set)
