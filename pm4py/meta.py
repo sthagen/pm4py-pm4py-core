@@ -20,7 +20,7 @@ Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
 __name__ = "pm4py"
-VERSION = "2.7.17.1"
+VERSION = "2.7.17.2"
 __version__ = VERSION
 __doc__ = "Process mining for Python"
 __author__ = "Process Intelligence Solutions (PIS)"
