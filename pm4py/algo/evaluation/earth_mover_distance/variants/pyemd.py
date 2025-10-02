@@ -179,9 +179,8 @@ class EMDCalculator:
 
         if res.status != 0:
             raise ValueError(
-                f"Linear programming failed. Status: {
-                res.status}, Message: {
-                res.message}")
+                "Linear programming failed. Status: {}, Message: {}".format(
+                    res.status, res.message))
 
         # The optimal value is the EMD
         return res.fun
