@@ -247,6 +247,124 @@ def filter_traces_attribute_in_timeframe(
     return filtered
 
 
+def filter_traces_starting_in_timeframe(
+    df: pd.DataFrame,
+    dt1: Union[str, datetime.datetime],
+    dt2: Union[str, datetime.datetime],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> pd.DataFrame:
+    """
+    Keep/Exclude traces whose *first event* timestamp falls in [dt1, dt2].
+
+    Parameters
+    ----------
+    df
+        Pandas dataframe
+    dt1
+        Lower bound to the interval (string or datetime)
+    dt2
+        Upper bound to the interval (string or datetime)
+    parameters
+        Possible parameters of the algorithm, including:
+            Parameters.TIMESTAMP_KEY -> Attribute to use as timestamp
+            Parameters.CASE_ID_KEY -> Column that contains the case id
+            "positive" (bool, default True) -> keep (True) or exclude (False) the matching cases
+
+    Returns
+    ----------
+    df
+        Filtered dataframe (all events for the selected cases)
+    """
+    if parameters is None:
+        parameters = {}
+
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY
+    )
+    case_id_glue = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME
+    )
+    positive = exec_utils.get_param_value("positive", parameters, True)
+
+    dt1 = get_dt_from_string(dt1)
+    dt2 = get_dt_from_string(dt2)
+
+    grouped_df = df[[case_id_glue, timestamp_key]].groupby(case_id_glue)
+    first = grouped_df.first()
+
+    # cases whose first event starts within [dt1, dt2]
+    matching_cases = first[
+        (first[timestamp_key] >= dt1) & (first[timestamp_key] <= dt2)
+    ].index
+
+    if positive:
+        ret = df[df[case_id_glue].isin(matching_cases)]
+    else:
+        ret = df[~df[case_id_glue].isin(matching_cases)]
+
+    ret.attrs = copy(df.attrs) if hasattr(df, "attrs") else {}
+    return ret
+
+
+def filter_traces_completing_in_timeframe(
+    df: pd.DataFrame,
+    dt1: Union[str, datetime.datetime],
+    dt2: Union[str, datetime.datetime],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> pd.DataFrame:
+    """
+    Keep/Exclude traces whose *last event* timestamp falls in [dt1, dt2].
+
+    Parameters
+    ----------
+    df
+        Pandas dataframe
+    dt1
+        Lower bound to the interval (string or datetime)
+    dt2
+        Upper bound to the interval (string or datetime)
+    parameters
+        Possible parameters of the algorithm, including:
+            Parameters.TIMESTAMP_KEY -> Attribute to use as timestamp
+            Parameters.CASE_ID_KEY -> Column that contains the case id
+            "positive" (bool, default True) -> keep (True) or exclude (False) the matching cases
+
+    Returns
+    ----------
+    df
+        Filtered dataframe (all events for the selected cases)
+    """
+    if parameters is None:
+        parameters = {}
+
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY
+    )
+    case_id_glue = exec_utils.get_param_value(
+        Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME
+    )
+    positive = exec_utils.get_param_value("positive", parameters, True)
+
+    dt1 = get_dt_from_string(dt1)
+    dt2 = get_dt_from_string(dt2)
+
+    grouped_df = df[[case_id_glue, timestamp_key]].groupby(case_id_glue)
+    last = grouped_df.last()
+
+    # cases whose last event completes within [dt1, dt2]
+    matching_cases = last[
+        (last[timestamp_key] >= dt1) & (last[timestamp_key] <= dt2)
+    ].index
+
+    if positive:
+        ret = df[df[case_id_glue].isin(matching_cases)]
+    else:
+        ret = df[~df[case_id_glue].isin(matching_cases)]
+
+    ret.attrs = copy(df.attrs) if hasattr(df, "attrs") else {}
+    return ret
+
+
 def apply(df, parameters=None):
     del df
     del parameters

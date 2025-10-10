@@ -256,54 +256,6 @@ class OtherPartsTests(unittest.TestCase):
         self.assertTrue(compression_util.discover_dfg(cl))
         self.assertTrue(compression_util.get_variants(cl))
 
-    def test_compression_univariate_log(self):
-        import pm4py
-        from pm4py.util.compression import util as compression_util
-        log = pm4py.read_xes(os.path.join("input_data", "receipt.xes"))
-        cl, lookup = compression_util.compress_univariate(log, "concept:name")
-        # just verify that the set is non-empty
-        self.assertTrue(compression_util.get_start_activities(cl))
-        self.assertTrue(compression_util.get_end_activities(cl))
-        self.assertTrue(compression_util.get_alphabet(cl))
-        self.assertTrue(compression_util.discover_dfg(cl))
-        self.assertTrue(compression_util.get_variants(cl))
-
-    def test_compression_univariate_df(self):
-        from pm4py.util.compression import util as compression_util
-        dataframe = pandas_utils.read_csv(os.path.join("input_data", "receipt.csv"))
-        dataframe = dataframe_utils.convert_timestamp_columns_in_df(dataframe, timest_format=constants.DEFAULT_TIMESTAMP_PARSE_FORMAT, timest_columns=["time:timestamp"])
-        cl, lookup = compression_util.compress_univariate(dataframe, "concept:name")
-        # just verify that the set is non-empty
-        self.assertTrue(compression_util.get_start_activities(cl))
-        self.assertTrue(compression_util.get_end_activities(cl))
-        self.assertTrue(compression_util.get_alphabet(cl))
-        self.assertTrue(compression_util.discover_dfg(cl))
-        self.assertTrue(compression_util.get_variants(cl))
-
-    def test_compression_multivariate_log(self):
-        import pm4py
-        from pm4py.util.compression import util as compression_util
-        log = pm4py.read_xes(os.path.join("input_data", "receipt.xes"))
-        cl, lookup = compression_util.compress_multivariate(log, ["concept:name", "org:resource"])
-        # just verify that the set is non-empty
-        self.assertTrue(compression_util.get_start_activities(cl))
-        self.assertTrue(compression_util.get_end_activities(cl))
-        self.assertTrue(compression_util.get_alphabet(cl))
-        self.assertTrue(compression_util.discover_dfg(cl))
-        self.assertTrue(compression_util.get_variants(cl))
-
-    def test_compression_multivariate_df(self):
-        from pm4py.util.compression import util as compression_util
-        dataframe = pandas_utils.read_csv(os.path.join("input_data", "receipt.csv"))
-        dataframe = dataframe_utils.convert_timestamp_columns_in_df(dataframe, timest_format=constants.DEFAULT_TIMESTAMP_PARSE_FORMAT, timest_columns=["time:timestamp"])
-        cl, lookup = compression_util.compress_multivariate(dataframe, ["concept:name", "org:resource"])
-        # just verify that the set is non-empty
-        self.assertTrue(compression_util.get_start_activities(cl))
-        self.assertTrue(compression_util.get_end_activities(cl))
-        self.assertTrue(compression_util.get_alphabet(cl))
-        self.assertTrue(compression_util.discover_dfg(cl))
-        self.assertTrue(compression_util.get_variants(cl))
-
     def test_log_to_target_rem_time(self):
         import pm4py
         from pm4py.algo.transformation.log_to_target import algorithm as log_to_target

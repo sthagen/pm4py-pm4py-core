@@ -30,11 +30,12 @@ from pm4py.objects.ocel.obj import OCEL
 from pm4py.objects.log.obj import EventLog
 from pm4py.utils import __event_log_deprecation_warning
 import random
+from copy import copy
 from pm4py.util.pandas_utils import (
     check_is_pandas_dataframe,
     check_pandas_dataframe_columns,
 )
-from pm4py.utils import get_properties, constants, pandas_utils
+from pm4py.utils import get_properties, constants, pandas_utils, is_polars_lazyframe, check_is_pandas_dataframe
 
 
 def split_train_test(
@@ -162,16 +163,15 @@ def extract_outcome_enriched_dataframe(
         timestamp_key=timestamp_key,
     )
 
-    from pm4py.objects.conversion.log import converter as log_converter
+    if not check_is_pandas_dataframe(log):
+        from pm4py.objects.conversion.log import converter as log_converter
+        log = log_converter.apply(
+            log,
+            variant=log_converter.Variants.TO_DATA_FRAME,
+            parameters=properties,
+        )
 
-    log = log_converter.apply(
-        log,
-        variant=log_converter.Variants.TO_DATA_FRAME,
-        parameters=properties,
-    )
-
-    from pm4py.util import pandas_utils
-
+    log = copy(log)
     fea_df = extract_features_dataframe(
         log,
         activity_key=activity_key,
@@ -179,20 +179,23 @@ def extract_outcome_enriched_dataframe(
         case_id_key=case_id_key,
         include_case_id=True,
     )
-    log2 = pandas_utils.insert_case_arrival_finish_rate(
-        log.copy(),
+    log = pandas_utils.insert_case_arrival_finish_rate(
+        log,
         timestamp_column=timestamp_key,
         case_id_column=case_id_key,
         start_timestamp_column=start_timestamp_key,
     )
-    log2 = pandas_utils.insert_case_service_waiting_time(
-        log2.copy(),
+    log = pandas_utils.insert_case_service_waiting_time(
+        log,
         timestamp_column=timestamp_key,
         case_id_column=case_id_key,
         start_timestamp_column=start_timestamp_key,
     )
 
-    return log2.merge(fea_df, on=case_id_key)
+    if is_polars_lazyframe(log):
+        return log.join(fea_df, on=case_id_key)
+    else:
+        return log.merge(fea_df, on=case_id_key)
 
 
 def extract_features_dataframe(
@@ -206,7 +209,7 @@ def extract_features_dataframe(
     timestamp_key: str = "time:timestamp",
     case_id_key: Optional[str] = None,
     resource_key: str = "org:resource",
-    include_case_id: bool = False,
+    include_case_id: bool = False, count_occurrences: bool = False,
     **kwargs
 ) -> pd.DataFrame:
     """
@@ -261,6 +264,7 @@ def extract_features_dataframe(
     parameters["num_ev_attr"] = num_ev_attr or []
     parameters["str_evsucc_attr"] = str_evsucc_attr or []
     parameters["add_case_identifier_column"] = include_case_id
+    parameters["count_occurrences"] = count_occurrences
 
     from pm4py.algo.transformation.log_to_features import (
         algorithm as log_to_features,
@@ -275,6 +279,8 @@ def extract_features_dataframe(
         )
 
     data, feature_names = log_to_features.apply(log, parameters=parameters)
+    if is_polars_lazyframe(data):
+        return data
 
     return pandas_utils.instantiate_dataframe(data, columns=feature_names)
 

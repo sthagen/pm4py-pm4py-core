@@ -12,6 +12,13 @@ class OutcomeMeasurement:
     SUCCESS = 0
     FAILED = 0
 
+
+def polars_process_cubes():
+    from examples import polars_process_cubes
+    print("\n\npolars_process_cubes")
+    polars_process_cubes.execute_script()
+
+
 def inductive_miner_dfg_lc():
     from examples import inductive_miner_dfg_lc
     print("\n\ninductive_miner_dfg_lc")
@@ -315,6 +322,30 @@ def log_to_int_tree_open_paths():
     from examples import log_to_int_tree_open_paths
     print("\n\nlog_to_int_tree_open_paths")
     log_to_int_tree_open_paths.execute_script()
+
+
+def concept_drift():
+    from examples import concept_drift
+    print("\n\nconcept_drift")
+    concept_drift.execute_script()
+
+
+def dfg_align_metrics():
+    from examples import dfg_align_metrics
+    print("\n\ndfg_align_metrics")
+    dfg_align_metrics.execute_script()
+
+
+def process_cubes():
+    from examples import process_cubes
+    print("\n\nprocess_cubes")
+    process_cubes.execute_script()
+
+
+def variants_duration_vis():
+    from examples import variants_duration_vis
+    print("\n\nvariants_duration_vis")
+    variants_duration_vis.execute_script()
 
 
 def murata_reduction():
@@ -985,6 +1016,8 @@ def main():
     print_versions()
 
     if EXECUTE_EXAMPLES:
+        if importlib.util.find_spec("polars"):
+            execute_script(polars_process_cubes)
         execute_script(log_to_fit_precise_pn)
         execute_script(inductive_miner_dfg_lc)
         execute_script(log_projection_dfg_variant)
@@ -1036,6 +1069,10 @@ def main():
         execute_script(interval_events_overlap)
         execute_script(kneighb_regression)
         execute_script(log_to_int_tree_open_paths)
+        execute_script(concept_drift)
+        execute_script(dfg_align_metrics)
+        execute_script(process_cubes)
+        #execute_script(variants_duration_vis)
         execute_script(murata_reduction)
         execute_script(ocel_merge_duplicates)
         execute_script(ocel_saw_net_disc)

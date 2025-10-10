@@ -57,6 +57,9 @@ def to_dict_records(df):
     list_dictio
         List containing a dictionary for each row
     """
+    if is_polars_lazyframe(df):
+        return df.collect().to_dicts()
+
     return df.to_dict("records")
 
 
@@ -74,6 +77,13 @@ def to_dict_index(df):
     dict
         dict like {index -> {column -> value}}
     """
+    if is_polars_lazyframe(df):
+        collected_df = df.collect()
+        return {
+            idx: row
+            for idx, row in enumerate(collected_df.iter_rows(named=True))
+        }
+
     return df.to_dict("index")
 
 
@@ -100,6 +110,13 @@ def insert_index(
     df
         Dataframe with index
     """
+    if is_polars_lazyframe(df):
+        lf = df
+        existing_columns = set(_lazyframe_column_names(lf))
+        if column_name in existing_columns:
+            lf = lf.drop(column_name)
+        return lf.with_row_count(name=column_name)
+
     if copy_dataframe:
         df = df.copy()
 
@@ -135,6 +152,20 @@ def insert_case_index(
     df
         Dataframe with case index
     """
+    if is_polars_lazyframe(df):
+        import polars as pl  # type: ignore[import-untyped]
+
+        lf = df
+        existing_columns = set(_lazyframe_column_names(lf))
+        if column_name in existing_columns:
+            lf = lf.drop(column_name)
+        case_map = (
+            lf.select(pl.col(case_id))
+            .unique(maintain_order=True)
+            .with_row_count(name=column_name)
+        )
+        return lf.join(case_map, on=case_id, how="left")
+
     if copy_dataframe:
         df = df.copy()
 
@@ -165,6 +196,17 @@ def insert_ev_in_tr_index(
     df
         Dataframe with index
     """
+    if is_polars_lazyframe(df):
+        import polars as pl  # type: ignore[import-untyped]
+
+        lf = df
+        existing_columns = set(_lazyframe_column_names(lf))
+        if column_name in existing_columns:
+            lf = lf.drop(column_name)
+        return lf.with_columns(
+            (pl.col(case_id).cum_count().over(case_id) - 1).alias(column_name)
+        )
+
     if copy_dataframe:
         df = df.copy()
 
@@ -179,7 +221,14 @@ def format_unique(values):
     except BaseException:
         pass
 
-    values = values.tolist()
+    try:
+        values = values.tolist()
+    except AttributeError:
+        try:
+            values = values.to_list()
+        except AttributeError:
+            values = list(values)
+
     return values
 
 
@@ -210,6 +259,37 @@ def insert_feature_activity_position_in_trace(
     df
         Pandas dataframe
     """
+    if is_polars_lazyframe(df):
+        import polars as pl  # type: ignore[import-untyped]
+
+        lf = insert_ev_in_tr_index(
+            df,
+            case_id=case_id,
+            column_name=constants.DEFAULT_INDEX_IN_TRACE_KEY,
+            copy_dataframe=False,
+        )
+        activities = (
+            lf.select(pl.col(activity_key))
+            .unique()
+            .collect()
+            .get_column(activity_key)
+            .to_list()
+        )
+        existing_columns = set(_lazyframe_column_names(lf))
+        for act in activities:
+            column_name = prefix + str(act)
+            if column_name in existing_columns:
+                lf = lf.drop(column_name)
+                existing_columns.discard(column_name)
+            lf = lf.with_columns(
+                pl.when(pl.col(activity_key) == act)
+                .then(pl.col(constants.DEFAULT_INDEX_IN_TRACE_KEY))
+                .otherwise(pl.lit(None))
+                .alias(column_name)
+            )
+            existing_columns.add(column_name)
+        return lf
+
     df = insert_ev_in_tr_index(df, case_id=case_id)
     activities = format_unique(df[activity_key].unique())
     for act in activities:
@@ -244,6 +324,70 @@ def insert_case_arrival_finish_rate(
     log
         Pandas dataframe enriched by arrival and finish rate
     """
+    if is_polars_lazyframe(log):
+        import polars as pl  # type: ignore[import-untyped]
+
+        if start_timestamp_column is None:
+            start_timestamp_column = timestamp_column
+
+        lf = log
+        existing_columns = set(_lazyframe_column_names(lf))
+        if arrival_rate_column in existing_columns:
+            lf = lf.drop(arrival_rate_column)
+            existing_columns.discard(arrival_rate_column)
+        if finish_rate_column in existing_columns:
+            lf = lf.drop(finish_rate_column)
+
+        arrival = (
+            lf.select(
+                pl.col(case_id_column),
+                pl.col(start_timestamp_column).alias("__start_ts"),
+            )
+            .group_by(case_id_column)
+            .agg(pl.col("__start_ts").min().alias("__start_ts"))
+            .with_columns(
+                pl.col("__start_ts")
+                .dt.timestamp()
+                .alias("__arrival_microseconds")
+            )
+            .sort(["__arrival_microseconds", case_id_column])
+            .with_columns(
+                pl.col("__arrival_microseconds")
+                .diff()
+                .fill_null(0)
+                .truediv(1_000_000)
+                .alias(arrival_rate_column)
+            )
+            .select(case_id_column, arrival_rate_column)
+        )
+
+        finish = (
+            lf.select(
+                pl.col(case_id_column),
+                pl.col(timestamp_column).alias("__finish_ts"),
+            )
+            .group_by(case_id_column)
+            .agg(pl.col("__finish_ts").max().alias("__finish_ts"))
+            .with_columns(
+                pl.col("__finish_ts")
+                .dt.timestamp()
+                .alias("__finish_microseconds")
+            )
+            .sort(["__finish_microseconds", case_id_column])
+            .with_columns(
+                pl.col("__finish_microseconds")
+                .diff()
+                .fill_null(0)
+                .truediv(1_000_000)
+                .alias(finish_rate_column)
+            )
+            .select(case_id_column, finish_rate_column)
+        )
+
+        lf = lf.join(arrival, on=case_id_column, how="left")
+        lf = lf.join(finish, on=case_id_column, how="left")
+        return lf
+
     if start_timestamp_column is None:
         start_timestamp_column = timestamp_column
 
@@ -306,6 +450,73 @@ def insert_case_service_waiting_time(
     log
         Pandas dataframe with service, waiting and sojourn time
     """
+    if is_polars_lazyframe(log):
+        import polars as pl  # type: ignore[import-untyped]
+
+        if start_timestamp_column is None:
+            start_timestamp_column = timestamp_column
+
+        lf = log
+        existing_columns = set(_lazyframe_column_names(lf))
+        for col_name in (
+            diff_start_end_column,
+            service_time_column,
+            sojourn_time_column,
+            waiting_time_column,
+        ):
+            if col_name in existing_columns:
+                lf = lf.drop(col_name)
+                existing_columns.discard(col_name)
+
+        lf = lf.with_columns(
+            (
+                pl.col(timestamp_column).dt.timestamp()
+                - pl.col(start_timestamp_column).dt.timestamp()
+            )
+            .truediv(1_000_000)
+            .alias(diff_start_end_column)
+        )
+
+        service = (
+            lf.group_by(case_id_column)
+            .agg(
+                pl.col(diff_start_end_column)
+                .sum()
+                .alias(service_time_column)
+            )
+        )
+
+        sojourn = (
+            lf.group_by(case_id_column)
+            .agg(
+                pl.col(start_timestamp_column)
+                .dt.timestamp()
+                .min()
+                .alias("__case_start_ts"),
+                pl.col(timestamp_column)
+                .dt.timestamp()
+                .max()
+                .alias("__case_end_ts"),
+            )
+            .with_columns(
+                (
+                    pl.col("__case_end_ts") - pl.col("__case_start_ts")
+                )
+                .truediv(1_000_000)
+                .alias(sojourn_time_column)
+            )
+            .select(case_id_column, sojourn_time_column)
+        )
+
+        lf = lf.join(service, on=case_id_column, how="left")
+        lf = lf.join(sojourn, on=case_id_column, how="left")
+        lf = lf.with_columns(
+            (
+                pl.col(sojourn_time_column) - pl.col(service_time_column)
+            ).alias(waiting_time_column)
+        )
+        return lf
+
     if start_timestamp_column is None:
         start_timestamp_column = timestamp_column
 
@@ -353,7 +564,23 @@ def check_is_pandas_dataframe(log):
         Is dataframe?
     """
     log_type = str(type(log)).lower()
-    return "dataframe" in log_type
+    return "dataframe" in log_type or "lazyframe" in log_type
+
+
+def is_polars_lazyframe(df):
+    """Return True if the provided dataframe is a Polars LazyFrame."""
+    df_type = str(type(df)).lower()
+    return "polars" in df_type and "lazyframe" in df_type
+
+
+def _lazyframe_schema(df):
+    """Return the Polars schema without triggering expensive resolution via .columns/.schema."""
+    return df.collect_schema()
+
+
+def _lazyframe_column_names(df):
+    """Return column names for a Polars LazyFrame without collecting the frame."""
+    return _lazyframe_schema(df).names()
 
 
 def instantiate_dataframe(*args, **kwargs):
@@ -439,6 +666,90 @@ def check_pandas_dataframe_columns(
     df
         Pandas dataframe
     """
+    if is_polars_lazyframe(df):
+        import polars as pl  # type: ignore[import-untyped]
+
+        schema = _lazyframe_schema(df)
+        columns = list(schema.names())
+        column_set = set(columns)
+        if len(columns) < 3:
+            raise Exception(
+                "the dataframe should (at least) contain a column for the case identifier, a column for the activity and a column for the timestamp."
+            )
+
+        str_columns = {
+            col
+            for col, dtype in schema.items()
+            if any(
+                token in str(dtype).lower()
+                for token in ("str", "utf8", "categorical", "enum", "object")
+            )
+        }
+        timest_columns = {
+            col
+            for col, dtype in schema.items()
+            if any(token in str(dtype).lower() for token in ("date", "time", "datetime"))
+        }
+
+        if len(str_columns) < 2:
+            raise Exception(
+                "the dataframe should (at least) contain a column of type string for the case identifier and a column of type string for the activity."
+            )
+
+        if len(timest_columns) < 1:
+            raise Exception("the dataframe should (at least) contain a column of type date")
+
+        def raise_if_missing(column_name):
+            raise Exception(
+                "the specified {} column is not contained in the dataframe. Available columns: {}".format(
+                    column_name,
+                    sorted(list(columns)),
+                )
+            )
+
+        def ensure_no_null(col, label):
+            has_null_df = df.select(
+                pl.col(col).is_null().any().alias("__has_null")
+            ).collect()
+            if bool(has_null_df[0, "__has_null"]):
+                raise Exception(
+                    "the {} column should not contain any empty value.".format(label)
+                )
+
+        if case_id_key is not None:
+            if case_id_key not in column_set:
+                raise_if_missing("case ID")
+            if case_id_key not in str_columns:
+                raise Exception("the case ID column should be of type string.")
+            ensure_no_null(case_id_key, "case ID")
+
+        if activity_key is not None:
+            if activity_key not in column_set:
+                raise_if_missing("activity")
+            if activity_key not in str_columns:
+                raise Exception("the activity column should be of type string.")
+            ensure_no_null(activity_key, "activity")
+
+        if timestamp_key is not None:
+            if timestamp_key not in column_set:
+                raise_if_missing("timestamp")
+            if timestamp_key not in timest_columns:
+                raise Exception(
+                    "the timestamp column should be of type datetime. Use the function pandas.to_datetime"
+                )
+            ensure_no_null(timestamp_key, "timestamp")
+
+        if start_timestamp_key is not None:
+            if start_timestamp_key not in column_set:
+                raise_if_missing("start timestamp")
+            if start_timestamp_key not in timest_columns:
+                raise Exception(
+                    "the start timestamp column should be of type datetime. Use the function pandas.to_datetime"
+                )
+            ensure_no_null(start_timestamp_key, "start timestamp")
+
+        return
+
     if len(df.columns) < 3:
         raise Exception(
             "the dataframe should (at least) contain a column for the case identifier, a column for the activity and a column for the timestamp."
@@ -470,11 +781,9 @@ def check_pandas_dataframe_columns(
     if case_id_key is not None:
         if case_id_key not in df.columns:
             raise Exception(
-                "the specified case ID column is not contained in the dataframe. Available columns: " +
-                str(
-                    sorted(
-                        list(
-                            df.columns))))
+                "the specified case ID column is not contained in the dataframe. Available columns: "
+                + str(sorted(list(df.columns)))
+            )
 
         if case_id_key not in str_columns:
             raise Exception("the case ID column should be of type string.")
@@ -487,11 +796,9 @@ def check_pandas_dataframe_columns(
     if activity_key is not None:
         if activity_key not in df.columns:
             raise Exception(
-                "the specified activity column is not contained in the dataframe. Available columns: " +
-                str(
-                    sorted(
-                        list(
-                            df.columns))))
+                "the specified activity column is not contained in the dataframe. Available columns: "
+                + str(sorted(list(df.columns)))
+            )
 
         if activity_key not in str_columns:
             raise Exception("the activity column should be of type string.")
@@ -504,11 +811,9 @@ def check_pandas_dataframe_columns(
     if timestamp_key is not None:
         if timestamp_key not in df.columns:
             raise Exception(
-                "the specified timestamp column is not contained in the dataframe. Available columns: " +
-                str(
-                    sorted(
-                        list(
-                            df.columns))))
+                "the specified timestamp column is not contained in the dataframe. Available columns: "
+                + str(sorted(list(df.columns)))
+            )
 
         if timestamp_key not in timest_columns:
             raise Exception(
@@ -523,11 +828,9 @@ def check_pandas_dataframe_columns(
     if start_timestamp_key is not None:
         if start_timestamp_key not in df.columns:
             raise Exception(
-                "the specified start timestamp column is not contained in the dataframe. Available columns: " +
-                str(
-                    sorted(
-                        list(
-                            df.columns))))
+                "the specified start timestamp column is not contained in the dataframe. Available columns: "
+                + str(sorted(list(df.columns)))
+            )
 
         if start_timestamp_key not in timest_columns:
             raise Exception(
@@ -539,8 +842,123 @@ def check_pandas_dataframe_columns(
                 "the start timestamp column should not contain any empty value."
             )
 
-    """if len(set(df.columns).intersection(
-            set([constants.CASE_CONCEPT_NAME, xes_constants.DEFAULT_NAME_KEY,
-                 xes_constants.DEFAULT_TIMESTAMP_KEY]))) < 3:
-        raise Exception(
-            "please format your dataframe accordingly! df = pm4py.format_dataframe(df, case_id='<name of the case ID column>', activity_key='<name of the activity column>', timestamp_key='<name of the timestamp column>')")"""
+
+def get_traces(log, case_id_key, activity_key):
+    if is_polars_lazyframe(log):
+        import polars as pl  # type: ignore[import-untyped]
+
+        collected = (
+            log.select(pl.col(case_id_key), pl.col(activity_key))
+            .group_by(case_id_key, maintain_order=True)
+            .agg(pl.col(activity_key).alias("__acts"))
+            .collect()
+        )
+        traces = [tuple(seq) for seq in collected["__acts"].to_list()]
+    else:
+        # Pandas dataframe management
+        traces = [
+            tuple(x)
+            for x in log.groupby(case_id_key)[activity_key]
+            .agg(list)
+            .to_dict()
+            .values()
+        ]
+    return traces
+
+
+def get_attribute_values_count(log, attribute):
+    if is_polars_lazyframe(log):
+        import importlib.util
+
+        if importlib.util.find_spec("polars") is None:
+            raise RuntimeError(
+                "Polars LazyFrame provided but 'polars' package is not installed."
+            )
+
+        import polars as pl  # type: ignore[import-untyped]
+
+        available_columns = set(_lazyframe_column_names(log))
+        if attribute not in available_columns:
+            raise Exception(
+                f"Column '{attribute}' is not present in the provided Polars LazyFrame."
+            )
+
+        result = (
+            log.group_by(attribute)
+            .agg(pl.len().alias("__pm4py_count__"))
+            .collect()
+        )
+
+        return {
+            row[attribute]: row["__pm4py_count__"]
+            for row in result.iter_rows(named=True)
+        }
+    else:
+        return log[attribute].value_counts().to_dict()
+
+
+def df_row_count(log):
+    if is_polars_lazyframe(log):
+        return len(log.collect())
+    else:
+        return len(log)
+
+
+def get_pivot_timestamp_distribution(
+        dataframe: pd.DataFrame,
+        frequency_alias="M",
+        case_id_col="case:concept:name",
+        timestamp_col="time:timestamp"
+) -> pd.DataFrame:
+    """
+    Creates a pivot table showing the distribution of timestamp occurrences for each case,
+    grouped by a specified time frequency.
+
+    Parameters
+    ----------
+    dataframe : pd.DataFrame
+        The input event log as a pandas DataFrame, with at least case and timestamp columns.
+    frequency_alias : str, default 'M'
+        The frequency at which to group (bin) the timestamps. This value should be a valid
+        pandas frequency alias, such as:
+            - 'A' or 'Y'   : Yearly (e.g., 2024)
+            - 'Q'          : Quarterly (e.g., 2024Q2)
+            - 'M'          : Monthly (e.g., 2024-06)
+            - 'W'          : Weekly (e.g., 2024-06-17/2024-06-23)
+            - 'D'          : Daily (e.g., 2024-06-18)
+            - 'H'          : Hourly (e.g., 2024-06-18 15:00)
+            - 'T', 'min'   : Minutely (e.g., 2024-06-18 15:30)
+            - 'S'          : Secondly (e.g., 2024-06-18 15:30:00)
+        For a complete list, see:
+        https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects
+    case_id_col : str, default 'case:concept:name'
+        The name of the column identifying each case.
+    timestamp_col : str, default 'time:timestamp'
+        The name of the column containing the event timestamps (must be pandas datetime dtype).
+
+    Returns
+    -------
+    pd.DataFrame
+        A pivot table where each row represents a case, columns represent time bins (according
+        to the frequency), and values are the counts of events in each bin.
+
+    Example
+    -------
+    get_pivot_timestamp_distribution(df, frequency_alias='D')
+    """
+    # Create column for binning
+    dataframe["@@binning"] = dataframe[timestamp_col].dt.to_period(frequency_alias).astype(str)
+
+    # Pivot table: cases as rows, yearmonths as columns, counts as values
+    pivot = dataframe.pivot_table(
+        index=case_id_col,
+        columns="@@binning",
+        values=timestamp_col,
+        aggfunc="count",
+        fill_value=0
+    )
+
+    pivot = pivot.reindex(sorted(pivot.columns), axis=1).reset_index()
+    pivot.columns = [x if x == case_id_col else "@@evcount_"+x for x in pivot.columns]
+
+    return pivot

@@ -144,7 +144,10 @@ def structural_similarity(tree1: pt.ProcessTree,
                           weights: Dict[str, float] = None) -> float:
     """
     Computes the structural similarity between two process trees, following an approach similar to:
-    Dijkman, Remco, et al. "Similarity of business process models: Metrics and evaluation." Information Systems 36.2 (2011): 498-516.
+    
+    Yan, Z., Dijkman, R., & Grefen, P. (2012). Fast business process similarity search.
+    Distributed and Parallel Databases, 30(2), 105–144.
+    (https://doi.org/10.1007/s10619-012-7089-z)
 
     Parameters
     ---------------

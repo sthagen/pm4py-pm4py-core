@@ -1,5 +1,6 @@
 import inspect
 import os
+import time
 import sys
 import unittest
 import importlib.util
@@ -13,6 +14,7 @@ EXECUTE_TESTS = True
 import pm4py
 import numpy
 import pandas
+import importlib.util
 import networkx
 
 pm4py.util.constants.SHOW_PROGRESS_BAR = False
@@ -30,6 +32,12 @@ enabled_tests = [
     "DataframePrefilteringTest", "StatisticsLogTest", "StatisticsDfTest", "TransitionSystemTest",
     "ImpExpFromString", "WoflanTest", "OcelFilteringTest", "OcelDiscoveryTest", "LlmTest"
 ]
+
+if importlib.util.find_spec("polars"):
+    #enabled_tests.append("TestPolarsFilteringSimplified")
+    #enabled_tests.append("TestPolarsFiltering")
+    enabled_tests.append("TestPolarsStatistics")
+    enabled_tests.append("TestPolarsStatisticsSimplified")
 
 loader = unittest.TestLoader()
 suite = unittest.TestSuite()
@@ -327,12 +335,41 @@ if "LlmTest" in enabled_tests:
         print("LlmTest import failed!")
         failed += 1
 
+if "TestPolarsFilteringSimplified" in enabled_tests:
+    try:
+        from tests.polars_filters_simp_interface import TestPolarsFilteringSimplified
+        suite.addTests(loader.loadTestsFromTestCase(TestPolarsFilteringSimplified))
+    except:
+        print("TestPolarsFilteringSimplified import failed!")
+        failed += 1
 
-# If some imports failed, let's prompt the user
-# (The original script paused for ENTER if any import fails)
+if "TestPolarsFiltering" in enabled_tests:
+    try:
+        from tests.polars_filters_test import TestPolarsFiltering
+        suite.addTests(loader.loadTestsFromTestCase(TestPolarsFiltering))
+    except:
+        print("TestPolarsFiltering import failed!")
+        failed += 1
+
+if "TestPolarsStatistics" in enabled_tests:
+    try:
+        from tests.polars_statistics_get import TestPolarsStatistics
+        suite.addTests(loader.loadTestsFromTestCase(TestPolarsStatistics))
+    except:
+        print("TestPolarsStatistics import failed!")
+        failed += 1
+
+if "TestPolarsStatisticsSimplified" in enabled_tests:
+    try:
+        from tests.polars_statistics_simp_interface import TestPolarsStatisticsSimplified
+        suite.addTests(loader.loadTestsFromTestCase(TestPolarsStatisticsSimplified))
+    except:
+        print("TestPolarsStatisticsSimplified import failed!")
+        failed += 1
+
+# If some imports failed, let's wait a little bit
 if failed > 0:
-    print("-- PRESS ENTER TO CONTINUE --")
-    input()
+    time.sleep(7.5)
 
 
 def main():

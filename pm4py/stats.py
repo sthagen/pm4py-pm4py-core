@@ -24,7 +24,8 @@ The ``pm4py.stats`` module contains the statistical functionalities offered in `
 """
 
 import sys
-from typing import Dict, Union, List, Tuple, Collection, Iterator
+import importlib
+from typing import Dict, Union, List, Tuple, Collection, Iterator, Any
 from typing import Set, Optional
 from typing import Counter as TCounter
 from collections import Counter
@@ -37,11 +38,27 @@ from pm4py.util.pandas_utils import (
     check_pandas_dataframe_columns,
     insert_ev_in_tr_index,
 )
-from pm4py.utils import get_properties, __event_log_deprecation_warning
+from pm4py.utils import (
+    get_properties,
+    __event_log_deprecation_warning,
+    is_polars_lazyframe,
+)
 from pm4py.util import constants, pandas_utils
 from pm4py.objects.petri_net.obj import PetriNet
 from pm4py.objects.process_tree.obj import ProcessTree
 import deprecation
+
+
+def _is_dataframe_like(obj) -> bool:
+    return check_is_pandas_dataframe(obj) or is_polars_lazyframe(obj)
+
+
+def _load_statistics_module(df, algorithm_path: str, module: Optional[str] = "get"):
+    package_type = "polars" if is_polars_lazyframe(df) else "pandas"
+    module_path = f"pm4py.statistics.{algorithm_path}.{package_type}"
+    if module:
+        module_path = f"{module_path}.{module}"
+    return importlib.import_module(module_path)
 
 
 def get_start_activities(
@@ -79,16 +96,16 @@ def get_start_activities(
         case_id_key=case_id_key,
     )
 
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
             case_id_key=case_id_key,
         )
-        from pm4py.statistics.start_activities.pandas import get
+        stats_module = _load_statistics_module(log, "start_activities")
 
-        return get.get_start_activities(log, parameters=properties)
+        return stats_module.get_start_activities(log, parameters=properties)
     else:
         from pm4py.statistics.start_activities.log import get
 
@@ -130,16 +147,16 @@ def get_end_activities(
         case_id_key=case_id_key,
     )
 
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
             case_id_key=case_id_key,
         )
-        from pm4py.statistics.end_activities.pandas import get
+        stats_module = _load_statistics_module(log, "end_activities")
 
-        return get.get_end_activities(log, parameters=properties)
+        return stats_module.get_end_activities(log, parameters=properties)
     else:
         from pm4py.statistics.end_activities.log import get
 
@@ -229,11 +246,13 @@ def get_event_attribute_values(
 
     parameters = get_properties(log, case_id_key=case_id_key)
     parameters["keep_once_per_case"] = count_once_per_case
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(log, case_id_key=case_id_key)
-        from pm4py.statistics.attributes.pandas import get
+        stats_module = _load_statistics_module(log, "attributes")
 
-        return get.get_attribute_values(log, attribute, parameters=parameters)
+        return stats_module.get_attribute_values(
+            log, attribute, parameters=parameters
+        )
     else:
         from pm4py.statistics.attributes.log import get
 
@@ -267,9 +286,9 @@ def get_trace_attribute_values(
 
     parameters = get_properties(log, case_id_key=case_id_key)
 
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(log, case_id_key=case_id_key)
-        from pm4py.statistics.attributes.pandas import get
+        stats_module = _load_statistics_module(log, "attributes")
 
         if (
             attribute not in log
@@ -278,7 +297,9 @@ def get_trace_attribute_values(
             # If "attribute" does not exist as a column, but "case:attribute"
             # exists, then use that.
             attribute = constants.CASE_ATTRIBUTE_PREFIX + attribute
-        ret = get.get_attribute_values(log, attribute, parameters=parameters)
+        ret = stats_module.get_attribute_values(
+            log, attribute, parameters=parameters
+        )
         return ret
     else:
         from pm4py.statistics.attributes.log import get
@@ -377,16 +398,18 @@ def get_variants_as_tuples(
         case_id_key=case_id_key,
     )
 
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
             case_id_key=case_id_key,
         )
-        from pm4py.statistics.variants.pandas import get
+        stats_module = _load_statistics_module(log, "variants")
 
-        variants = get.get_variants_count(log, parameters=properties)
+        variants = stats_module.get_variants_count(
+            log, parameters=properties
+        )
     else:
         from pm4py.statistics.variants.log import get
 
@@ -529,11 +552,11 @@ def get_variants_paths_duration(
         variant_column=variant_column,
         index_in_trace_column=index_in_trace_column,
     ):
-        from pm4py.statistics.eventually_follows.pandas import (
-            get as eventually_follows,
+        eventually_follows_module = _load_statistics_module(
+            filtered_log, "eventually_follows"
         )
 
-        dir_follo_dataframe = eventually_follows.get_partial_order_dataframe(
+        dir_follo_dataframe = eventually_follows_module.get_partial_order_dataframe(
             filtered_log.copy(),
             activity_key=activity_key,
             timestamp_key=timestamp_key,
@@ -799,16 +822,20 @@ def get_case_arrival_average(
         case_id_key=case_id_key,
     )
 
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
             case_id_key=case_id_key,
         )
-        from pm4py.statistics.traces.generic.pandas import case_arrival
+        case_arrival_module = _load_statistics_module(
+            log, "traces.generic", module="case_arrival"
+        )
 
-        return case_arrival.get_case_arrival_avg(log, parameters=properties)
+        return case_arrival_module.get_case_arrival_avg(
+            log, parameters=properties
+        )
     else:
         from pm4py.statistics.traces.generic.log import case_arrival
 
@@ -851,16 +878,16 @@ def get_rework_cases_per_activity(
         case_id_key=case_id_key,
     )
 
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
             case_id_key=case_id_key,
         )
-        from pm4py.statistics.rework.pandas import get as rework_get
+        rework_module = _load_statistics_module(log, "rework")
 
-        return rework_get.apply(log, parameters=properties)
+        return rework_module.apply(log, parameters=properties)
     else:
         from pm4py.statistics.rework.log import get as rework_get
 
@@ -907,16 +934,18 @@ def get_case_overlap(
         case_id_key=case_id_key,
     )
 
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
             case_id_key=case_id_key,
         )
-        from pm4py.statistics.overlap.cases.pandas import get as cases_overlap
+        overlap_module = _load_statistics_module(
+            log, "overlap.cases"
+        )
 
-        return cases_overlap.apply(log, parameters=properties)
+        return overlap_module.apply(log, parameters=properties)
     else:
         from pm4py.statistics.overlap.cases.log import get as cases_overlap
 
@@ -965,16 +994,18 @@ def get_cycle_time(
         case_id_key=case_id_key,
     )
 
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
             case_id_key=case_id_key,
         )
-        from pm4py.statistics.traces.cycle_time.pandas import get as cycle_time
+        cycle_time_module = _load_statistics_module(
+            log, "traces.cycle_time"
+        )
 
-        return cycle_time.apply(log, parameters=properties)
+        return cycle_time_module.apply(log, parameters=properties)
     else:
         from pm4py.statistics.traces.cycle_time.log import get as cycle_time
 
@@ -1032,7 +1063,7 @@ def get_service_time(
     )
     properties["aggregationMeasure"] = aggregation_measure
 
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log,
             activity_key=activity_key,
@@ -1040,9 +1071,11 @@ def get_service_time(
             case_id_key=case_id_key,
             start_timestamp_key=start_timestamp_key,
         )
-        from pm4py.statistics.service_time.pandas import get as serv_time_get
+        service_time_module = _load_statistics_module(
+            log, "service_time"
+        )
 
-        return serv_time_get.apply(log, parameters=properties)
+        return service_time_module.apply(log, parameters=properties)
     else:
         from pm4py.statistics.service_time.log import get as serv_time_get
 
@@ -1099,17 +1132,26 @@ def get_all_case_durations(
     properties["business_hours"] = business_hours
     properties["business_hour_slots"] = business_hour_slots
 
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
             case_id_key=case_id_key,
         )
-        from pm4py.statistics.traces.generic.pandas import case_statistics
+        case_stats_module = _load_statistics_module(
+            log, "traces.generic", module="case_statistics"
+        )
 
-        cd = case_statistics.get_cases_description(log, parameters=properties)
-        return sorted([x["caseDuration"] for x in cd.values()])
+        cd = case_stats_module.get_cases_description(
+            log, parameters=properties
+        )
+        if isinstance(cd, dict):
+            case_durations = [x["caseDuration"] for x in cd.values()]
+        else:
+            case_durations = [x["caseDuration"] for x in cd]
+
+        return sorted(case_durations)
     else:
         from pm4py.statistics.traces.generic.log import case_statistics
 
@@ -1171,17 +1213,26 @@ def get_case_duration(
     properties["business_hours"] = business_hours
     properties["business_hour_slots"] = business_hour_slots
 
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
             case_id_key=case_id_key,
         )
-        from pm4py.statistics.traces.generic.pandas import case_statistics
+        case_stats_module = _load_statistics_module(
+            log, "traces.generic", module="case_statistics"
+        )
 
-        cd = case_statistics.get_cases_description(log, parameters=properties)
-        return cd[case_id]["caseDuration"]
+        cd = case_stats_module.get_cases_description(
+            log, parameters=properties
+        )
+        if isinstance(cd, dict):
+            return cd[case_id]["caseDuration"]
+        else:
+            for i in range(len(cd)):
+                if cd[i]["caseid"] == case_id:
+                    return cd[i]["caseDuration"]
     else:
         from pm4py.statistics.traces.generic.log import case_statistics
 
@@ -1304,3 +1355,107 @@ def get_activity_position_summary(
                 if this_act == activity:
                     ret[i] += 1
         return dict(ret)
+
+
+def get_process_cube(
+    feature_table: pd.DataFrame,
+    x_col: str,
+    y_col: str,
+    agg_col: str,
+    parameters: Optional[Dict[Any, Any]] = None
+) -> Tuple[pd.DataFrame, Dict[Any, Any]]:
+    """
+    Build a two-dimensional process cube by slicing and aggregating a feature table.
+
+    Parameters
+    ----------
+    feature_table : pd.DataFrame
+        A table containing one row per case and columns for:
+        - 'case:concept:name' (case identifiers)
+        - Numeric metrics (e.g. '@@arrival_rate', '@@finish_rate')
+        - Prefix-based indicators (e.g. 'concept:name_<activity>', 'org:resource_<resource>')
+        - Aggregation target (e.g. '@@sojourn_time')
+        Typically constructed via:
+        ```python
+        enriched_df = pm4py.extract_outcome_enriched_dataframe(log_df)
+        feature_table = pm4py.extract_features_dataframe(enriched_df, include_case_id=True)
+        ```
+
+    x_col : str
+        Name of the X dimension:
+        - **Numeric mode**: If this exact column exists (e.g. '@@arrival_rate'), cases will be binned by value into equally sized ranges.
+        - **Prefix mode**: If not present, treated as prefix for indicator columns (e.g. 'concept:name'), grouping each column starting with this prefix.
+          Each bin corresponds to presence/absence of that prefix-based feature.
+
+    y_col : str
+        Name of the Y dimension (same rules as x_col):
+        - Numeric if present in columns (e.g. '@@finish_rate').
+        - Prefix-based otherwise (e.g. 'case:channel').
+
+    agg_col : str
+        Name of the column to aggregate over each cell. Must be present in feature_table.
+        Commonly a duration or count metric, such as '@@sojourn_time'.
+
+    variant : Variants, optional
+        Algorithm variant to use. Defaults to Variants.CLASSIC.
+
+    parameters : Dict[Any, Any], optional
+        Additional settings for numeric binning and aggregation:
+        - Parameters.MAX_DIVISIONS_X (int): Number of bins for X in numeric mode.
+        - Parameters.MAX_DIVISIONS_Y (int): Number of bins for Y in numeric mode.
+        - Parameters.AGGREGATION_FUNCTION (str): One of 'mean', 'sum', 'min', 'max'.
+
+    Returns
+    -------
+    pivot_df : pd.DataFrame
+        Rows are X bins, columns are Y bins; each cell holds the aggregated agg_col value.
+
+    cell_case_dict : Dict[Tuple, Set]
+        Maps each (x_bin, y_bin) to the set of case IDs included in that cell, allowing drill-down.
+
+    Examples
+    --------
+    # 1) Activity vs. Resource, aggregating sojourn time:
+    cube_df, cell_cases = pm4py.get_process_cube(
+        feature_table,
+        x_col="concept:name",             # prefix mode: one bin per activity
+        y_col="org:resource",             # prefix mode: one bin per resource
+        agg_col="@@sojourn_time",          # total case time per cell
+        parameters={
+            "aggregation_function": "sum"
+        }
+    )
+
+    # 2) Binary presence of a specific activity vs. channel:
+    cube_df2, cell_cases2 = pm4py.get_process_cube(
+        feature_table,
+        x_col="concept:name_T06Determinenecessityofstopadvice",  # prefix for this specific activity
+        y_col="case:channel",         # prefix mode: one bin per channel value
+        agg_col="@@sojourn_time"
+    )
+
+    # 3) Numeric arrival vs. finish rate:
+    cube_df3, cell_cases3 = pm4py.get_process_cube(
+        feature_table,
+        x_col="@@arrival_rate",       # numeric mode: divide into bins
+        y_col="@@finish_rate",         # numeric mode: divide into bins
+        agg_col="@@sojourn_time",
+        parameters={
+            "max_divisions_x": 5,
+            "max_divisions_y": 5,
+            "aggregation_function": "mean"
+        }
+    )
+    """
+    if is_polars_lazyframe(feature_table):
+        from pm4py.statistics.process_cube.polars import algorithm
+    else:
+        from pm4py.statistics.process_cube.pandas import algorithm
+
+    return algorithm.apply(
+        feature_table,
+        x_col=x_col,
+        y_col=y_col,
+        agg_col=agg_col,
+        parameters=parameters
+    )

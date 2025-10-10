@@ -437,6 +437,134 @@ def filter_traces_attribute_in_timeframe(
     return filtered_log
 
 
+def filter_traces_starting_in_timeframe(
+    log: EventLog,
+    dt1: Union[str, datetime.datetime],
+    dt2: Union[str, datetime.datetime],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> EventLog:
+    """
+    Keep/Exclude traces whose *first event* timestamp falls in [dt1, dt2].
+
+    Parameters
+    ----------
+    log
+        Event log
+    dt1
+        Lower bound to the interval
+    dt2
+        Upper bound to the interval
+    parameters
+        Possible parameters of the algorithm, including:
+            Parameters.TIMESTAMP_KEY -> attribute to use as timestamp
+            "positive" (bool, default True) -> keep (True) or exclude (False) the matching cases
+
+    Returns
+    ----------
+    filtered_log
+        Filtered event log
+    """
+    if parameters is None:
+        parameters = {}
+
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
+
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY
+    )
+    positive = exec_utils.get_param_value("positive", parameters, True)
+
+    dt1 = get_dt_from_string(dt1)
+    dt2 = get_dt_from_string(dt2)
+
+    def starts_in(tf_trace: Trace) -> bool:
+        if tf_trace:
+            ts0 = strpfromiso.fix_naivety(tf_trace[0][timestamp_key])
+            return dt1 <= ts0 <= dt2
+        return False
+
+    if positive:
+        traces = [tr for tr in log if starts_in(tr)]
+    else:
+        traces = [tr for tr in log if not starts_in(tr)]
+
+    filtered_log = EventLog(
+        traces,
+        attributes=log.attributes,
+        extensions=log.extensions,
+        omni_present=log.omni_present,
+        classifiers=log.classifiers,
+        properties=log.properties,
+    )
+    return filtered_log
+
+
+def filter_traces_completing_in_timeframe(
+    log: EventLog,
+    dt1: Union[str, datetime.datetime],
+    dt2: Union[str, datetime.datetime],
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> EventLog:
+    """
+    Keep/Exclude traces whose *last event* timestamp falls in [dt1, dt2].
+
+    Parameters
+    ----------
+    log
+        Event log
+    dt1
+        Lower bound to the interval
+    dt2
+        Upper bound to the interval
+    parameters
+        Possible parameters of the algorithm, including:
+            Parameters.TIMESTAMP_KEY -> attribute to use as timestamp
+            "positive" (bool, default True) -> keep (True) or exclude (False) the matching cases
+
+    Returns
+    ----------
+    filtered_log
+        Filtered event log
+    """
+    if parameters is None:
+        parameters = {}
+
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
+
+    timestamp_key = exec_utils.get_param_value(
+        Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY
+    )
+    positive = exec_utils.get_param_value("positive", parameters, True)
+
+    dt1 = get_dt_from_string(dt1)
+    dt2 = get_dt_from_string(dt2)
+
+    def completes_in(tf_trace: Trace) -> bool:
+        if tf_trace:
+            tsN = strpfromiso.fix_naivety(tf_trace[-1][timestamp_key])
+            return dt1 <= tsN <= dt2
+        return False
+
+    if positive:
+        traces = [tr for tr in log if completes_in(tr)]
+    else:
+        traces = [tr for tr in log if not completes_in(tr)]
+
+    filtered_log = EventLog(
+        traces,
+        attributes=log.attributes,
+        extensions=log.extensions,
+        omni_present=log.omni_present,
+        classifiers=log.classifiers,
+        properties=log.properties,
+    )
+    return filtered_log
+
+
 def apply(df, parameters=None):
     del df
     del parameters

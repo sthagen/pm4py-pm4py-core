@@ -35,9 +35,39 @@ from pm4py.util.pandas_utils import (
     check_is_pandas_dataframe,
     check_pandas_dataframe_columns,
 )
-from pm4py.utils import get_properties, __event_log_deprecation_warning
+from pm4py.utils import (
+    get_properties,
+    __event_log_deprecation_warning,
+    is_polars_lazyframe,
+)
 from pm4py.objects.ocel.obj import OCEL
+from pm4py.utils import __event_log_filtering_level_warning
 import datetime
+
+
+def _get_dataframe_filtering_package(df):
+    if is_polars_lazyframe(df):
+        import pm4py.algo.filtering.polars as filtering_pkg
+    else:
+        import pm4py.algo.filtering.pandas as filtering_pkg
+
+    return filtering_pkg
+
+
+def _is_dataframe_like(obj):
+    return check_is_pandas_dataframe(obj) or is_polars_lazyframe(obj)
+
+
+def _normalize_sequence_argument(value):
+    """Normalize a prefix/suffix input into the list-of-list structure expected by Polars filters."""
+    if isinstance(value, str):
+        return [[value]]
+    if isinstance(value, (list, tuple)):
+        if value and all(isinstance(elem, (list, tuple)) for elem in value):
+            return [list(elem) if isinstance(elem, tuple) else list(elem) for elem in value]
+        if all(isinstance(elem, str) for elem in value):
+            return [list(value)]
+    return [[str(value)]]
 
 
 def filter_log_relative_occurrence_event_attribute(
@@ -82,11 +112,12 @@ def filter_log_relative_occurrence_event_attribute(
         case_id_key=case_id_key,
         activity_key=attribute_key,
     )
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log, timestamp_key=timestamp_key, case_id_key=case_id_key
         )
-        from pm4py.algo.filtering.pandas.attributes import attributes_filter
+        filtering_pkg = _get_dataframe_filtering_package(log)
+        attributes_filter = filtering_pkg.attributes.attributes_filter
 
         parameters[attributes_filter.Parameters.ATTRIBUTE_KEY] = attribute_key
         parameters[attributes_filter.Parameters.KEEP_ONCE_PER_CASE] = (
@@ -148,15 +179,16 @@ def filter_start_activities(
         timestamp_key=timestamp_key,
         case_id_key=case_id_key,
     )
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
             case_id_key=case_id_key,
         )
-        from pm4py.algo.filtering.pandas.start_activities import (
-            start_activities_filter,
+        filtering_pkg = _get_dataframe_filtering_package(log)
+        start_activities_filter = (
+            filtering_pkg.start_activities.start_activities_filter
         )
 
         parameters[start_activities_filter.Parameters.POSITIVE] = retain
@@ -213,15 +245,16 @@ def filter_end_activities(
         timestamp_key=timestamp_key,
         case_id_key=case_id_key,
     )
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
             case_id_key=case_id_key,
         )
-        from pm4py.algo.filtering.pandas.end_activities import (
-            end_activities_filter,
+        filtering_pkg = _get_dataframe_filtering_package(log)
+        end_activities_filter = (
+            filtering_pkg.end_activities.end_activities_filter
         )
 
         parameters[end_activities_filter.Parameters.POSITIVE] = retain
@@ -243,7 +276,7 @@ def filter_event_attribute_values(
     log: Union[EventLog, pd.DataFrame],
     attribute_key: str,
     values: Union[Set[str], List[str]],
-    level: str = "case",
+    level: Optional[str] = None,
     retain: bool = True,
     case_id_key: str = "case:concept:name",
 ) -> Union[EventLog, pd.DataFrame]:
@@ -271,11 +304,15 @@ def filter_event_attribute_values(
     """
     __event_log_deprecation_warning(log)
 
+    if level is None:
+        __event_log_filtering_level_warning()
+
     parameters = get_properties(log, case_id_key=case_id_key)
     parameters[constants.PARAMETER_CONSTANT_ATTRIBUTE_KEY] = attribute_key
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(log, case_id_key=case_id_key)
-        from pm4py.algo.filtering.pandas.attributes import attributes_filter
+        filtering_pkg = _get_dataframe_filtering_package(log)
+        attributes_filter = filtering_pkg.attributes.attributes_filter
 
         if level == "event":
             parameters[attributes_filter.Parameters.POSITIVE] = retain
@@ -330,9 +367,10 @@ def filter_trace_attribute_values(
 
     parameters = get_properties(log, case_id_key=case_id_key)
     parameters[constants.PARAMETER_CONSTANT_ATTRIBUTE_KEY] = attribute_key
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(log, case_id_key=case_id_key)
-        from pm4py.algo.filtering.pandas.attributes import attributes_filter
+        filtering_pkg = _get_dataframe_filtering_package(log)
+        attributes_filter = filtering_pkg.attributes.attributes_filter
 
         parameters[attributes_filter.Parameters.POSITIVE] = retain
         return attributes_filter.apply(log, values, parameters=parameters)
@@ -386,14 +424,15 @@ def filter_variants(
         timestamp_key=timestamp_key,
         case_id_key=case_id_key,
     )
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
             case_id_key=case_id_key,
         )
-        from pm4py.algo.filtering.pandas.variants import variants_filter
+        filtering_pkg = _get_dataframe_filtering_package(log)
+        variants_filter = filtering_pkg.variants.variants_filter
 
         parameters[variants_filter.Parameters.POSITIVE] = retain
         return variants_filter.apply(log, variants, parameters=parameters)
@@ -445,8 +484,9 @@ def filter_directly_follows_relation(
         timestamp_key=timestamp_key,
         case_id_key=case_id_key,
     )
-    if check_is_pandas_dataframe(log):
-        from pm4py.algo.filtering.pandas.paths import paths_filter
+    if _is_dataframe_like(log):
+        filtering_pkg = _get_dataframe_filtering_package(log)
+        paths_filter = filtering_pkg.paths.paths_filter
 
         parameters[paths_filter.Parameters.POSITIVE] = retain
         return paths_filter.apply(log, relations, parameters=parameters)
@@ -498,24 +538,53 @@ def filter_eventually_follows_relation(
         timestamp_key=timestamp_key,
         case_id_key=case_id_key,
     )
-    if check_is_pandas_dataframe(log):
-        from pm4py.algo.filtering.pandas.ltl import ltl_checker
+    if _is_dataframe_like(log):
+        filtering_pkg = _get_dataframe_filtering_package(log)
+        ltl_checker = filtering_pkg.ltl.ltl_checker
 
         parameters[ltl_checker.Parameters.POSITIVE] = retain
-        if retain:
-            cases = set()
-        else:
-            cases = set(log[case_id_key].to_numpy().tolist())
-        for path in relations:
-            filt_log = ltl_checker.eventually_follows(
-                log, path, parameters=parameters
-            )
-            this_traces = set(filt_log[case_id_key].to_numpy().tolist())
+
+        if not is_polars_lazyframe(log):
             if retain:
-                cases = cases.union(this_traces)
+                cases = set()
             else:
-                cases = cases.intersection(this_traces)
-        return log[log[case_id_key].isin(cases)]
+                cases = set(log[case_id_key].to_numpy().tolist())
+            for path in relations:
+                filt_log = ltl_checker.eventually_follows(
+                    log, path, parameters=parameters
+                )
+                this_traces = set(filt_log[case_id_key].to_numpy().tolist())
+                if retain:
+                    cases = cases.union(this_traces)
+                else:
+                    cases = cases.intersection(this_traces)
+            return log[log[case_id_key].isin(cases)]
+        else:
+            import polars as pl  # type: ignore[import-untyped]
+
+            case_frames = []
+            for path in relations:
+                filt_log = ltl_checker.eventually_follows(
+                    log, path, parameters=parameters
+                )
+                case_frames.append(
+                    filt_log.select(pl.col(case_id_key)).unique()
+                )
+
+            if retain:
+                if not case_frames:
+                    return log.filter(pl.lit(False))
+                cases_frame = pl.concat(case_frames).unique()
+                return log.join(cases_frame, on=case_id_key, how="inner")
+            else:
+                if not case_frames:
+                    return log
+                cases_frame = case_frames[0]
+                for frame in case_frames[1:]:
+                    cases_frame = cases_frame.join(
+                        frame, on=case_id_key, how="inner"
+                    )
+                return log.join(cases_frame, on=case_id_key, how="inner")
     else:
         from pm4py.algo.filtering.log.ltl import ltl_checker
 
@@ -560,50 +629,31 @@ def filter_time_range(
     :param log: Event log or Pandas DataFrame.
     :param dt1: Left extreme of the interval.
     :param dt2: Right extreme of the interval.
-    :param mode: Modality of filtering ('events', 'traces_contained', 'traces_intersecting').
-                 - 'events': Any event that fits the time frame is retained.
-                 - 'traces_contained': Any trace completely contained in the timeframe is retained.
-                 - 'traces_intersecting': Any trace intersecting with the timeframe is retained.
+    :param mode: Modality of filtering. Supported:
+                 - 'events': keep events within timeframe.
+                 - 'traces_contained': keep traces fully contained in timeframe.
+                 - 'traces_intersecting': keep traces intersecting timeframe.
+                 - 'traces_starting_in': keep traces whose first event is in timeframe.
+                 - 'traces_starting_in_exclude': exclude traces whose first event is in timeframe.
+                 - 'traces_completing_in': keep traces whose last event is in timeframe.
+                 - 'traces_completing_in_exclude': exclude traces whose last event is in timeframe.
     :param timestamp_key: Attribute to be used for the timestamp.
     :param case_id_key: Attribute to be used as case identifier.
     :return: Filtered event log or Pandas DataFrame.
-
-    .. code-block:: python3
-
-        import pm4py
-
-        filtered_dataframe1 = pm4py.filter_time_range(
-            dataframe,
-            '2010-01-01 00:00:00',
-            '2011-01-01 00:00:00',
-            mode='traces_contained',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        filtered_dataframe2 = pm4py.filter_time_range(
-            dataframe,
-            '2010-01-01 00:00:00',
-            '2011-01-01 00:00:00',
-            mode='traces_intersecting',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        filtered_dataframe3 = pm4py.filter_time_range(
-            dataframe,
-            '2010-01-01 00:00:00',
-            '2011-01-01 00:00:00',
-            mode='events',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
     """
     __event_log_deprecation_warning(log)
 
     properties = get_properties(
         log, timestamp_key=timestamp_key, case_id_key=case_id_key
     )
-    if check_is_pandas_dataframe(log):
-        from pm4py.algo.filtering.pandas.timestamp import timestamp_filter
+
+    # Helper: compute "positive" flag from mode for the new variants
+    def _positive_from_mode(m: str) -> bool:
+        return not (m.endswith("_exclude"))
+
+    if _is_dataframe_like(log):
+        filtering_pkg = _get_dataframe_filtering_package(log)
+        timestamp_filter = filtering_pkg.timestamp.timestamp_filter
 
         if mode == "events":
             return timestamp_filter.apply_events(
@@ -617,10 +667,23 @@ def filter_time_range(
             return timestamp_filter.filter_traces_intersecting(
                 log, dt1, dt2, parameters=properties
             )
+        elif mode in ("traces_starting_in", "traces_starting_in_exclude"):
+            params = dict(properties)
+            params["positive"] = _positive_from_mode(mode)
+            return timestamp_filter.filter_traces_starting_in_timeframe(
+                log, dt1, dt2, parameters=params
+            )
+        elif mode in ("traces_completing_in", "traces_completing_in_exclude"):
+            params = dict(properties)
+            params["positive"] = _positive_from_mode(mode)
+            return timestamp_filter.filter_traces_completing_in_timeframe(
+                log, dt1, dt2, parameters=params
+            )
         else:
             if constants.SHOW_INTERNAL_WARNINGS:
                 warnings.warn(
-                    f"Mode provided: {mode} is not recognized; original log returned!")
+                    f"Mode provided: {mode} is not recognized; original log returned!"
+                )
             return log
     else:
         from pm4py.algo.filtering.log.timestamp import timestamp_filter
@@ -637,10 +700,23 @@ def filter_time_range(
             return timestamp_filter.filter_traces_intersecting(
                 log, dt1, dt2, parameters=properties
             )
+        elif mode in ("traces_starting_in", "traces_starting_in_exclude"):
+            params = dict(properties)
+            params["positive"] = _positive_from_mode(mode)
+            return timestamp_filter.filter_traces_starting_in_timeframe(
+                log, dt1, dt2, parameters=params
+            )
+        elif mode in ("traces_completing_in", "traces_completing_in_exclude"):
+            params = dict(properties)
+            params["positive"] = _positive_from_mode(mode)
+            return timestamp_filter.filter_traces_completing_in_timeframe(
+                log, dt1, dt2, parameters=params
+            )
         else:
             if constants.SHOW_INTERNAL_WARNINGS:
                 warnings.warn(
-                    f"Mode provided: {mode} is not recognized; original log returned!")
+                    f"Mode provided: {mode} is not recognized; original log returned!"
+                )
             return log
 
 
@@ -702,14 +778,15 @@ def filter_between(
         timestamp_key=timestamp_key,
         case_id_key=case_id_key,
     )
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
             case_id_key=case_id_key,
         )
-        from pm4py.algo.filtering.pandas.between import between_filter
+        filtering_pkg = _get_dataframe_filtering_package(log)
+        between_filter = filtering_pkg.between.between_filter
 
         return between_filter.apply(log, act1, act2, parameters=parameters)
     else:
@@ -747,9 +824,10 @@ def filter_case_size(
     __event_log_deprecation_warning(log)
 
     parameters = get_properties(log, case_id_key=case_id_key)
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(log, case_id_key=case_id_key)
-        from pm4py.algo.filtering.pandas.cases import case_filter
+        filtering_pkg = _get_dataframe_filtering_package(log)
+        case_filter = filtering_pkg.cases.case_filter
 
         case_id = (
             parameters[constants.PARAMETER_CONSTANT_CASEID_KEY]
@@ -800,11 +878,12 @@ def filter_case_performance(
     parameters = get_properties(
         log, timestamp_key=timestamp_key, case_id_key=case_id_key
     )
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log, timestamp_key=timestamp_key, case_id_key=case_id_key
         )
-        from pm4py.algo.filtering.pandas.cases import case_filter
+        filtering_pkg = _get_dataframe_filtering_package(log)
+        case_filter = filtering_pkg.cases.case_filter
 
         return case_filter.filter_case_performance(
             log, min_performance, max_performance, parameters=parameters
@@ -858,14 +937,23 @@ def filter_activities_rework(
         case_id_key=case_id_key,
     )
     parameters["min_occurrences"] = min_occurrences
-    if check_is_pandas_dataframe(log):
+    is_polars = is_polars_lazyframe(log)
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
             case_id_key=case_id_key,
         )
-        from pm4py.algo.filtering.pandas.rework import rework_filter
+        filtering_pkg = _get_dataframe_filtering_package(log)
+        rework_filter = filtering_pkg.rework.rework_filter
+
+        if is_polars:
+            if hasattr(rework_filter, "apply_activity_set"):
+                return rework_filter.apply_activity_set(
+                    log, {activity}, parameters=parameters
+                )
+            return rework_filter.apply(log, parameters=parameters)
 
         return rework_filter.apply(log, activity, parameters=parameters)
     else:
@@ -923,15 +1011,19 @@ def filter_paths_performance(
         case_id_key=case_id_key,
     )
     parameters["positive"] = keep
+    parameters["min_performance"] = min_performance
+    parameters["max_performance"] = max_performance
+
     path = tuple(path)
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
             case_id_key=case_id_key,
         )
-        from pm4py.algo.filtering.pandas.paths import paths_filter
+        filtering_pkg = _get_dataframe_filtering_package(log)
+        paths_filter = filtering_pkg.paths.paths_filter
 
         return paths_filter.apply_performance(log, path, parameters=parameters)
     else:
@@ -977,14 +1069,15 @@ def filter_variants_top_k(
         timestamp_key=timestamp_key,
         case_id_key=case_id_key,
     )
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
             case_id_key=case_id_key,
         )
-        from pm4py.algo.filtering.pandas.variants import variants_filter
+        filtering_pkg = _get_dataframe_filtering_package(log)
+        variants_filter = filtering_pkg.variants.variants_filter
 
         return variants_filter.filter_variants_top_k(
             log, k, parameters=parameters
@@ -1039,14 +1132,15 @@ def filter_variants_by_coverage_percentage(
         timestamp_key=timestamp_key,
         case_id_key=case_id_key,
     )
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
             case_id_key=case_id_key,
         )
-        from pm4py.algo.filtering.pandas.variants import variants_filter
+        filtering_pkg = _get_dataframe_filtering_package(log)
+        variants_filter = filtering_pkg.variants.variants_filter
 
         return variants_filter.filter_variants_by_coverage_percentage(
             log, min_coverage_percentage, parameters=parameters
@@ -1112,16 +1206,22 @@ def filter_prefixes(
     parameters["strict"] = strict
     parameters["first_or_last"] = first_or_last
 
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
             case_id_key=case_id_key,
         )
-        from pm4py.algo.filtering.pandas.prefixes import prefix_filter
+        filtering_pkg = _get_dataframe_filtering_package(log)
+        prefix_filter = filtering_pkg.prefixes.prefix_filter
+        prefixes_arg = (
+            _normalize_sequence_argument(activity)
+            if is_polars_lazyframe(log)
+            else activity
+        )
 
-        return prefix_filter.apply(log, activity, parameters=parameters)
+        return prefix_filter.apply(log, prefixes_arg, parameters=parameters)
     else:
         from pm4py.algo.filtering.log.prefixes import prefix_filter
 
@@ -1181,16 +1281,22 @@ def filter_suffixes(
     parameters["strict"] = strict
     parameters["first_or_last"] = first_or_last
 
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
             case_id_key=case_id_key,
         )
-        from pm4py.algo.filtering.pandas.suffixes import suffix_filter
+        filtering_pkg = _get_dataframe_filtering_package(log)
+        suffix_filter = filtering_pkg.suffixes.suffix_filter
+        suffixes_arg = (
+            _normalize_sequence_argument(activity)
+            if is_polars_lazyframe(log)
+            else activity
+        )
 
-        return suffix_filter.apply(log, activity, parameters=parameters)
+        return suffix_filter.apply(log, suffixes_arg, parameters=parameters)
     else:
         from pm4py.algo.filtering.log.suffixes import suffix_filter
 
@@ -1463,7 +1569,7 @@ def filter_four_eyes_principle(
     )
     properties["positive"] = not keep_violations
 
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log,
             activity_key=activity_key,
@@ -1471,7 +1577,8 @@ def filter_four_eyes_principle(
             case_id_key=case_id_key,
         )
 
-        from pm4py.algo.filtering.pandas.ltl import ltl_checker
+        filtering_pkg = _get_dataframe_filtering_package(log)
+        ltl_checker = filtering_pkg.ltl.ltl_checker
 
         return ltl_checker.four_eyes_principle(
             log, activity1, activity2, parameters=properties
@@ -1529,7 +1636,7 @@ def filter_activity_done_different_resources(
     )
     properties["positive"] = keep_violations
 
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log,
             activity_key=activity_key,
@@ -1537,7 +1644,8 @@ def filter_activity_done_different_resources(
             case_id_key=case_id_key,
         )
 
-        from pm4py.algo.filtering.pandas.ltl import ltl_checker
+        filtering_pkg = _get_dataframe_filtering_package(log)
+        ltl_checker = filtering_pkg.ltl.ltl_checker
 
         return ltl_checker.attr_value_different_persons(
             log, activity, parameters=properties
@@ -1602,14 +1710,15 @@ def filter_trace_segments(
     )
     parameters["positive"] = positive
 
-    if check_is_pandas_dataframe(log):
+    if _is_dataframe_like(log):
         check_pandas_dataframe_columns(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
             case_id_key=case_id_key,
         )
-        from pm4py.algo.filtering.pandas.traces import trace_filter
+        filtering_pkg = _get_dataframe_filtering_package(log)
+        trace_filter = filtering_pkg.traces.trace_filter
 
         return trace_filter.apply(log, admitted_traces, parameters=parameters)
     else:

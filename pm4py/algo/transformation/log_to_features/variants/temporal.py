@@ -51,7 +51,10 @@ def apply(
     Extracts temporal features with the provided granularity from the Pandas dataframe.
 
     Implements the approach described in the paper:
-    Pourbafrani, Mahsa, Sebastiaan J. van Zelst, and Wil MP van der Aalst. "Supporting automatic system dynamics model generation for simulation in the context of process mining." International Conference on Business Information Systems. Springer, Cham, 2020.
+    Pourbafrani, Mahsa, Sebastiaan J. van Zelst, and Wil MP van der Aalst.
+    "Supporting automatic system dynamics model generation for simulation
+    in the context of process mining." International Conference on Business
+    Information Systems. Springer, Cham, 2020.
 
     Parameters
     ---------------
@@ -59,7 +62,7 @@ def apply(
         Event log / Event stream / Pandas dataframe
     parameters
         Parameters of the algorithm, including:
-        - Parameters.GROUPER_FREQ => the time interval to be used for the grouping
+        - Parameters.GROUPER_FREQ => the time interval to be used for the grouping (default: "W")
         - Parameters.ARRIVAL_RATE => column of the dataframe which is going to host the arrival rate
         - Parameters.FINISH_RATE => column of the dataframe which is going to host the finishing rate
         - Parameters.SERVICE_TIME => column of the dataframe which is going to host the service time
@@ -69,12 +72,13 @@ def apply(
         - Parameters.ACTIVITY_COLUMN => activity column in the dataframe (default: concept:name)
         - Parameters.TIMESTAMP_COLUMN => timestamp column in the dataframe (default: time:timestamp)
         - Parameters.RESOURCE_COLUMN => resource column in the dataframe (default: org:resource)
-        - Parameters.START_TIMESTAMP_COLUMN => start timestamp column in the dataframe (if not provided, the timestamp column is used)
+        - Parameters.START_TIMESTAMP_COLUMN => start timestamp column in the dataframe
+          (if not provided, the timestamp column is used)
 
     Returns
     ----------------
     features_df
-        Dataframe with temporal features
+        Dataframe with temporal features, aggregated per time window
     """
     if parameters is None:
         parameters = {}
@@ -92,6 +96,7 @@ def apply(
     )
     if start_timestamp_column is None:
         start_timestamp_column = timestamp_column
+
     case_id_column = exec_utils.get_param_value(
         Parameters.CASE_ID_COLUMN, parameters, constants.CASE_CONCEPT_NAME
     )
@@ -122,20 +127,25 @@ def apply(
         Parameters.ACTIVITY_COLUMN, parameters, xes_constants.DEFAULT_NAME_KEY
     )
 
-    log = log_converter.apply(
+    # Convert input event log to a DataFrame if necessary
+    log_df = log_converter.apply(
         log,
         variant=log_converter.Variants.TO_DATA_FRAME,
         parameters=parameters,
     )
-    log = pandas_utils.insert_case_arrival_finish_rate(
-        log,
+
+    # Insert arrival and finish rate columns
+    log_df = pandas_utils.insert_case_arrival_finish_rate(
+        log_df,
         case_id_column=case_id_column,
         timestamp_column=timestamp_column,
         arrival_rate_column=arrival_rate,
         finish_rate_column=finish_rate,
     )
-    log = pandas_utils.insert_case_service_waiting_time(
-        log,
+
+    # Insert service, waiting, sojourn times
+    log_df = pandas_utils.insert_case_service_waiting_time(
+        log_df,
         case_id_column=case_id_column,
         timestamp_column=timestamp_column,
         diff_start_end_column=diff_start_end,
@@ -144,7 +154,8 @@ def apply(
         waiting_time_column=waiting_time,
     )
 
-    grouped_log = log.groupby(
+    # Group the log by time windows
+    grouped_log = log_df.groupby(
         pandas_utils.get_grouper(key=start_timestamp_column, freq=grouper_freq)
     )
 
@@ -154,22 +165,66 @@ def apply(
         dct = {}
         dct["timestamp"] = gkey
 
+        # Group by case to get one row per case (first arrival_rate, etc.)
         gval_first = gval.groupby(case_id_column).first()
 
+        # Keep existing features (if desired)
         dct["unique_resources"] = gval[resource_column].nunique()
-        dct["unique_cases"] = gval[case_id_column].nunique()
         dct["unique_activities"] = gval[activity_column].nunique()
         dct["num_events"] = len(gval)
 
         dct["average_arrival_rate"] = gval_first[arrival_rate].mean()
         dct["average_finish_rate"] = gval_first[finish_rate].mean()
-
         dct["average_waiting_time"] = gval_first[waiting_time].mean()
         dct["average_sojourn_time"] = gval_first[sojourn_time].mean()
         dct["average_service_time"] = gval_first[service_time].mean()
 
+        # -----------------------------------------------------------------
+        # NEW FEATURES
+        # -----------------------------------------------------------------
+        # (1) Total number of reworked activities
+        # For each case: (number_of_events) - (unique_activities)
+        # Then sum across all cases in the window.
+        if len(gval) > 0:
+            reworks_series = gval.groupby(case_id_column).apply(
+                lambda x: len(x) - x[activity_column].nunique()
+            )
+            dct["total_number_of_reworked_activities"] = reworks_series.sum()
+
+            # (2) Average number of cases per resource
+            # For each resource, count distinct cases, then average over resources
+            cases_per_resource = gval.groupby(resource_column)[case_id_column].nunique()
+            dct["avg_cases_per_resource"] = (
+                cases_per_resource.mean() if not pd.isna(cases_per_resource.mean()) else 0
+            )
+
+            # (3) Average number of events per case
+            # For each case, count events, then average
+            events_per_case = gval.groupby(case_id_column).size()
+            dct["avg_events_per_case"] = (
+                events_per_case.mean() if not pd.isna(events_per_case.mean()) else 0
+            )
+
+            # (4) Number of cases
+            dct["number_of_cases"] = gval[case_id_column].nunique()
+
+            # (5) Average number of resources per case
+            # For each case, count distinct resources, then average
+            resources_per_case = gval.groupby(case_id_column)[resource_column].nunique()
+            dct["avg_resources_per_case"] = (
+                resources_per_case.mean() if not pd.isna(resources_per_case.mean()) else 0
+            )
+            # -----------------------------------------------------------------
+        else:
+            dct["total_number_of_reworked_activities"] = 0
+            dct["avg_cases_per_resource"] = 0
+            dct["avg_events_per_case"] = 0
+            dct["avg_resources_per_case"] = 0
+
         final_values.append(dct)
 
     dataframe = pandas_utils.instantiate_dataframe(final_values)
+    # Fill any remaining NaNs with 0
     dataframe = dataframe.fillna(0)
+
     return dataframe

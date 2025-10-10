@@ -30,6 +30,8 @@ def execute_script():
         # writes the log1 to a XES file
         pm4py.write_xes(log1, "ru1.xes")
 
+        log1 = pm4py.format_dataframe(log1)
+
         dfg, dfg_sa, dfg_ea = pm4py.discover_dfg(log1)
         petri_alpha, im_alpha, fm_alpha = pm4py.discover_petri_net_alpha(log1)
         petri_inductive, im_inductive, fm_inductive = pm4py.discover_petri_net_inductive(log1)

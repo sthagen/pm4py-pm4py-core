@@ -22,8 +22,6 @@ Contact: info@processintelligence.solutions
 from enum import Enum
 from typing import Optional, Dict, Any, Union, Tuple, List, Set
 
-import pandas as pd
-
 from pm4py.objects.conversion.log import converter
 from pm4py.objects.log.obj import EventLog, Trace, Event
 from pm4py.objects.log.util import dataframe_utils
@@ -31,6 +29,7 @@ from pm4py.util import constants, pandas_utils
 from pm4py.util import exec_utils
 from pm4py.util import xes_constants as xes
 from pm4py.util import xes_constants
+from pm4py.utils import is_polars_lazyframe
 
 
 class Parameters(Enum):
@@ -1464,15 +1463,29 @@ def apply(
                 .union(set(str_ev_attr))
                 .union(set(num_ev_attr))
             )
-            fea_df = dataframe_utils.get_features_df(
-                log, columns, parameters=parameters
-            )
-            feature_names = list(fea_df.columns)
+            if is_polars_lazyframe(log):
+                from pm4py.objects.log.util import pl_lazy_fea_utils
+                fea_df = pl_lazy_fea_utils.get_features_df(log, columns, parameters=parameters)
+            else:
+                fea_df = dataframe_utils.get_features_df(
+                    log, columns, parameters=parameters
+                )
+            if is_polars_lazyframe(fea_df):
+                feature_names = list(fea_df.collect_schema().names())
+            else:
+                feature_names = list(fea_df.columns)
         else:
-            fea_df = dataframe_utils.automatic_feature_extraction_df(
-                log, parameters=parameters
-            )
-            feature_names = list(fea_df.columns)
+            if is_polars_lazyframe(log):
+                from pm4py.objects.log.util import pl_lazy_fea_utils
+                fea_df = pl_lazy_fea_utils.automatic_feature_extraction_df(log, parameters=parameters)
+            else:
+                fea_df = dataframe_utils.automatic_feature_extraction_df(
+                    log, parameters=parameters
+                )
+            if is_polars_lazyframe(fea_df):
+                feature_names = list(fea_df.collect_schema().names())
+            else:
+                feature_names = list(fea_df.columns)
         return fea_df, feature_names
     else:
         enable_all = exec_utils.get_param_value(
