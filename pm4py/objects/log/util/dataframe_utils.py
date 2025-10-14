@@ -44,6 +44,7 @@ class Parameters(Enum):
     CASE_ID_KEY = constants.PARAMETER_CONSTANT_CASEID_KEY
     CASE_PREFIX = constants.CASE_ATTRIBUTE_PREFIX
     CASE_ATTRIBUTES = "case_attributes"
+    CONSIDER_ALL_ATTRIBUTES = "consider_all_attributes"
     MANDATORY_ATTRIBUTES = "mandatory_attributes"
     MAX_NO_CASES = "max_no_cases"
     MIN_DIFFERENT_OCC_STR_ATTR = "min_different_occ_str_attr"

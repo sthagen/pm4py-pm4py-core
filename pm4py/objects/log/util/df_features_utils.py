@@ -75,6 +75,9 @@ def automatic_feature_selection_df(df, parameters=None):
     max_different_occ_str_attr = exec_utils.get_param_value(
         Parameters.MAX_DIFFERENT_OCC_STR_ATTR, parameters, 50
     )
+    consider_all_attributes = exec_utils.get_param_value(
+        Parameters.CONSIDER_ALL_ATTRIBUTES, parameters, True
+    )
 
     cols_dtypes = {x: str(df[x].dtype) for x in df.columns}
     other_attributes_to_retain = set()
@@ -83,9 +86,10 @@ def automatic_feature_selection_df(df, parameters=None):
     for x, y in cols_dtypes.items():
         attr_df = df.dropna(subset=[x])
         this_cases = attr_df[case_id_key].nunique()
+        attr_in_all_cases = this_cases == no_all_cases
 
         # in any case, keep attributes that appears at least once per case
-        if this_cases == no_all_cases:
+        if attr_in_all_cases or consider_all_attributes:
             if "float" in y or "int" in y:
                 # (as in the classic log version) retain always float/int attributes
                 other_attributes_to_retain.add(x)
@@ -197,14 +201,14 @@ def select_string_column(
         )
         # Fill NaN and convert to float32 for all new columns at once
         new_cols = crosstab.columns.tolist()
-        for col_name in new_cols:
-            if col_name in fea_df.columns:
-                fea_df[col_name] = fea_df[col_name].fillna(0).astype(np.float32)
+        if new_cols:
+            fea_df[new_cols] = fea_df[new_cols].astype(np.float32)
     else:
         # Use pivot_table for binary encoding - much faster than loop
         # Create a dummy column for aggregation
         df_filtered = df_filtered.copy()
         df_filtered["_dummy"] = 1
+        cases_with_values = df_filtered[case_id_key].unique()
 
         # Get unique values
         unique_vals = pandas_utils.format_unique(df_filtered[col].unique())
@@ -217,7 +221,6 @@ def select_string_column(
                 columns=col,
                 values="_dummy",
                 aggfunc="max",
-                fill_value=0,
             )
 
             # Rename columns
@@ -234,13 +237,21 @@ def select_string_column(
             fea_df = fea_df.merge(
                 pivot, left_on=case_id_key, right_index=True, how="left"
             )
-            # Fill NaN and convert to float32 for the newly added columns
+            # Fill NaN only for cases having at least one value and convert to float32
             new_cols = pivot.columns.tolist()
-            for col_name in new_cols:
-                if col_name in fea_df.columns:
-                    fea_df[col_name] = (
-                        fea_df[col_name].fillna(0).astype(np.float32)
-                    )
+            if new_cols:
+                mask = (
+                    fea_df[case_id_key].isin(cases_with_values)
+                    if case_id_key in fea_df.columns
+                    else None
+                )
+                for col_name in new_cols:
+                    if col_name in fea_df.columns:
+                        if mask is not None:
+                            fea_df.loc[mask, col_name] = (
+                                fea_df.loc[mask, col_name].fillna(0)
+                            )
+                        fea_df[col_name] = fea_df[col_name].astype(np.float32)
 
     return fea_df
 

@@ -101,9 +101,9 @@ def apply(
     numeric_y = y_col in df.columns
     
     if not numeric_x:
-        x_prefix_cols = [c for c in df.columns if c.startswith(x_col)]
+        x_prefix_cols = [c for c in df.columns if c.startswith(x_col+"_")]
     if not numeric_y:
-        y_prefix_cols = [c for c in df.columns if c.startswith(y_col)]
+        y_prefix_cols = [c for c in df.columns if c.startswith(y_col+"_")]
 
     # ------------------------------------------------------
     # Handle X dimension binning

@@ -178,7 +178,7 @@ def _aggregation_expression(column: str, agg_fn: str) -> pl.Expr:
 
 
 def _prefix_columns(df: pl.DataFrame, prefix: str) -> List[str]:
-    return [col for col in df.columns if col.startswith(prefix)]
+    return [col for col in df.columns if col.startswith(prefix+"_")]
 
 
 def _numeric_numeric_case(
