@@ -283,6 +283,7 @@ from pm4py.analysis import (
 )
 from pm4py.stats import (
     get_start_activities,
+    get_process_cube,
     get_end_activities,
     get_event_attributes,
     get_event_attribute_values,
@@ -304,7 +305,7 @@ from pm4py.stats import (
     get_stochastic_language,
     split_by_process_variant,
     get_variants_paths_duration,
-    get_service_time,
+    get_service_time
 )
 from pm4py.sim import play_out, generate_process_tree
 from pm4py.ml import (

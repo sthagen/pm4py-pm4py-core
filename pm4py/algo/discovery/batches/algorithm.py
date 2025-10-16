@@ -27,11 +27,18 @@ import pandas as pd
 from pm4py.algo.discovery.batches.variants import pandas, log
 from pm4py.objects.log.obj import EventLog
 from pm4py.util import exec_utils, pandas_utils
+from pm4py.utils import is_polars_lazyframe
+import importlib.util
+
+POLARS_AVAILABLE = importlib.util.find_spec("polars") is not None
+if POLARS_AVAILABLE:
+    from pm4py.algo.discovery.batches.variants import polars
 
 
 class Variants(Enum):
     LOG = log
     PANDAS = pandas
+    POLARS = polars if POLARS_AVAILABLE else log
 
 
 def apply(
@@ -80,6 +87,12 @@ def apply(
     if parameters is None:
         parameters = {}
 
+    if is_polars_lazyframe(log):
+        if not POLARS_AVAILABLE:
+            raise RuntimeError("Polars support requested but 'polars' is not installed.")
+        return exec_utils.get_variant(Variants.POLARS).apply(
+            log, parameters=parameters
+        )
     if pandas_utils.check_is_pandas_dataframe(log):
         return exec_utils.get_variant(Variants.PANDAS).apply(
             log, parameters=parameters

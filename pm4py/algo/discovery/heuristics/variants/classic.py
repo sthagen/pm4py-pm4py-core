@@ -56,6 +56,12 @@ class Parameters(Enum):
     HEU_NET_DECORATION = "heu_net_decoration"
 
 
+def is_polars_lazyframe(df: Any) -> bool:
+    """Return True if the provided dataframe is a Polars LazyFrame."""
+    df_type = str(type(df)).lower()
+    return "polars" in df_type and "lazyframe" in df_type
+
+
 def apply(
     log: EventLog,
     parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
@@ -312,13 +318,22 @@ def apply_heu_pandas(
         Parameters.TIMESTAMP_KEY, parameters, xes.DEFAULT_TIMESTAMP_KEY
     )
 
-    from pm4py.algo.discovery.dfg.adapters.pandas import (
-        df_statistics,
-        freq_triples as get_freq_triples,
-    )
-    from pm4py.statistics.attributes.pandas import get as pd_attributes
-    from pm4py.statistics.start_activities.pandas import get as pd_sa_filter
-    from pm4py.statistics.end_activities.pandas import get as pd_ea_filter
+    if is_polars_lazyframe(df):
+        from pm4py.algo.discovery.dfg.adapters.polars import (
+            df_statistics,
+            freq_triples as get_freq_triples,
+        )
+        from pm4py.statistics.attributes.polars import get as pd_attributes
+        from pm4py.statistics.start_activities.polars import get as pd_sa_filter
+        from pm4py.statistics.end_activities.polars import get as pd_ea_filter
+    else:
+        from pm4py.algo.discovery.dfg.adapters.pandas import (
+            df_statistics,
+            freq_triples as get_freq_triples,
+        )
+        from pm4py.statistics.attributes.pandas import get as pd_attributes
+        from pm4py.statistics.start_activities.pandas import get as pd_sa_filter
+        from pm4py.statistics.end_activities.pandas import get as pd_ea_filter
 
     start_activities = pd_sa_filter.get_start_activities(
         df, parameters=parameters

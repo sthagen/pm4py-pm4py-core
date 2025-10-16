@@ -33,8 +33,14 @@ from pm4py.objects.petri_net.obj import PetriNet
 from pm4py.objects.process_tree.obj import ProcessTree
 from enum import Enum
 from pm4py.util import exec_utils, pandas_utils
+from pm4py.utils import is_polars_lazyframe
 import pandas as pd
 from typing import Optional, Dict, Any
+import importlib.util
+
+POLARS_AVAILABLE = importlib.util.find_spec("polars") is not None
+if POLARS_AVAILABLE:
+    from pm4py.algo.discovery.footprints.log.variants import polars_lazyframes
 
 
 class Variants(Enum):
@@ -45,6 +51,7 @@ class Variants(Enum):
     PROCESS_TREE = bottomup
     POWL = bottomup_powl
     DFG = dfg
+    POLARS_LAZYFRAMES = polars_lazyframes if POLARS_AVAILABLE else entire_dataframe
 
 
 def apply(
@@ -86,7 +93,14 @@ def apply(
             variant = Variants.DFG
 
         if pandas_utils.check_is_pandas_dataframe(args[0]):
-            variant = Variants.ENTIRE_DATAFRAME
+            if is_polars_lazyframe(args[0]):
+                if not POLARS_AVAILABLE:
+                    raise RuntimeError(
+                        "Polars LazyFrame provided but 'polars' package is not installed."
+                    )
+                variant = Variants.POLARS_LAZYFRAMES
+            else:
+                variant = Variants.ENTIRE_DATAFRAME
 
         if variant is None:
             return Exception("unsupported arguments")
@@ -98,6 +112,7 @@ def apply(
         Variants.PROCESS_TREE,
         Variants.POWL,
         Variants.ENTIRE_DATAFRAME,
+        Variants.POLARS_LAZYFRAMES,
     ]:
         return exec_utils.get_variant(variant).apply(
             args[0], parameters=parameters

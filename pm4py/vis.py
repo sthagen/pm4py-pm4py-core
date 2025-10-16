@@ -495,7 +495,7 @@ def save_vis_bpmn(
     :param file_path: Destination path
     :param bgcolor: Background color of the visualization (default: white)
     :param rankdir: Sets the direction of the graph ("LR" for left-to-right; "TB" for top-to-bottom)
-    :param variant_str: Variant of the visualization to be used ("classic" or "dagrejs")
+    :param variant_str: Variant of the visualization to be used ("classic" or "dagrejs" or "bpmnio_auto_layout")
     :param graph_title: Sets the title of the visualization (if provided)
 
     .. code-block:: python3
@@ -513,6 +513,9 @@ def save_vis_bpmn(
         variant = bpmn_visualizer.Variants.CLASSIC
     elif variant_str == "dagrejs":
         variant = bpmn_visualizer.Variants.DAGREJS
+    elif variant_str == "bpmnio_auto_layout":
+        variant = bpmn_visualizer.Variants.BPMNIO_AUTO_LAYOUT
+
     props = _setup_parameters(fmt, bgcolor, rankdir, graph_title)
     gviz = bpmn_visualizer.apply(bpmn_graph, variant=variant, parameters=props)
     return bpmn_visualizer.save(gviz, file_path, variant=variant)
@@ -533,7 +536,7 @@ def view_bpmn(
     :param format: Format of the visualization (if 'html' is provided, GraphvizJS is used to render the visualization in an HTML page)
     :param bgcolor: Background color of the visualization (default: white)
     :param rankdir: Sets the direction of the graph ("LR" for left-to-right; "TB" for top-to-bottom)
-    :param variant_str: Variant of the visualization to be used ("classic" or "dagrejs")
+    :param variant_str: Variant of the visualization to be used ("classic" or "dagrejs" or "bpmnio_auto_layout")
     :param graph_title: Sets the title of the visualization (if provided)
 
     .. code-block:: python3
@@ -551,6 +554,9 @@ def view_bpmn(
         variant = bpmn_visualizer.Variants.CLASSIC
     elif variant_str == "dagrejs":
         variant = bpmn_visualizer.Variants.DAGREJS
+    elif variant_str == "bpmnio_auto_layout":
+        variant = bpmn_visualizer.Variants.BPMNIO_AUTO_LAYOUT
+
     props = _setup_parameters(fmt, bgcolor, rankdir, graph_title)
     gviz = bpmn_visualizer.apply(bpmn_graph, variant=variant, parameters=props)
     bpmn_visualizer.view(gviz, variant=variant)
@@ -628,15 +634,13 @@ def __dotted_attribute_selection(
         check_pandas_dataframe_columns(log)
 
     if attributes is None:
-        from pm4py.util import xes_constants
-        from pm4py.objects.log.util import sorting
-        from pm4py.objects.conversion.log import converter
+        if isinstance(log, EventLog):
+            for index, trace in enumerate(log):
+                trace.attributes["@@index"] = index
+            attributes = ["time:timestamp", "case:@@index", "concept:name"]
+        else:
+            attributes = ["time:timestamp", "@@case_index", "concept:name"]
 
-        log = converter.apply(log, variant=converter.Variants.TO_EVENT_LOG)
-        log = sorting.sort_timestamp(log, xes_constants.DEFAULT_TIMESTAMP_KEY)
-        for index, trace in enumerate(log):
-            trace.attributes["@@index"] = index
-        attributes = ["time:timestamp", "case:@@index", "concept:name"]
     return log, attributes
 
 

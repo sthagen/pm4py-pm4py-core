@@ -1,6 +1,63 @@
 # Changelog of pm4py
 
 
+## pm4py 2.7.18.1 (2025.05.08)
+
+### Added
+* c02d02d7d146f8760c82ae9cf096ca7832008ab2
+  * example for label replacement in models
+* 0255f91f83ec4f6ff1fcc8a91082746951ac1710
+  * example computation M2M similarities
+
+### Changed
+* 5a661bb3a7498d3cfc5efaac2b4eee8ff1a27864
+  da9aa0cf8e40607570307425567939ab00f08411
+  d410501438c42ddfe945168e628fd3c533b64bc0
+  * Updated examples directory
+* 03964b640a73daaabf79a988d35f46a8f1b6de51
+  * parameter for extensive visit of the state space
+    to traverse invisibles.
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Other
+
+
+---
+
+## pm4py 2.7.18 (2025.05.05)
+
+### Added
+* 0a5118729e076dbdc3ef4990fb50b1594cae8698
+  * process cubes discovery in the simplified interface
+* b7aac259b074d42022a5763cb343db60697b89e7
+  * BPMN.IO auto layouting visualizer
+* 3ec1423ad6e87257c687a0c7b875deb53cd5e29d
+  * visualizer of variants paths durations
+
+### Changed
+* f9e7e015698f4af1e4cb37dc293d7e0381ddd493
+  * configuration for start/end symbols in graphs
+* 6827378d1d724c0ec8da04af10ae13f72ea9d995
+  * changing soundness check in the simplified interface
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Other
+* aaad23ac060ed92e79c822008264519fd3bceb24
+  * roadtraffic.parquet example
+
+---
+
+
 ## pm4py 2.7.17 (2025.04.11)
 
 ### Added

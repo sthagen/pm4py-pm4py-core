@@ -30,6 +30,7 @@ from pm4py.objects.log.obj import EventLog
 from pm4py.util import exec_utils, vis_utils
 from pm4py.visualization.dotted_chart.variants import classic
 from pm4py.util import constants, pandas_utils
+from pm4py.utils import is_polars_lazyframe
 
 
 class Variants(Enum):
@@ -62,7 +63,13 @@ def apply(
     if parameters is None:
         parameters = {}
 
-    if pandas_utils.check_is_pandas_dataframe(log_obj):
+    if is_polars_lazyframe(log_obj):
+        import polars as pl  # type: ignore[import-untyped]
+
+        unique_attrs = list(dict.fromkeys(attributes))
+        available_cols = [attr for attr in unique_attrs if attr in log_obj.schema]
+        log_obj = log_obj.select([pl.col(attr) for attr in available_cols])
+    else:
         log_obj = log_obj[list(set(attributes))]
 
     parameters["deepcopy"] = False

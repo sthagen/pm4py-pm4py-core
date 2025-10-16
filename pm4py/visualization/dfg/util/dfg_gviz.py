@@ -426,7 +426,7 @@ def graphviz_visualization(
         )
 
     if start_activities_to_include:
-        viz.node("@@startnode", "<&#9679;>", shape="circle", fontsize="34")
+        viz.node("@@startnode", constants.DEFAULT_START_SYMBOL_GRAPHS, shape="circle", fontsize="34")
         for act in start_activities_to_include:
             label = (
                 str(start_activities[act])
@@ -447,8 +447,7 @@ def graphviz_visualization(
             )
 
     if end_activities_to_include:
-        # <&#9632;>
-        viz.node("@@endnode", "<&#9632;>", shape="doublecircle", fontsize="32")
+        viz.node("@@endnode", constants.DEFAULT_END_SYMBOL_GRAPHS, shape="doublecircle", fontsize="32")
         for act in end_activities_to_include:
             label = (
                 str(end_activities[act])

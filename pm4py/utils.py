@@ -98,38 +98,59 @@ def format_dataframe(
         import polars as pl  # type: ignore[import-untyped]
 
         lf = df
+        schema = lf.collect_schema()
+        column_names = schema.names()
         required_columns = (case_id, activity_key, timestamp_key)
         for col in required_columns:
-            if col not in lf.columns:
+            if col not in column_names:
                 raise Exception(f"{col} column is not in the dataframe!")
 
-        def drop_if_present(lazy_frame, col_name):
-            if col_name in lazy_frame.columns:
-                lazy_frame = lazy_frame.drop(col_name)
-            return lazy_frame
+        def refresh_schema():
+            nonlocal lf, schema, column_names
+            schema = lf.collect_schema()
+            column_names = schema.names()
 
-        if case_id != constants.CASE_CONCEPT_NAME or constants.CASE_CONCEPT_NAME not in lf.columns:
-            lf = drop_if_present(lf, constants.CASE_CONCEPT_NAME)
+        def drop_if_present(col_name):
+            nonlocal lf
+            if col_name in column_names:
+                lf = lf.drop(col_name)
+                refresh_schema()
+
+        if (
+            case_id != constants.CASE_CONCEPT_NAME
+            or constants.CASE_CONCEPT_NAME not in column_names
+        ):
+            drop_if_present(constants.CASE_CONCEPT_NAME)
             lf = lf.with_columns(
                 pl.col(case_id).alias(constants.CASE_CONCEPT_NAME)
             )
-        if activity_key != xes_constants.DEFAULT_NAME_KEY or xes_constants.DEFAULT_NAME_KEY not in lf.columns:
-            lf = drop_if_present(lf, xes_constants.DEFAULT_NAME_KEY)
+            refresh_schema()
+        if (
+            activity_key != xes_constants.DEFAULT_NAME_KEY
+            or xes_constants.DEFAULT_NAME_KEY not in column_names
+        ):
+            drop_if_present(xes_constants.DEFAULT_NAME_KEY)
             lf = lf.with_columns(
                 pl.col(activity_key).alias(xes_constants.DEFAULT_NAME_KEY)
             )
-        if timestamp_key != xes_constants.DEFAULT_TIMESTAMP_KEY or xes_constants.DEFAULT_TIMESTAMP_KEY not in lf.columns:
-            lf = drop_if_present(lf, xes_constants.DEFAULT_TIMESTAMP_KEY)
+            refresh_schema()
+        if (
+            timestamp_key != xes_constants.DEFAULT_TIMESTAMP_KEY
+            or xes_constants.DEFAULT_TIMESTAMP_KEY not in column_names
+        ):
+            drop_if_present(xes_constants.DEFAULT_TIMESTAMP_KEY)
             lf = lf.with_columns(
                 pl.col(timestamp_key).alias(xes_constants.DEFAULT_TIMESTAMP_KEY)
             )
+            refresh_schema()
 
-        if start_timestamp_key in lf.columns:
+        if start_timestamp_key in column_names:
             lf = lf.with_columns(
                 pl.col(start_timestamp_key).alias(
                     xes_constants.DEFAULT_START_TIMESTAMP_KEY
                 )
             )
+            refresh_schema()
 
         timestamp_targets = [
             col
@@ -137,11 +158,12 @@ def format_dataframe(
                 xes_constants.DEFAULT_TIMESTAMP_KEY,
                 xes_constants.DEFAULT_START_TIMESTAMP_KEY,
             )
-            if col in lf.columns
+            if col in column_names
         ]
 
+        schema = lf.collect_schema()
         for col in timestamp_targets:
-            dtype = lf.schema.get(col)
+            dtype = schema.get(col)
             expr = pl.col(col)
             if dtype != pl.Datetime:
                 expr = expr.cast(pl.Utf8).str.strptime(
@@ -152,6 +174,7 @@ def format_dataframe(
                 )
             expr = expr.dt.replace_time_zone("UTC")
             lf = lf.with_columns(expr.alias(col))
+        refresh_schema()
 
         lf = lf.filter(
             pl.col(constants.CASE_CONCEPT_NAME).is_not_null()
@@ -794,14 +817,18 @@ def project_on_event_attribute(
 
             index_column = constants.DEFAULT_INDEX_KEY
             lf = log
-            if index_column not in lf.columns:
+            schema = lf.collect_schema()
+            column_names = schema.names()
+            if index_column not in column_names:
                 index_column = "__pm4py_row_index__"
                 lf = lf.with_row_count(index_column)
+                schema = lf.collect_schema()
+                column_names = schema.names()
 
             sort_columns = [case_column]
-            if xes_constants.DEFAULT_TIMESTAMP_KEY in lf.columns:
+            if xes_constants.DEFAULT_TIMESTAMP_KEY in column_names:
                 sort_columns.append(xes_constants.DEFAULT_TIMESTAMP_KEY)
-            if index_column in lf.columns:
+            if index_column in column_names:
                 sort_columns.append(index_column)
 
             lf_sorted = lf.sort(sort_columns)

@@ -76,14 +76,15 @@ def apply(
     cidk = exec_utils.get_param_value(
         Parameters.CASE_ID_KEY, parameters, util.constants.CASE_CONCEPT_NAME
     )
-    if type(obj) in [EventLog, pd.DataFrame]:
+
+    if type(obj) is UVCL:
+        uvcl = obj
+    else:
         uvcl = comut.get_variants(
             comut.project_univariate(
                 obj, key=ack, df_glue=cidk, df_sorting_criterion_key=tk
             )
         )
-    else:
-        uvcl = obj
 
     algorithm = get_variant(variant)
     im = algorithm(parameters)

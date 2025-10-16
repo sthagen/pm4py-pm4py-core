@@ -26,7 +26,6 @@ from typing import Optional, Dict, Any, Tuple
 import pandas as pd
 
 from pm4py.algo.discovery.dfg import algorithm as dfg_alg
-from pm4py.algo.discovery.dfg.adapters.pandas import df_statistics
 from pm4py.objects.conversion.heuristics_net import converter as hn_conv_alg
 from pm4py.objects.conversion.log import converter as log_converter
 from pm4py.objects.heuristics_net import defaults
@@ -36,17 +35,11 @@ from pm4py.objects.log.obj import EventLog
 from pm4py.objects.log.util import interval_lifecycle
 from pm4py.objects.petri_net.obj import PetriNet, Marking
 from pm4py.statistics.attributes.log import get as log_attributes
-from pm4py.statistics.attributes.pandas import get as pd_attributes
 from pm4py.statistics.concurrent_activities.log import get as conc_act_get
-from pm4py.statistics.concurrent_activities.pandas import get as pd_conc_act
 from pm4py.statistics.end_activities.log import get as log_ea
-from pm4py.statistics.end_activities.pandas import get as pd_ea
 from pm4py.statistics.eventually_follows.log import get as efg_get
-from pm4py.statistics.eventually_follows.pandas import get as pd_efg
 from pm4py.statistics.service_time.log import get as soj_get
-from pm4py.statistics.service_time.pandas import get as pd_soj_time
 from pm4py.statistics.start_activities.log import get as log_sa
-from pm4py.statistics.start_activities.pandas import get as pd_sa
 from pm4py.util import exec_utils, constants, xes_constants as xes
 
 
@@ -60,6 +53,11 @@ class Parameters(Enum):
     MIN_ACT_COUNT = "min_act_count"
     MIN_DFG_OCCURRENCES = "min_dfg_occurrences"
     HEU_NET_DECORATION = "heu_net_decoration"
+
+def is_polars_lazyframe(df: Any) -> bool:
+    """Return True if the provided dataframe is a Polars LazyFrame."""
+    df_type = str(type(df)).lower()
+    return "polars" in df_type and "lazyframe" in df_type
 
 
 def apply(
@@ -380,6 +378,24 @@ def discover_abstraction_dataframe(
     case_id_glue = exec_utils.get_param_value(
         Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
     )
+
+    if is_polars_lazyframe(df):
+        from pm4py.algo.discovery.dfg.adapters.polars import df_statistics
+        from pm4py.statistics.attributes.polars import get as pd_attributes
+        from pm4py.statistics.concurrent_activities.polars import get as pd_conc_act
+        from pm4py.statistics.end_activities.polars import get as pd_ea
+        from pm4py.statistics.eventually_follows.polars import get as pd_efg
+        from pm4py.statistics.service_time.polars import get as pd_soj_time
+        from pm4py.statistics.start_activities.polars import get as pd_sa
+    else:
+        from pm4py.algo.discovery.dfg.adapters.pandas import df_statistics
+        from pm4py.statistics.attributes.pandas import get as pd_attributes
+        from pm4py.statistics.concurrent_activities.pandas import get as pd_conc_act
+        from pm4py.statistics.end_activities.pandas import get as pd_ea
+        from pm4py.statistics.eventually_follows.pandas import get as pd_efg
+        from pm4py.statistics.service_time.pandas import get as pd_soj_time
+        from pm4py.statistics.start_activities.pandas import get as pd_sa
+
     start_activities = pd_sa.get_start_activities(df, parameters=parameters)
     end_activities = pd_ea.get_end_activities(df, parameters=parameters)
     activities_occurrences = pd_attributes.get_attribute_values(

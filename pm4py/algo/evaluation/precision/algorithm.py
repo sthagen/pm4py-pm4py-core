@@ -21,6 +21,7 @@ Contact: info@processintelligence.solutions
 '''
 from pm4py.algo.evaluation.precision.variants import etconformance_token
 from pm4py.algo.evaluation.precision.variants import align_etconformance
+from pm4py.algo.evaluation.precision.variants import automaton_after_align
 from pm4py.objects.petri_net.utils.check_soundness import (
     check_easy_soundness_net_in_fin_marking,
 )
@@ -35,10 +36,12 @@ import pandas as pd
 class Variants(Enum):
     ETCONFORMANCE_TOKEN = etconformance_token
     ALIGN_ETCONFORMANCE = align_etconformance
+    AUTOMATON_AFTER_ALIGN = automaton_after_align
 
 
 ETCONFORMANCE_TOKEN = Variants.ETCONFORMANCE_TOKEN
 ALIGN_ETCONFORMANCE = Variants.ALIGN_ETCONFORMANCE
+AUTOMATON_AFTER_ALIGN = Variants.AUTOMATON_AFTER_ALIGN
 
 VERSIONS = {ETCONFORMANCE_TOKEN, ALIGN_ETCONFORMANCE}
 

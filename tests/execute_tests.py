@@ -34,8 +34,8 @@ enabled_tests = [
 ]
 
 if importlib.util.find_spec("polars"):
-    #enabled_tests.append("TestPolarsFilteringSimplified")
-    #enabled_tests.append("TestPolarsFiltering")
+    enabled_tests.append("TestPolarsFilteringSimplified")
+    enabled_tests.append("TestPolarsFiltering")
     enabled_tests.append("TestPolarsStatistics")
     enabled_tests.append("TestPolarsStatisticsSimplified")
 

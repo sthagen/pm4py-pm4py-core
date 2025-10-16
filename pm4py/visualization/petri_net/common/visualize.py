@@ -405,7 +405,7 @@ def graphviz_visualization(
             if initial_marking[p] == 1:
                 viz.node(
                     str(id(p)),
-                    "<&#9679;>",
+                    constants.DEFAULT_START_SYMBOL_GRAPHS,
                     fontsize="34",
                     fixedsize="true",
                     shape="circle",
@@ -436,10 +436,9 @@ def graphviz_visualization(
                         fillcolor=fillcolor,
                     )
         elif p in final_marking:
-            # <&#9632;>
             viz.node(
                 str(id(p)),
-                "<&#9632;>",
+                constants.DEFAULT_END_SYMBOL_GRAPHS,
                 fontsize="32",
                 shape="doublecircle",
                 fixedsize="true",

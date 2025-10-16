@@ -21,11 +21,6 @@ Contact: info@processintelligence.solutions
 '''
 from pm4py import util as pmutil
 from pm4py.algo.discovery.alpha import variants
-from pm4py.algo.discovery.dfg.adapters.pandas import df_statistics
-from pm4py.statistics.start_activities.pandas import (
-    get as start_activities_get,
-)
-from pm4py.statistics.end_activities.pandas import get as end_activities_get
 from pm4py.objects.conversion.log import converter as log_conversion
 from pm4py.util import exec_utils
 from pm4py.util import xes_constants as xes_util
@@ -53,6 +48,12 @@ ALPHA_VERSION_CLASSIC = Variants.ALPHA_VERSION_CLASSIC
 ALPHA_VERSION_PLUS = Variants.ALPHA_VERSION_PLUS
 DEFAULT_VARIANT = ALPHA_VERSION_CLASSIC
 VERSIONS = {Variants.ALPHA_VERSION_CLASSIC, Variants.ALPHA_VERSION_PLUS}
+
+
+def is_polars_lazyframe(df: Any) -> bool:
+    """Return True if the provided dataframe is a Polars LazyFrame."""
+    df_type = str(type(df)).lower()
+    return "polars" in df_type and "lazyframe" in df_type
 
 
 def apply(
@@ -103,6 +104,15 @@ def apply(
         pandas_utils.check_is_pandas_dataframe(log)
         and variant == ALPHA_VERSION_CLASSIC
     ):
+        if is_polars_lazyframe(log):
+            from pm4py.algo.discovery.dfg.adapters.polars import df_statistics
+            from pm4py.statistics.start_activities.polars import get as start_activities_get
+            from pm4py.statistics.end_activities.polars import get as end_activities_get
+        else:
+            from pm4py.algo.discovery.dfg.adapters.pandas import df_statistics
+            from pm4py.statistics.start_activities.pandas import get as start_activities_get
+            from pm4py.statistics.end_activities.pandas import get as end_activities_get
+
         dfg = df_statistics.get_dfg_graph(
             log,
             case_id_glue=case_id_glue,

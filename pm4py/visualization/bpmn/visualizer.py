@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,7 +19,7 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.visualization.bpmn.variants import classic, dagrejs
+from pm4py.visualization.bpmn.variants import classic, dagrejs, bpmnio_auto_layout
 from pm4py.util import exec_utils
 from enum import Enum
 from pm4py.visualization.common.gview import serialize, serialize_dot
@@ -31,6 +31,7 @@ import graphviz
 class Variants(Enum):
     CLASSIC = classic
     DAGREJS = dagrejs
+    BPMNIO_AUTO_LAYOUT = bpmnio_auto_layout
 
 
 DEFAULT_VARIANT = Variants.CLASSIC

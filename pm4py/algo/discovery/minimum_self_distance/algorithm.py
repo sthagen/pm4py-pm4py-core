@@ -27,11 +27,18 @@ import pandas as pd
 from pm4py.algo.discovery.minimum_self_distance.variants import log, pandas
 from pm4py.objects.log.obj import EventLog, EventStream
 from pm4py.util import exec_utils, pandas_utils
+from pm4py.utils import is_polars_lazyframe
+import importlib.util
+
+POLARS_AVAILABLE = importlib.util.find_spec("polars") is not None
+if POLARS_AVAILABLE:
+    from pm4py.algo.discovery.minimum_self_distance.variants import polars
 
 
 class Variants(Enum):
     LOG = log
     PANDAS = pandas
+    POLARS = polars if POLARS_AVAILABLE else log
 
 
 def apply(
@@ -43,7 +50,13 @@ def apply(
         parameters = {}
 
     if variant is None:
-        if pandas_utils.check_is_pandas_dataframe(log_obj):
+        if is_polars_lazyframe(log_obj):
+            if not POLARS_AVAILABLE:
+                raise RuntimeError(
+                    "Polars LazyFrame provided but 'polars' package is not installed."
+                )
+            variant = Variants.POLARS
+        elif pandas_utils.check_is_pandas_dataframe(log_obj):
             variant = Variants.PANDAS
         else:
             variant = Variants.LOG

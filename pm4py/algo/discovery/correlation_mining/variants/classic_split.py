@@ -28,7 +28,9 @@ from collections import Counter
 import numpy as np
 from typing import Optional, Dict, Any, Union, Tuple
 from pm4py.objects.log.obj import EventLog, EventStream
+from pm4py.utils import is_polars_lazyframe
 import pandas as pd
+import importlib.util
 
 
 class Parameters(Enum):
@@ -83,13 +85,51 @@ def apply(
     duration_matrixes = []
 
     if pandas_utils.check_is_pandas_dataframe(log):
-        # keep only the two columns before conversion
-        log = log[
-            list(set([activity_key, timestamp_key, start_timestamp_key]))
-        ]
-        log = log.sort_values([timestamp_key, start_timestamp_key])
-        activities_counter = log[activity_key].value_counts().to_dict()
-        activities = sorted(list(activities_counter.keys()))
+        if is_polars_lazyframe(log):
+            if importlib.util.find_spec("polars") is None:
+                raise RuntimeError(
+                    "Polars LazyFrame provided but 'polars' package is not installed."
+                )
+
+            import polars as pl  # type: ignore[import-untyped]
+
+            required_columns = list(
+                {activity_key, timestamp_key, start_timestamp_key}
+            )
+            missing_columns = [
+                col for col in required_columns if col not in log.columns
+            ]
+            if missing_columns:
+                raise Exception(
+                    "The provided Polars LazyFrame does not contain the following required columns: "
+                    + ", ".join(sorted(missing_columns))
+                )
+
+            activities_counter = (
+                log.group_by(activity_key)
+                .agg(pl.len().alias("__pm4py_count__"))
+                .collect()
+            )
+            activities_counter = {
+                row[activity_key]: row["__pm4py_count__"]
+                for row in activities_counter.iter_rows(named=True)
+            }
+            activities = sorted(list(activities_counter.keys()))
+
+            log = (
+                log.select(required_columns)
+                .sort([timestamp_key, start_timestamp_key])
+                .collect()
+                .to_pandas()
+            )
+        else:
+            # code for Pandas dataframes
+            log = log[
+                list(set([activity_key, timestamp_key, start_timestamp_key]))
+            ]
+            log = log.sort_values([timestamp_key, start_timestamp_key])
+            activities_counter = log[activity_key].value_counts().to_dict()
+            activities = sorted(list(activities_counter.keys()))
     else:
         log = converter.apply(
             log,

@@ -24,12 +24,9 @@ from typing import Optional, Dict, Any
 
 import pandas as pd
 
-from pm4py.algo.discovery.dfg.adapters.pandas.df_statistics import (
-    get_partial_order_dataframe,
-)
 from pm4py.util import exec_utils, constants, xes_constants
 from pm4py.util import typing
-
+from pm4py.utils import is_polars_lazyframe
 
 class Parameters(Enum):
     ACTIVITY_KEY = constants.PARAMETER_CONSTANT_ACTIVITY_KEY
@@ -100,6 +97,11 @@ def apply(
         constants.DEFAULT_BUSINESS_HOURS_WORKCALENDAR,
     )
 
+    if is_polars_lazyframe(df):
+        from pm4py.algo.discovery.dfg.adapters.polars.df_statistics import get_partial_order_dataframe
+    else:
+        from pm4py.algo.discovery.dfg.adapters.pandas.df_statistics import get_partial_order_dataframe
+
     efg = get_partial_order_dataframe(
         df,
         activity_key=activity_key,
@@ -111,6 +113,10 @@ def apply(
         business_hours_slot=business_hours_slots,
         workcalendar=workcalendar,
     )
+
+    if is_polars_lazyframe(df):
+        efg = efg.collect().to_pandas()
+
     efg = efg[[activity_key, activity_key + "_2", "@@flow_time"]]
     temporal_profile = (
         efg.groupby([activity_key, activity_key + "_2"])

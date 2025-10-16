@@ -43,7 +43,7 @@ from pm4py.util.pandas_utils import (
     check_is_pandas_dataframe,
     check_pandas_dataframe_columns,
 )
-from pm4py.utils import get_properties, __event_log_deprecation_warning
+from pm4py.utils import get_properties, __event_log_deprecation_warning, is_polars_lazyframe
 from pm4py.util import constants, pandas_utils
 import deprecation
 import importlib.util
@@ -98,21 +98,26 @@ def discover_dfg(
         )
         from pm4py.util import constants
 
-        from pm4py.algo.discovery.dfg.adapters.pandas.df_statistics import (
-            get_dfg_graph,
-        )
+        if is_polars_lazyframe(log):
+            from pm4py.algo.discovery.dfg.adapters.polars.df_statistics import get_dfg_graph
+            from pm4py.statistics.start_activities.polars import get as start_activities_module
+            from pm4py.statistics.end_activities.polars import get as end_activities_module
+        else:
+            from pm4py.algo.discovery.dfg.adapters.pandas.df_statistics import (
+                get_dfg_graph,
+            )
+            from pm4py.statistics.start_activities.pandas import (
+                get as start_activities_module,
+            )
+            from pm4py.statistics.end_activities.pandas import (
+                get as end_activities_module,
+            )
 
         dfg = get_dfg_graph(
             log,
             activity_key=activity_key,
             timestamp_key=timestamp_key,
             case_id_glue=case_id_key,
-        )
-        from pm4py.statistics.start_activities.pandas import (
-            get as start_activities_module,
-        )
-        from pm4py.statistics.end_activities.pandas import (
-            get as end_activities_module,
         )
 
         start_activities = start_activities_module.get_start_activities(
@@ -279,9 +284,20 @@ def discover_performance_dfg(
         )
         from pm4py.util import constants
 
-        from pm4py.algo.discovery.dfg.adapters.pandas.df_statistics import (
-            get_dfg_graph,
-        )
+        if is_polars_lazyframe(log):
+            from pm4py.algo.discovery.dfg.adapters.polars.df_statistics import get_dfg_graph
+            from pm4py.statistics.start_activities.polars import get as start_activities_module
+            from pm4py.statistics.end_activities.polars import get as end_activities_module
+        else:
+            from pm4py.algo.discovery.dfg.adapters.pandas.df_statistics import (
+                get_dfg_graph,
+            )
+            from pm4py.statistics.start_activities.pandas import (
+                get as start_activities_module,
+            )
+            from pm4py.statistics.end_activities.pandas import (
+                get as end_activities_module,
+            )
 
         dfg = get_dfg_graph(
             log,
@@ -293,12 +309,6 @@ def discover_performance_dfg(
             business_hours=business_hours,
             business_hours_slot=business_hour_slots,
             workcalendar=workcalendar,
-        )
-        from pm4py.statistics.start_activities.pandas import (
-            get as start_activities_module,
-        )
-        from pm4py.statistics.end_activities.pandas import (
-            get as end_activities_module,
         )
 
         start_activities = start_activities_module.get_start_activities(
@@ -1466,8 +1476,38 @@ def correlation_miner(
         df, activity_key=activity_key, timestamp_key=timestamp_key
     )
 
-    first_activity = df[activity_key].iloc[0]
-    last_activity = df[activity_key].iloc[-1]
+    if is_polars_lazyframe(df):
+        if importlib.util.find_spec("polars") is None:
+            raise RuntimeError(
+                "Polars LazyFrame provided but 'polars' package is not installed."
+            )
+
+        import polars as pl  # type: ignore[import-untyped]
+
+        if activity_key not in df.columns:
+            raise Exception(
+                f"Column '{activity_key}' is not present in the provided Polars LazyFrame."
+            )
+
+        first_row = (
+            df.select(pl.col(activity_key))
+            .head(1)
+            .collect()
+        )
+        if first_row.height == 0:
+            raise ValueError("The provided Polars LazyFrame must contain at least one event.")
+        first_activity = first_row[activity_key].to_list()[0]
+
+        last_row = (
+            df.select(pl.col(activity_key))
+            .tail(1)
+            .collect()
+        )
+        last_activity = last_row[activity_key].to_list()[0]
+    else:
+        # code for Pandas dataframes
+        first_activity = df[activity_key].iloc[0]
+        last_activity = df[activity_key].iloc[-1]
 
     from pm4py.algo.discovery.correlation_mining import (
         algorithm as correlation_miner,

@@ -335,20 +335,15 @@ def apply(
     if type(log) is EventLog:
         logs_traces = Counter([tuple(y[activity_key] for y in x) for x in log])
         all_activs = Counter(list(y[activity_key] for x in log for y in x))
+        events_count = sum(len(x) for x in log)
     elif pandas_utils.check_is_pandas_dataframe(log):
         case_id_key = exec_utils.get_param_value(
             Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME
         )
-        all_activs = log[activity_key].value_counts().to_dict()
-        logs_traces = Counter(
-            [
-                tuple(x)
-                for x in log.groupby(case_id_key)[activity_key]
-                .agg(list)
-                .to_dict()
-                .values()
-            ]
-        )
+        logs_traces = pandas_utils.get_traces(log, case_id_key, activity_key)
+        logs_traces = Counter(logs_traces)
+        all_activs = pandas_utils.get_attribute_values_count(log, activity_key)
+        events_count = pandas_utils.df_row_count(log)
 
     ret = {}
     ret[Outputs.EQUIVALENCE.value] = equivalence(
@@ -361,13 +356,13 @@ def apply(
         logs_traces, all_activs, noise_threshold=noise_threshold
     )
     ret[Outputs.NEVER_TOGETHER.value] = never_together(
-        logs_traces, all_activs, len(log), noise_threshold=noise_threshold
+        logs_traces, all_activs, events_count, noise_threshold=noise_threshold
     )
     ret[Outputs.DIRECTLY_FOLLOWS.value] = directly_follows(
         logs_traces, all_activs, noise_threshold=noise_threshold
     )
     ret[Outputs.ACTIV_FREQ.value] = activ_freq(
-        logs_traces, all_activs, len(log), noise_threshold=noise_threshold
+        logs_traces, all_activs, events_count, noise_threshold=noise_threshold
     )
 
     return ret

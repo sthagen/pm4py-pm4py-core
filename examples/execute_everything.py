@@ -1072,7 +1072,7 @@ def main():
         execute_script(concept_drift)
         execute_script(dfg_align_metrics)
         execute_script(process_cubes)
-        #execute_script(variants_duration_vis)
+        execute_script(variants_duration_vis)
         execute_script(murata_reduction)
         execute_script(ocel_merge_duplicates)
         execute_script(ocel_saw_net_disc)
