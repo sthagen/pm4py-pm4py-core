@@ -24,7 +24,7 @@ import sys
 import uuid
 from enum import Enum
 
-from pm4py.util import constants, xes_constants, exec_utils, pandas_utils
+from pm4py.util import constants, xes_constants, exec_utils, pandas_utils, thread_utils
 from pm4py.util import variants_util
 from pm4py.objects.petri_net.utils import align_utils
 from pm4py.objects.log.obj import EventLog, Trace, Event
@@ -156,13 +156,7 @@ def apply_log(log, dfg, sa, ea, parameters=None):
         case_id_key = exec_utils.get_param_value(
             Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
         )
-        traces = [
-            tuple(x)
-            for x in log.groupby(case_id_key)[activity_key]
-            .agg(list)
-            .to_dict()
-            .values()
-        ]
+        traces = pandas_utils.get_traces(log, case_id_key, activity_key)
     else:
         log = log_converter.apply(
             log,
@@ -171,27 +165,37 @@ def apply_log(log, dfg, sa, ea, parameters=None):
         )
         traces = [tuple(x[activity_key] for x in trace) for trace in log]
 
+    unique_traces = set(traces)
+
+    thm = thread_utils.Pm4pyThreadManager()
+    f = lambda x, y: __compute_alignments(x, dfg, sa, ea, y, al_empty_cost, parameters)
+
+    for trace_act in unique_traces:
+        thm.submit(f, trace_act, align_dict)
+
+    thm.join()
+
     for trace_act in traces:
-        if trace_act in align_dict:
-            aligned_traces.append(align_dict[trace_act])
-        else:
-            log_move_cost_function = exec_utils.get_param_value(
-                Parameters.LOG_MOVE_COST_FUNCTION,
-                parameters,
-                {x: align_utils.STD_MODEL_LOG_MOVE_COST for x in trace_act},
-            )
-            trace_bwc_cost = sum(log_move_cost_function[x] for x in trace_act)
-            al_tr = __apply_list_activities(
-                trace_act, dfg, sa, ea, parameters=parameters
-            )
-            al_tr["fitness"] = 1.0 - al_tr["cost"] / (
-                al_empty_cost + trace_bwc_cost
-            )
-            al_tr["bwc"] = al_empty_cost + trace_bwc_cost
-            align_dict[trace_act] = al_tr
-            aligned_traces.append(align_dict[trace_act])
+        aligned_traces.append(align_dict[trace_act])
 
     return aligned_traces
+
+
+def __compute_alignments(trace_act, dfg, sa, ea, align_dict, al_empty_cost, parameters):
+    log_move_cost_function = exec_utils.get_param_value(
+        Parameters.LOG_MOVE_COST_FUNCTION,
+        parameters,
+        {x: align_utils.STD_MODEL_LOG_MOVE_COST for x in trace_act},
+    )
+    trace_bwc_cost = sum(log_move_cost_function[x] for x in trace_act)
+    al_tr = __apply_list_activities(
+        trace_act, dfg, sa, ea, parameters=parameters
+    )
+    al_tr["fitness"] = 1.0 - al_tr["cost"] / (
+            al_empty_cost + trace_bwc_cost
+    )
+    al_tr["bwc"] = al_empty_cost + trace_bwc_cost
+    align_dict[trace_act] = al_tr
 
 
 def apply_trace(trace, dfg, sa, ea, parameters=None):

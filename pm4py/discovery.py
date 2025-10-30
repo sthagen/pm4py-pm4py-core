@@ -195,29 +195,10 @@ def discover_dfg_typed(
             timestamp_key='time:timestamp'
         )
     """
-    from pm4py.algo.discovery.dfg.variants import clean
+    from pm4py.objects.dfg.obj import DFG
 
-    parameters = get_properties(
-        log,
-        activity_key=activity_key,
-        timestamp_key=timestamp_key,
-        case_id_key=case_id_key,
-    )
-
-    if importlib.util.find_spec("polars"):
-        import polars as pl
-
-        if isinstance(log, pl.DataFrame):
-            from pm4py.algo.discovery.dfg.variants import clean_polars
-
-            return clean_polars.apply(log, parameters)
-
-    if pandas_utils.check_is_pandas_dataframe(log):
-        return clean.apply(log, parameters)
-    else:
-        raise TypeError(
-            "pm4py.discover_dfg_typed is only defined for DataFrames"
-        )
+    dfg, sa, ea = discover_dfg(log, activity_key=activity_key, case_id_key=case_id_key, timestamp_key=timestamp_key)
+    return DFG(dfg, sa, ea)
 
 
 def discover_performance_dfg(
@@ -907,9 +888,13 @@ def discover_eventually_follows_graph(
             timestamp_key=timestamp_key,
             case_id_key=case_id_key,
         )
-        from pm4py.statistics.eventually_follows.pandas import get
 
-        return get.apply(log, parameters=properties)
+        if is_polars_lazyframe(log):
+            from pm4py.statistics.eventually_follows.polars import get
+            return get.apply(log, parameters=properties)
+        else:
+            from pm4py.statistics.eventually_follows.pandas import get
+            return get.apply(log, parameters=properties)
     else:
         from pm4py.statistics.eventually_follows.log import get
 

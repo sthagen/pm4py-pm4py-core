@@ -800,10 +800,14 @@ def project_on_event_attribute(
 
             import polars as pl  # type: ignore[import-untyped]
 
+            lf = log
+            schema = lf.collect_schema()
+            column_names = schema.names()
+
             case_column = (
                 case_id_key if case_id_key is not None else constants.CASE_CONCEPT_NAME
             )
-            if case_column not in log.columns:
+            if case_column not in column_names:
                 raise Exception(
                     f"The specified case identifier column '{case_column}' is not present in the Polars LazyFrame."
                 )
@@ -812,13 +816,10 @@ def project_on_event_attribute(
                 attribute_key if attribute_key is not None else xes_constants.DEFAULT_NAME_KEY
             )
             has_activity_column = (
-                activity_column is not None and activity_column in log.columns
+                activity_column is not None and activity_column in column_names
             )
 
             index_column = constants.DEFAULT_INDEX_KEY
-            lf = log
-            schema = lf.collect_schema()
-            column_names = schema.names()
             if index_column not in column_names:
                 index_column = "__pm4py_row_index__"
                 lf = lf.with_row_count(index_column)

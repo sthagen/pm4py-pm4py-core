@@ -92,7 +92,7 @@ def apply(
         start_timestamp_key=start_timestamp_key,
     )
 
-    schema = log.schema
+    schema = log.collect_schema()
     attributes = [
         activity_key,
         resource_key,

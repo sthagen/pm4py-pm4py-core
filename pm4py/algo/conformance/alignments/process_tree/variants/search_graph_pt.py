@@ -33,7 +33,7 @@ from pm4py.algo.conformance.alignments.process_tree.util import (
 from pm4py.objects.petri_net.utils import align_utils
 from pm4py.objects.process_tree.obj import Operator
 from pm4py.objects.process_tree.utils import generic as pt_util
-from pm4py.util import exec_utils, constants, xes_constants, pandas_utils
+from pm4py.util import exec_utils, constants, xes_constants, pandas_utils, thread_utils
 from typing import Optional, Dict, Any, Union
 from pm4py.objects.process_tree.obj import ProcessTree
 from pm4py.objects.log.obj import EventLog, Trace
@@ -484,13 +484,7 @@ def apply(
             case_id_key = exec_utils.get_param_value(
                 Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
             )
-            traces = [
-                tuple(x)
-                for x in obj.groupby(case_id_key)[activity_key]
-                .agg(list)
-                .to_dict()
-                .values()
-            ]
+            traces = pandas_utils.get_traces(obj, case_id_key, activity_key)
         else:
             obj = log_converter.apply(
                 obj,
@@ -504,13 +498,15 @@ def apply(
         align_dict = {}
         ret = []
         progress = _construct_progress_bar(len(variants), parameters)
+
+        thm = thread_utils.Pm4pyThreadManager()
+        f = lambda x, y: (y.update({x: _apply_variant(x, pt, leaves, bwc, parameters)}), progress.update() if progress is not None else None)
         for trace in traces:
             if trace not in align_dict:
-                align_dict[trace] = _apply_variant(
-                    trace, pt, leaves, bwc, parameters
-                )
-                if progress is not None:
-                    progress.update()
+                thm.submit(f, trace, align_dict)
+        thm.join()
+
+        for trace in traces:
             ret.append(align_dict[trace])
         _destroy_progress_bar(progress)
         return ret

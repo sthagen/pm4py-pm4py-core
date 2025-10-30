@@ -25,11 +25,9 @@ from typing import Optional, Dict, Any
 
 import pandas as pd
 
-from pm4py.algo.discovery.dfg.adapters.pandas.df_statistics import (
-    get_partial_order_dataframe,
-)
 from pm4py.util import exec_utils, constants, xes_constants, pandas_utils
 from pm4py.util import typing
+from pm4py.utils import is_polars_lazyframe
 
 
 class Parameters(Enum):
@@ -127,8 +125,25 @@ def apply(
         ]
     )
 
-    cases = pandas_utils.format_unique(df[case_id_key].unique())
+    if is_polars_lazyframe(df):
+        import polars as pl  # type: ignore[import-untyped]
+
+        cases = (
+            df.select(pl.col(case_id_key).unique())
+            .collect()
+            .get_column(case_id_key)
+            .to_list()
+        )
+    else:
+        cases = pandas_utils.format_unique(df[case_id_key].unique())
+
     ret = [[] for c in cases]
+
+    if is_polars_lazyframe(df):
+        from pm4py.algo.discovery.dfg.adapters.polars.df_statistics import get_partial_order_dataframe
+    else:
+        from pm4py.algo.discovery.dfg.adapters.pandas.df_statistics import get_partial_order_dataframe
+
     efg = get_partial_order_dataframe(
         df,
         activity_key=activity_key,
@@ -140,23 +155,60 @@ def apply(
         business_hours_slot=business_hours_slots,
         workcalendar=workcalendar,
     )
-    efg = efg[[case_id_key, activity_key, activity_key + "_2", "@@flow_time"]]
-    efg = efg.merge(temporal_profile, on=[activity_key, activity_key + "_2"])
-    efg = efg[
-        (efg["@@flow_time"] < efg["@@min"])
-        | (efg["@@flow_time"] > efg["@@max"])
-    ][
-        [
-            case_id_key,
-            activity_key,
-            activity_key + "_2",
-            "@@flow_time",
-            "@@mean",
-            "@@std",
-        ]
-    ].to_dict(
-        "records"
-    )
+
+    if is_polars_lazyframe(df):
+        flow_time_col = constants.DEFAULT_FLOW_TIME
+        temporal_profile_pl = pl.from_pandas(temporal_profile).lazy()
+
+        efg = (
+            efg.select(
+                [
+                    pl.col(case_id_key),
+                    pl.col(activity_key),
+                    pl.col(activity_key + "_2"),
+                    pl.col(flow_time_col),
+                ]
+            )
+            .join(
+                temporal_profile_pl,
+                on=[activity_key, activity_key + "_2"],
+                how="inner",
+            )
+            .filter(
+                (pl.col(flow_time_col) < pl.col("@@min"))
+                | (pl.col(flow_time_col) > pl.col("@@max"))
+            )
+            .select(
+                [
+                    pl.col(case_id_key),
+                    pl.col(activity_key),
+                    pl.col(activity_key + "_2"),
+                    pl.col(flow_time_col).alias("@@flow_time"),
+                    pl.col("@@mean"),
+                    pl.col("@@std"),
+                ]
+            )
+            .collect()
+            .to_dicts()
+        )
+    else:
+        efg = efg[[case_id_key, activity_key, activity_key + "_2", "@@flow_time"]]
+        efg = efg.merge(temporal_profile, on=[activity_key, activity_key + "_2"])
+        efg = efg[
+            (efg["@@flow_time"] < efg["@@min"])
+            | (efg["@@flow_time"] > efg["@@max"])
+        ][
+            [
+                case_id_key,
+                activity_key,
+                activity_key + "_2",
+                "@@flow_time",
+                "@@mean",
+                "@@std",
+            ]
+        ].to_dict(
+            "records"
+        )
 
     for el in efg:
         this_zeta = (

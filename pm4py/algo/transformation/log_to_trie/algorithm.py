@@ -23,9 +23,8 @@ from enum import Enum
 from pm4py import util
 from pm4py.objects.log.obj import EventLog
 from pm4py.objects.trie.obj import Trie
-from pm4py.statistics.variants.log import get as get_variants_log
-from pm4py.statistics.variants.pandas import get as get_variants_pandas
 from pm4py.util import pandas_utils, exec_utils
+from pm4py.utils import is_polars_lazyframe
 from typing import Optional, Dict, Any, Union
 import pandas as pd
 
@@ -49,10 +48,21 @@ def apply(
     )
 
     if pandas_utils.check_is_pandas_dataframe(log):
-        variants = get_variants_pandas.get_variants_set(
-            log, parameters=parameters
-        )
+        if is_polars_lazyframe(log):
+            from pm4py.statistics.variants.polars import get as get_variants_polars
+
+            variants = get_variants_polars.get_variants_set(
+                log, parameters=parameters
+            )
+        else:
+            from pm4py.statistics.variants.pandas import get as get_variants_pandas
+
+            variants = get_variants_pandas.get_variants_set(
+                log, parameters=parameters
+            )
     else:
+        from pm4py.statistics.variants.log import get as get_variants_log
+
         variants = get_variants_log.get_variants(log, parameters=parameters)
 
     variants = list(variants)

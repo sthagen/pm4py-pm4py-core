@@ -28,6 +28,7 @@ from pm4py.algo.conformance.alignments.petri_net import algorithm as petri_align
 from pm4py.objects import log as log_lib
 from pm4py.objects.log.obj import EventLog, EventStream
 from pm4py.objects.petri_net import semantics
+from pm4py.utils import is_polars_lazyframe
 from pm4py.objects.petri_net.obj import Marking, PetriNet
 from pm4py.objects.petri_net.utils import (
     align_utils as pn_align_utils,
@@ -275,7 +276,16 @@ def apply(
     }
     diff_ini = enabled_ini.difference(start_acts)
 
-    n_traces = len(log) if isinstance(log, EventLog) else log[case_id_key].nunique()
+    if isinstance(log, EventLog):
+        n_traces = len(log)
+    elif is_polars_lazyframe(log):
+        import polars as pl
+        n_traces_result = log.select(pl.col(case_id_key).n_unique()).collect()
+        n_traces = 0
+        if n_traces_result.height > 0 and n_traces_result.width > 0:
+            n_traces = int(n_traces_result.to_series(0)[0] or 0)
+    else:
+        n_traces = int(log[case_id_key].nunique())
     sum_at += len(enabled_ini) * n_traces
     sum_ee += len(diff_ini) * n_traces
 

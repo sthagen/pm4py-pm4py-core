@@ -23,6 +23,8 @@ import math
 from copy import deepcopy, copy
 from enum import Enum
 
+import pandas as pd
+
 from pm4py.objects.conversion.log import constants
 from pm4py.objects.log import obj as log_instance
 from pm4py.objects.log.obj import EventLog, Event, XESExtension
@@ -175,11 +177,12 @@ def apply(log, parameters=None):
 
 def __detect_extensions(df):
     extensions = set()
-    for col in df.columns:
-        for single_key in col.split(":"):
-            for ext in XESExtension:
-                if single_key == ext.prefix:
-                    extensions.add(ext)
+    if isinstance(df, pd.DataFrame):
+        for col in df.columns:
+            for single_key in col.split(":"):
+                for ext in XESExtension:
+                    if single_key == ext.prefix:
+                        extensions.add(ext)
     return extensions
 
 

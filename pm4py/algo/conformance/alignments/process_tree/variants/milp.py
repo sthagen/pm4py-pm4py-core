@@ -29,7 +29,7 @@ from pm4py.utils import project_on_event_attribute
 import pandas as pd
 from pm4py.util import exec_utils
 from enum import Enum
-from pm4py.util import constants, xes_constants
+from pm4py.util import constants, xes_constants, thread_utils
 from pm4py.objects.log.obj import EventLog
 import importlib.util
 from functools import lru_cache
@@ -566,6 +566,16 @@ def _destroy_progress_bar(progress):
     del progress
 
 
+def __perform_alignment_computations(v, variants_align, aligner, empty_cost):
+    alignment_cost, alignment_moves = aligner.align(v)
+    alignment_cost = round(alignment_cost + 10 ** -14, 13)
+
+    fitness = 1.0 - alignment_cost / (empty_cost + len(v)) if (empty_cost + len(v)) > 0 else 0.0
+
+    alignment = {"cost": alignment_cost, "alignment": alignment_moves, "fitness": fitness}
+    variants_align[v] = alignment
+
+
 def apply_list_tuple_activities(list_tuple_activities: List[Collection[str]], aligner: ProcessTreeAligner,
                                 parameters: Optional[Dict[Any, Any]] = None) -> List[Dict[str, Any]]:
     """
@@ -585,19 +595,14 @@ def apply_list_tuple_activities(list_tuple_activities: List[Collection[str]], al
     empty_cost, empty_moves = aligner.align(())
     empty_cost = round(empty_cost + 10 ** -14, 13)
 
+    f = lambda x, y: (__perform_alignment_computations(x, y, aligner, empty_cost), progress.update() if progress is not None else None)
+    thm = thread_utils.Pm4pyThreadManager()
+
     # Process each variant only once
     for v in variants:
-        alignment_cost, alignment_moves = aligner.align(v)
-        alignment_cost = round(alignment_cost + 10 ** -14, 13)
+        thm.submit(f, v, variants_align)
 
-        fitness = 1.0 - alignment_cost / (empty_cost + len(v)) if (empty_cost + len(v)) > 0 else 0.0
-
-        alignment = {"cost": alignment_cost, "alignment": alignment_moves, "fitness": fitness}
-        variants_align[v] = alignment
-
-        if progress is not None:
-            progress.update()
-
+    thm.join()
     _destroy_progress_bar(progress)
 
     # Map results back to original list

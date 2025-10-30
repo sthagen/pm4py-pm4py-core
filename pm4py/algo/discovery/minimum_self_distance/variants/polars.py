@@ -55,7 +55,11 @@ def apply(df, parameters: Optional[Dict[Union[str, Parameters], Any]] = None) ->
     )
 
     required_columns = {activity_key, case_id_key}
-    missing_columns = [col for col in required_columns if col not in df.columns]
+    if hasattr(df, "collect_schema"):
+        df_columns = df.collect_schema().names()
+    else:
+        df_columns = df.columns
+    missing_columns = [col for col in required_columns if col not in df_columns]
     if missing_columns:
         raise Exception(
             "The provided Polars LazyFrame does not contain the following required columns: "

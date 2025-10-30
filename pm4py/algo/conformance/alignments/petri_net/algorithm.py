@@ -28,7 +28,7 @@ from pm4py.util.xes_constants import DEFAULT_NAME_KEY, DEFAULT_TRACEID_KEY
 from pm4py.objects.log.obj import Trace, Event
 import time
 from pm4py.util.lp import solver
-from pm4py.util import exec_utils
+from pm4py.util import exec_utils, thread_utils
 from enum import Enum
 import sys
 from pm4py.util.constants import (
@@ -282,25 +282,38 @@ def apply_log(
         )
         parameters[Parameters.BEST_WORST_COST_INTERNAL] = best_worst_cost
 
-    all_alignments = []
-    for trace in one_tr_per_var:
+    is_dijkstra = str(variant) in {"Variants.VERSION_DIJKSTRA_LESS_MEMORY", "Variants.VERSION_DIJKSTRA_NO_HEURISTICS"}
+    thm = thread_utils.Pm4pyThreadManager(is_threaded=(is_dijkstra and constants.DEFAULT_IS_THREADING_MANAGEMENT_ENABLED))
+
+    all_alignments = [None] * len(one_tr_per_var)
+
+    def _compute(idx, trace, params, results):
+        results[idx] = apply_trace(
+            trace,
+            petri_net,
+            initial_marking,
+            final_marking,
+            parameters=params,
+            variant=variant,
+        )
+        if progress is not None:
+            progress.update()
+
+    for idx, trace in enumerate(one_tr_per_var):
         this_max_align_time = min(
             max_align_time_case,
             (max_align_time - (time.time() - start_time)) * 0.5,
         )
         parameters[Parameters.PARAM_MAX_ALIGN_TIME_TRACE] = this_max_align_time
-        all_alignments.append(
-            apply_trace(
-                trace,
-                petri_net,
-                initial_marking,
-                final_marking,
-                parameters=copy(parameters),
-                variant=variant,
-            )
+        thm.submit(
+            _compute,
+            idx,
+            trace,
+            copy(parameters),
+            all_alignments,
         )
-        if progress is not None:
-            progress.update()
+
+    thm.join()
 
     alignments = __form_alignments(variants_idxs, all_alignments)
     __close_progress_bar(progress)

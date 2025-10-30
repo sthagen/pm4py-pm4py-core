@@ -39,7 +39,7 @@ from pm4py.util import exec_utils
 from pm4py.util import variants_util
 
 from enum import Enum
-from pm4py.util import constants, nx_utils
+from pm4py.util import constants, nx_utils, thread_utils
 
 from typing import Optional, Dict, Any, Union
 from pm4py.objects.log.obj import EventLog
@@ -233,23 +233,17 @@ def apply_log(log, list_nets, parameters=None):
 
     all_alignments = [None] * len(variants_to_process)  # Pre-allocate result list
 
-    # Serial processing
-    max_align_time = exec_utils.get_param_value(
-        Parameters.PARAM_MAX_ALIGN_TIME, parameters, sys.maxsize
-    )
-    start_time = time.time()
-
-    for variant_info in variants_to_process:
-        this_time = time.time()
-        if this_time - start_time <= max_align_time:
-            alignment = apply_trace(variant_info[1], list_nets, parameters=parameters)
-        else:
-            alignment = None
-
-        all_alignments[variant_info[2]] = alignment
-
+    thm = thread_utils.Pm4pyThreadManager(is_threaded=False)
+    def _compute(variant_info, nets, results):
+        idx = variant_info[2]
+        results[idx] = apply_trace(variant_info[1], nets, parameters=parameters)
         if progress is not None:
             progress.update()
+
+    for variant_info in variants_to_process:
+        thm.submit(_compute, variant_info, list_nets, all_alignments)
+
+    thm.join()
 
     # Map alignments back to original traces
     al_idx = {}

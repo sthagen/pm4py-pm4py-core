@@ -94,7 +94,12 @@ def apply(
     if start_timestamp_key is not None:
         required_columns.add(start_timestamp_key)
 
-    missing_columns = [col for col in required_columns if col not in lf.columns]
+    if hasattr(lf, "collect_schema"):
+        lf_columns = lf.collect_schema().names()
+    else:
+        lf_columns = lf.columns
+
+    missing_columns = [col for col in required_columns if col not in lf_columns]
     if missing_columns:
         raise Exception(
             "The provided Polars LazyFrame does not contain the following required columns: "

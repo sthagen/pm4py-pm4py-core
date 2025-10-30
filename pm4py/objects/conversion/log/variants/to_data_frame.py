@@ -26,13 +26,16 @@ from pm4py.objects.log import obj as log_instance
 from pm4py.objects.conversion.log import constants
 from copy import copy
 from pm4py.util import constants as pm4_constants
-from pm4py.util import pandas_utils
+from pm4py.util import pandas_utils, exec_utils
+import pandas as pd
+import importlib.util
 
 
 class Parameters(Enum):
     DEEP_COPY = constants.DEEPCOPY
     STREAM_POST_PROCESSING = constants.STREAM_POSTPROCESSING
     CASE_ATTRIBUTE_PREFIX = "case_attribute_prefix"
+    RETURN_PL_LAZYFRAME = "return_pl_lazyframe"
 
 
 def apply(log, parameters=None):
@@ -55,12 +58,12 @@ def apply(log, parameters=None):
     df
         Pandas dataframe
     """
-    import pandas as pd
-
     if parameters is None:
         parameters = dict()
     if pandas_utils.check_is_pandas_dataframe(log):
         return log
+
+    return_pl_lazyframe = exec_utils.get_param_value(Parameters.RETURN_PL_LAZYFRAME, parameters, False)
 
     if type(log) is log_instance.EventLog:
         new_parameters = copy(parameters)
@@ -68,10 +71,14 @@ def apply(log, parameters=None):
         log = to_event_stream.apply(log, parameters=new_parameters)
 
     transf_log = [dict(x) for x in log]
-    df = pandas_utils.instantiate_dataframe(transf_log)
 
-    df.attrs = copy(log.properties)
-    if pm4_constants.PARAMETER_CONSTANT_CASEID_KEY in df.attrs:
-        del df.attrs[pm4_constants.PARAMETER_CONSTANT_CASEID_KEY]
+    if return_pl_lazyframe:
+        import polars as pl
+        df = pl.DataFrame(transf_log).lazy()
+    else:
+        df = pandas_utils.instantiate_dataframe(transf_log)
+        df.attrs = copy(log.properties)
+        if pm4_constants.PARAMETER_CONSTANT_CASEID_KEY in df.attrs:
+            del df.attrs[pm4_constants.PARAMETER_CONSTANT_CASEID_KEY]
 
     return df

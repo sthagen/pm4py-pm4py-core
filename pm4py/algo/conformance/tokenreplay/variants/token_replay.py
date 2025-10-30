@@ -30,7 +30,7 @@ from pm4py.objects.petri_net.utils import align_utils
 from copy import copy
 from enum import Enum
 from pm4py.util import exec_utils, constants
-from pm4py.util import variants_util, pandas_utils
+from pm4py.util import variants_util, pandas_utils, thread_utils
 import importlib.util
 from typing import Optional, Dict, Any, Union
 from pm4py.objects.log.obj import EventLog
@@ -1396,14 +1396,8 @@ def apply_log(
         trans_map[t.label] = t
 
     if pandas_utils.check_is_pandas_dataframe(log):
-        traces = [
-            (tuple(x), y)
-            for y, x in log.groupby(case_id_key)[activity_key]
-            .agg(list)
-            .to_dict()
-            .items()
-        ]
-        traces = [(traces[i][0], i) for i in range(len(traces))]
+        traces = pandas_utils.get_traces(log, case_id_key, activity_key)
+        traces = [(x, i) for i, x in enumerate(traces)]
     else:
         traces = [
             (tuple(x[activity_key] for x in log[i]), i)
@@ -1445,56 +1439,18 @@ def apply_log(
                 desc="replaying log with TBR, completed traces :: ",
             )
 
-    for i in range(len(vc)):
-        variant = vc[i][0]
-        all_cases = vc[i][1]
+    case_runs = {}
 
-        if disable_variants and not pandas_utils.check_is_pandas_dataframe(
-            log
-        ):
-            for j in range(len(all_cases)):
-                case_position = all_cases[j]
-                considered_case = log[case_position]
-                t = ApplyTraceTokenReplay(
-                    considered_case,
-                    net,
-                    initial_marking,
-                    final_marking,
-                    trans_map,
-                    enable_pltr_fitness,
-                    place_fitness_per_trace,
-                    transition_fitness_per_trace,
-                    notexisting_activities_in_model,
-                    places_shortest_path_by_hidden,
-                    consider_remaining_in_fitness,
-                    activity_key=activity_key,
-                    reach_mark_through_hidden=reach_mark_through_hidden,
-                    stop_immediately_when_unfit=stop_immediately_unfit,
-                    walk_through_hidden_trans=walk_through_hidden_trans,
-                    post_fix_caching=post_fix_cache,
-                    marking_to_activity_caching=marking_to_activity_cache,
-                    is_reduction=is_reduction,
-                    thread_maximum_ex_time=thread_maximum_ex_time,
-                    cleaning_token_flood=cleaning_token_flood,
-                    s_components=s_components,
-                    trace_occurrences=1,
-                    consider_activities_not_in_model_in_fitness=consider_activities_not_in_model_in_fitness,
-                    exhaustive_invisible_exploration=exhaustive_invisible_exploration
-                )
-                t.run()
-                threads_results[case_position] = transcribe_result(
-                    t, return_object_names=return_object_names
-                )
-                if progress is not None:
-                    progress.update()
-        else:
-            considered_case = variants_util.variant_to_trace(
-                variant,
-                parameters={
-                    constants.PARAMETER_CONSTANT_ACTIVITY_KEY: activity_key
-                },
-            )
-            t = ApplyTraceTokenReplay(
+    execute_case = lambda considered_case, trace_occurrences, positions, update_progress=True: (
+        (lambda runner: (
+            runner.run(),
+            [case_runs.__setitem__(pos, runner) for pos in positions],
+            progress.update()
+            if progress is not None and update_progress
+            else None,
+            runner,
+        )[-1])(
+            ApplyTraceTokenReplay(
                 considered_case,
                 net,
                 initial_marking,
@@ -1516,21 +1472,54 @@ def apply_log(
                 thread_maximum_ex_time=thread_maximum_ex_time,
                 cleaning_token_flood=cleaning_token_flood,
                 s_components=s_components,
-                trace_occurrences=len(vc[i][1]),
+                trace_occurrences=trace_occurrences,
                 consider_activities_not_in_model_in_fitness=consider_activities_not_in_model_in_fitness,
-                exhaustive_invisible_exploration=exhaustive_invisible_exploration
+                exhaustive_invisible_exploration=exhaustive_invisible_exploration,
             )
-            t.run()
+        )
+    )
+    transcribe_case = lambda case_position, runner: threads_results.__setitem__(
+        case_position,
+        transcribe_result(
+            runner, return_object_names=return_object_names
+        ),
+    )
+    tm = thread_utils.Pm4pyThreadManager()
 
-            for j in range(len(all_cases)):
-                case_position = all_cases[j]
+    for i in range(len(vc)):
+        variant = vc[i][0]
+        all_cases = vc[i][1]
 
-                threads_results[case_position] = transcribe_result(
-                    t, return_object_names=return_object_names
+        if disable_variants and not pandas_utils.check_is_pandas_dataframe(
+            log
+        ):
+            for case_position in all_cases:
+                considered_case = log[case_position]
+                tm.submit(execute_case, considered_case, 1, [case_position])
+        else:
+            considered_case = variants_util.variant_to_trace(
+                variant,
+                parameters={
+                    constants.PARAMETER_CONSTANT_ACTIVITY_KEY: activity_key
+                },
+            )
+            tm.submit(execute_case, considered_case, len(all_cases), all_cases)
+
+    tm.join()
+
+    for i in range(len(vc)):
+        all_cases = vc[i][1]
+
+        if disable_variants and not pandas_utils.check_is_pandas_dataframe(
+            log
+        ):
+            for case_position in all_cases:
+                transcribe_case(case_position, case_runs[case_position])
+        else:
+            for case_position in all_cases:
+                transcribe_case(
+                    case_position, case_runs[case_position]
                 )
-
-            if progress is not None:
-                progress.update()
 
     for i in range(len(traces)):
         aligned_traces.append(threads_results[i])
@@ -1631,7 +1620,7 @@ def apply(
 
     exhaustive_invisible_exploration = exec_utils.get_param_value(Parameters.EXHAUSTIVE_INVISIBLE_EXPLORATION, parameters, False)
 
-    if type(log) is not pd.DataFrame:
+    if not pandas_utils.check_is_pandas_dataframe(log):
         log = log_converter.apply(
             log,
             variant=log_converter.Variants.TO_EVENT_LOG,

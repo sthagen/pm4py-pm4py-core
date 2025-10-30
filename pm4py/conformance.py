@@ -868,11 +868,6 @@ def __convert_to_fp(*args) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
     return fp
 
 
-@deprecation.deprecated(
-    deprecated_in="2.3.0",
-    removed_in="3.0.0",
-    details="Conformance checking using footprints will not be exposed in a future release.",
-)
 def conformance_diagnostics_footprints(
     *args,
 ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
@@ -922,11 +917,6 @@ def conformance_diagnostics_footprints(
     return result
 
 
-@deprecation.deprecated(
-    deprecated_in="2.3.0",
-    removed_in="3.0.0",
-    details="Conformance checking using footprints will not be exposed in a future release.",
-)
 def fitness_footprints(*args) -> Dict[str, float]:
     """
     Calculate fitness using footprints.
@@ -969,11 +959,6 @@ def fitness_footprints(*args) -> Dict[str, float]:
     return result
 
 
-@deprecation.deprecated(
-    deprecated_in="2.3.0",
-    removed_in="3.0.0",
-    details="Conformance checking using footprints will not be exposed in a future release.",
-)
 def precision_footprints(*args) -> float:
     """
     Calculate precision using footprints.

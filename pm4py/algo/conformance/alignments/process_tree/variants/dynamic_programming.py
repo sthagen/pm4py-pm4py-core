@@ -24,7 +24,7 @@ from pm4py.utils import project_on_event_attribute
 import pandas as pd
 from pm4py.util import exec_utils
 from enum import Enum
-from pm4py.util import constants, xes_constants
+from pm4py.util import constants, xes_constants, thread_utils
 from pm4py.objects.log.obj import EventLog
 import importlib.util
 from pm4py.objects.process_tree.utils import generic
@@ -409,6 +409,22 @@ def _destroy_progress_bar(progress):
     del progress
 
 
+def __perform_alignment_computations(v, process_tree, variants_align, use_global_cache, empty_cost):
+    alignment_cost, alignment_moves = align_trace_with_process_tree(v, process_tree, use_global_cache)
+    alignment_cost = round(alignment_cost + 10 ** -14, 13)
+
+    # Calculate fitness
+    trace_len = len(v)
+    denominator = empty_cost + trace_len
+    fitness = 1.0 - alignment_cost / denominator if denominator > 0 else 0.0
+
+    variants_align[v] = {
+        "cost": alignment_cost,
+        "alignment": alignment_moves,
+        "fitness": fitness
+    }
+
+
 def apply_list_tuple_activities(list_tuple_activities: List[Collection[str]], process_tree: ProcessTree,
                                 parameters: Optional[Dict[Any, Any]] = None) -> List[Dict[str, Any]]:
     """Apply alignment to a list of trace activity tuples with memory optimization"""
@@ -446,24 +462,15 @@ def apply_list_tuple_activities(list_tuple_activities: List[Collection[str]], pr
     # Track time for early termination
     t0 = time.time_ns()
 
+    thm = thread_utils.Pm4pyThreadManager()
+    f = lambda x, y, z: (__perform_alignment_computations(x, y, z, use_global_cache, empty_cost), progress.update() if progress is not None else None)
+
     # Process variants in batches for memory efficiency
     for i in range(0, len(variants), batch_size):
         batch = variants[i:i + batch_size]
 
         for v in batch:
-            alignment_cost, alignment_moves = align_trace_with_process_tree(v, process_tree, use_global_cache)
-            alignment_cost = round(alignment_cost + 10 ** -14, 13)
-
-            # Calculate fitness
-            trace_len = len(v)
-            denominator = empty_cost + trace_len
-            fitness = 1.0 - alignment_cost / denominator if denominator > 0 else 0.0
-
-            variants_align[v] = {
-                "cost": alignment_cost,
-                "alignment": alignment_moves,
-                "fitness": fitness
-            }
+            thm.submit(f, v, process_tree, variants_align)
 
             if progress is not None:
                 progress.update()
@@ -477,6 +484,8 @@ def apply_list_tuple_activities(list_tuple_activities: List[Collection[str]], pr
         # Force garbage collection between batches if not using global cache
         if not use_global_cache and i + batch_size < len(variants):
             gc.collect()
+
+    thm.join()
 
     _destroy_progress_bar(progress)
 

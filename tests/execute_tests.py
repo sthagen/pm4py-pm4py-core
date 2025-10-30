@@ -38,6 +38,8 @@ if importlib.util.find_spec("polars"):
     enabled_tests.append("TestPolarsFiltering")
     enabled_tests.append("TestPolarsStatistics")
     enabled_tests.append("TestPolarsStatisticsSimplified")
+    enabled_tests.append("TestPolarsProcessDiscovery")
+    enabled_tests.append("TestPolarsProcessConformance")
 
 loader = unittest.TestLoader()
 suite = unittest.TestSuite()
@@ -365,6 +367,22 @@ if "TestPolarsStatisticsSimplified" in enabled_tests:
         suite.addTests(loader.loadTestsFromTestCase(TestPolarsStatisticsSimplified))
     except:
         print("TestPolarsStatisticsSimplified import failed!")
+        failed += 1
+
+if "TestPolarsProcessDiscovery" in enabled_tests:
+    try:
+        from tests.polars_process_discovery_test import TestPolarsProcessDiscovery
+        suite.addTests(loader.loadTestsFromTestCase(TestPolarsProcessDiscovery))
+    except:
+        print("TestPolarsProcessDiscovery import failed!")
+        failed += 1
+
+if "TestPolarsProcessConformance" in enabled_tests:
+    try:
+        from tests.polars_cc_test import TestPolarsProcessConformance
+        suite.addTests(loader.loadTestsFromTestCase(TestPolarsProcessConformance))
+    except:
+        print("TestPolarsProcessConformance import failed!")
         failed += 1
 
 # If some imports failed, let's wait a little bit

@@ -141,13 +141,7 @@ def get_log_prefixes(
     prefix_count = Counter()
 
     if pandas_utils.check_is_pandas_dataframe(log):
-        traces = [
-            tuple(x)
-            for x in log.groupby(case_id_key)[activity_key]
-            .agg(list)
-            .to_dict()
-            .values()
-        ]
+        traces = pandas_utils.get_traces(log, case_id_key, activity_key)
     else:
         traces = [tuple(x[activity_key] for x in trace) for trace in log]
 

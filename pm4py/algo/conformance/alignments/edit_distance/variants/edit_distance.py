@@ -29,7 +29,7 @@ from pm4py.objects.petri_net.utils import align_utils
 from pm4py.util import exec_utils
 from pm4py.util import string_distance
 from pm4py.util import typing
-from pm4py.util import constants, xes_constants
+from pm4py.util import constants, xes_constants, thread_utils
 import pandas as pd
 from pm4py.objects.conversion.log import converter as log_converter
 
@@ -46,7 +46,32 @@ def apply(
     parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
 ) -> typing.ListAlignments:
     """
-    Aligns each trace of the first log against the second log, minimizing the edit distance
+    Aligns each trace of the first log against the second log, minimizing the edit distance.
+
+    Parameters
+    --------------
+    log1
+        First log
+    log2
+        Second log
+    parameters
+        Parameters of the algorithm
+
+    Returns
+    ---------------
+    aligned_traces
+        List that contains, for each trace of the first log, the corresponding alignment
+    """
+    return apply_log(log1, log2, parameters=parameters)
+
+
+def apply_log(
+    log1: EventLog,
+    log2: EventLog,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> typing.ListAlignments:
+    """
+    Aligns each trace of the first log against the second log, minimizing the edit distance.
 
     Parameters
     --------------
@@ -80,8 +105,6 @@ def apply(
         Parameters.PERFORM_ANTI_ALIGNMENT, parameters, False
     )
 
-    aligned_traces = []
-
     # form a mapping dictionary associating each activity of the two logs to
     # an ASCII character
     mapping = log_regex.form_encoding_dictio_from_two_logs(
@@ -102,23 +125,33 @@ def apply(
     else:
         list_encodings = sorted(list_encodings, key=lambda x: len(x))
 
-    # keeps an alignment cache (to avoid re-calculating the same edit
-    # distances :) )
-    cache_align = {}
+    # keeps an alignment cache (to avoid re-calculating the same edit distances)
+    cache_align: Dict[str, typing.AlignmentResult] = {}
 
     best_worst_cost = min(len(x) for x in list_encodings)
 
+    # encode all traces once and keep track of the unique encodings
+    encoded_traces: List[str] = []
+    unique_encoded_traces: Set[str] = set()
     for trace in log1:
-        # gets the alignment
-        align_result = align_trace(
-            trace,
-            list_encodings,
-            set_encodings,
-            mapping,
-            cache_align=cache_align,
-            parameters=parameters,
+        encoded_trace = log_regex.get_encoded_trace(
+            trace, mapping, parameters=parameters
         )
-        aligned_traces.append(align_result)
+        encoded_traces.append(encoded_trace)
+        unique_encoded_traces.add(encoded_trace)
+
+    thm = thread_utils.Pm4pyThreadManager()
+    f = lambda x: __perform_trace_alignment(x, list_encodings, set_encodings, mapping, cache_align=cache_align, parameters=parameters)
+
+    # perform the alignment per encoded trace
+    for encoded_trace in unique_encoded_traces:
+        thm.submit(f, encoded_trace)
+    thm.join()
+
+    # map each trace back to its alignment result
+    aligned_traces = [
+        cache_align[encoded_trace] for encoded_trace in encoded_traces
+    ]
 
     # assign fitness to traces
     for index, align in enumerate(aligned_traces):
@@ -142,7 +175,7 @@ def apply(
     return aligned_traces
 
 
-def align_trace(
+def apply_trace(
     trace: Trace,
     list_encodings: List[str],
     set_encodings: Set[str],
@@ -151,7 +184,7 @@ def align_trace(
     parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
 ) -> typing.AlignmentResult:
     """
-    Aligns a trace against a list of traces, minimizing the edit distance
+    Aligns a trace against a list of traces, minimizing the edit distance.
 
     Parameters
     --------------
@@ -177,8 +210,58 @@ def align_trace(
     if parameters is None:
         parameters = {}
 
-    # keeps an alignment cache (to avoid re-calculating the same edit
-    # distances :) )
+    if cache_align is None:
+        cache_align = {}
+
+    # encode the current trace using the mapping dictionary, then align it
+    encoded_trace = log_regex.get_encoded_trace(
+        trace, mapping, parameters=parameters
+    )
+    return __perform_trace_alignment(
+        encoded_trace,
+        list_encodings,
+        set_encodings,
+        mapping,
+        cache_align=cache_align,
+        parameters=parameters,
+    )
+
+
+def align_trace(
+    trace: Trace,
+    list_encodings: List[str],
+    set_encodings: Set[str],
+    mapping: Dict[str, str],
+    cache_align: Optional[Dict[Any, Any]] = None,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> typing.AlignmentResult:
+    """
+    Backwards-compatible wrapper for apply_trace.
+    """
+    return apply_trace(
+        trace,
+        list_encodings,
+        set_encodings,
+        mapping,
+        cache_align=cache_align,
+        parameters=parameters,
+    )
+
+
+def __perform_trace_alignment(
+    encoded_trace: str,
+    list_encodings: List[str],
+    set_encodings: Set[str],
+    mapping: Dict[str, str],
+    cache_align: Optional[Dict[Any, Any]] = None,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> typing.AlignmentResult:
+    """
+    Aligns an encoded trace against a list of encoded traces, minimizing the edit distance.
+    """
+    if parameters is None:
+        parameters = {}
+
     if cache_align is None:
         cache_align = {}
 
@@ -191,20 +274,14 @@ def align_trace(
         else string_distance.argmin_levenshtein
     )
 
-    # encode the current trace using the mapping dictionary
-    encoded_trace = log_regex.get_encoded_trace(
-        trace, mapping, parameters=parameters
-    )
     inv_mapping = {y: x for x, y in mapping.items()}
 
     if encoded_trace not in cache_align:
         if not anti_alignment and encoded_trace in set_encodings:
-            # the trace is already in the encodings. we don't need to calculate
-            # any edit distance
+            # the trace is already in the encodings. we don't need to calculate any edit distance
             argmin_dist = encoded_trace
         else:
-            # finds the encoded trace of the other log that is at minimal
-            # distance
+            # finds the encoded trace of the other log that is at minimal distance
             argmin_dist = comparison_function(encoded_trace, list_encodings)
 
         seq_match = difflib.SequenceMatcher(
@@ -212,33 +289,33 @@ def align_trace(
         ).get_matching_blocks()
         i = 0
         j = 0
-        align_trace = []
+        aligned_moves = []
         total_cost = 0
         for el in seq_match:
             while i < el.a:
-                align_trace.append((inv_mapping[encoded_trace[i]], ">>"))
+                aligned_moves.append((inv_mapping[encoded_trace[i]], ">>"))
                 total_cost += align_utils.STD_MODEL_LOG_MOVE_COST
-                i = i + 1
+                i += 1
             while j < el.b:
-                align_trace.append((">>", inv_mapping[argmin_dist[j]]))
+                aligned_moves.append((">>", inv_mapping[argmin_dist[j]]))
                 total_cost += align_utils.STD_MODEL_LOG_MOVE_COST
-                j = j + 1
-            for z in range(el.size):
-                align_trace.append(
+                j += 1
+            for _ in range(el.size):
+                aligned_moves.append(
                     (
                         inv_mapping[encoded_trace[i]],
                         inv_mapping[argmin_dist[j]],
                     )
                 )
-                i = i + 1
-                j = j + 1
+                i += 1
+                j += 1
 
-        align = {"alignment": align_trace, "cost": total_cost}
+        align = {"alignment": aligned_moves, "cost": total_cost}
         # saves the alignment in the cache
         cache_align[encoded_trace] = align
         return align
-    else:
-        return cache_align[encoded_trace]
+
+    return cache_align[encoded_trace]
 
 
 def project_log_on_variant(
