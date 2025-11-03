@@ -33,7 +33,7 @@ if __name__ == "__main__":
 ```
 
 ## Installation
-PM4Py can be installed on Python 3.9.x / 3.10.x / 3.11.x / 3.12.x / 3.13.x by invoking:
+PM4Py can be installed on Python 3.9.x / 3.10.x / 3.11.x / 3.12.x / 3.13.x / 3.14.x by invoking:
 
 `pip install -U pm4py`
 

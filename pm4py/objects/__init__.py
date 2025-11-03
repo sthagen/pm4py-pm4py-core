@@ -31,6 +31,10 @@ if pm4_constants.ENABLE_INTERNAL_IMPORTS:
         dfg,
         trie,
         org,
+        heuristics_net,
+        ocel,
+        powl,
+        random_variables,
     )
     import importlib.util
 

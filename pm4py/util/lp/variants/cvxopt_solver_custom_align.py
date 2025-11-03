@@ -20,9 +20,12 @@ Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
 import sys
+from threading import Lock
 
 from cvxopt import blas
 from cvxopt import glpk
+
+LP_LOCK = Lock()
 
 this_options = {}
 this_options["LPX_K_MSGLEV"] = 0
@@ -37,7 +40,8 @@ this_options["obj_ul"] = 10**-5
 
 
 def custom_solve_lp(c, G, h, A, b):
-    status, x, z, y = glpk.lp(c, G, h, A, b, options=this_options)
+    with LP_LOCK:
+        status, x, z, y = glpk.lp(c, G, h, A, b, options=this_options)
 
     if status == 'optimal':
         pcost = blas.dot(c, x)

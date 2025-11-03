@@ -7,7 +7,7 @@ RUN apt-get -y install gcc g++ flex bison pkg-config automake autoconf cmake
 RUN apt-get -y install python3-dev python3-pydot python3-tk
 RUN apt-get -y install libopenblas-dev liblapack-dev libboost-all-dev libncurses5-dev libtool libssl-dev libjemalloc-dev libboost-dev libboost-filesystem-dev libboost-system-dev libboost-regex-dev libxml2-dev libxslt-dev libfreetype6-dev libsuitesparse-dev libclang-16-dev llvm-16-dev libthrift-dev libfftw3-dev
 RUN python3 -m pip install --upgrade pip
-RUN pip3 install deprecation==2.1.0 graphviz==0.21 intervaltree==3.1.0 networkx==3.5 packaging==25.0 python-dateutil==2.9.0.post0 pytz==2025.2 setuptools==80.9.0 six==1.17.0 sortedcontainers==2.4.0 tzdata==2025.2 wheel==0.45.1 
+RUN pip3 install graphviz==0.21 intervaltree==3.1.0 networkx==3.5 packaging==25.0 python-dateutil==2.9.0.post0 pytz==2025.2 setuptools==80.9.0 six==1.17.0 sortedcontainers==2.4.0 tzdata==2025.2 wheel==0.45.1 
 RUN pip3 install colorama==0.4.6 cycler==0.12.1 pydotplus==2.0.2 pyparsing==3.2.5 tqdm==4.67.1 
 RUN pip3 install lxml==6.0.2 numpy==2.3.4 pandas==2.3.3 scipy==1.16.3 
 RUN pip3 install contourpy==1.3.3 fonttools==4.60.1 kiwisolver==1.4.9 matplotlib==3.10.7 pillow==12.0.0 

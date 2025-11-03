@@ -9,7 +9,6 @@
     | colorama | https://pypi.org/pypi/colorama/json | BSD License | 0.4.6 |
 | contourpy | https://pypi.org/pypi/contourpy/json | BSD License | 1.3.3 |
 | cycler | https://pypi.org/pypi/cycler/json | BSD License | 0.12.1 |
-| deprecation | https://pypi.org/pypi/deprecation/json | Apache Software License | 2.1.0 |
 | fonttools | https://pypi.org/pypi/fonttools/json | Unspecified | 4.60.1 |
 | graphviz | https://pypi.org/pypi/graphviz/json | Unspecified | 0.21 |
 | intervaltree | https://pypi.org/pypi/intervaltree/json | Apache Software License | 3.1.0 |

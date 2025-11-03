@@ -21,6 +21,7 @@ Contact: info@processintelligence.solutions
 '''
 import sys
 from enum import Enum
+from threading import Lock
 from pm4py.util import exec_utils
 
 from cvxopt import blas
@@ -45,6 +46,8 @@ this_options_lp["presolve"] = "GLP_ON"
 
 TOL = 10**(-5)
 
+LP_LOCK = Lock()
+
 
 def check_lp_sol_is_integer(x):
     for i in range(len(x)):
@@ -54,18 +57,19 @@ def check_lp_sol_is_integer(x):
 
 
 def custom_solve_ilp(c, G, h, A, b, I):
-    status, x, y, z = glpk.lp(c, G, h, A, b, options=this_options_lp)
-    if status == "optimal":
-        if not check_lp_sol_is_integer(x):
-            status, x = glpk.ilp(c, G, h, A, b, I=I, options=this_options)
-        if status == 'optimal':
-            pcost = blas.dot(c, x)
-        else:
-            pcost = None
+    with LP_LOCK:
+        status, x, y, z = glpk.lp(c, G, h, A, b, options=this_options_lp)
+        if status == "optimal":
+            if not check_lp_sol_is_integer(x):
+                status, x = glpk.ilp(c, G, h, A, b, I=I, options=this_options)
+            if status == 'optimal':
+                pcost = blas.dot(c, x)
+            else:
+                pcost = None
 
-        return {'status': status, 'x': x, 'primal objective': pcost}
-    else:
-        return {'status': status, 'x': None, 'primal objective': None}
+            return {'status': status, 'x': x, 'primal objective': pcost}
+        else:
+            return {'status': status, 'x': None, 'primal objective': None}
 
 
 def apply(c, Aub, bub, Aeq, beq, parameters=None):

@@ -151,7 +151,7 @@ for ep in extra_packages:
     if importlib.util.find_spec(ep):
         deps, packages = get_all_third_party_dependencies(ep, deps, packages_dictio, include_self=True)
 
-first_line_packages = ["deprecation", "packaging", "networkx", "graphviz", "six", "python-dateutil", "pytz", "tzdata", "intervaltree", "sortedcontainers", "wheel", "setuptools"]
+first_line_packages = ["packaging", "networkx", "graphviz", "six", "python-dateutil", "pytz", "tzdata", "intervaltree", "sortedcontainers", "wheel", "setuptools"]
 second_line_packages = ["pydotplus", "pyparsing", "tqdm", "colorama", "cycler", "joblib", "threadpoolctl"]
 third_line_packages = ["lxml", "numpy", "pandas", "scipy"]
 

@@ -419,17 +419,20 @@ def extract_temporal_features_dataframe(
         case_id_key=case_id_key,
     )
 
-    from pm4py.algo.transformation.log_to_features.variants import temporal
-
-    parameters[temporal.Parameters.GROUPER_FREQ] = grouper_freq
-    parameters[temporal.Parameters.ACTIVITY_COLUMN] = activity_key
-    parameters[temporal.Parameters.TIMESTAMP_COLUMN] = timestamp_key
+    parameters["grouper_freq"] = grouper_freq
+    parameters["pm4py:param:activity_key"] = activity_key
+    parameters["pm4py:param:timestamp_key"] = timestamp_key
     if case_id_key is not None:
-        parameters[temporal.Parameters.CASE_ID_COLUMN] = case_id_key
-    parameters[temporal.Parameters.START_TIMESTAMP_COLUMN] = (
+        parameters["pm4py:param:case_id_key"] = case_id_key
+    parameters["pm4py:param:start_timestamp_key"] = (
         start_timestamp_key
     )
-    parameters[temporal.Parameters.RESOURCE_COLUMN] = resource_key
+    parameters["pm4py:param:resource_key"] = resource_key
+
+    if is_polars_lazyframe(log):
+        from pm4py.algo.transformation.log_to_features.variants import temporal_lazy as temporal
+    else:
+        from pm4py.algo.transformation.log_to_features.variants import temporal
 
     return temporal.apply(log, parameters=parameters)
 

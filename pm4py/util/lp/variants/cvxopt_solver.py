@@ -20,8 +20,11 @@ Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
 import sys
+from threading import Lock
 
 from cvxopt import matrix, solvers
+
+LP_LOCK = Lock()
 
 
 def apply(c, Aub, bub, Aeq, beq, parameters=None):
@@ -61,19 +64,20 @@ def apply(c, Aub, bub, Aeq, beq, parameters=None):
     if beq is not None:
         beq = matrix(beq)
 
-    solvers.options['glpk'] = {}
-    solvers.options['glpk']['LPX_K_MSGLEV'] = 0
-    solvers.options['glpk']['msg_lev'] = 'GLP_MSG_OFF'
-    solvers.options['glpk']['show_progress'] = False
-    solvers.options['glpk']['presolve'] = "GLP_ON"
-    solvers.options['glpk']['meth'] = "GLP_PRIMAL"
-    solvers.options['msg_lev'] = 'GLP_MSG_OFF'
-    solvers.options['show_progress'] = False
+    with LP_LOCK:
+        solvers.options['glpk'] = {}
+        solvers.options['glpk']['LPX_K_MSGLEV'] = 0
+        solvers.options['glpk']['msg_lev'] = 'GLP_MSG_OFF'
+        solvers.options['glpk']['show_progress'] = False
+        solvers.options['glpk']['presolve'] = "GLP_ON"
+        solvers.options['glpk']['meth'] = "GLP_PRIMAL"
+        solvers.options['msg_lev'] = 'GLP_MSG_OFF'
+        solvers.options['show_progress'] = False
 
-    if solver:
-        sol = solvers.lp(c, Aub, bub, A=Aeq, b=beq, solver=solver)
-    else:
-        sol = solvers.lp(c, Aub, bub, A=Aeq, b=beq)
+        if solver:
+            sol = solvers.lp(c, Aub, bub, A=Aeq, b=beq, solver=solver)
+        else:
+            sol = solvers.lp(c, Aub, bub, A=Aeq, b=beq)
 
     return sol
 

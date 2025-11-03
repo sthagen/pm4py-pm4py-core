@@ -186,8 +186,8 @@ def apply(
         # For each case: (number_of_events) - (unique_activities)
         # Then sum across all cases in the window.
         if len(gval) > 0:
-            reworks_series = gval.groupby(case_id_column).apply(
-                lambda x: len(x) - x[activity_column].nunique()
+            reworks_series = gval.groupby(case_id_column)[activity_column].apply(
+                lambda series: series.size - series.nunique()
             )
             dct["total_number_of_reworked_activities"] = reworks_series.sum()
 

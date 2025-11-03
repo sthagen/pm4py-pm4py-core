@@ -46,7 +46,7 @@ from pm4py.utils import (
 from pm4py.util import constants, pandas_utils
 from pm4py.objects.petri_net.obj import PetriNet
 from pm4py.objects.process_tree.obj import ProcessTree
-import deprecation
+from pm4py.util import deprecation
 
 
 def _is_dataframe_like(obj) -> bool:

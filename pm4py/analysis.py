@@ -31,9 +31,9 @@ from pm4py.objects.process_tree.obj import ProcessTree
 from pm4py.utils import get_properties, pandas_utils, constants
 from pm4py.util.pandas_utils import check_is_pandas_dataframe, check_pandas_dataframe_columns
 from pm4py.util import labels_similarity as ls_util
+from pm4py.util import deprecation
 
 import pandas as pd
-import deprecation
 
 
 @deprecation.deprecated(

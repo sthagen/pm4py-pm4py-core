@@ -139,6 +139,7 @@ DEFAULT_XES_TIMESTAMP_PARSE_FORMAT = get_param_from_env(
     "PM4PY_DEFAULT_XES_TIMESTAMP_PARSE_FORMAT",
     get_default_xes_timestamp_format(),
 )
+DEFAULT_XES_FORMAT_DATAFRAME = True if get_param_from_env("PM4PY_DEFAULT_XES_FORMAT_DATAFRAME", "False").lower() == "true" else False
 
 DEFAULT_START_SYMBOL_GRAPHS = get_param_from_env("PM4PY_DEFAULT_START_SYMBOL_GRAPHS", "<&#9679;>")
 DEFAULT_END_SYMBOL_GRAPHS = get_param_from_env("PM4PY_DEFAULT_END_SYMBOL_GRAPHS", "<&#9632;>")

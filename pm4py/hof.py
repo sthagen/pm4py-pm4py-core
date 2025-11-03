@@ -28,7 +28,7 @@ from typing import Callable, Any, Union
 
 from pm4py.objects.log import obj as log_inst
 from pm4py.utils import __event_log_deprecation_warning
-import deprecation
+from pm4py.util import deprecation
 
 
 @deprecation.deprecated(

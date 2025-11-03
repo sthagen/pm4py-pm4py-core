@@ -24,4 +24,5 @@ from pm4py.algo.conformance.alignments import (
     dfg,
     petri_net,
     process_tree,
+    edit_distance
 )

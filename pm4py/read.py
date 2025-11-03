@@ -140,11 +140,18 @@ def read_xes(
 
     log = xes_importer.apply(local_path, variant=v, parameters=parameters)
 
-    if isinstance(log, EventLog) and not return_legacy_log_object:
-        from pm4py.objects.conversion.log import converter as log_converter
-        log = log_converter.apply(
-            log, variant=log_converter.Variants.TO_DATA_FRAME, parameters=parameters
-        )
+    if return_legacy_log_object:
+        pass
+    else:
+        if isinstance(log, EventLog):
+            from pm4py.objects.conversion.log import converter as log_converter
+            log = log_converter.apply(
+                log, variant=log_converter.Variants.TO_DATA_FRAME, parameters=parameters
+            )
+
+        if constants.DEFAULT_XES_FORMAT_DATAFRAME:
+            from pm4py.utils import format_dataframe
+            log = format_dataframe(log)
 
     return log
 

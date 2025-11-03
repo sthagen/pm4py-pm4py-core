@@ -233,7 +233,7 @@ def apply_log(log, list_nets, parameters=None):
 
     all_alignments = [None] * len(variants_to_process)  # Pre-allocate result list
 
-    thm = thread_utils.Pm4pyThreadManager(is_threaded=False)
+    thm = thread_utils.Pm4pyThreadManager()
     def _compute(variant_info, nets, results):
         idx = variant_info[2]
         results[idx] = apply_trace(variant_info[1], nets, parameters=parameters)

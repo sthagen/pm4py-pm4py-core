@@ -45,7 +45,7 @@ from pm4py.util.pandas_utils import (
 )
 from pm4py.utils import get_properties, __event_log_deprecation_warning, is_polars_lazyframe
 from pm4py.util import constants, pandas_utils
-import deprecation
+from pm4py.util import deprecation
 import importlib.util
 
 

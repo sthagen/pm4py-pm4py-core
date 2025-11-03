@@ -283,7 +283,7 @@ def apply_log(
         parameters[Parameters.BEST_WORST_COST_INTERNAL] = best_worst_cost
 
     is_dijkstra = str(variant) in {"Variants.VERSION_DIJKSTRA_LESS_MEMORY", "Variants.VERSION_DIJKSTRA_NO_HEURISTICS"}
-    thm = thread_utils.Pm4pyThreadManager(is_threaded=(is_dijkstra and constants.DEFAULT_IS_THREADING_MANAGEMENT_ENABLED))
+    thm = thread_utils.Pm4pyThreadManager()
 
     all_alignments = [None] * len(one_tr_per_var)
 

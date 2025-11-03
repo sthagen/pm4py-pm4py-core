@@ -35,7 +35,7 @@ from pm4py.util.pandas_utils import (
     check_pandas_dataframe_columns,
 )
 import pandas as pd
-import deprecation
+from pm4py.util import deprecation
 
 
 def conformance_diagnostics_token_based_replay(

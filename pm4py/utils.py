@@ -38,7 +38,7 @@ from pm4py.util.pandas_utils import (
     check_pandas_dataframe_columns,
 )
 from pm4py.util.dt_parsing.variants import strpfromiso
-import deprecation
+from pm4py.util import deprecation
 
 
 INDEX_COLUMN = "@@index"

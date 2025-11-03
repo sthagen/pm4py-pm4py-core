@@ -1,7 +1,6 @@
 colorama
 contourpy
 cycler
-deprecation
 fonttools
 graphviz
 intervaltree

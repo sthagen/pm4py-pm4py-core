@@ -19,3 +19,4 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
+from pm4py.algo.concept_drift.variants import bose

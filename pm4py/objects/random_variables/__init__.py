@@ -31,10 +31,3 @@ if pm4_constants.ENABLE_INTERNAL_IMPORTS:
         lognormal,
         gamma,
     )
-
-    import warnings
-
-    if pm4_constants.SHOW_INTERNAL_WARNINGS:
-        warnings.warn(
-            "The random_variables package will be removed in a future release."
-        )
