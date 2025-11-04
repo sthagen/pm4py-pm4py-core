@@ -36,18 +36,15 @@ if pm4_constants.ENABLE_INTERNAL_IMPORTS:
             trie,
             ocel,
             network_analysis,
+            heuristics_net
         )
 
-        if importlib.util.find_spec("matplotlib") and importlib.util.find_spec(
-            "pyvis"
-        ):
-            # SNA requires both packages matplotlib and pyvis. These are included in the default installation;
-            # however, they may lead to problems in some platforms/deployments
-            from pm4py.visualization import sna, performance_spectrum
-        if importlib.util.find_spec("pydotplus"):
-            # heuristics net visualization requires pydotplus. This is included in the default installation;
-            # however, they may lead to problems in some platforms/deployments
-            from pm4py.visualization import heuristics_net
+        if importlib.util.find_spec("matplotlib"):
+            from pm4py.visualization import performance_spectrum
+
+            if importlib.util.find_spec("pyvis"):
+                # SNA requires both packages matplotlib and pyvis.
+                from pm4py.visualization import sna
 
     if importlib.util.find_spec("matplotlib"):
         # graphs require matplotlib. This is included in the default installation;

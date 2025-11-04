@@ -22,7 +22,7 @@ Contact: info@processintelligence.solutions
 from enum import Enum
 from typing import Optional, Dict, Any
 
-from intervaltree import IntervalTree
+from pm4py.util.intervaltree import IntervalTree
 
 from pm4py.algo.transformation.log_to_interval_tree.variants import open_paths
 from pm4py.objects.log.obj import EventLog

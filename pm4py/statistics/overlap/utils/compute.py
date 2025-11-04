@@ -22,7 +22,7 @@ Contact: info@processintelligence.solutions
 from enum import Enum
 from typing import Optional, Dict, Any, Tuple, List, Union
 
-from intervaltree import Interval, IntervalTree
+from pm4py.util.intervaltree import Interval, IntervalTree
 
 from pm4py.util import exec_utils
 

@@ -470,7 +470,7 @@ def __compute_workload(
         for x in events
     ]
     events = sorted(events)
-    from intervaltree import IntervalTree, Interval
+    from pm4py.util.intervaltree import IntervalTree, Interval
 
     tree = IntervalTree()
     ev_map = {}

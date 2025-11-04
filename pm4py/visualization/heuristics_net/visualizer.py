@@ -20,15 +20,18 @@ Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
 import shutil
-from enum import Enum
-
-import pydotplus
-from pm4py.util import exec_utils, vis_utils
-from pm4py.visualization.heuristics_net.variants import pydotplus_vis
 import tempfile
+from enum import Enum
+from typing import Any, Dict, Optional
+
+from graphviz import Digraph
+from pm4py.visualization.common import gview
+from pm4py.visualization.common import save as gsave
+from pm4py.visualization.common.gview import serialize, serialize_dot
+
 from pm4py.objects.heuristics_net.obj import HeuristicsNet
-from typing import Optional, Dict, Any
-from pm4py.util import constants
+from pm4py.util import constants, exec_utils, vis_utils
+from pm4py.visualization.heuristics_net.variants import pydotplus_vis
 
 
 class Variants(Enum):
@@ -67,35 +70,6 @@ def apply(
     )
 
 
-def get_graph(
-    heu_net: HeuristicsNet,
-    parameters: Optional[Dict[Any, Any]] = None,
-    variant=DEFAULT_VARIANT,
-) -> pydotplus.graphviz.Dot:
-    """
-    Gets a representation of an Heuristics Net
-
-    Parameters
-    -------------
-    heu_net
-        Heuristics net
-    parameters
-        Possible parameters of the algorithm, including:
-            - Parameters.FORMAT
-    variant
-        Variant of the algorithm to use:
-             - Variants.PYDOTPLUS
-
-    Returns
-    ------------
-    graph
-        Pydotplus graph
-    """
-    return exec_utils.get_variant(variant).get_graph(
-        heu_net, parameters=parameters
-    )
-
-
 def view(figure):
     """
     View on the screen a figure that has been rendered
@@ -130,61 +104,42 @@ def view(figure):
             vis_utils.open_opsystem_image_viewer(figure)
 
 
-def save(figure, output_file_path):
+def save(gviz: Digraph, output_file_path: str, parameters=None):
     """
-    Save a figure that has been rendered
+    Save the diagram
 
     Parameters
     -----------
-    figure
-        figure
+    gviz
+        GraphViz diagram
     output_file_path
-        Path where the figure should be saved
+        Path where the GraphViz output should be saved
     """
-    try:
-        filename = figure.name
-        figure = filename
-    except AttributeError:
-        # continue without problems, a proper path has been provided
-        pass
-
-    shutil.copyfile(figure, output_file_path)
+    gsave.save(gviz, output_file_path, parameters=parameters)
     return ""
 
 
-def serialize(figure: tempfile._TemporaryFileWrapper) -> bytes:
+def view(gviz: Digraph, parameters=None):
     """
-    Serialize a figure that has been rendered
+    View the diagram
 
     Parameters
-    ----------
-    figure
-        figure
+    -----------
+    gviz
+        GraphViz diagram
     """
-    with open(figure.name, "rb") as f:
-        return f.read()
+    return gview.view(gviz, parameters=parameters)
 
 
-def matplotlib_view(figure):
+def matplotlib_view(gviz: Digraph, parameters=None):
     """
-    Views the figure using Matplotlib
+    Views the diagram using Matplotlib
 
     Parameters
     ---------------
-    figure
-        Figure
+    gviz
+        Graphviz
     """
-    if constants.DEFAULT_ENABLE_VISUALIZATIONS_VIEW:
-        try:
-            filename = figure.name
-            figure = filename
-        except AttributeError:
-            # continue without problems, a proper path has been provided
-            pass
 
-        import matplotlib.pyplot as plt
-        import matplotlib.image as mpimg
+    return gview.matplotlib_view(gviz, parameters=parameters)
 
-        img = mpimg.imread(figure)
-        plt.imshow(img)
-        plt.show()

@@ -7,8 +7,6 @@ lxml
 matplotlib
 pytz
 tqdm
-pydotplus
 wheel
 setuptools
-intervaltree
 cvxopt;python_version<'3.14'

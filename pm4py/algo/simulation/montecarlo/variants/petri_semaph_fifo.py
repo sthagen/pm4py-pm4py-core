@@ -26,9 +26,8 @@ from pm4py.objects.log.obj import Trace, Event
 from pm4py.util import xes_constants, exec_utils, constants
 from pm4py.objects.stochastic_petri import utils as stochastic_utils
 from pm4py.util.dt_parsing.variants import strpfromiso
-from pm4py.objects.petri_net.obj import PetriNet, Marking
 
-from intervaltree import Interval, IntervalTree
+from pm4py.util.intervaltree import Interval, IntervalTree
 from statistics import median
 import datetime
 import heapq

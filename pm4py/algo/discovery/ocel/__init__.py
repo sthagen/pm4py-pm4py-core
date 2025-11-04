@@ -19,4 +19,4 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.algo.discovery.ocel import interleavings, ocdfg, ocpn, link_analysis, saw_nets
+from pm4py.algo.discovery.ocel import interleavings, ocdfg, ocpn, link_analysis, saw_nets, otg, etot

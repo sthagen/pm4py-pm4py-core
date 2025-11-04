@@ -224,7 +224,7 @@ def resource_workload(
     if parameters is None:
         parameters = {}
 
-    from intervaltree.intervaltree import IntervalTree, Interval
+    from pm4py.util.intervaltree import IntervalTree, Interval
 
     start_timestamp_key = exec_utils.get_param_value(
         Parameters.START_TIMESTAMP_KEY,
@@ -301,7 +301,7 @@ def work_in_progress(
     if parameters is None:
         parameters = {}
 
-    from intervaltree.intervaltree import IntervalTree, Interval
+    from pm4py.util.intervaltree import IntervalTree, Interval
 
     start_timestamp_key = exec_utils.get_param_value(
         Parameters.START_TIMESTAMP_KEY,

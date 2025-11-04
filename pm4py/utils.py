@@ -205,7 +205,7 @@ def format_dataframe(
             CASE_INDEX_COLUMN,
             copy_dataframe=False,
         )
-
+        lf = lf.collect().lazy()
         return lf
 
     from pm4py.objects.log.util import dataframe_utils

@@ -29,6 +29,7 @@ from collections import Counter
 import pandas as pd
 from pandas import DataFrame
 
+from pm4py.objects.ocel.obj import OCEL
 from pm4py.objects.bpmn.obj import BPMN
 from pm4py.objects.dfg.obj import DFG
 from pm4py.objects.powl.obj import POWL
@@ -1515,3 +1516,87 @@ def correlation_miner(
         return dfg, start_activities, end_activities
     else:
         return perf_dfg, start_activities, end_activities
+
+
+def discover_otg(
+    ocel: OCEL,
+    variant=None,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Tuple[Set[str], Dict[Tuple[str, str, str], int]]:
+    """
+    Discovers an Object-Type Graph (OTG) from an object-centric event log.
+
+    Published in: https://publications.rwth-aachen.de/record/1014107
+
+    An OTG summarizes how object types are related across different interaction graphs extracted from the OCEL.
+    Specifically, an OTG is a tuple containing:
+    - The set of object types
+    - The edges along with the frequency, where each edge is (object_type1, relationship, object_type2).
+
+    Relationship can be:
+    * object_interaction (objects related in some event)
+    * object_descendants (lifecycle of the first event starts before the other object)
+    * object_inheritance (lifecycle of the first object ends exactly when the second one starts)
+    * object_cobirth (objects start their lifecycle in the same event)
+    * object_codeath (objects end their lifecycle in the sae event)
+
+    :param ocel: Object-centric event log.
+    :param variant: Variant of the OTG discovery algorithm to use (default: classic variant).
+    :param parameters: Optional variant-specific parameters.
+    :return: Tuple containing the set of object types and the OTG edges with their frequencies.
+    :rtype: ``Tuple[Set[str], Dict[Tuple[str, str, str], int]]``
+
+    .. code-block:: python3
+
+        import pm4py
+
+        otg = pm4py.discover_otg(ocel)
+    """
+    from pm4py.algo.discovery.ocel.otg import algorithm as otg_discovery
+
+    if variant is None:
+        variant = otg_discovery.Variants.CLASSIC
+
+    return otg_discovery.apply(ocel, variant=variant, parameters=parameters)
+
+
+def discover_etot(
+    ocel: OCEL,
+    variant=None,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Tuple[
+    Set[str],
+    Set[str],
+    Set[Tuple[str, str]],
+    Dict[Tuple[str, str], int],
+]:
+    """
+    Discovers the ET-OT (Event Type - Object Type) graph from an object-centric event log.
+
+    Published in: https://publications.rwth-aachen.de/record/1014107
+
+    The ET-OT graph captures the relationships between event types and object types along with their frequencies.
+    Specifically, an ET-OT graph is a tuple consisting of:
+    - Set of activities
+    - Set of object types
+    - Set of relationships, where an edge (a, ot) indicates that events of type a are associated with objects of type ot
+    - A dictionary associating each relationship to a weight (frequency)
+
+    :param ocel: Object-centric event log.
+    :param variant: Variant of the ET-OT discovery algorithm to use (default: classic variant).
+    :param parameters: Optional variant-specific parameters.
+    :return: Tuple containing the set of activities, the set of object types, the ET-OT edges, and their frequencies.
+    :rtype: ``Tuple[Set[str], Set[str], Set[Tuple[str, str]], Dict[Tuple[str, str], int]]``
+
+    .. code-block:: python3
+
+        import pm4py
+
+        etot = pm4py.discover_etot(ocel)
+    """
+    from pm4py.algo.discovery.ocel.etot import algorithm as etot_discovery
+
+    if variant is None:
+        variant = etot_discovery.Variants.CLASSIC
+
+    return etot_discovery.apply(ocel, variant=variant, parameters=parameters)

@@ -28,6 +28,7 @@ from typing import List, Dict, Any, Union, Optional, Tuple, Set
 from pm4py.objects.log.obj import EventLog, Trace, Event
 from pm4py.objects.petri_net.obj import PetriNet, Marking
 from pm4py.objects.process_tree.obj import ProcessTree
+from pm4py.objects.ocel.obj import OCEL
 from pm4py.util import xes_constants, constants
 from pm4py.utils import get_properties, __event_log_deprecation_warning
 from pm4py.util.pandas_utils import (
@@ -1409,3 +1410,140 @@ def conformance_log_skeleton(
         )
 
     return result
+
+
+def conformance_ocdfg(
+    ocel: Union[OCEL, Dict[str, Any]],
+    model: Dict[str, Any],
+    variant=None,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Dict[str, Any]:
+    """
+    Performs OC-DFG-based conformance checking between an object-centric event log (or OC-DFG) and a normative OC-DFG.
+
+    An object-centric directly-follows graph is expressed as a dictionary containing the following properties:
+    - activities: complete set of activities derived from the object-centric event log
+    - object_types: complete set of object types derived from the object-centric event log
+    - edges: dictionary connecting each object type to a set of directly-followed arcs between activities
+    - activities_indep: dictionary linking each activity, regardless of the object type
+    - activities_ot: dictionary linking each object type to another dictionary
+    - start_activities: dictionary linking each object type to start activities
+    - end_activities: dictionary linking each object type to end activities
+
+    Published in: https://publications.rwth-aachen.de/record/1014107
+
+    :param ocel: Object-centric event log or OC-DFG representing the real behavior.
+    :param model: Normative OC-DFG obtained from discovery.
+    :param variant: Variant of the OC-DFG conformance algorithm to use (default: graph comparison).
+    :param parameters: Optional variant-specific parameters.
+    :return: Dictionary containing conformance diagnostics.
+    :rtype: ``Dict[str, Any]``
+
+    .. code-block:: python3
+
+        import pm4py
+
+        diagnostics = pm4py.conformance_ocdfg(ocel, ocdfg_model)
+    """
+    from pm4py.algo.conformance.ocel.ocdfg import algorithm as ocdfg_conformance
+
+    if variant is None:
+        variant = ocdfg_conformance.Variants.GRAPH_COMPARISON
+
+    return ocdfg_conformance.apply(ocel, model, variant=variant, parameters=parameters)
+
+
+def conformance_otg(
+    ocel: Union[OCEL, Tuple[Set[str], Dict[Tuple[str, str, str], int]]],
+    model: Tuple[Set[str], Dict[Tuple[str, str, str], int]],
+    variant=None,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Dict[str, Any]:
+    """
+    Performs OTG-based conformance checking between an object-centric event log (or OTG) and a normative OTG.
+
+    An OTG summarizes how object types are related across different interaction graphs extracted from the OCEL.
+    Specifically, an OTG is a tuple containing:
+    - The set of object types
+    - The edges along with the frequency, where each edge is (object_type1, relationship, object_type2).
+
+    Relationship can be:
+    * object_interaction (objects related in some event)
+    * object_descendants (lifecycle of the first event starts before the other object)
+    * object_inheritance (lifecycle of the first object ends exactly when the second one starts)
+    * object_cobirth (objects start their lifecycle in the same event)
+    * object_codeath (objects end their lifecycle in the sae event)
+
+    Published in: https://publications.rwth-aachen.de/record/1014107
+
+    :param ocel: Object-centric event log or OTG capturing the real behavior.
+    :param model: Normative OTG, typically discovered from a reference log.
+    :param variant: Variant of the OTG conformance algorithm to use (default: graph comparison).
+    :param parameters: Optional variant-specific parameters.
+    :return: Dictionary containing OTG conformance diagnostics.
+    :rtype: ``Dict[str, Any]``
+
+    .. code-block:: python3
+
+        import pm4py
+
+        diagnostics = pm4py.conformance_otg(ocel, otg_model)
+    """
+    from pm4py.algo.conformance.ocel.otg import algorithm as otg_conformance
+
+    if variant is None:
+        variant = otg_conformance.Variants.GRAPH_COMPARISON
+
+    return otg_conformance.apply(ocel, model, variant=variant, parameters=parameters)
+
+
+def conformance_etot(
+    ocel: Union[
+        OCEL,
+        Tuple[
+            Set[str],
+            Set[str],
+            Set[Tuple[str, str]],
+            Dict[Tuple[str, str], int],
+        ],
+    ],
+    model: Tuple[
+        Set[str],
+        Set[str],
+        Set[Tuple[str, str]],
+        Dict[Tuple[str, str], int],
+    ],
+    variant=None,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Dict[str, Any]:
+    """
+    Performs ET-OT-based conformance checking between an object-centric event log (or ET-OT graph) and a normative ET-OT graph.
+
+    The ET-OT graph captures the relationships between event types and object types along with their frequencies.
+    Specifically, an ET-OT graph is a tuple consisting of:
+    - Set of activities
+    - Set of object types
+    - Set of relationships, where an edge (a, ot) indicates that events of type a are associated with objects of type ot
+    - A dictionary associating each relationship to a weight (frequency)
+
+    Published in: https://publications.rwth-aachen.de/record/1014107
+
+    :param ocel: Object-centric event log or ET-OT graph capturing the real behavior.
+    :param model: Normative ET-OT graph, typically discovered from a reference log.
+    :param variant: Variant of the ET-OT conformance algorithm to use (default: graph comparison).
+    :param parameters: Optional variant-specific parameters.
+    :return: Dictionary containing ET-OT conformance diagnostics.
+    :rtype: ``Dict[str, Any]``
+
+    .. code-block:: python3
+
+        import pm4py
+
+        diagnostics = pm4py.conformance_etot(ocel, etot_model)
+    """
+    from pm4py.algo.conformance.ocel.etot import algorithm as etot_conformance
+
+    if variant is None:
+        variant = etot_conformance.Variants.GRAPH_COMPARISON
+
+    return etot_conformance.apply(ocel, model, variant=variant, parameters=parameters)

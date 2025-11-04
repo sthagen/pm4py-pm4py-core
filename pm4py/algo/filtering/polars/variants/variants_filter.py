@@ -22,6 +22,7 @@ Contact: info@processintelligence.solutions
 from pm4py.util.constants import CASE_CONCEPT_NAME, PARAMETER_CONSTANT_CASEID_KEY, PARAMETER_CONSTANT_ACTIVITY_KEY
 from enum import Enum
 from pm4py.util import exec_utils, constants, xes_constants
+from pm4py.statistics.variants.polars import get as variants_get
 from typing import Optional, Dict, Any, Union, List
 import polars as pl
 
@@ -90,6 +91,44 @@ def apply(
         ret = df.join(matching_cases, on=case_id_glue, how="anti")
 
     return ret
+
+
+def filter_variants_top_k(
+    log: pl.LazyFrame,
+    k: int,
+    parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
+) -> pl.LazyFrame:
+    """
+    Keeps the top-k variants of the log
+
+    Parameters
+    -------------
+    log
+        Event log LazyFrame
+    k
+        Number of variants that should be kept
+    parameters
+        Parameters
+
+    Returns
+    -------------
+    filtered_log
+        Filtered log
+    """
+    if parameters is None:
+        parameters = {}
+
+    variants = variants_get.get_variants_count(log, parameters=parameters)
+    variant_count = []
+    for variant, count in variants.items():
+        variant_count.append([variant, count])
+    variant_count = sorted(
+        variant_count, key=lambda x: (x[1], x[0]), reverse=True
+    )
+    variant_count = variant_count[: min(k, len(variant_count))]
+    variants_to_filter = [x[0] for x in variant_count]
+
+    return apply(log, variants_to_filter, parameters=parameters)
 
 
 def apply_auto_filter(

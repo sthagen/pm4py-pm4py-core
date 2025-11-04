@@ -296,6 +296,15 @@ def discover_ocdfg(
     These graphs can be annotated with different metrics considering the entities of an object-centric event log
     (i.e., events, unique objects, total objects).
 
+    Returns an object-centric directly-follows graph, expressed as a dictionary containing the following properties:
+    - activities: complete set of activities derived from the object-centric event log
+    - object_types: complete set of object types derived from the object-centric event log
+    - edges: dictionary connecting each object type to a set of directly-followed arcs between activities
+    - activities_indep: dictionary linking each activity, regardless of the object type
+    - activities_ot: dictionary linking each object type to another dictionary
+    - start_activities: dictionary linking each object type to start activities
+    - end_activities: dictionary linking each object type to end activities
+
     Reference paper:
     Berti, Alessandro, and Wil van der Aalst. "Extracting multiple viewpoint models from relational databases."
     Data-Driven Process Discovery and Analysis. Springer, Cham, 2018. 24-51.

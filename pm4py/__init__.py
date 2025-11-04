@@ -156,6 +156,8 @@ from pm4py.discovery import (
     discover_declare,
     discover_powl,
     correlation_miner,
+    discover_otg,
+    discover_etot,
 )
 from pm4py.conformance import (
     conformance_diagnostics_token_based_replay,
@@ -171,6 +173,9 @@ from pm4py.conformance import (
     conformance_temporal_profile,
     conformance_declare,
     conformance_log_skeleton,
+    conformance_ocdfg,
+    conformance_otg,
+    conformance_etot,
     replay_prefix_tbr,
     generalization_tbr,
 )

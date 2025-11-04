@@ -1277,12 +1277,14 @@ def get_frequent_trace_segments(
         )
 
     import pm4py.utils
-    from prefixspan import PrefixSpan
 
     projection = pm4py.utils.project_on_event_attribute(
         log, attribute_key=activity_key, case_id_key=case_id_key
     )
+
+    from pm4py.util.prefixspan import PrefixSpan
     traces0 = PrefixSpan(projection).frequent(min_occ)
+
     traces = {}
     for x in traces0:
         trace = ["..."]

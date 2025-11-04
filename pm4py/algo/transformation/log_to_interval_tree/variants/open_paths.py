@@ -23,7 +23,7 @@ from enum import Enum
 from typing import Optional, Dict, Any, List, Union
 import pandas as pd
 
-from intervaltree import IntervalTree, Interval
+from pm4py.util.intervaltree import IntervalTree, Interval
 
 from pm4py.objects.log.obj import EventLog
 from pm4py.util import exec_utils, constants, xes_constants

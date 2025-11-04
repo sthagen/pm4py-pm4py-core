@@ -6,13 +6,13 @@ from __future__ import annotations
 import base64
 import hashlib
 import io
+import lzma
+import os
 import sys
 import time
 import zipfile
 from pathlib import Path
 from string import Template
-
-import os
 
 os.chdir("..")
 
@@ -30,24 +30,25 @@ BUNDLE_TEMPLATE = Template(r"""# -*- coding: utf-8 -*-
 import base64
 import importlib
 import io
+import lzma
 import os
 import runpy
 import sys
 import tempfile
 import time
 
-_EMBEDDED_ZIP_B64 = $zip_b64_literal
+_EMBEDDED_ZIP_LZMA_B85 = $zip_lzma_b85_literal
 _PKG_NAME = $pkg_name_literal
 _DEFAULT_MODE = $default_mode_literal  # "auto" | "module" | "none"
 _ENTRYPOINT = $entrypoint_literal      # e.g. "pkg.module:main" or None
 
 def _ensure_zip_on_sys_path():
-    data = base64.b64decode(_EMBEDDED_ZIP_B64)
     digest = "sha256-" + $digest_literal
     tempdir = tempfile.gettempdir()
     zip_path = os.path.join(tempdir, f"{_PKG_NAME}-{digest}.pyz")
 
     if not os.path.exists(zip_path):
+        data = lzma.decompress(base64.a85decode(_EMBEDDED_ZIP_LZMA_B85))
         tmppath = zip_path + ".tmp-" + str(int(time.time() * 1000))
         with open(tmppath, "wb") as f:
             f.write(data)
@@ -121,14 +122,18 @@ def _zip_package_with_parent(pkg_dir: Path) -> bytes:
             if path.is_dir():
                 continue
             arcname = path.relative_to(parent)
+            size = path.stat().st_size
+            print(f"[bundle] add {arcname} ({size} bytes)")
             zf.write(path, arcname=str(arcname))
     return buf.getvalue()
 
-def _b64_literal(b: bytes, wrap: int = 76) -> str:
-    s = base64.b64encode(b).decode("ascii")
+def _a85_literal(b: bytes, wrap: int = 120) -> str:
+    s = base64.a85encode(b, adobe=False).decode("ascii")
     if wrap:
-        s = "\n".join(s[i:i+wrap] for i in range(0, len(s), wrap))
-    return '("""\n' + s + '\n""")'
+        chunks = [s[i:i+wrap] for i in range(0, len(s), wrap)]
+        inner = "\n    ".join(repr(chunk) for chunk in chunks)
+        return "(\n    " + inner + "\n)"
+    return repr(s)
 
 def _py_str(s: str) -> str:
     return repr(s)
@@ -149,6 +154,8 @@ def main():
         if expect not in zf.namelist():
             sys.exit(f"INTERNAL ERROR: expected {expect} in archive")
 
+    compressed_zip_bytes = lzma.compress(zip_bytes, preset=9)
+
     out_text = BUNDLE_TEMPLATE.substitute(
         timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
         pkg_name=pkg_name,
@@ -156,7 +163,7 @@ def main():
         default_mode_literal=_py_str(DEFAULT_MODE),
         entrypoint_literal=_py_str(ENTRYPOINT) if ENTRYPOINT else "None",
         digest_literal=_py_str(_sha256(zip_bytes)),
-        zip_b64_literal=_b64_literal(zip_bytes),
+        zip_lzma_b85_literal=_a85_literal(compressed_zip_bytes),
     )
 
     out_path = OUTPUT_FILE.resolve()

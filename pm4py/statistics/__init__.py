@@ -37,10 +37,6 @@ if pm4_constants.ENABLE_INTERNAL_IMPORTS:
         start_activities,
         traces,
         util,
-        variants
+        variants,
+        overlap
     )
-
-    import importlib.util
-
-    if importlib.util.find_spec("intervaltree"):
-        from pm4py.statistics import overlap

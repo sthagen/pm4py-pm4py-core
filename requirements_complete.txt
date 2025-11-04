@@ -3,7 +3,6 @@ contourpy
 cycler
 fonttools
 graphviz
-intervaltree
 kiwisolver
 lxml
 matplotlib
@@ -12,14 +11,12 @@ numpy
 packaging
 pandas
 pillow
-pydotplus
 pyparsing
 python-dateutil
 pytz
 scipy
 setuptools
 six
-sortedcontainers
 tqdm
 tzdata
 wheel

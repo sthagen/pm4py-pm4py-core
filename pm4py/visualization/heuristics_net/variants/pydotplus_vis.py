@@ -22,15 +22,15 @@ Contact: info@processintelligence.solutions
 
 import math
 import tempfile
-
-import pydotplus
-
-from pm4py.util import exec_utils, constants
-from pm4py.util.vis_utils import human_readable_stat
-from enum import Enum
-from pm4py.objects.heuristics_net.obj import HeuristicsNet
-from typing import Optional, Dict, Any, Union
 from uuid import uuid4
+from enum import Enum
+from typing import Optional, Dict, Any, Union
+
+from graphviz import Digraph
+
+from pm4py.objects.heuristics_net.obj import HeuristicsNet
+from pm4py.util import constants, exec_utils
+from pm4py.util.vis_utils import human_readable_stat
 
 
 class Parameters(Enum):
@@ -128,7 +128,7 @@ def transform_to_hex_2(color):
 def get_graph(
     heu_net: HeuristicsNet,
     parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
-) -> pydotplus.graphviz.Dot:
+) -> Digraph:
     """
     Gets a representation of an Heuristics Net
 
@@ -143,7 +143,7 @@ def get_graph(
     Returns
     ------------
     graph
-        Pydotplus graph
+        Graphviz graph
     """
     if parameters is None:
         parameters = {}
@@ -160,15 +160,23 @@ def get_graph(
     bgcolor = exec_utils.get_param_value(
         Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR
     )
-    graph = pydotplus.Dot(strict=True)
-    graph.obj_dict["attributes"]["bgcolor"] = bgcolor
-    graph.set_bgcolor(bgcolor)
+    image_format = exec_utils.get_param_value(
+        Parameters.FORMAT, parameters, "png"
+    )
+
+    filename = tempfile.NamedTemporaryFile(suffix=".gv")
+    filename.close()
+
+    graph = Digraph(filename=filename.name, strict=True, engine="dot")
+    graph.attr(bgcolor=bgcolor)
 
     if enable_graph_title:
-        graph.set_label(graph_title)
-        graph.set_labelloc("top")
-        graph.set_labeljust("center")
-        graph.set_fontsize(20)
+        graph.attr(
+            label=graph_title,
+            labelloc="top",
+            labeljust="center",
+            fontsize="20",
+        )
 
     corr_nodes = {}
     corr_nodes_names = {}
@@ -197,35 +205,28 @@ def get_graph(
             graycolor = transform_to_hex_2(
                 max(255 - math.log(node_occ) * 9, 0)
             )
+            node_id = str(uuid4())
             if node.node_type == "frequency":
                 is_frequency = True
-                n = pydotplus.Node(
-                    name=str(uuid4()),
-                    shape="box",
-                    style="filled",
-                    label=node_name + " (" + str(node_occ) + ")",
-                    fillcolor=node.get_fill_color(graycolor),
-                    fontcolor=node.get_font_color(),
-                )
+                node_label = f"{node_name} ({node_occ})"
             else:
-                n = pydotplus.Node(
-                    name=str(uuid4()),
-                    shape="box",
-                    style="filled",
-                    label=(
-                        node_name
-                        + " ("
-                        + human_readable_stat(heu_net.sojourn_times[node_name])
-                        + ")"
-                        if node_name in heu_net.sojourn_times
-                        else node_name + " (0s)"
-                    ),
-                    fillcolor=node.get_fill_color(graycolor),
-                    fontcolor=node.get_font_color(),
+                sojourn = (
+                    human_readable_stat(heu_net.sojourn_times[node_name])
+                    if node_name in heu_net.sojourn_times
+                    else "0s"
                 )
-            corr_nodes[node] = n
-            corr_nodes_names[node_name] = n
-            graph.add_node(n)
+                node_label = f"{node_name} ({sojourn})"
+
+            graph.node(
+                node_id,
+                label=node_label,
+                shape="box",
+                style="filled",
+                fillcolor=node.get_fill_color(graycolor),
+                fontcolor=node.get_font_color(),
+            )
+            corr_nodes[node] = node_id
+            corr_nodes_names[node_name] = node_id
 
     # gets max arc value
     max_arc_value = -1
@@ -243,55 +244,34 @@ def get_graph(
                 for edge in node.output_connections[other_node]:
                     this_pen_width = 1.0 + math.log(1 + edge.repr_value) / 11.0
                     repr_value = str(edge.repr_value)
+                    edge_kwargs = {
+                        "color": edge.get_color(),
+                        "fontcolor": edge.get_font_color(),
+                        "penwidth": str(edge.get_penwidth(this_pen_width)),
+                    }
                     if edge.net_name:
                         if node.node_type == "frequency":
-                            e = pydotplus.Edge(
-                                src=corr_nodes[node],
-                                dst=corr_nodes[other_node],
-                                label=edge.net_name + " (" + repr_value + ")",
-                                color=edge.get_color(),
-                                fontcolor=edge.get_font_color(),
-                                penwidth=edge.get_penwidth(this_pen_width),
-                            )
+                            label = f"{edge.net_name} ({repr_value})"
                         else:
-                            e = pydotplus.Edge(
-                                src=corr_nodes[node],
-                                dst=corr_nodes[other_node],
-                                label=edge.net_name
-                                + " ("
-                                + human_readable_stat(repr_value)
-                                + ")",
-                                color=edge.get_color(),
-                                fontcolor=edge.get_font_color(),
-                                penwidth=edge.get_penwidth(this_pen_width),
+                            label = (
+                                f"{edge.net_name} "
+                                f"({human_readable_stat(repr_value)})"
                             )
                     else:
                         if node.node_type == "frequency":
-                            e = pydotplus.Edge(
-                                src=corr_nodes[node],
-                                dst=corr_nodes[other_node],
-                                label=repr_value,
-                                color=edge.get_color(),
-                                fontcolor=edge.get_font_color(),
-                                penwidth=edge.get_penwidth(this_pen_width),
-                            )
+                            label = repr_value
                         else:
-                            e = pydotplus.Edge(
-                                src=corr_nodes[node],
-                                dst=corr_nodes[other_node],
-                                label=human_readable_stat(repr_value),
-                                color=edge.get_color(),
-                                fontcolor=edge.get_font_color(),
-                                penwidth=edge.get_penwidth(this_pen_width),
-                            )
-
-                    graph.add_edge(e)
+                            label = human_readable_stat(repr_value)
+                    graph.edge(
+                        corr_nodes[node], corr_nodes[other_node], label=label, **edge_kwargs
+                    )
 
     for index, sa_list in enumerate(heu_net.start_activities):
         effective_sa_list = [n for n in sa_list if n in corr_nodes_names]
         if effective_sa_list:
-            start_i = pydotplus.Node(
-                name="start_" + str(index),
+            start_id = f"start_{index}"
+            graph.node(
+                start_id,
                 label="@@S",
                 color=heu_net.default_edges_color[index],
                 fontsize="8",
@@ -299,7 +279,6 @@ def get_graph(
                 fillcolor="#32CD32",
                 style="filled",
             )
-            graph.add_node(start_i)
             for node_name in effective_sa_list:
                 sa = corr_nodes_names[node_name]
                 if type(heu_net.start_activities[index]) is dict:
@@ -307,54 +286,42 @@ def get_graph(
                     if occ >= heu_net.min_dfg_occurrences:
                         if is_frequency:
                             this_pen_width = 1.0 + math.log(1 + occ) / 11.0
+                            penwidth = str(this_pen_width)
                             if heu_net.net_name[index]:
-                                e = pydotplus.Edge(
-                                    src=start_i,
-                                    dst=sa,
-                                    label=heu_net.net_name[index]
-                                    + " ("
-                                    + str(occ)
-                                    + ")",
-                                    color=heu_net.default_edges_color[index],
-                                    fontcolor=heu_net.default_edges_color[
-                                        index
-                                    ],
-                                    penwidth=this_pen_width,
-                                )
+                                label = f"{heu_net.net_name[index]} ({occ})"
                             else:
-                                e = pydotplus.Edge(
-                                    src=start_i,
-                                    dst=sa,
-                                    label=str(occ),
-                                    color=heu_net.default_edges_color[index],
-                                    fontcolor=heu_net.default_edges_color[
-                                        index
-                                    ],
-                                    penwidth=this_pen_width,
-                                )
+                                label = str(occ)
+                            graph.edge(
+                                start_id,
+                                sa,
+                                label=label,
+                                color=heu_net.default_edges_color[index],
+                                fontcolor=heu_net.default_edges_color[index],
+                                penwidth=penwidth,
+                            )
                         else:
-                            e = pydotplus.Edge(
-                                src=start_i,
-                                dst=sa,
+                            graph.edge(
+                                start_id,
+                                sa,
                                 label=heu_net.net_name[index],
                                 color=heu_net.default_edges_color[index],
                                 fontcolor=heu_net.default_edges_color[index],
                             )
                 else:
-                    e = pydotplus.Edge(
-                        src=start_i,
-                        dst=sa,
+                    graph.edge(
+                        start_id,
+                        sa,
                         label=heu_net.net_name[index],
                         color=heu_net.default_edges_color[index],
                         fontcolor=heu_net.default_edges_color[index],
                     )
-                graph.add_edge(e)
 
     for index, ea_list in enumerate(heu_net.end_activities):
         effective_ea_list = [n for n in ea_list if n in corr_nodes_names]
         if effective_ea_list:
-            end_i = pydotplus.Node(
-                name="end_" + str(index),
+            end_id = f"end_{index}"
+            graph.node(
+                end_id,
                 label="@@E",
                 color="#FFA500",
                 fillcolor="#FFA500",
@@ -362,7 +329,6 @@ def get_graph(
                 fontsize="8",
                 style="filled",
             )
-            graph.add_node(end_i)
             for node_name in effective_ea_list:
                 ea = corr_nodes_names[node_name]
                 if type(heu_net.end_activities[index]) is dict:
@@ -370,48 +336,37 @@ def get_graph(
                     if occ >= heu_net.min_dfg_occurrences:
                         if is_frequency:
                             this_pen_width = 1.0 + math.log(1 + occ) / 11.0
+                            penwidth = str(this_pen_width)
                             if heu_net.net_name[index]:
-                                e = pydotplus.Edge(
-                                    src=ea,
-                                    dst=end_i,
-                                    label=heu_net.net_name[index]
-                                    + " ("
-                                    + str(occ)
-                                    + ")",
-                                    color=heu_net.default_edges_color[index],
-                                    fontcolor=heu_net.default_edges_color[
-                                        index
-                                    ],
-                                    penwidth=this_pen_width,
-                                )
+                                label = f"{heu_net.net_name[index]} ({occ})"
                             else:
-                                e = pydotplus.Edge(
-                                    src=ea,
-                                    dst=end_i,
-                                    label=str(occ),
-                                    color=heu_net.default_edges_color[index],
-                                    fontcolor=heu_net.default_edges_color[
-                                        index
-                                    ],
-                                    penwidth=this_pen_width,
-                                )
+                                label = str(occ)
+                            graph.edge(
+                                ea,
+                                end_id,
+                                label=label,
+                                color=heu_net.default_edges_color[index],
+                                fontcolor=heu_net.default_edges_color[index],
+                                penwidth=penwidth,
+                            )
                         else:
-                            e = pydotplus.Edge(
-                                src=ea,
-                                dst=end_i,
+                            graph.edge(
+                                ea,
+                                end_id,
                                 label=heu_net.net_name[index],
                                 color=heu_net.default_edges_color[index],
                                 fontcolor=heu_net.default_edges_color[index],
                             )
                 else:
-                    e = pydotplus.Edge(
-                        src=ea,
-                        dst=end_i,
+                    graph.edge(
+                        ea,
+                        end_id,
                         label=heu_net.net_name[index],
                         color=heu_net.default_edges_color[index],
                         fontcolor=heu_net.default_edges_color[index],
                     )
-                graph.add_edge(e)
+
+    graph.format = image_format.replace("html", "plain-ext")
 
     return graph
 
@@ -439,14 +394,7 @@ def apply(
     if parameters is None:
         parameters = {}
 
-    image_format = exec_utils.get_param_value(
-        Parameters.FORMAT, parameters, "png"
-    )
 
     graph = get_graph(heu_net, parameters=parameters)
 
-    file_name = tempfile.NamedTemporaryFile(suffix="." + image_format)
-    file_name.close()
-
-    graph.write(file_name.name, format=image_format)
-    return file_name
+    return graph
