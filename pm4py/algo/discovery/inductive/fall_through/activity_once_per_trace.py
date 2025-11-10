@@ -56,4 +56,5 @@ class ActivityOncePerTraceUVCL(ActivityConcurrentUVCL):
                 return None
 
         # Return any one of the remaining candidates
-        return next(iter(candidates)) if candidates else None
+        candidates = sorted(list(candidates))
+        return candidates[0] if candidates else None

@@ -35,7 +35,7 @@ class Parameters(Enum):
 
 def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     """
-    Converts an OCEL to a NetworkX DiGraph object.
+    Converts an OCEL to a NetworkX MultiDiGraph object.
     The nodes are the events and objects of the OCEL.
     The edges are of two different types:
     - relation edges, connecting an event to its related objects
@@ -52,7 +52,7 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     Returns
     ---------------
     G
-        NetworkX DiGraph
+        NetworkX MultiDiGraph
     """
     if parameters is None:
         parameters = {}
@@ -64,7 +64,7 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
         Parameters.INCLUDE_OBJECT_CHANGES, parameters, True
     )
 
-    G = nx_utils.DiGraph()
+    G = nx_utils.MultiDiGraph()
 
     stream = ocel.events.to_dict("records")
     stream = to_event_stream.__postprocess_stream(stream)

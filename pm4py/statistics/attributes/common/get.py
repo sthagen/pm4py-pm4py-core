@@ -148,8 +148,16 @@ def get_kde_numeric_attribute(values, parameters=None):
 
         # linear space including both endpoints
         xs1 = np.linspace(min_val, max_val, half, endpoint=True)
-        # geometric space including both endpoints (avoid zero)
-        xs2 = np.geomspace(max(min_val, eps), max_val, half, endpoint=True)
+        # try to enrich the sampling near the distribution tails; fall back when geomspace is not applicable
+        if min_val > 0 and max_val > 0:
+            # both bounds positive -> standard geometric spacing
+            xs2 = np.geomspace(max(min_val, eps), max_val, half, endpoint=True)
+        elif min_val < 0 and max_val < 0:
+            # both bounds negative -> mirror geometric spacing on the absolute values
+            xs2 = -np.geomspace(abs(min_val), max(abs(max_val), eps), half, endpoint=True)
+        else:
+            # bounds cross or hit zero -> stick to linear spacing to avoid invalid geometric ranges
+            xs2 = np.linspace(min_val, max_val, half, endpoint=True)
 
         # combine, add exact endpoints, dedupe & sort
         xs = np.unique(

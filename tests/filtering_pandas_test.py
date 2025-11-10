@@ -55,6 +55,77 @@ class DataframePrefilteringTest(unittest.TestCase):
         del df1
         del df2
 
+    def test_filtering_attr_values(self):
+        # to avoid static method warnings in tests,
+        # that by construction of the unittest package have to be expressed in such way
+        self.dummy_variable = "dummy_value"
+        input_log = os.path.join(INPUT_DATA_DIR, "running-example.csv")
+        dataframe = pandas_utils.read_csv(input_log)
+        dataframe = dataframe_utils.convert_timestamp_columns_in_df(dataframe, timest_format=constants.DEFAULT_TIMESTAMP_PARSE_FORMAT)
+        # add a row with a NAN value in the filter attribute
+        case_id_of_nan_case = len(dataframe)
+        dataframe.loc[len(dataframe)] = {"case:concept:name": case_id_of_nan_case,
+                                    "case:concept": "register request",
+                                    "Resource": None,
+                                    "time:timestamp": "2011-01-09 12:02:00+00:00"
+                                    }
+
+        pos = attributes_filter.apply(dataframe, ["Pete"],
+                                             parameters={attributes_filter.Parameters.POSITIVE: True,
+                                                         attributes_filter.PARAMETER_CONSTANT_ATTRIBUTE_KEY: "Resource"})
+        neg = attributes_filter.apply(dataframe, ["Pete"],
+                                             parameters={attributes_filter.Parameters.POSITIVE: False,
+                                                         attributes_filter.PARAMETER_CONSTANT_ATTRIBUTE_KEY: "Resource"})
+
+        pos_with_nan = attributes_filter.apply(dataframe, ["Pete"],
+                                             parameters={attributes_filter.Parameters.POSITIVE: True,
+                                                         attributes_filter.PARAMETER_CONSTANT_ATTRIBUTE_KEY: "Resource",
+                                                         attributes_filter.Parameters.KEEP_NAN_VALUES: True})
+
+        # We configure the filter to keep NAN values, however because of attributes_filter.Parameters.POSITIVE: False
+        # the complement of the filter result is taken. This means that the NAN values are not included
+        neg_without_nan = attributes_filter.apply(dataframe, ["Pete"],
+                                             parameters={attributes_filter.Parameters.POSITIVE: False,
+                                                         attributes_filter.PARAMETER_CONSTANT_ATTRIBUTE_KEY: "Resource",
+                                                         attributes_filter.Parameters.KEEP_NAN_VALUES: True})
+
+        case_identifier = "case:concept:name"
+        num_cases = len(dataframe[case_identifier].unique())
+
+        cases_pos = pos[case_identifier].unique()
+        num_cases_pos = len(cases_pos)
+
+        cases_neg = neg[case_identifier].unique()
+        num_cases_neg = len(cases_neg)
+
+        cases_pos_with_nan = pos_with_nan[case_identifier].unique()
+        num_cases_pos_with_nan = len(cases_pos_with_nan)
+
+        cases_neg_without_nan = neg_without_nan[case_identifier].unique()
+        num_cases_neg_without_nan = len(cases_neg_without_nan)
+
+        self.assertEqual(num_cases_pos + num_cases_neg, num_cases)
+        self.assertEqual(num_cases_pos_with_nan + num_cases_neg_without_nan, num_cases)
+
+        self.assertEqual(num_cases_pos + 1, num_cases_pos_with_nan)
+        self.assertEqual(num_cases_neg, num_cases_neg_without_nan + 1)
+
+        self.assertNotIn(case_id_of_nan_case, cases_pos)
+        self.assertIn(case_id_of_nan_case, cases_neg)
+        self.assertIn(case_id_of_nan_case, cases_pos_with_nan)
+        self.assertNotIn(case_id_of_nan_case, cases_neg_without_nan)
+
+        del pos
+        del neg
+        del pos_with_nan
+        del neg_without_nan
+
+        del cases_pos
+        del cases_neg
+        del cases_pos_with_nan
+        del cases_neg_without_nan
+
+
     def test_filtering_paths(self):
         # to avoid static method warnings in tests,
         # that by construction of the unittest package have to be expressed in such way
