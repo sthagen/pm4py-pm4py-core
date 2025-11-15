@@ -51,8 +51,10 @@ def apply(
     for place in petri_net.places:
         targets = set()
         for out_arc in place.out_arcs:
+            targets1 = set()
             for out_arc2 in out_arc.target.out_arcs:
-                targets.add(out_arc2.target)
+                targets1.add(out_arc2.target.name)
+            targets.add(tuple(sorted(list(targets1))))
         ext_card += len(targets)
 
     return ext_card

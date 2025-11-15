@@ -36,6 +36,8 @@ def apply(
     """
     Gets simplicity from a Petri net
 
+    Sánchez-González, Laura, et al. "Prediction of business process model quality based on structural metrics." International Conference on Conceptual Modeling. Berlin, Heidelberg: Springer Berlin Heidelberg, 2010.
+    
     Vázquez-Barreiros, Borja, Manuel Mucientes, and Manuel Lama. "ProDiGen: Mining complete, precise and minimal
     structure process models with a genetic algorithm." Information Sciences 294 (2015): 315-333.
 

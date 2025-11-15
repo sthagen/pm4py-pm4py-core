@@ -99,11 +99,16 @@ def apply(
     # Pre-compute column lists and masks for better performance
     numeric_x = x_col in df.columns
     numeric_y = y_col in df.columns
-    
+
+    x_prefix_cols = []
+    y_prefix_cols = []
     if not numeric_x:
         x_prefix_cols = [c for c in df.columns if c.startswith(x_col+"_")]
     if not numeric_y:
         y_prefix_cols = [c for c in df.columns if c.startswith(y_col+"_")]
+
+    x_all_bins = None
+    y_all_bins = None
 
     # ------------------------------------------------------
     # Handle X dimension binning
@@ -125,11 +130,13 @@ def apply(
         # Create binned column directly without temporary column
         x_binned = pd.cut(df[x_col], bins=x_bins, include_lowest=True)
         x_valid_mask = pd.notna(x_binned)
+        x_all_bins = x_binned.cat.categories
     else:
         # Pre-filter and vectorize prefix-based column selection
         x_prefix_data = df[x_prefix_cols].fillna(0)
         x_valid_cols_mask = x_prefix_data >= 1
         x_valid_mask = x_valid_cols_mask.any(axis=1)
+        x_all_bins = x_prefix_cols
 
     # ------------------------------------------------------
     # Handle Y dimension binning
@@ -149,10 +156,12 @@ def apply(
         
         y_binned = pd.cut(df[y_col], bins=y_bins, include_lowest=True)
         y_valid_mask = pd.notna(y_binned)
+        y_all_bins = y_binned.cat.categories
     else:
         y_prefix_data = df[y_prefix_cols].fillna(0)
         y_valid_cols_mask = y_prefix_data >= 1
         y_valid_mask = y_valid_cols_mask.any(axis=1)
+        y_all_bins = y_prefix_cols
 
     # Combined validity mask
     valid_mask = x_valid_mask & y_valid_mask
@@ -335,9 +344,12 @@ def apply(
         aggfunc=agg_fn,
         dropna=False
     )
-    
-    # Drop completely empty rows/columns more efficiently
-    pivot_df = pivot_df.dropna(how="all", axis=0).dropna(how="all", axis=1)
+
+    # Always keep all configured bins, even when no entries end up in that slice
+    if x_all_bins is not None and len(x_all_bins) > 0:
+        pivot_df = pivot_df.reindex(x_all_bins)
+    if y_all_bins is not None and len(y_all_bins) > 0:
+        pivot_df = pivot_df.reindex(columns=y_all_bins)
 
     # Build cell-case mapping using vectorized operations
     valid_x_mask = agg_result["x_bin"].isin(pivot_df.index)

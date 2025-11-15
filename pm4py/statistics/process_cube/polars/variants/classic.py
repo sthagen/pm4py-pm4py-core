@@ -118,12 +118,18 @@ def _prepare_bins(
     return []
 
 
+def _bin_labels(bins: List[float]) -> List[str]:
+    if len(bins) < 2:
+        return []
+    return [f"[{bins[i]}, {bins[i + 1]}]" for i in range(len(bins) - 1)]
+
+
 def _assign_bins(series: pl.Series, bins: List[float], name: str) -> pl.Series:
     length = len(series)
     if len(bins) < 2:
         return pl.Series(name, [None] * length)
 
-    labels = [f"[{bins[i]}, {bins[i + 1]}]" for i in range(len(bins) - 1)]
+    labels = _bin_labels(bins)
     last_edge = bins[-1]
 
     assigned: List[Optional[str]] = []
@@ -338,6 +344,8 @@ def apply(
 
     x_prefix_cols: List[str] = []
     y_prefix_cols: List[str] = []
+    all_x_bins: List[str] = []
+    all_y_bins: List[str] = []
 
     if not numeric_x:
         x_prefix_cols = _prefix_columns(df, x_col)
@@ -351,20 +359,28 @@ def apply(
         y_bins = _prepare_bins(df[y_col], y_bins_param, max_divisions_y)
         if len(x_bins) < 2 or len(y_bins) < 2:
             return pl.DataFrame(), {}
+        all_x_bins = _bin_labels(x_bins)
+        all_y_bins = _bin_labels(y_bins)
         temp_df = _numeric_numeric_case(df, x_col, y_col, agg_col, x_bins, y_bins)
     elif numeric_x and not numeric_y:
         x_bins = _prepare_bins(df[x_col], x_bins_param, max_divisions_x)
         if len(x_bins) < 2 or not y_prefix_cols:
             return pl.DataFrame(), {}
+        all_x_bins = _bin_labels(x_bins)
+        all_y_bins = y_prefix_cols
         temp_df = _numeric_prefix_case(df, x_col, agg_col, x_bins, y_prefix_cols, "y_bin")
     elif not numeric_x and numeric_y:
         y_bins = _prepare_bins(df[y_col], y_bins_param, max_divisions_y)
         if len(y_bins) < 2 or not x_prefix_cols:
             return pl.DataFrame(), {}
+        all_x_bins = x_prefix_cols
+        all_y_bins = _bin_labels(y_bins)
         temp_df = _prefix_numeric_case(df, y_col, agg_col, y_bins, x_prefix_cols, "x_bin")
     else:
         if not x_prefix_cols or not y_prefix_cols:
             return pl.DataFrame(), {}
+        all_x_bins = x_prefix_cols
+        all_y_bins = y_prefix_cols
         temp_df = _prefix_prefix_case(df, agg_col, x_prefix_cols, y_prefix_cols)
 
     if temp_df.is_empty():
@@ -388,6 +404,20 @@ def apply(
         columns="y_bin",
         sort_columns=False,
     )
+
+    if all_x_bins:
+        base_rows = pl.DataFrame({"x_bin": all_x_bins})
+        pivot_df = base_rows.join(pivot_df, on="x_bin", how="left")
+
+    value_columns = [col for col in pivot_df.columns if col != "x_bin"]
+    if all_y_bins:
+        missing_cols = [col for col in all_y_bins if col not in value_columns]
+        if missing_cols:
+            additions = {col: [None] * pivot_df.height for col in missing_cols}
+            pivot_df = pl.concat([pivot_df, pl.DataFrame(additions)], how="horizontal")
+        ordered_cols = ["x_bin", *all_y_bins]
+        remaining_cols = [col for col in pivot_df.columns if col not in ordered_cols]
+        pivot_df = pivot_df.select([*ordered_cols, *remaining_cols])
 
     case_groups = (
         temp_df.group_by(["x_bin", "y_bin"], maintain_order=True)

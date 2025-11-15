@@ -68,7 +68,7 @@ def apply(
 
     for n in reach_graph.states:
         for n2 in n.outgoing:
-            G.add_edge(n, n2)
+            G.add_edge(n.name, n2.name)
 
     sg = list(nx_utils.strongly_connected_components(G))
 
