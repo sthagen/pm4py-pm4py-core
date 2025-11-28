@@ -312,8 +312,12 @@ def apply(
 
     nodes, edges = simplify_and_gateways(nodes, edges)
 
-    rankdir = "LR"
-    bgcolor = constants.DEFAULT_BGCOLOR
+    rankdir = exec_utils.get_param_value(
+        Parameters.RANKDIR, parameters, constants.DEFAULT_RANKDIR_GVIZ
+    )
+    bgcolor = exec_utils.get_param_value(
+        Parameters.BGCOLOR, parameters, constants.DEFAULT_BGCOLOR
+    )
 
     filename = tempfile.NamedTemporaryFile(suffix=".gv")
     viz = Digraph(

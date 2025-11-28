@@ -50,6 +50,7 @@ class Parameters(Enum):
     ENABLE_DEEPCOPY = "enable_deepcopy"
     FONT_SIZE = "font_size"
     BGCOLOR = "bgcolor"
+    RANKDIR = "rankdir"
     ENABLE_GRAPH_TITLE = "enable_graph_title"
     GRAPH_TITLE = "graph_title"
 
@@ -82,6 +83,11 @@ def apply(powl: POWL, parameters: Optional[Dict[Any, Any]] = None) -> Digraph:
 
     filename = tempfile.NamedTemporaryFile(suffix=".gv")
 
+    rankdir = exec_utils.get_param_value(Parameters.RANKDIR, parameters, "TB")
+    bgcolor = exec_utils.get_param_value(
+        Parameters.BGCOLOR, parameters, fillcolor
+    )
+
     viz = Digraph("powl", filename=filename.name, engine="dot")
     viz.attr("node", shape="ellipse", fixedsize="false")
     viz.attr(nodesep="1")
@@ -89,13 +95,13 @@ def apply(powl: POWL, parameters: Optional[Dict[Any, Any]] = None) -> Digraph:
     viz.attr(compound="true")
     viz.attr(overlap="scale")
     viz.attr(splines="true")
-    viz.attr(rankdir="TB")
+    viz.attr(rankdir=rankdir)
     viz.attr(style="filled")
-    viz.attr(fillcolor=fillcolor)
+    viz.attr(fillcolor=bgcolor)
 
     color_map = exec_utils.get_param_value(Parameters.COLOR_MAP, {}, {})
 
-    repr_powl(powl, viz, color_map, level=0)
+    repr_powl(powl, viz, color_map, level=0, base_color=bgcolor)
     viz.format = "svg"
 
     return viz
@@ -204,12 +210,12 @@ def add_order_edge(
             )
 
 
-def repr_powl(powl, viz, color_map, level):
+def repr_powl(powl, viz, color_map, level, base_color):
     font_size = "18"
     this_node_id = str(id(powl))
 
     current_color = darken_color(
-        fillcolor, amount=opacity_change_ratio * level
+        base_color, amount=opacity_change_ratio * level
     )
 
     if isinstance(powl, FrequentTransition):
@@ -305,7 +311,9 @@ def repr_powl(powl, viz, color_map, level):
             block.attr(style="filled")
             block.attr(fillcolor=current_color)
             for child in powl.children:
-                repr_powl(child, block, color_map, level=level + 1)
+                repr_powl(
+                    child, block, color_map, level=level + 1, base_color=base_color
+                )
             for child in powl.children:
                 for child2 in powl.children:
                     if transitive_reduction.is_edge(child, child2):
@@ -332,9 +340,13 @@ def repr_powl(powl, viz, color_map, level):
                     )
                 do = powl.children[0]
                 redo = powl.children[1]
-                repr_powl(do, block, color_map, level=level + 1)
+                repr_powl(
+                    do, block, color_map, level=level + 1, base_color=base_color
+                )
                 add_operator_edge(block, this_node_id, do)
-                repr_powl(redo, block, color_map, level=level + 1)
+                repr_powl(
+                    redo, block, color_map, level=level + 1, base_color=base_color
+                )
                 add_operator_edge(block, this_node_id, redo, style="dashed")
             elif powl.operator == Operator.XOR:
                 with importlib.resources.path(
@@ -351,7 +363,9 @@ def repr_powl(powl, viz, color_map, level):
                         fixedsize="true",
                     )
                 for child in powl.children:
-                    repr_powl(child, block, color_map, level=level + 1)
+                    repr_powl(
+                        child, block, color_map, level=level + 1, base_color=base_color
+                    )
                     add_operator_edge(block, this_node_id, child)
 
 

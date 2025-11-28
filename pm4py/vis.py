@@ -1989,6 +1989,7 @@ def view_powl(
     format: str = constants.DEFAULT_FORMAT_GVIZ_VIEW,
     bgcolor: str = "white",
     variant_str: str = "basic",
+    rankdir: str = "TB",
     graph_title: Optional[str] = None,
 ):
     """
@@ -2002,6 +2003,7 @@ def view_powl(
     :param powl: POWL model
     :param format: Format of the visualization (default: png)
     :param bgcolor: Background color (default: white)
+    :param rankdir: Graph direction ("LR" or "TB")
     :param variant_str: Variant of the visualization to be used ("basic" or "net")
     :param graph_title: Title of the visualization (if provided)
 
@@ -2026,7 +2028,7 @@ def view_powl(
     fmt = _extract_format(format)
     from pm4py.visualization.powl import visualizer as powl_visualizer
 
-    params = _setup_parameters(fmt, bgcolor, graph_title=graph_title)
+    params = _setup_parameters(fmt, bgcolor, rankdir, graph_title=graph_title)
     gviz = powl_visualizer.apply(powl, variant=variant, parameters=params)
 
     powl_visualizer.view(gviz, parameters=params)
