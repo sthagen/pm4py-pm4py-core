@@ -23,7 +23,6 @@ Contact: info@processintelligence.solutions
 from pm4py.util.lp import solver
 from pm4py.util import constants
 from pm4py.objects.petri_net.utils.petri_utils import remove_place
-from copy import copy
 from typing import Tuple
 import warnings
 import importlib.util
@@ -34,10 +33,18 @@ def apply_reduction(
     net: PetriNet, im: Marking, fm: Marking
 ) -> Tuple[PetriNet, Marking, Marking]:
     """
-    Apply the Murata reduction to an accepting Petri net, removing the structurally redundant places.
+    Apply the Murata reduction to an accepting Petri net, removing structurally redundant (implicit) places.
 
-    The implementation follows the Berthelot algorithm as in:
-    https://svn.win.tue.nl/repos/prom/Packages/Murata/Trunk/src/org/processmining/algorithms/BerthelotAlgorithm.java
+    This implementation follows the (Berthelot) implicit-place check by searching, via ILP,
+    for a place-flow f = a_p * p - Σ a_q * q (a_p >= 1, a_q >= 0) such that:
+
+      (1) f is a P-invariant (flow):  a_p*C(p,t) - Σ a_q*C(q,t) = 0    for all transitions t
+          where C(p,t) = Post(p,t) - Pre(p,t)
+
+      (2) a_p*Pre(p,t) - Σ a_q*Pre(q,t) <= k   for all transitions t
+          with k = a_p*M0(p) - Σ a_q*M0(q),  and k >= 0
+
+    If such a solution exists, the candidate place is implicit and can be removed without changing behavior.
 
     Parameters
     ---------------
@@ -51,95 +58,137 @@ def apply_reduction(
     Returns
     --------------
     net
-        Petri net
+        Reduced Petri net
     im
-        Initial marking
+        Initial marking (unchanged)
     fm
-        Final marking
+        Final marking (unchanged)
     """
     places = sorted(list(net.places), key=lambda x: x.name)
     redundant = set()
+
+    # Choose solver backend
+    proposed_solver = solver.SCIPY
+    if importlib.util.find_spec("pulp"):
+        proposed_solver = solver.PULP
+    else:
+        if constants.SHOW_INTERNAL_WARNINGS:
+            warnings.warn(
+                "solution from scipy may be unstable. Please install PuLP (pip install pulp) for fully reliable results."
+            )
+
     for place in places:
+        # Skip already proven redundant places
+        if place in redundant:
+            continue
+
         # Skip places in the initial or final markings
         if place in im or place in fm:
             continue
+
+        # Work on the "current" net as if previously found redundant places were removed:
+        active_places = [p for p in places if p not in redundant]
+        active_places = sorted(active_places, key=lambda x: x.name)
+        place_index = {p: i for i, p in enumerate(active_places)}
+
+        n_places = len(active_places)
+        n_vars = n_places + 1  # last variable is k
+        k_idx = n_vars - 1
 
         Aeq = []
         Aub = []
         beq = []
         bub = []
 
-        # first constraint
-        constraint = [0] * (len(net.places) + 1)
-        for p2 in im:
-            if p2 not in redundant:
-                if p2 == place:
-                    constraint[places.index(p2)] = im[p2]
-                else:
-                    constraint[places.index(p2)] = -im[p2]
-        constraint[-1] = -1
-        Aeq.append(constraint)
+        # ---------------------------------------------------------------------
+        # (A) k = a_p*M0(p) - Σ a_q*M0(q)
+        #     => a_p*M0(p) - Σ a_q*M0(q) - k = 0
+        # ---------------------------------------------------------------------
+        eq = [0] * n_vars
+        for p2 in active_places:
+            m0 = im[p2] if p2 in im else 0
+            if m0 == 0:
+                continue
+            if p2 == place:
+                eq[place_index[p2]] += m0
+            else:
+                eq[place_index[p2]] -= m0
+        eq[k_idx] = -1
+        Aeq.append(eq)
         beq.append(0)
 
-        # second constraints
+        # ---------------------------------------------------------------------
+        # (B) Flow constraints: for all transitions t,
+        #     a_p*C(p,t) - Σ a_q*C(q,t) = 0
+        #     where C(p,t)=Post(p,t)-Pre(p,t)
+        # ---------------------------------------------------------------------
         for trans in net.transitions:
-            constraint = [0] * (len(net.places) + 1)
+            pre = {}
+            post = {}
 
             for arc in trans.in_arcs:
-                p2 = arc.source
-                if p2 not in redundant:
-                    if p2 == place:
-                        constraint[places.index(p2)] = arc.weight
-                    else:
-                        constraint[places.index(p2)] = -arc.weight
-            constraint[-1] = -1
-            Aub.append(constraint)
-            bub.append(0)
-
-        # third constraints
-        for trans in net.transitions:
-            constraint = [0] * (len(net.places) + 1)
+                src = arc.source
+                if src in place_index:
+                    pre[src] = pre.get(src, 0) + arc.weight
 
             for arc in trans.out_arcs:
-                p2 = arc.target
-                if p2 not in redundant:
-                    if p2 == place:
-                        constraint[places.index(p2)] = -arc.weight
-                    else:
-                        constraint[places.index(p2)] = arc.weight
-            Aub.append(constraint)
+                tgt = arc.target
+                if tgt in place_index:
+                    post[tgt] = post.get(tgt, 0) + arc.weight
+
+            eq = [0] * n_vars
+            for p2 in active_places:
+                c_val = post.get(p2, 0) - pre.get(p2, 0)
+                if c_val == 0:
+                    continue
+                if p2 == place:
+                    eq[place_index[p2]] += c_val
+                else:
+                    eq[place_index[p2]] -= c_val
+            # k has coefficient 0 here
+            Aeq.append(eq)
+            beq.append(0)
+
+        # ---------------------------------------------------------------------
+        # (C) Implicitness inequalities: for all transitions t,
+        #     a_p*Pre(p,t) - Σ a_q*Pre(q,t) - k <= 0
+        # ---------------------------------------------------------------------
+        for trans in net.transitions:
+            ineq = [0] * n_vars
+            for arc in trans.in_arcs:
+                p2 = arc.source
+                if p2 not in place_index:
+                    continue
+                if p2 == place:
+                    ineq[place_index[p2]] += arc.weight
+                else:
+                    ineq[place_index[p2]] -= arc.weight
+            ineq[k_idx] = -1
+            Aub.append(ineq)
             bub.append(0)
 
-        # fourth constraint
-        for p2 in net.places:
-            if p2 not in redundant:
-                constraint = [0] * (len(net.places) + 1)
+        # ---------------------------------------------------------------------
+        # (D) Variable lower bounds:
+        #     a_p >= 1, a_q >= 0, k >= 0
+        #     Implemented as -a <= b
+        # ---------------------------------------------------------------------
+        for p2 in active_places:
+            ineq = [0] * n_vars
+            ineq[place_index[p2]] = -1
+            Aub.append(ineq)
+            if p2 == place:
+                bub.append(-1)  # -a_p <= -1  -> a_p >= 1
+            else:
+                bub.append(0)   # -a_q <= 0   -> a_q >= 0
 
-                constraint[places.index(p2)] = -1
+        ineq = [0] * n_vars
+        ineq[k_idx] = -1
+        Aub.append(ineq)
+        bub.append(0)  # -k <= 0 -> k >= 0
 
-                Aub.append(constraint)
-                if p2 == place:
-                    bub.append(-1)
-                else:
-                    bub.append(0)
-
-        # fifth constraint
-        constraint = [0] * (len(net.places) + 1)
-        constraint[-1] = -1
-        Aub.append(constraint)
-        bub.append(0)
-
-        c = [1] * (len(net.places) + 1)
-        integrality = [1] * (len(net.places) + 1)
-
-        proposed_solver = solver.SCIPY
-        if importlib.util.find_spec("pulp"):
-            proposed_solver = solver.PULP
-        else:
-            if constants.SHOW_INTERNAL_WARNINGS:
-                warnings.warn(
-                    "solution from scipy may be unstable. Please install PuLP (pip install pulp) for fully reliable results."
-                )
+        # Objective (any feasible solution is enough; minimize sum to keep it small)
+        c = [1] * n_vars
+        integrality = [1] * n_vars
 
         xx = solver.apply(
             c,
@@ -156,8 +205,8 @@ def apply_reduction(
         ):
             redundant.add(place)
 
-    for place in redundant:
-        # Remove the redundant place from the net
-        net = remove_place(net, place)
+    # Remove redundant places (deterministic order)
+    for pl in sorted(list(redundant), key=lambda x: x.name):
+        net = remove_place(net, pl)
 
     return net, im, fm

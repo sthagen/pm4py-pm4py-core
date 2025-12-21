@@ -117,12 +117,12 @@ def eventually_follows(
         for attribute_value in attribute_values
     ]
 
-    df_join = (
-        df_a[0].merge(df_a[1], on=case_id_glue, suffixes=("_0", "_1")).dropna()
-    )
-    df_join[constants.DEFAULT_INDEX_KEY] = df_join[
-        constants.DEFAULT_INDEX_KEY + "_0"
-    ]
+    df_join = df_a[0].merge(df_a[1], on=case_id_glue, suffixes=("_0", "_1")).dropna()
+    df_join[constants.DEFAULT_INDEX_KEY] = df_join[constants.DEFAULT_INDEX_KEY + "_0"]
+
+    if enable_timestamp:
+        df_join[timestamp_key] = df_join[timestamp_key + "_0"]
+
     df_join["@@diffindex0"] = (
         df_join[constants.DEFAULT_INDEX_KEY + "_1"]
         - df_join[constants.DEFAULT_INDEX_KEY + "_0"]

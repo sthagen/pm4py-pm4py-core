@@ -19,7 +19,7 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from typing import Optional, Dict, Any, List, Set
+from typing import Optional, Dict, Any, List, Set, Iterable
 
 import polars as pl
 
@@ -28,14 +28,20 @@ from pm4py.util import constants, exec_utils, pandas_utils
 from pm4py.util import xes_constants
 
 
+def _dedupe_preserve_order(values: Iterable[str]) -> List[str]:
+    seen: Set[str] = set()
+    out: List[str] = []
+    for v in values:
+        if v not in seen:
+            seen.add(v)
+            out.append(v)
+    return out
+
+
 def _sanitize_feature_name(
     prefix: str, value: Any, used_names: Optional[Set[str]] = None
 ) -> str:
-    sanitized = (
-        str(value)
-        .encode("ascii", errors="ignore")
-        .decode("ascii")
-    )
+    sanitized = str(value).encode("ascii", errors="ignore").decode("ascii")
     if not sanitized:
         sanitized = "value"
     base_name = f"{prefix}_{sanitized}"
@@ -65,6 +71,21 @@ def _lazy_schema(lf: pl.LazyFrame) -> pl.Schema:
 
 def _lazy_columns(lf: pl.LazyFrame) -> List[str]:
     return _lazy_schema(lf).names()
+
+
+def _drop_if_present(lf: pl.LazyFrame, cols: Iterable[str]) -> pl.LazyFrame:
+    existing = set(_lazy_columns(lf))
+    to_drop = [c for c in cols if c in existing]
+    return lf.drop(to_drop) if to_drop else lf
+
+
+def _unique_internal_name(existing: Set[str], base: str) -> str:
+    if base not in existing:
+        return base
+    i = 1
+    while f"{base}__{i}" in existing:
+        i += 1
+    return f"{base}__{i}"
 
 
 def _is_numeric_dtype(dtype: pl.DataType) -> bool:
@@ -174,17 +195,29 @@ def select_number_column(
     col: str,
     case_id_key: str = constants.CASE_CONCEPT_NAME,
 ) -> pl.LazyFrame:
-    """Adds a numeric column to the feature lazyframe."""
+    """Adds a numeric column to the feature lazyframe.
+
+    Notes on column duplication:
+      * If `fea_df` already contained `col` (e.g., repeated calls / duplicate inputs),
+        Polars would create `col_right` during the join. We explicitly drop any prior
+        versions first to keep the output schema stable.
+      * We also ensure the internal row-number column does not collide with user data.
+    """
+    fea_df = _drop_if_present(fea_df, [col, f"{col}_right"])
+
+    df_cols = set(_lazy_columns(df))
+    row_nr_col = _unique_internal_name(df_cols, "__row_nr")
+
     df_numeric = (
-        df.with_row_count("__row_nr")
-        .select(pl.col(case_id_key), pl.col(col), pl.col("__row_nr"))
+        df.with_row_count(row_nr_col)
+        .select(pl.col(case_id_key), pl.col(col), pl.col(row_nr_col))
         .drop_nulls(subset=[col])
         .group_by(case_id_key)
-        .agg(pl.col(col).sort_by(pl.col("__row_nr")).last().alias(col))
+        .agg(pl.col(col).sort_by(pl.col(row_nr_col)).last().alias(col))
     )
 
     return (
-        fea_df.join(df_numeric, on=case_id_key, how="left")
+        fea_df.join(df_numeric, on=case_id_key, how="left", coalesce=True)
         .with_columns(pl.col(col).cast(pl.Float32))
     )
 
@@ -193,7 +226,6 @@ def _collect_categorical_values(
     df: pl.LazyFrame, columns: List[str]
 ) -> Dict[str, List[Any]]:
     """Collects formatted unique values for the provided categorical columns."""
-
     collected: Dict[str, List[Any]] = {}
     for col in columns:
         unique_values = (
@@ -205,7 +237,9 @@ def _collect_categorical_values(
             .to_list()
         )
         formatted = [
-            value for value in pandas_utils.format_unique(unique_values) if value is not None
+            value
+            for value in pandas_utils.format_unique(unique_values)
+            if value is not None
         ]
         if formatted:
             collected[col] = formatted
@@ -220,46 +254,79 @@ def _select_string_columns(
     case_id_key: str,
     count_occurrences: bool,
 ) -> pl.LazyFrame:
-    """Adds one-hot or count encoded columns for the provided categorical attributes."""
+    """Adds one-hot or count encoded columns for the provided categorical attributes.
 
+    This function is designed to be idempotent: running it multiple times with the same
+    inputs will overwrite/recompute the same generated feature columns instead of
+    creating suffixed duplicates (e.g., `...__1`, `..._right`).
+    """
     if not columns:
         return fea_df
 
-    unique_values_map = _collect_categorical_values(df, columns)
+    df_schema = _lazy_schema(df)
+    available = set(df_schema.names())
+
+    clean_columns = [
+        c
+        for c in _dedupe_preserve_order(columns)
+        if c != case_id_key and c in available
+    ]
+    if not clean_columns:
+        return fea_df
+
+    unique_values_map = _collect_categorical_values(df, clean_columns)
     if not unique_values_map:
         return fea_df
 
+    existing_cols: Set[str] = set(_lazy_columns(fea_df))
+    used_names: Set[str] = set(existing_cols)
+
     agg_exprs: List[pl.Expr] = []
     fill_exprs: List[pl.Expr] = []
-    used_names: Set[str] = set(_lazy_columns(fea_df))
+    cols_to_drop: Set[str] = set()
 
     for column, unique_values in unique_values_map.items():
         for value in unique_values:
-            column_name = _sanitize_feature_name(column, value, used_names)
+            # Deterministic base name (no dependency on existing columns).
+            base_name = _sanitize_feature_name(column, value)
+
+            # If the feature column already exists, we recompute it (drop first),
+            # avoiding `*_right` duplicates from joins.
+            if base_name in existing_cols:
+                cols_to_drop.add(base_name)
+                used_names.discard(base_name)
+            if f"{base_name}_right" in existing_cols:
+                cols_to_drop.add(f"{base_name}_right")
+                used_names.discard(f"{base_name}_right")
+
+            # Ensure uniqueness against the remaining schema + other new features.
+            column_name = base_name
+            suffix = 1
+            while column_name in used_names:
+                column_name = f"{base_name}__{suffix}"
+                suffix += 1
+            used_names.add(column_name)
 
             comparison = pl.col(column).eq(value)
-
             if count_occurrences:
-                agg_expr = comparison.cast(pl.Int64).sum().alias(column_name)
+                agg_exprs.append(comparison.cast(pl.Int64).sum().alias(column_name))
             else:
-                agg_expr = comparison.cast(pl.Int8).max().alias(column_name)
+                agg_exprs.append(comparison.cast(pl.Int8).max().alias(column_name))
 
-            agg_exprs.append(agg_expr)
-            fill_exprs.append(
-                pl.col(column_name).cast(pl.Float32)
-            )
+            fill_exprs.append(pl.col(column_name).cast(pl.Float32))
+
+    if cols_to_drop:
+        fea_df = _drop_if_present(fea_df, cols_to_drop)
 
     feature_chunk = (
-        df.select(
-            [pl.col(case_id_key)] + [pl.col(col) for col in unique_values_map.keys()]
-        )
+        df.select([pl.col(case_id_key)] + [pl.col(c) for c in unique_values_map.keys()])
         .group_by(case_id_key)
         .agg(agg_exprs)
         # Materialize all encoded columns in one go to minimize separate joins.
         .with_columns(fill_exprs)
     )
 
-    return fea_df.join(feature_chunk, on=case_id_key, how="left")
+    return fea_df.join(feature_chunk, on=case_id_key, how="left", coalesce=True)
 
 
 def select_string_column(
@@ -270,7 +337,6 @@ def select_string_column(
     count_occurrences: bool = False,
 ) -> pl.LazyFrame:
     """Adds one-hot or count encoded columns for a categorical attribute."""
-
     return _select_string_columns(
         df,
         fea_df,
@@ -288,7 +354,6 @@ def select_string_columns(
     count_occurrences: bool = False,
 ) -> pl.LazyFrame:
     """Adds one-hot or count encoded columns for the provided categorical attributes."""
-
     return _select_string_columns(
         df,
         fea_df,
@@ -317,6 +382,10 @@ def get_features_df(
         Parameters.COUNT_OCCURRENCES, parameters, False
     )
 
+    # Avoid duplicate work and join-induced `*_right` columns when the
+    # input list contains duplicates.
+    list_columns = _dedupe_preserve_order(list_columns)
+
     fea_df = df.select(pl.col(case_id_key)).unique().sort(case_id_key)
 
     schema = _lazy_schema(df)
@@ -333,9 +402,7 @@ def get_features_df(
             string_columns.append(col)
 
     for col in numeric_columns:
-        fea_df = select_number_column(
-            df, fea_df, col, case_id_key=case_id_key
-        )
+        fea_df = select_number_column(df, fea_df, col, case_id_key=case_id_key)
 
     fea_df = select_string_columns(
         df,
@@ -371,10 +438,7 @@ def automatic_feature_extraction_df(
     fea_sel_df = automatic_feature_selection_df(df, parameters=parameters)
     columns = set(_lazy_columns(fea_sel_df))
 
-    if case_id_key in columns:
-        columns.remove(case_id_key)
-
-    if timestamp_key in columns:
-        columns.remove(timestamp_key)
+    columns.discard(case_id_key)
+    columns.discard(timestamp_key)
 
     return get_features_df(fea_sel_df, list(columns), parameters=parameters)

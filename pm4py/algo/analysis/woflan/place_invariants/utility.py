@@ -177,14 +177,16 @@ def transform_basis(basis, style=None):
             val = solver.get_prim_obj_from_sol(sol, variant=proposed_solver)
 
             if points is not None:
-                new_vector = np.zeros(len(vector))
+                new_vector = np.zeros(len(vector), dtype=np.float64)
 
                 if style == "weighted":
                     for i in range(len(new_vector)):
-                        new_vector[i] = points[len(set_B)] * vector[i]
+                        base_value = np.asarray(vector[i]).reshape(-1)[0]
+                        new_vector[i] = points[len(set_B)] * base_value
                         for j in range(len(modified_base)):
+                            coeff = np.asarray(modified_base[j][i]).reshape(-1)[0]
                             new_vector[i] = (
-                                new_vector[i] + modified_base[j][i] * points[j]
+                                new_vector[i] + coeff * points[j]
                             )
                 elif style == "uniform":
                     for i in range(len(new_vector)):

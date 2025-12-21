@@ -174,6 +174,7 @@ def apply_performance(
         str(col) + "_2" for col in filt_dif_shifted.columns
     ]
     stacked_df = pandas_utils.concat([filt_df, filt_dif_shifted], axis=1)
+    stacked_df = stacked_df[stacked_df[case_id_glue] == stacked_df[case_id_glue + "_2"]].copy()
     stacked_df["@@path"] = (
         stacked_df[attribute_key]
         + DEFAULT_VARIANT_SEP

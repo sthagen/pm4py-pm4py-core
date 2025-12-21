@@ -116,7 +116,7 @@ class ConcurrencyCutUVCL(ConcurrencyCut[IMDataStructureUVCL]):
         for g in groups:
             c = Counter()
             for t in obj.data_structure:
-                c[tuple(filter(lambda e: e in g, t))] = obj.data_structure[t]
+                c[tuple(filter(lambda e: e in g, t))] += obj.data_structure[t]
             r.append(c)
         return list(map(lambda l: IMDataStructureUVCL(l), r))
 

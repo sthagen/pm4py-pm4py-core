@@ -41,6 +41,21 @@ def compute_extra_columns(dataframe: pd.DataFrame, parameters: Optional[Dict[Any
     timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters, xes_constants.DEFAULT_TIMESTAMP_KEY)
     compute_extra_temporal_features = exec_utils.get_param_value(Parameters.COMPUTE_EXTRA_TEMPORAL_FEATURES, parameters, True)
 
+    # Drop previously computed helper columns so re-running the enrichment doesn't duplicate them
+    columns_to_drop = ["@@count", "@@case_throughput"]
+    if compute_extra_temporal_features:
+        columns_to_drop.extend([
+            "@@case_start_year",
+            "@@case_start_ymonth",
+            "@@case_start_month",
+            "@@case_start_week",
+            "@@case_end_year",
+            "@@case_end_ymonth",
+            "@@case_end_month",
+            "@@case_end_week",
+        ])
+    dataframe.drop(columns=columns_to_drop, inplace=True, errors="ignore")
+
     dataframe["@@count"] = 1
 
     # Calculate first and last timestamps for each case

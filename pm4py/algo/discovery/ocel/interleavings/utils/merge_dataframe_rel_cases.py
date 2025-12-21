@@ -134,11 +134,22 @@ def merge_dataframes(
     )
     del left_df[case_id_key + left_suffix]
 
+    # Rename the right-case column coming from relations to avoid clashing with
+    # the suffix that will be assigned to the right dataframe case column.
+    merge_key = case_id_key + right_suffix
+    if merge_key in left_df.columns:
+        renamed_merge_key = merge_key + "_REL"
+        left_df = left_df.rename(columns={merge_key: renamed_merge_key})
+        merge_key = renamed_merge_key
+
     left_df = left_df.merge(
         right_df,
-        left_on=case_id_key + right_suffix,
+        left_on=merge_key,
         right_on=case_id_key,
         suffixes=(left_suffix, right_suffix),
     )
+
+    if merge_key in left_df.columns and merge_key.endswith("_REL"):
+        del left_df[merge_key]
 
     return left_df

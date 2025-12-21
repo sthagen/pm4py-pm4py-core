@@ -22,7 +22,7 @@ Contact: info@processintelligence.solutions
 """Utilities for enriching event data stored in Polars LazyFrames."""
 
 from enum import Enum
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Iterable, List, Set
 
 import polars as pl
 
@@ -36,6 +36,13 @@ class Parameters(Enum):
     COMPUTE_EXTRA_TEMPORAL_FEATURES = "compute_extra_temporal_features"
 
 
+def _drop_if_present(lf: pl.LazyFrame, cols: Iterable[str]) -> pl.LazyFrame:
+    """Drop columns from a LazyFrame if they exist (schema-aware)."""
+    existing: Set[str] = set(lf.collect_schema().names())
+    to_drop = [c for c in cols if c in existing]
+    return lf.drop(to_drop) if to_drop else lf
+
+
 def _prepare_case_features(
     df: pl.LazyFrame,
     case_id_key: str,
@@ -45,18 +52,22 @@ def _prepare_case_features(
 ) -> pl.LazyFrame:
     """Compute per-case aggregates needed for feature enrichment."""
 
+    # Use more specific internal names to minimize collisions with user columns.
+    case_start_col = "__pm4py_case_start"
+    case_end_col = "__pm4py_case_end"
+
     case_summary = df.group_by(case_id_key).agg(
         [
-            pl.col(start_timestamp_key).first().alias("__case_start"),
-            pl.col(timestamp_key).last().alias("__case_end"),
+            pl.col(start_timestamp_key).first().alias(case_start_col),
+            pl.col(timestamp_key).last().alias(case_end_col),
         ]
     )
 
     case_summary = case_summary.with_columns(
         (
             (
-                pl.col("__case_end").dt.timestamp("ns")
-                - pl.col("__case_start").dt.timestamp("ns")
+                pl.col(case_end_col).dt.timestamp("ns")
+                - pl.col(case_start_col).dt.timestamp("ns")
             )
             / 1_000_000_000
         ).alias("@@case_throughput")
@@ -65,26 +76,26 @@ def _prepare_case_features(
     if compute_extra_temporal_features:
         case_summary = case_summary.with_columns(
             [
-                pl.col("__case_start").dt.strftime("%Y").alias("@@case_start_year"),
-                pl.col("__case_start").dt.strftime("%Y-%m").alias("@@case_start_ymonth"),
-                pl.concat_str(
-                    pl.lit("M"), pl.col("__case_start").dt.strftime("%m")
-                ).alias("@@case_start_month"),
+                pl.col(case_start_col).dt.strftime("%Y").alias("@@case_start_year"),
+                pl.col(case_start_col).dt.strftime("%Y-%m").alias("@@case_start_ymonth"),
+                pl.concat_str(pl.lit("M"), pl.col(case_start_col).dt.strftime("%m")).alias(
+                    "@@case_start_month"
+                ),
                 pl.concat_str(
                     pl.lit("W"),
-                    pl.col("__case_start")
+                    pl.col(case_start_col)
                     .dt.week()
                     .cast(pl.Utf8)
                     .str.pad_start(2, "0"),
                 ).alias("@@case_start_week"),
-                pl.col("__case_end").dt.strftime("%Y").alias("@@case_end_year"),
-                pl.col("__case_end").dt.strftime("%Y-%m").alias("@@case_end_ymonth"),
-                pl.concat_str(
-                    pl.lit("M"), pl.col("__case_end").dt.strftime("%m")
-                ).alias("@@case_end_month"),
+                pl.col(case_end_col).dt.strftime("%Y").alias("@@case_end_year"),
+                pl.col(case_end_col).dt.strftime("%Y-%m").alias("@@case_end_ymonth"),
+                pl.concat_str(pl.lit("M"), pl.col(case_end_col).dt.strftime("%m")).alias(
+                    "@@case_end_month"
+                ),
                 pl.concat_str(
                     pl.lit("W"),
-                    pl.col("__case_end")
+                    pl.col(case_end_col)
                     .dt.week()
                     .cast(pl.Utf8)
                     .str.pad_start(2, "0"),
@@ -92,7 +103,7 @@ def _prepare_case_features(
             ]
         )
 
-    select_columns = [pl.col(case_id_key), pl.col("@@case_throughput")]
+    select_columns: List[pl.Expr] = [pl.col(case_id_key), pl.col("@@case_throughput")]
 
     if compute_extra_temporal_features:
         select_columns.extend(
@@ -137,6 +148,25 @@ def compute_extra_columns(
         Parameters.COMPUTE_EXTRA_TEMPORAL_FEATURES, parameters, True
     )
 
+    # Drop any previously-added enrichment columns to avoid duplicated columns
+    # (including join-suffix leftovers from older versions).
+    all_enrichment_columns = [
+        "@@count",
+        "@@case_throughput",
+        "@@case_start_year",
+        "@@case_start_ymonth",
+        "@@case_start_month",
+        "@@case_start_week",
+        "@@case_end_year",
+        "@@case_end_ymonth",
+        "@@case_end_month",
+        "@@case_end_week",
+    ]
+    drop_candidates = list(all_enrichment_columns) + [
+        f"{c}_right" for c in all_enrichment_columns
+    ]
+    dataframe = _drop_if_present(dataframe, drop_candidates)
+
     df = dataframe.with_columns(pl.lit(1).alias("@@count"))
 
     case_features = _prepare_case_features(
@@ -147,7 +177,7 @@ def compute_extra_columns(
         compute_extra_temporal_features,
     )
 
-    enriched = df.join(case_features, on=case_id_key, how="left")
+    enriched = df.join(case_features, on=case_id_key, how="left", coalesce=True)
     return enriched
 
 
