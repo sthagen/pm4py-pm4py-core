@@ -340,6 +340,30 @@ class OtherPartsTests(unittest.TestCase):
         from pm4py.algo.transformation.ocel.description.variants import variant1
         variant1.apply(ocel)
 
+    def test_murata1(self):
+        import pm4py
+        net, im, fm = pm4py.read_pnml("input_data/murata1.pnml")
+        p1 = len(net.places)
+        net1, im1, fm1 = pm4py.reduce_petri_net_implicit_places(net, im, fm)
+        p2 = len(net1.places)
+        self.assertTrue(p1 == p2+1)
+
+    def test_murata2(self):
+        import pm4py
+        net, im, fm = pm4py.read_pnml("input_data/murata2.pnml")
+        p1 = len(net.places)
+        net1, im1, fm1 = pm4py.reduce_petri_net_implicit_places(net, im, fm)
+        p2 = len(net1.places)
+        self.assertTrue(p1 == p2+1)
+
+    def test_murata3(self):
+        import pm4py
+        net, im, fm = pm4py.read_pnml("input_data/murata3.pnml")
+        p1 = len(net.places)
+        net1, im1, fm1 = pm4py.reduce_petri_net_implicit_places(net, im, fm)
+        p2 = len(net1.places)
+        self.assertTrue(p1 == p2)
+
 
 if __name__ == "__main__":
     unittest.main()

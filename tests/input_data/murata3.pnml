@@ -1,0 +1,185 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pnml>
+  <net id="new_petri_net" type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel">
+    <name>
+      <text>new_petri_net</text>
+    </name>
+    <page id="n0">
+      <place id="p0">
+        <name>
+          <text>p0</text>
+        </name>
+      </place>
+      <place id="p3">
+        <name>
+          <text>p3</text>
+        </name>
+      </place>
+      <place id="p4">
+        <name>
+          <text>p4</text>
+        </name>
+      </place>
+      <place id="p6">
+        <name>
+          <text>p6</text>
+        </name>
+      </place>
+      <place id="p7">
+        <name>
+          <text>p7</text>
+        </name>
+      </place>
+      <place id="sink">
+        <name>
+          <text>sink</text>
+        </name>
+      </place>
+      <place id="p12">
+        <name>
+          <text>p12</text>
+        </name>
+      </place>
+      <place id="p1">
+        <name>
+          <text>p1</text>
+        </name>
+      </place>
+      <place id="p13">
+        <name>
+          <text>p13</text>
+        </name>
+      </place>
+      <place id="p11">
+        <name>
+          <text>p11</text>
+        </name>
+      </place>
+      <place id="p14">
+        <name>
+          <text>p14</text>
+        </name>
+      </place>
+      <place id="p2">
+        <name>
+          <text>p2</text>
+        </name>
+      </place>
+      <place id="p5">
+        <name>
+          <text>p5</text>
+        </name>
+      </place>
+      <place id="p8">
+        <name>
+          <text>p8</text>
+        </name>
+      </place>
+      <place id="source">
+        <name>
+          <text>source</text>
+        </name>
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <transition id="Start">
+        <name>
+          <text>Start</text>
+        </name>
+      </transition>
+      <transition id="e">
+        <name>
+          <text>e</text>
+        </name>
+      </transition>
+      <transition id="end_tau">
+        <name>
+          <text>end_tau</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="b7f37714-fa1b-413c-8e48-6df1ba9be1db"/>
+      </transition>
+      <transition id="End">
+        <name>
+          <text>End</text>
+        </name>
+      </transition>
+      <transition id="c">
+        <name>
+          <text>c</text>
+        </name>
+      </transition>
+      <transition id="a">
+        <name>
+          <text>a</text>
+        </name>
+      </transition>
+      <transition id="b">
+        <name>
+          <text>b</text>
+        </name>
+      </transition>
+      <transition id="d">
+        <name>
+          <text>d</text>
+        </name>
+      </transition>
+      <transition id="f">
+        <name>
+          <text>f</text>
+        </name>
+      </transition>
+      <transition id="g">
+        <name>
+          <text>g</text>
+        </name>
+      </transition>
+      <transition id="h">
+        <name>
+          <text>h</text>
+        </name>
+      </transition>
+      <transition id="start_tau">
+        <name>
+          <text>start_tau</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="fd92f364-a36d-44b6-8e12-d9faf8cee400"/>
+      </transition>
+      <arc id="2165024654848" source="p0" target="a"/>
+      <arc id="2165024667392" source="p11" target="Start"/>
+      <arc id="2165024664704" source="start_tau" target="p11"/>
+      <arc id="2165024659328" source="e" target="p13"/>
+      <arc id="2165024655744" source="d" target="p6"/>
+      <arc id="2165024661120" source="source" target="start_tau"/>
+      <arc id="2165024666384" source="a" target="p14"/>
+      <arc id="2165024657424" source="p14" target="e"/>
+      <arc id="2165024661008" source="p4" target="End"/>
+      <arc id="2165024658320" source="c" target="p5"/>
+      <arc id="2165024667280" source="p8" target="g"/>
+      <arc id="2165024665376" source="p5" target="f"/>
+      <arc id="2165024653728" source="p6" target="h"/>
+      <arc id="2165024655408" source="g" target="p3"/>
+      <arc id="2165024659776" source="a" target="p1"/>
+      <arc id="2165024667840" source="p12" target="end_tau"/>
+      <arc id="2165024665152" source="c" target="p2"/>
+      <arc id="2165024664256" source="h" target="p4"/>
+      <arc id="2165024668736" source="p7" target="c"/>
+      <arc id="2165024667728" source="p2" target="d"/>
+      <arc id="2165024658768" source="b" target="p7"/>
+      <arc id="2165024666832" source="end_tau" target="sink"/>
+      <arc id="2165024659552" source="p1" target="b"/>
+      <arc id="2165024658656" source="End" target="p12"/>
+      <arc id="2165024669408" source="p13" target="f"/>
+      <arc id="2165024662128" source="Start" target="p0"/>
+      <arc id="2165024665712" source="p3" target="h"/>
+      <arc id="2165024669296" source="f" target="p8"/>
+    </page>
+    <finalmarkings>
+      <marking>
+        <place idref="sink">
+          <text>1</text>
+        </place>
+      </marking>
+    </finalmarkings>
+  </net>
+</pnml>
