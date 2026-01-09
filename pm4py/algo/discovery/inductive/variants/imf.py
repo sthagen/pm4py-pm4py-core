@@ -129,6 +129,12 @@ class IMFUVCL(IMF[IMDataStructureUVCL]):
         # filter the elements in the DFG
         graph = {x: y for x, y in dfg.items() if x in dfg_list}
 
+        # apply filtering to start activities
+        start_max_occ = max(start_activities.values())
+        start_activities = {x: y for x, y in start_activities.items()
+             if y >= start_max_occ * noise_threshold
+        }
+        
         dfg = DFG()
         for sa in start_activities:
             dfg.start_activities[sa] = start_activities[sa]

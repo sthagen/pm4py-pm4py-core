@@ -327,7 +327,7 @@ def assign_lead_cycle_time(log, parameters=None):
                 approx_wasted_time = approx_wasted_time + unworked_sec
                 this_wasted_time = unworked_sec
 
-            if st_seconds > max_et_seconds:
+            if st_seconds >= max_et_seconds:
                 bh = BusinessHours(
                     st, et, business_hour_slots=business_hours_slots
                 )
