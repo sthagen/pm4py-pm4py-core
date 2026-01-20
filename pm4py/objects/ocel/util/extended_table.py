@@ -136,16 +136,13 @@ def get_ocel_from_extended_table(
     object_type_mapping = {ot: ot.split(object_type_prefix)[1] for ot in object_type_columns}
 
     # Create events DataFrame (only non-object columns)
-    events_df = df[non_object_type_columns]
+    events_df = df[non_object_type_columns].copy()
 
     # Add internal index for sorting events
-    events_df[internal_index] = events_df.index
+    events_df.loc[:, internal_index] = events_df.index
 
     # Sort by timestamp and index
-    if type(events_df) is pd.DataFrame:
-        events_df.sort_values([event_timestamp, internal_index], inplace=True)
-    else:
-        events_df = events_df.sort_values([event_timestamp, internal_index])
+    events_df = events_df.sort_values([event_timestamp, internal_index])
 
     # Track unique objects if needed
     unique_objects = {ot: set() for ot in object_type_columns} if objects_df is None else None

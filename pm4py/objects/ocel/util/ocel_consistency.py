@@ -87,6 +87,8 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
             valid_rows = ~df[valid_columns].isna().any(axis=1)
             df = df.loc[valid_rows]
 
+        df = df.copy()
+
         # Convert columns to string type
         for col in valid_columns:
             df[col] = df[col].astype(str)

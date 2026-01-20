@@ -361,7 +361,7 @@ class SimplifiedInterfaceTest(unittest.TestCase):
 
     def test_rebase(self):
         dataframe = pandas_utils.read_csv("input_data/running-example-transformed.csv")
-        df = dataframe_utils.convert_timestamp_columns_in_df(dataframe, timest_format=constants.DEFAULT_TIMESTAMP_PARSE_FORMAT, timest_columns=["Timestamp"])
+        dataframe = dataframe_utils.convert_timestamp_columns_in_df(dataframe, timest_format=constants.DEFAULT_TIMESTAMP_PARSE_FORMAT, timest_columns=["Timestamp"])
         dataframe["CaseID"] = dataframe["CaseID"].astype("string")
 
         dataframe = pm4py.rebase(dataframe, activity_key="Activity", case_id="CaseID", timestamp_key="Timestamp", timest_format=constants.DEFAULT_TIMESTAMP_PARSE_FORMAT)

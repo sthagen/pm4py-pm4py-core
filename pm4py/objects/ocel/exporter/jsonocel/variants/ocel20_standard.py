@@ -25,6 +25,7 @@ from typing import Optional, Dict, Any
 from enum import Enum
 import json
 from pm4py.util import exec_utils, constants as pm4_constants
+from pm4py.objects.ocel.exporter.util import clean_dataframes
 
 
 class Parameters(Enum):
@@ -84,8 +85,15 @@ def apply(
         if "ocel:ovmap" in obj and obj["ocel:ovmap"]:
             descr["attributes"] = []
             for k, v in obj["ocel:ovmap"].items():
+                norm_value = clean_dataframes.normalize_value(v)
+                if clean_dataframes.is_null(norm_value):
+                    continue
                 descr["attributes"].append(
-                    {"name": k, "time": "1970-01-01T00:00:00Z", "value": v}
+                    {
+                        "name": k,
+                        "time": "1970-01-01T00:00:00Z",
+                        "value": norm_value,
+                    }
                 )
         if "ocel:o2o" in obj and obj["ocel:o2o"]:
             descr["relationships"] = []
@@ -108,7 +116,12 @@ def apply(
         if "ocel:vmap" in eve and eve["ocel:vmap"]:
             descr["attributes"] = []
             for k, v in eve["ocel:vmap"].items():
-                descr["attributes"].append({"name": k, "value": v})
+                norm_value = clean_dataframes.normalize_value(v)
+                if clean_dataframes.is_null(norm_value):
+                    continue
+                descr["attributes"].append(
+                    {"name": k, "value": norm_value}
+                )
         if "ocel:typedOmap" in eve and eve["ocel:typedOmap"]:
             descr["relationships"] = []
             for v in eve["ocel:typedOmap"]:
@@ -122,14 +135,22 @@ def apply(
         eve_idx[evid] = len(eve_idx)
 
     for change in legacy_object["ocel:objectChanges"]:
+        field = change.get("ocel:field")
+        if field is None or field not in change:
+            continue
         oid = change["ocel:oid"]
         obj = json_object["objects"][obj_idx[oid]]
 
-        obj["attributes"].append(
+        norm_value = clean_dataframes.normalize_value(
+            change[field]
+        )
+        if clean_dataframes.is_null(norm_value):
+            continue
+        obj.setdefault("attributes", []).append(
             {
-                "name": change["ocel:field"],
+                "name": field,
                 "time": change["ocel:timestamp"],
-                "value": change[change["ocel:field"]],
+                "value": norm_value,
             }
         )
 

@@ -477,12 +477,7 @@ def read_ocel2_json(
     """
     from pm4py.objects.ocel.importer.jsonocel import importer as jsonocel_importer
 
-    if importlib.util.find_spec("rustxes"):
-        __rustxes_usage_warning()
-        variant = jsonocel_importer.Variants.OCEL20_RUSTXES
-    else:
-        __rustxes_non_usage_warning()
-        variant = jsonocel_importer.Variants.OCEL20_STANDARD
+    variant = jsonocel_importer.Variants.OCEL20_STANDARD
 
     return jsonocel_importer.apply(
         file_path, variant=variant, parameters={"encoding": encoding}
@@ -536,12 +531,7 @@ def read_ocel2_xml(
     """
     from pm4py.objects.ocel.importer.xmlocel import importer as xml_importer
 
-    if importlib.util.find_spec("rustxes"):
-        __rustxes_usage_warning()
-        variant = xml_importer.Variants.OCEL20_RUSTXES
-    else:
-        __rustxes_non_usage_warning()
-        variant = xml_importer.Variants.OCEL20
+    variant = xml_importer.Variants.OCEL20
 
     return xml_importer.apply(
         file_path, variant=variant, parameters={"encoding": encoding}

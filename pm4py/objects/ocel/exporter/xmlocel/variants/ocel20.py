@@ -31,6 +31,7 @@ from pm4py.util import exec_utils, constants as pm4_constants
 from pm4py.objects.ocel.util import ocel_consistency
 from pm4py.objects.ocel.util import attributes_per_type
 from pm4py.objects.ocel.util import filtering_utils
+from pm4py.objects.ocel.exporter.util import clean_dataframes
 
 
 class Parameters(Enum):
@@ -198,7 +199,9 @@ def apply(
                 )
                 object_attribute.set("name", val[0])
                 object_attribute.set("time", val[2])
-                object_attribute.text = str(val[1])
+                object_attribute.text = str(
+                    clean_dataframes.normalize_value(val[1])
+                )
 
         if objid in o2o_dict:
             object_objects = etree.SubElement(object, "objects")
@@ -233,7 +236,9 @@ def apply(
                     event_attributes, "attribute"
                 )
                 event_attribute.set("name", k)
-                event_attribute.text = str(v)
+                event_attribute.text = str(
+                    clean_dataframes.normalize_value(v)
+                )
 
     tree = etree.ElementTree(root)
 

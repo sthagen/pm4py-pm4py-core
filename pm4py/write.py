@@ -436,7 +436,7 @@ def write_ocel2(
         "xmlocel"
     ):
         write_ocel2_xml(ocel, file_path, encoding=encoding)
-    elif file_path.lower().endswith("jsonocel"):
+    elif file_path.lower().endswith("jsonocel") or file_path.lower().endswith("json"):
         write_ocel2_json(ocel, file_path, encoding=encoding)
     else:
         raise Exception("Unsupported file format for OCEL2.0 export.")

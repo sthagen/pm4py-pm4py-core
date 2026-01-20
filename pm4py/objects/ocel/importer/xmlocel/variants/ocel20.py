@@ -157,6 +157,7 @@ def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
                     object_type_column: object_type,
                 }
                 obj_type_dict[object_id] = object_type
+                obj_attrs = {}
 
                 for child2 in object:
                     if child2.tag.endswith("objects"):
@@ -190,19 +191,30 @@ def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
                                     "1970-01-01T00:00:00"
                                 )
                             ):
-                                obj_dict[attribute_name] = attribute_text
+                                time_key = None
+                                time_val = attribute_time
                             else:
-                                attribute_time = embed_date_parser(
+                                time_val = embed_date_parser(
                                     date_parser.apply, attribute_time
                                 )
-                                obj_change_dict = {
-                                    object_id_column: object_id,
-                                    object_type_column: object_type,
-                                    attribute_name: attribute_text,
-                                    changed_field: attribute_name,
-                                    event_timestamp_column: attribute_time,
-                                }
-                                object_changes_list.append(obj_change_dict)
+                                time_key = time_val
+
+                            obj_attrs.setdefault(attribute_name, []).append(
+                                (time_key, time_val, attribute_text)
+                            )
+
+                for attr_name, entries in obj_attrs.items():
+                    base_time_key, base_time_val, base_value = entries[0]
+                    obj_dict[attr_name] = base_value
+                    for time_key, time_val, value in entries[1:]:
+                        obj_change_dict = {
+                            object_id_column: object_id,
+                            object_type_column: object_type,
+                            attr_name: value,
+                            changed_field: attr_name,
+                            event_timestamp_column: time_val,
+                        }
+                        object_changes_list.append(obj_change_dict)
 
                 objects_list.append(obj_dict)
 

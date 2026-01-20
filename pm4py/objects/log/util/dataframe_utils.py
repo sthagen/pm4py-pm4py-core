@@ -193,6 +193,11 @@ def convert_timestamp_columns_in_df(
         Dataframe with timestamp columns converted
 
     """
+    if df is None:
+        return df
+
+    df = df.copy()
+
     if timest_format is None:
         timest_format = constants.DEFAULT_TIMESTAMP_PARSE_FORMAT
 

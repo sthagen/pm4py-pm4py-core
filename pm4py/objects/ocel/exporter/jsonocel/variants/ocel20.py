@@ -29,6 +29,7 @@ from pm4py.util import exec_utils, constants as pm4_constants
 from pm4py.objects.ocel.util import ocel_consistency
 from pm4py.objects.ocel.util import filtering_utils
 from pm4py.objects.ocel.exporter.jsonocel.variants import classic
+from pm4py.objects.ocel.exporter.util import clean_dataframes
 from pm4py.objects.ocel.util import attributes_per_type
 
 
@@ -97,9 +98,13 @@ def get_enriched_object(
     if len(ocel.object_changes) > 0:
         object_changes = ocel.object_changes.to_dict("records")
         for i in range(len(object_changes)):
-            object_changes[i][event_timestamp] = object_changes[i][
-                event_timestamp
-            ].isoformat()
+            change = object_changes[i]
+            for k in list(change.keys()):
+                value = clean_dataframes.normalize_value(change[k])
+                if clean_dataframes.is_null(value):
+                    del change[k]
+                    continue
+                change[k] = value
 
         base_object[constants.OCEL_OBJCHANGES_KEY] = object_changes
 

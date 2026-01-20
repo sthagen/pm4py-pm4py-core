@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+    PM4Py â€“ A Process Mining Library for Python
+Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,7 +19,7 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.util import exec_utils
+from pm4py.util import exec_utils, dt_parsing
 from pm4py.objects.ocel.obj import OCEL
 from typing import Optional, Dict, Any
 from pm4py.objects.ocel.util import filtering_utils
@@ -32,6 +32,42 @@ import json
 
 class Parameters(Enum):
     ENCODING = "encoding"
+
+
+def _parse_attr_value(value, attr_type, parser):
+    if value is None:
+        return None
+    if isinstance(value, str) and value.strip().lower() == "null":
+        return None
+
+    attr_type = "" if attr_type is None else str(attr_type).lower()
+    if "date" in attr_type or "time" in attr_type:
+        try:
+            return parser.apply(value)
+        except BaseException:
+            from dateutil.parser import parse
+
+            try:
+                return parse(value)
+            except BaseException:
+                return value
+    if "float" in attr_type or "double" in attr_type:
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return value
+    if "int" in attr_type:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return value
+    if "bool" in attr_type:
+        if isinstance(value, str):
+            lowered = value.strip().lower()
+            if lowered in ("true", "false"):
+                return lowered == "true"
+        return bool(value)
+    return value
 
 
 def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
@@ -62,6 +98,20 @@ def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
     json_obj = json.load(F)
     F.close()
 
+    event_attr_types = {}
+    for et in json_obj.get("eventTypes", []):
+        event_attr_types[et["name"]] = {
+            x["name"]: x["type"] for x in et.get("attributes", [])
+        }
+
+    object_attr_types = {}
+    for ot in json_obj.get("objectTypes", []):
+        object_attr_types[ot["name"]] = {
+            x["name"]: x["type"] for x in ot.get("attributes", [])
+        }
+
+    parser = dt_parsing.parser.get()
+
     legacy_obj = {}
     legacy_obj["ocel:events"] = {}
     legacy_obj["ocel:objects"] = {}
@@ -73,8 +123,12 @@ def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
         dct["ocel:timestamp"] = eve["time"]
         dct["ocel:vmap"] = {}
         if "attributes" in eve and eve["attributes"]:
+            type_map = event_attr_types.get(eve["type"], {})
             dct["ocel:vmap"] = {
-                x["name"]: x["value"] for x in eve["attributes"]
+                x["name"]: _parse_attr_value(
+                    x["value"], type_map.get(x["name"]), parser
+                )
+                for x in eve["attributes"]
             }
         dct["ocel:typedOmap"] = []
         if "relationships" in eve and eve["relationships"]:
@@ -92,19 +146,45 @@ def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
         dct["ocel:type"] = obj["type"]
         dct["ocel:ovmap"] = {}
         if "attributes" in obj and obj["attributes"]:
+            type_map = object_attr_types.get(obj["type"], {})
+            attrs_by_name = {}
             for x in obj["attributes"]:
-                if x["name"] in dct["ocel:ovmap"]:
+                value = _parse_attr_value(
+                    x["value"], type_map.get(x["name"]), parser
+                )
+                time_raw = x.get("time")
+                if time_raw is None:
+                    time_key = None
+                    time_val = None
+                elif str(time_raw).startswith("1970-01-01T00:00:00") or str(
+                    time_raw
+                ) == "0":
+                    time_key = None
+                    time_val = time_raw
+                else:
+                    try:
+                        time_val = parser.apply(time_raw)
+                        time_key = time_val
+                    except BaseException:
+                        time_val = time_raw
+                        time_key = time_raw
+                attrs_by_name.setdefault(x["name"], []).append(
+                    (time_key, time_val, value)
+                )
+
+            for name, entries in attrs_by_name.items():
+                base_time_key, base_time_val, base_value = entries[0]
+                dct["ocel:ovmap"][name] = base_value
+                for time_key, time_val, value in entries[1:]:
                     legacy_obj["ocel:objectChanges"].append(
                         {
                             "ocel:oid": obj["id"],
                             "ocel:type": obj["type"],
-                            "ocel:field": x["name"],
-                            x["name"]: x["value"],
-                            "ocel:timestamp": x["time"],
+                            "ocel:field": name,
+                            name: value,
+                            "ocel:timestamp": time_val,
                         }
                     )
-                else:
-                    dct["ocel:ovmap"][x["name"]] = x["value"]
         dct["ocel:o2o"] = []
         if "relationships" in obj and obj["relationships"]:
             dct["ocel:o2o"] = [

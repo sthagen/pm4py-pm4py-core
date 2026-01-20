@@ -28,6 +28,7 @@ from enum import Enum
 from pm4py.util import exec_utils, pandas_utils
 from pm4py.objects.ocel.util import ocel_consistency
 from pm4py.objects.ocel.util import filtering_utils
+from pm4py.objects.ocel.exporter.util import clean_dataframes
 
 
 class Parameters(Enum):
@@ -130,6 +131,9 @@ def apply(ocel: OCEL, file_path: str, parameters: Optional[Dict[Any, Any]] = Non
 
         # Convert 'ocel_time' to Python datetime (if it's a pandas Timestamp or string)
         df["ocel_time"] = pd.to_datetime(df["ocel_time"], errors="coerce")
+        for col in df.columns:
+            if str(df[col].dtype) == "object":
+                df[col] = df[col].map(clean_dataframes.normalize_value)
 
         act_red = names_stripping.apply(act) if enable_names_stripping else act
 
@@ -161,6 +165,9 @@ def apply(ocel: OCEL, file_path: str, parameters: Optional[Dict[Any, Any]] = Non
             df = pandas_utils.concat([df, df2], axis=0)
 
         df["ocel_id"] = df["ocel_id"].astype("string")
+        for col in df.columns:
+            if str(df[col].dtype) == "object":
+                df[col] = df[col].map(clean_dataframes.normalize_value)
 
         ot_red = names_stripping.apply(ot) if enable_names_stripping else ot
 
