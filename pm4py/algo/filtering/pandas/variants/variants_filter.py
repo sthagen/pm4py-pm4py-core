@@ -83,6 +83,10 @@ def apply(
         if "variants_df" in parameters
         else get_variants_df(df, parameters=parameters)
     )
+    if variants_df.empty:
+        ret = df.iloc[0:0] if positive else df
+        ret.attrs = copy(df.attrs) if hasattr(df, "attrs") else {}
+        return ret
     variants_df = variants_df[variants_df["variant"].isin(admitted_variants)]
     i1 = df.set_index(case_id_glue).index
     i2 = variants_df.index

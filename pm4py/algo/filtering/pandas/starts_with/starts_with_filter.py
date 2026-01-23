@@ -84,6 +84,11 @@ def apply(
         else get_variants_df(df, parameters=parameters)
     )
 
+    if variants_df.empty:
+        ret = df.iloc[0:0] if positive else df
+        ret.attrs = copy(df.attrs) if hasattr(df, "attrs") else {}
+        return ret
+
     admitted_prefixes = list(admitted_prefixes)
     first_case_variant = variants_df["variant"].iloc[0]
     if isinstance(first_case_variant, tuple):
