@@ -20,4 +20,4 @@ Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
 from pm4py.algo.conformance.alignments.process_tree.variants.approximated import (
-    calculate_a_sa_ea_sets, matrix_lp, original, utilities, )
+    calculate_a_sa_ea_sets, original, utilities, )

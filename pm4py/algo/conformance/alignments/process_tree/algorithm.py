@@ -20,8 +20,6 @@ Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
 from pm4py.algo.conformance.alignments.process_tree.variants.approximated import (
-    matrix_lp as approximated_matrix_lp, )
-from pm4py.algo.conformance.alignments.process_tree.variants.approximated import (
     original as approximated_original, )
 from pm4py.algo.conformance.alignments.process_tree.variants import (
     search_graph_pt, dynamic_programming, milp
@@ -39,7 +37,6 @@ import pandas as pd
 
 class Variants(Enum):
     APPROXIMATED_ORIGINAL = approximated_original
-    APPROXIMATED_MATRIX_LP = approximated_matrix_lp
     SEARCH_GRAPH_PT = search_graph_pt
     DYNAMIC_PROGRAMMING = dynamic_programming
     MILP = milp

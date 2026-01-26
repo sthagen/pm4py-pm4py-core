@@ -120,7 +120,8 @@ def apply_standard_cost_function_to_alignment(align: List) -> int:
 
 def empty_sequence_accepted(pt: ProcessTree) -> bool:
     alignment = calculate_optimal_alignment(pt, Trace())
-    return alignment["cost"] < STD_MODEL_LOG_MOVE_COST
+    cost = apply_standard_cost_function_to_alignment(alignment)
+    return cost < STD_MODEL_LOG_MOVE_COST
 
 
 def calculate_optimal_alignment(
@@ -131,7 +132,7 @@ def calculate_optimal_alignment(
     align_variant = exec_utils.get_param_value(
         Parameters.CLASSIC_ALIGNMENTS_VARIANT,
         parameters,
-        Variants.VERSION_STATE_EQUATION_A_STAR,
+        Variants.VERSION_DIJKSTRA_NO_HEURISTICS,
     )
     conversion_version = exec_utils.get_param_value(
         Parameters.CONVERSION_VERSION,

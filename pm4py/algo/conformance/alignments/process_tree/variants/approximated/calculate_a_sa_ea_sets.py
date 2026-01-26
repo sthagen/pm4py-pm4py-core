@@ -28,7 +28,7 @@ from pm4py.objects.process_tree.obj import Operator
 def __get_activity_set(pt: ProcessTree, a_set=None) -> Set[str]:
     if a_set is None:
         a_set = set()
-    if is_leaf(pt):
+    if is_leaf(pt) and not is_tau_leaf(pt):
         a_set.add(pt.label)
     else:
         for c in pt.children:

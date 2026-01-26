@@ -607,6 +607,9 @@ def __approximate_alignment_on_loop(
         ilp += n_variables[i][1] >= x_variables[i + 1][0]
         ilp += n_variables[i][1] >= t_variables[i + 1][0]
 
+    ilp += n_variables[len(trace) - 1][0] == 1
+    ilp += n_variables[len(trace) - 1][1] == 1
+
     ilp += t_variables[len(trace)][1] <= n_variables[len(trace) - 1][0]
     ilp += t_variables[len(trace)][0] <= n_variables[len(trace) - 1][1]
 
@@ -621,8 +624,8 @@ def __approximate_alignment_on_loop(
 
     # define auxiliary variables p: p_i_1 = 1 <=> previous activity i-1 is
     # assigned to 2nd subtree or t_i-1_2 = 1
-    ilp += t_variables[0][1] <= p_variables[0][0]
-    ilp += p_variables[0][1] <= t_variables[0][0]
+    ilp += p_variables[0][0] == 1
+    ilp += p_variables[0][1] == 1
 
     for i in range(1, len(trace)):
         ilp += p_variables[i][0] <= t_variables[i][1] + x_variables[i - 1][1]
@@ -640,7 +643,7 @@ def __approximate_alignment_on_loop(
                 s_variables[i][j] >= p_variables[i][j] + x_variables[i][j] - 1
             )
             ilp += s_variables[i][j] <= p_variables[i][j]
-            ilp += s_variables[i][j] <= p_variables[i][j]
+            ilp += s_variables[i][j] <= x_variables[i][j]
     ilp += 1 - t_variables[0][0] <= s_variables[0][0]
 
     # define v_i_j variables

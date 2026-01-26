@@ -62,6 +62,12 @@ def _normalize_id_series(series: pd.Series) -> pd.Series:
     return series.str.replace(r"\\.0$", "", regex=True)
 
 
+def _quote_identifier(identifier: str) -> str:
+    if identifier is None:
+        return identifier
+    return '"' + identifier.replace('"', '""') + '"'
+
+
 def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None):
     if parameters is None:
         parameters = {}
@@ -142,7 +148,8 @@ def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None):
 
     for act in etypes:
         act_red = events_type_map[act]
-        df = pd.read_sql("SELECT * FROM event_" + act_red, conn)
+        table_name = _quote_identifier("event_" + act_red)
+        df = pd.read_sql(f"SELECT * FROM {table_name}", conn)
         df = df.rename(
             columns={"ocel_id": event_id, "ocel_time": event_timestamp}
         )
@@ -151,7 +158,8 @@ def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None):
 
     for ot in otypes:
         ot_red = objects_type_map[ot]
-        df = pd.read_sql("SELECT * FROM object_" + ot_red, conn)
+        table_name = _quote_identifier("object_" + ot_red)
+        df = pd.read_sql(f"SELECT * FROM {table_name}", conn)
         df = df.rename(
             columns={"ocel_id": object_id, "ocel_time": event_timestamp}
         )
