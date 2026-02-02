@@ -87,13 +87,10 @@ def compute_class_geometry_metrics(
             np.mean(sims[np.triu_indices(len(unique_labels), k=1)])
         )
 
-        all_sims = Xn @ centroid_matrix.T
-        label_to_idx = {label: idx for idx, label in enumerate(unique_labels)}
-        own_idx = np.array([label_to_idx[label] for label in y])
-        own_sims = all_sims[np.arange(n_samples), own_idx]
-        all_sims[np.arange(n_samples), own_idx] = -np.inf
-        max_other = np.max(all_sims, axis=1)
-        centroid_margin = float(np.mean(own_sims - max_other))
+        centroid_sims = sims.copy()
+        np.fill_diagonal(centroid_sims, -np.inf)
+        max_other = np.max(centroid_sims, axis=1)
+        centroid_margin = float(np.mean(1.0 - max_other))
 
     knn_purities = {k: None for k in k_values}
     if n_samples > 1:
