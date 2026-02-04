@@ -61,6 +61,30 @@ def execute_script():
     except:
         traceback.print_exc()
 
+    try:
+        cube_df4, cell_case_dict4 = process_cube_builder.apply(feature_table, x_col=("@@arrival_rate", "concept:name"), y_col="@@finish_rate", agg_col="@@sojourn_time")
+
+        print(cube_df4)
+    except:
+        traceback.print_exc()
+
+    try:
+        cube_df5, cell_case_dict5 = process_cube_builder.apply(feature_table, x_col=("@@arrival_rate", "@@arrival_rate"), y_col="@@finish_rate", agg_col="@@sojourn_time")
+
+        print(cube_df5)
+    except:
+        traceback.print_exc()
+
+    try:
+        cube_df6, cell_case_dict6 = process_cube_builder.apply(feature_table, x_col=("@@arrival_rate", "@@arrival_rate"), y_col=("@@finish_rate", "@@finish_rate"), agg_col="@@sojourn_time", parameters={
+            "x_bins": [[0, 200000, 500000, 800000, 1000000], [0, 250000, 500000, 750000, 1000000]],
+            "y_bins": [[0, 300000, 600000, 900000, 1000000], [0, 350000, 650000, 950000, 1000000]]
+        })
+
+        print(cube_df6)
+    except:
+        traceback.print_exc()
+
 
 if __name__ == "__main__":
     execute_script()

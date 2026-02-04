@@ -25,6 +25,7 @@ from bisect import bisect_right
 import math
 from enum import Enum
 from typing import Optional, Dict, Any, Tuple, List
+from itertools import product
 
 import numpy as np
 import polars as pl
@@ -184,7 +185,144 @@ def _aggregation_expression(column: str, agg_fn: str) -> pl.Expr:
 
 
 def _prefix_columns(df: pl.DataFrame, prefix: str) -> List[str]:
-    return [col for col in df.columns if col.startswith(prefix+"_")]
+    return [col for col in df.columns if col.startswith(prefix + "_")]
+
+
+def _normalize_dimension(dim: str | Tuple[str, ...]) -> Tuple[str, ...]:
+    if isinstance(dim, tuple):
+        return dim
+    return (dim,)
+
+
+def _select_bins_param(
+    bins_param: Any,
+    idx: int,
+    col: str,
+    num_dims: int,
+) -> Optional[List[float]]:
+    if bins_param is None:
+        return None
+    if isinstance(bins_param, dict):
+        if col in bins_param:
+            return bins_param[col]
+        if idx in bins_param:
+            return bins_param[idx]
+        return None
+    if isinstance(bins_param, (list, tuple)) and num_dims > 1:
+        if len(bins_param) == num_dims and all(
+            isinstance(item, (list, tuple)) for item in bins_param
+        ):
+            return list(bins_param[idx])
+    return bins_param
+
+
+def _combine_bins(dim_cols: Tuple[str, ...], bins_per_dim: List[List[str]]) -> List[str]:
+    if not bins_per_dim:
+        return []
+    if len(bins_per_dim) == 1:
+        return bins_per_dim[0]
+    combined: List[str] = []
+    for combo in product(*bins_per_dim):
+        parts = [f"{dim_cols[i]}={combo[i]}" for i in range(len(dim_cols))]
+        combined.append(" | ".join(parts))
+    return combined
+
+
+def _dimension_bins(
+    df: pl.DataFrame,
+    dim: str | Tuple[str, ...],
+    bins_param: Any,
+    max_divisions: int,
+    dim_name: str,
+) -> Tuple[pl.DataFrame, List[str]]:
+    dim_cols = _normalize_dimension(dim)
+    if not dim_cols:
+        return pl.DataFrame(), []
+
+    per_attr_dfs: List[pl.DataFrame] = []
+    bins_per_dim: List[List[str]] = []
+
+    for idx, col in enumerate(dim_cols):
+        col_exists = col in df.columns
+        numeric = col_exists and _is_numeric_dtype(df.schema[col])
+        bin_col = f"__bin_{idx}"
+
+        if numeric:
+            selected_bins = _select_bins_param(bins_param, idx, col, len(dim_cols))
+            bins = _prepare_bins(df[col], selected_bins, max_divisions)
+            if len(bins) < 2:
+                return pl.DataFrame(), []
+            bins_per_dim.append(_bin_labels(bins))
+
+            series = _assign_bins(df[col], bins, bin_col)
+            attr_df = (
+                df.select([CASE_ID_COL])
+                .with_columns(series)
+                .filter(pl.col(bin_col).is_not_null())
+                .select([CASE_ID_COL, pl.col(bin_col)])
+            )
+        else:
+            prefix_cols = _prefix_columns(df, col)
+            if prefix_cols:
+                bins_per_dim.append(prefix_cols)
+                attr_df = (
+                    df.select([CASE_ID_COL, *prefix_cols])
+                    .melt(
+                        id_vars=[CASE_ID_COL],
+                        value_vars=prefix_cols,
+                        variable_name=bin_col,
+                        value_name="__value",
+                    )
+                    .filter(pl.col("__value").fill_null(0) >= 1)
+                    .select([CASE_ID_COL, pl.col(bin_col)])
+                )
+            elif col_exists:
+                series = df[col].cast(pl.Utf8)
+                bins = (
+                    series.drop_nulls()
+                    .unique()
+                    .sort()
+                    .to_list()
+                )
+                if not bins:
+                    return pl.DataFrame(), []
+                bins_per_dim.append([str(b) for b in bins])
+                attr_df = (
+                    df.select([CASE_ID_COL])
+                    .with_columns(series.alias(bin_col))
+                    .filter(pl.col(bin_col).is_not_null())
+                    .select([CASE_ID_COL, pl.col(bin_col)])
+                )
+            else:
+                return pl.DataFrame(), []
+
+        if attr_df.is_empty():
+            return pl.DataFrame(), []
+        per_attr_dfs.append(attr_df)
+
+    combined = per_attr_dfs[0]
+    for attr_df in per_attr_dfs[1:]:
+        combined = combined.join(attr_df, on=CASE_ID_COL, how="inner")
+        if combined.is_empty():
+            return pl.DataFrame(), []
+
+    bin_cols = [f"__bin_{idx}" for idx in range(len(dim_cols))]
+    if len(bin_cols) == 1:
+        combined = combined.with_columns(
+            pl.col(bin_cols[0]).alias(f"{dim_name}_bin")
+        )
+        all_bins = bins_per_dim[0]
+    else:
+        label_parts = [
+            pl.concat_str([pl.lit(f"{dim_cols[i]}="), pl.col(bin_cols[i])], separator="")
+            for i in range(len(dim_cols))
+        ]
+        combined = combined.with_columns(
+            pl.concat_str(label_parts, separator=" | ").alias(f"{dim_name}_bin")
+        )
+        all_bins = _combine_bins(dim_cols, bins_per_dim)
+
+    return combined.select([CASE_ID_COL, f"{dim_name}_bin"]), all_bins
 
 
 def _numeric_numeric_case(
@@ -315,12 +453,17 @@ def _prefix_prefix_case(
 
 def apply(
     feature_table: pl.LazyFrame | pl.DataFrame,
-    x_col: str,
-    y_col: str,
+    x_col: str | Tuple[str, ...],
+    y_col: str | Tuple[str, ...],
     agg_col: str,
     parameters: Optional[Dict[Any, Any]] = None,
 ) -> Tuple[pl.DataFrame, Dict[Any, Any]]:
-    """Construct a process cube using Polars data structures."""
+    """Construct a process cube using Polars data structures.
+
+    The X/Y dimensions can be defined by a single attribute (str) or by a tuple of
+    attributes. When a tuple is provided, bins are computed per attribute and then
+    combined into a single composite bin label.
+    """
 
     if parameters is None:
         parameters = {}
@@ -339,49 +482,22 @@ def apply(
     x_bins_param = exec_utils.get_param_value(Parameters.X_BINS, parameters, None)
     y_bins_param = exec_utils.get_param_value(Parameters.Y_BINS, parameters, None)
 
-    numeric_x = x_col in df.columns and _is_numeric_dtype(df.schema[x_col])
-    numeric_y = y_col in df.columns and _is_numeric_dtype(df.schema[y_col])
+    x_dim_df, all_x_bins = _dimension_bins(
+        df, x_col, x_bins_param, max_divisions_x, "x"
+    )
+    if x_dim_df.is_empty():
+        return pl.DataFrame(), {}
 
-    x_prefix_cols: List[str] = []
-    y_prefix_cols: List[str] = []
-    all_x_bins: List[str] = []
-    all_y_bins: List[str] = []
+    y_dim_df, all_y_bins = _dimension_bins(
+        df, y_col, y_bins_param, max_divisions_y, "y"
+    )
+    if y_dim_df.is_empty():
+        return pl.DataFrame(), {}
 
-    if not numeric_x:
-        x_prefix_cols = _prefix_columns(df, x_col)
-    if not numeric_y:
-        y_prefix_cols = _prefix_columns(df, y_col)
-
-    temp_df: pl.DataFrame
-
-    if numeric_x and numeric_y:
-        x_bins = _prepare_bins(df[x_col], x_bins_param, max_divisions_x)
-        y_bins = _prepare_bins(df[y_col], y_bins_param, max_divisions_y)
-        if len(x_bins) < 2 or len(y_bins) < 2:
-            return pl.DataFrame(), {}
-        all_x_bins = _bin_labels(x_bins)
-        all_y_bins = _bin_labels(y_bins)
-        temp_df = _numeric_numeric_case(df, x_col, y_col, agg_col, x_bins, y_bins)
-    elif numeric_x and not numeric_y:
-        x_bins = _prepare_bins(df[x_col], x_bins_param, max_divisions_x)
-        if len(x_bins) < 2 or not y_prefix_cols:
-            return pl.DataFrame(), {}
-        all_x_bins = _bin_labels(x_bins)
-        all_y_bins = y_prefix_cols
-        temp_df = _numeric_prefix_case(df, x_col, agg_col, x_bins, y_prefix_cols, "y_bin")
-    elif not numeric_x and numeric_y:
-        y_bins = _prepare_bins(df[y_col], y_bins_param, max_divisions_y)
-        if len(y_bins) < 2 or not x_prefix_cols:
-            return pl.DataFrame(), {}
-        all_x_bins = x_prefix_cols
-        all_y_bins = _bin_labels(y_bins)
-        temp_df = _prefix_numeric_case(df, y_col, agg_col, y_bins, x_prefix_cols, "x_bin")
-    else:
-        if not x_prefix_cols or not y_prefix_cols:
-            return pl.DataFrame(), {}
-        all_x_bins = x_prefix_cols
-        all_y_bins = y_prefix_cols
-        temp_df = _prefix_prefix_case(df, agg_col, x_prefix_cols, y_prefix_cols)
+    temp_df = (
+        x_dim_df.join(y_dim_df, on=CASE_ID_COL, how="inner")
+        .join(df.select([CASE_ID_COL, agg_col]), on=CASE_ID_COL, how="inner")
+    )
 
     if temp_df.is_empty():
         return pl.DataFrame(), {}
