@@ -90,6 +90,7 @@ Among *procedural process models*, ``pm4py`` currently supports:
   * :meth:`pm4py.discovery.discover_petri_net_inductive`; discovers a *Petri net* using the Inductive Miner algorithm.
   * :meth:`pm4py.discovery.discover_petri_net_heuristics`; discovers a *Petri net* using the Heuristics Miner algorithm.
   * :meth:`pm4py.discovery.discover_petri_net_ilp`; discovers a *Petri net* using the ILP Miner algorithm.
+  * :meth:`pm4py.discovery.discover_petri_net_genetic`; discovers a *Petri net* using the Genetic Miner algorithm.
   * :meth:`pm4py.discovery.discover_process_tree_inductive`; discovers a *process tree* using the Inductive Miner algorithm.
   * :meth:`pm4py.discovery.discover_bpmn_inductive`; discovers a *BPMN model* using the Inductive Miner algorithm.
   * :meth:`pm4py.discovery.discover_heuristics_net`; discovers a *heuristics net* using the Heuristics Miner algorithm.
@@ -466,6 +467,7 @@ List of Methods
    pm4py.discovery.discover_petri_net_inductive
    pm4py.discovery.discover_petri_net_heuristics
    pm4py.discovery.discover_petri_net_ilp
+   pm4py.discovery.discover_petri_net_genetic
    pm4py.discovery.discover_process_tree_inductive
    pm4py.discovery.discover_heuristics_net
    pm4py.discovery.derive_minimum_self_distance

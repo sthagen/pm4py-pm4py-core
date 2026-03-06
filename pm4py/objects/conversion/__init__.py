@@ -25,6 +25,7 @@ if pm4_constants.ENABLE_INTERNAL_IMPORTS:
     from pm4py.objects.conversion import (
         bpmn,
         heuristics_net,
+        genetic_matrix,
         process_tree,
         wf_net,
         log,

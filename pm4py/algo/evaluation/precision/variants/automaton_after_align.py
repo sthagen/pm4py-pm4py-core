@@ -19,8 +19,6 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from __future__ import annotations
-
 from copy import copy
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple, Union

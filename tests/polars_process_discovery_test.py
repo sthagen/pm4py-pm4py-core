@@ -76,6 +76,13 @@ class TestPolarsProcessDiscovery(unittest.TestCase):
         self.assertTrue(len(im) > 0)
         self.assertTrue(len(fm) > 0)
 
+    def test_discover_petri_net_genetic(self):
+        log = self._lazy_log()
+        net, im, fm = pm4py.discover_petri_net_genetic(log)
+        self.assertTrue(net.places and net.transitions)
+        self.assertTrue(len(im) > 0)
+        self.assertTrue(len(fm) > 0)
+
     def test_discover_process_tree_inductive(self):
         log = self._lazy_log()
         process_tree = pm4py.discover_process_tree_inductive(log)

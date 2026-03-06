@@ -32,6 +32,7 @@ if pm4_constants.ENABLE_INTERNAL_IMPORTS:
         trie,
         org,
         heuristics_net,
+        genetic_matrix,
         ocel,
         powl,
         random_variables,

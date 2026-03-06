@@ -138,6 +138,7 @@ from pm4py.discovery import (
     discover_petri_net_ilp,
     discover_petri_net_heuristics,
     discover_petri_net_inductive,
+    discover_petri_net_genetic,
     discover_process_tree_inductive,
     discover_heuristics_net,
     discover_dfg,

@@ -33,6 +33,7 @@ from pm4py.objects.bpmn.obj import BPMN
 from pm4py.objects.ocel.obj import OCEL
 from pm4py.objects.powl.obj import POWL
 from pm4py.objects.heuristics_net.obj import HeuristicsNet
+from pm4py.objects.genetic_matrix.obj import GeneticMatrix
 from pm4py.objects.log.obj import EventLog, EventStream
 from pm4py.objects.petri_net.obj import Marking
 from pm4py.objects.process_tree.obj import ProcessTree
@@ -207,17 +208,17 @@ def convert_to_bpmn(
 
 
 def convert_to_petri_net(
-    *args: Union[BPMN, ProcessTree, HeuristicsNet, POWL, dict]
+    *args: Union[BPMN, ProcessTree, HeuristicsNet, GeneticMatrix, POWL, dict]
 ) -> Tuple[PetriNet, Marking, Marking]:
     """
     Converts an input model to an (accepting) Petri net.
 
-    The input objects can be a process tree, BPMN model, Heuristic net, POWL model, or a dictionary representing a Directly-Follows Graph (DFG).
+    The input objects can be a process tree, BPMN model, Heuristic net, GeneticMatrix, POWL model, or a dictionary representing a Directly-Follows Graph (DFG).
     The output is a tuple containing the Petri net and the initial and final markings.
     The markings are only returned if they can be reasonably derived from the input model.
 
     :param args:
-        - If converting from a BPMN, ProcessTree, HeuristicsNet, or POWL: a single object of the respective type.
+        - If converting from a BPMN, ProcessTree, HeuristicsNet, GeneticMatrix, or POWL: a single object of the respective type.
         - If converting from a DFG: a dictionary representing the DFG, followed by lists of start and end activities.
     :return: A tuple of (``PetriNet``, ``Marking``, ``Marking``).
 
@@ -246,6 +247,12 @@ def convert_to_petri_net(
         return to_petri_net.apply(args[0])
     elif isinstance(args[0], HeuristicsNet):
         from pm4py.objects.conversion.heuristics_net.variants import (
+            to_petri_net,
+        )
+
+        return to_petri_net.apply(args[0])
+    elif isinstance(args[0], GeneticMatrix):
+        from pm4py.objects.conversion.genetic_matrix.variants import (
             to_petri_net,
         )
 

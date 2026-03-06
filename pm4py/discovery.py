@@ -23,7 +23,7 @@ __doc__ = """
 The ``pm4py.discovery`` module contains the process discovery algorithms implemented in ``pm4py``.
 """
 
-from typing import Tuple, Union, List, Dict, Any, Optional, Set
+from typing import Tuple, Union, List, Dict, Any, Optional, Set, TextIO
 from collections import Counter
 
 import pandas as pd
@@ -430,6 +430,87 @@ def discover_petri_net_ilp(
 
     return ilp_miner.apply(
         log, variant=ilp_miner.Variants.CLASSIC, parameters=parameters
+    )
+
+
+def discover_petri_net_genetic(
+    log: Union[EventLog, pd.DataFrame],
+    population_size: int = 500,
+    elitism_rate: float = 0.01,
+    crossover_rate: float = 1.0,
+    mutation_rate: float = 0.01,
+    generations: int = 100,
+    elitism_min_sample: int = 5,
+    tournament_timeout: int = None,
+    log_csv: TextIO = None,
+    activity_key: str = "concept:name",
+    timestamp_key: str = "time:timestamp",
+    case_id_key: str = "case:concept:name",
+) -> Tuple[PetriNet, Marking, Marking]:
+    """
+    Discovers a Petri net using the Genetic Miner.
+
+    Reference paper:
+    Maximilian Josef Frank. "Optimising and Implementing the Genetic Miner in PM4Py" (2026).
+
+    :param log: Event log or Pandas DataFrame.
+    :param population_size: Population size of genetic sampling (default: 500).
+    :param elitism_rate: Rate of best models used in next generation (default: 0.01).
+    :param crossover_rate: Rate of genetically combined models (offsprings) used in next generation (default: 1.0).
+    :param mutation_rate: Random model mutation rate (default: 0.01).
+    :param generations: Iterations of model improvement (default: 100).
+    :param elitism_min_sample: Minimum sample size for selecting best models (default: 5).
+    :param tournament_timeout: Timeout in seconds for assessing individuals. If the timeout is reached, the individual will not appear in the next generation (default: factor dependent on number of activities and log size)
+    :param log_csv: Output stream for CSV log (default: None).
+    :param activity_key: Attribute to be used for the activity (default: "concept:name").
+    :param timestamp_key: Attribute to be used for the timestamp (default: "time:timestamp").
+    :param case_id_key: Attribute to be used as case identifier (default: "case:concept:name").
+    :return: A tuple containing the Petri net, initial marking, and final marking.
+    :rtype: ``Tuple[PetriNet, Marking, Marking]``
+
+    .. code-block:: python3
+
+        import pm4py
+
+        net, im, fm = pm4py.discover_petri_net_genetic(
+            dataframe,
+            activity_key='concept:name',
+            timestamp_key='time:timestamp',
+            case_id_key='case:concept:name'
+        )
+    """
+    __event_log_deprecation_warning(log)
+
+    from pm4py.algo.discovery.genetic import algorithm as genetic_miner
+
+    genetic_parameters = genetic_miner.Parameters
+    parameters = get_properties(
+        log,
+        activity_key=activity_key,
+        timestamp_key=timestamp_key,
+        case_id_key=case_id_key,
+    )
+    parameters[genetic_parameters.POPULATION_SIZE] = population_size
+    parameters[genetic_parameters.ELITISM_RATE] = elitism_rate
+    parameters[genetic_parameters.CROSSOVER_RATE] = crossover_rate
+    parameters[genetic_parameters.MUTATION_RATE] = mutation_rate
+    parameters[genetic_parameters.GENERATIONS] = generations
+    parameters[genetic_parameters.ELITISM_MIN_SAMPLE] = elitism_min_sample
+    parameters[genetic_parameters.TOURNAMENT_TIMEOUT] = tournament_timeout
+    parameters[genetic_parameters.LOG_CSV] = log_csv
+
+    if check_is_pandas_dataframe(log):
+        check_pandas_dataframe_columns(
+            log,
+            activity_key=activity_key,
+            timestamp_key=timestamp_key,
+            case_id_key=case_id_key,
+        )
+
+    return genetic_miner.apply(
+        log,
+        variant=genetic_miner.Variants.CLASSIC,
+        parameters=parameters,
     )
 
 

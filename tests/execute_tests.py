@@ -30,7 +30,9 @@ enabled_tests = [
     "DiagnDfConfChecking", "ProcessModelEvaluationTests", "DecisionTreeTest", "GraphsForming",
     "HeuMinerTest", "MainFactoriesTest", "AlgorithmTest", "LogFilteringTest",
     "DataframePrefilteringTest", "StatisticsLogTest", "StatisticsDfTest", "TransitionSystemTest",
-    "ImpExpFromString", "WoflanTest", "OcelFilteringTest", "OcelDiscoveryTest", "LlmTest"
+    "ImpExpFromString", "WoflanTest", "OcelFilteringTest", "OcelDiscoveryTest", "LlmTest",
+    "OcCausalNetSemanticsTest", "OcCausalNetSimulationTest", "OcCausalNetTest",
+    "OcpnSemanticsTest", "OcpnSimulationTest", "OcpnTest"
 ]
 
 if importlib.util.find_spec("polars"):
@@ -335,6 +337,54 @@ if "LlmTest" in enabled_tests:
         suite.addTests(loader.loadTestsFromTestCase(LlmTest))
     except:
         print("LlmTest import failed!")
+        failed += 1
+
+if "OcCausalNetSemanticsTest" in enabled_tests:
+    try:
+        from tests.oc_causal_net_semantics_test import OCCausalNetSemanticsTest
+        suite.addTests(loader.loadTestsFromTestCase(OCCausalNetSemanticsTest))
+    except:
+        print("OcCausalNetSemanticsTest import failed!")
+        failed += 1
+
+if "OcCausalNetSimulationTest" in enabled_tests:
+    try:
+        from tests.oc_causal_net_simulation_test import OCCausalNetSimulationTest
+        suite.addTests(loader.loadTestsFromTestCase(OCCausalNetSimulationTest))
+    except:
+        print("OcCausalNetSimulationTest import failed!")
+        failed += 1
+
+if "OcCausalNetTest" in enabled_tests:
+    try:
+        from tests.oc_causal_net_test import OCCausalNetTest
+        suite.addTests(loader.loadTestsFromTestCase(OCCausalNetTest))
+    except:
+        print("OcCausalNetTest import failed!")
+        failed += 1
+
+if "OcpnSemanticsTest" in enabled_tests:
+    try:
+        from tests.ocpn_semantics_test import OCPN_Semantics_Test
+        suite.addTests(loader.loadTestsFromTestCase(OCPN_Semantics_Test))
+    except:
+        print("OcpnSemanticsTest import failed!")
+        failed += 1
+
+if "OcpnSimulationTest" in enabled_tests:
+    try:
+        from tests.ocpn_simulation_test import OCPNSimulationTest
+        suite.addTests(loader.loadTestsFromTestCase(OCPNSimulationTest))
+    except:
+        print("OcpnSimulationTest import failed!")
+        failed += 1
+
+if "OcpnTest" in enabled_tests:
+    try:
+        from tests.ocpn_test import OCPN_Test
+        suite.addTests(loader.loadTestsFromTestCase(OCPN_Test))
+    except:
+        print("OCPN_Test import failed!")
         failed += 1
 
 if "TestPolarsFilteringSimplified" in enabled_tests:
