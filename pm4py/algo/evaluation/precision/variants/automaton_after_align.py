@@ -19,23 +19,21 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
+from __future__ import annotations
+
 from copy import copy
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import pandas as pd
 from pm4py.algo.conformance.alignments.petri_net import algorithm as petri_alignments
-from pm4py.objects import log as log_lib
+from pm4py.objects.conversion.log import converter as log_converter
 from pm4py.objects.log.obj import EventLog, EventStream
 from pm4py.objects.petri_net import semantics
-from pm4py.utils import is_polars_lazyframe
 from pm4py.objects.petri_net.obj import Marking, PetriNet
-from pm4py.objects.petri_net.utils import (
-    align_utils as pn_align_utils,
-    check_soundness,
-)
-from pm4py.statistics.start_activities.log.get import get_start_activities
-from pm4py.util import constants, exec_utils, variants_util
+from pm4py.objects.petri_net.utils import align_utils as pn_align_utils, check_soundness
+from pm4py.statistics.variants.log import get as variants_get
+from pm4py.util import constants, exec_utils
 
 
 class Parameters(Enum):
@@ -47,66 +45,95 @@ class Parameters(Enum):
     MULTIPROCESSING = "multiprocessing"
     CORES = "cores"
 
+    # Optional: if True, uses transition *names* (task IDs) as symbols instead of labels.
+    # Useful to disambiguate duplicate labels. Still ignores invisible transitions.
+    USE_TASK_IDS = "use_task_ids"
 
-# -----------------------------------------------------------------------------#
-# Helper functions
-# -----------------------------------------------------------------------------#
+
+SKIP = ">>"
+Prefix = Tuple[str, ...]
+
+
+def _get_alignment_model_part(step: Any) -> Tuple[Any, Any]:
+    """
+    Extract (model_transition_name, model_label) from one alignment step.
+
+    Expected format when PM4Py is called with ret_tuple_as_trans_desc=True:
+        step == ( (log_trans_name, model_trans_name), (log_label, model_label) )
+    where the first tuple comes from the sync-product transition name, and the second from its label.
+
+    Returns
+    -------
+    model_trans_name, model_label
+    """
+    try:
+        trans_desc, labels = step
+        model_trans_name = trans_desc[1]
+        model_label = labels[1]
+        return model_trans_name, model_label
+    except Exception as exc:
+        raise ValueError(
+            "Unexpected alignment step format. Make sure alignments are computed with "
+            "parameters={'ret_tuple_as_trans_desc': True}."
+        ) from exc
+
+
 def _extract_model_sequence(
-    alignment: List[Tuple[Tuple[str, str], Tuple[str, str]]]
+    alignment: List[Any], *, use_task_ids: bool = False
 ) -> List[str]:
     """
-    Given an alignment (returned by PM4Py with
-    ``ret_tuple_as_trans_desc = True``)
-    extract the sequence of *visible* model moves
-    (i.e. the bottom row in the alignment table).
+    Implements the paper's λ̄(γ): projection of *model moves* of an alignment γ,
+    yielding a complete activity sequence of the model.
 
-    Invisible moves are ignored because they do not constitute
-    log activities/prefixes.
+    - Log-only moves are ignored (model side '>>')
+    - Invisible model moves are ignored (model label is None)
+    - If use_task_ids=True: return model transition *names* (task IDs) for visible moves
+      (still ignoring invisible transitions).
     """
     seq: List[str] = []
-    for move in alignment:
-        # move[0] – model side, move[1] – log side
-        # move[0][0] == '>>'  ⇒  move in log only
-        if move[0][0] != ">>":  # model fired a transition
-            label = move[1][0]  # log label (same as transition label for sync moves)
-            if label is not None and label != ">>":
-                seq.append(label)
+    for step in alignment:
+        model_trans_name, model_label = _get_alignment_model_part(step)
+
+        if model_trans_name == SKIP:
+            continue
+
+        if model_label is None or model_label == SKIP:
+            continue
+
+        if use_task_ids:
+            seq.append(str(model_trans_name))
+        else:
+            seq.append(str(model_label))
+
     return seq
 
 
 def _update_prefix_stats(
     seq: List[str],
     weight: int,
-    prefixes: Dict[str, Set[str]],
-    prefix_count: Dict[str, int],
+    next_by_prefix: Dict[Prefix, Set[str]],
+    prefix_weight: Dict[Prefix, int],
 ) -> None:
     """
-    From a *model* sequence build/extend:
-      * ``prefixes``      – prefix  →  set(next visible activity labels)
-      * ``prefix_count``  – prefix  →  aggregated frequency
+    For each prefix of seq (excluding the full seq), update:
+      - next_by_prefix[prefix] : set(next symbols)
+      - prefix_weight[prefix]  : ω(prefix) aggregated across traces/variants
 
-    The very last activity in a trace is *not* considered,
-    exactly like in the original ET‑Conformance definition:
-    there is no “next” move after the last event.
+    This corresponds to the paper's ω(s) for the Λ1 setting:
+      ω(γ) = frequency(trace)
+      ω(s) = Σ ω(γ) for all alignments γ whose λ̄(γ) has prefix s.
     """
-    if not seq:
+    if len(seq) < 2:
         return
 
-    current_prefix = None
-    for i, activity in enumerate(seq[:-1]):  # stop before the last element
-        current_prefix = activity if current_prefix is None else f"{current_prefix},{activity}"
-
-        next_act = seq[i + 1]
-
-        # update set of next activities
-        prefixes.setdefault(current_prefix, set()).add(next_act)
-        # update multiplicity
-        prefix_count[current_prefix] = prefix_count.get(current_prefix, 0) + weight
+    prefix: Prefix = ()
+    for i in range(len(seq) - 1):
+        prefix = prefix + (seq[i],)
+        next_sym = seq[i + 1]
+        next_by_prefix.setdefault(prefix, set()).add(next_sym)
+        prefix_weight[prefix] = prefix_weight.get(prefix, 0) + weight
 
 
-# -----------------------------------------------------------------------------#
-# Main algorithm
-# -----------------------------------------------------------------------------#
 def apply(
     log: Union[EventLog, EventStream, pd.DataFrame],
     net: PetriNet,
@@ -115,189 +142,170 @@ def apply(
     parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
 ) -> float:
     """
-    Compute the Align‑ETConformance *precision* where the prefix‑automaton
-    is generated from **aligned traces** (model projections).
+    Alignment-based ETC precision (per "Measuring precision of modeled behavior").
 
-    Implements: Adriansyah, Arya, et al. "Measuring precision of modeled behavior." Information systems and e-Business Management 13.1 (2015): 37-67.
+    Summary of approach (Λ1 case):
+      1) compute one optimal alignment per trace variant
+      2) build the alignment automaton from λ̄(γ) (projection of model moves)
+      3) compute precision from escaping edges:
+           precision = 1 - (Σ ω(s)*|a_v(s) \\ e_x(s)|) / (Σ ω(s)*|a_v(s)|)
 
-    The only difference with the reference implementation contained in PM4Py
-    is that the prefix automaton is built *after* aligning every
-    (variant of the) trace with the model; hence each prefix is guaranteed to end
-    in a reachable marking and the set of enabled visible transitions can be
-    computed without risk of being undefined.
-
-    Parameters
-    ----------
-    log
-        The event log / event stream / dataframe.
-    net
-        Petri net.
-    im
-        Initial marking.
-    fm
-        Final marking.
-    parameters
-        Same dictionary accepted by the original function.
+    Fixes vs the original snippet:
+      - empty-prefix executed set taken from aligned sequences (not raw log)
+      - available actions aggregated over all markings reached by the same prefix
+      - tuple prefixes instead of comma-joined strings
+      - robust log conversion and trace counting
     """
     if parameters is None:
         parameters = {}
 
-    # ------------------------------------------------------------------#
-    # Basic checks and parameter extraction
-    # ------------------------------------------------------------------#
     if not check_soundness.check_easy_soundness_net_in_fin_marking(net, im, fm):
         raise ValueError(
-            "Align‑ET precision can only be applied on a Petri net that is "
-            "a *sound* WF‑net (easy‑sound)."
+            "Align-ETC precision can only be applied on a Petri net that is "
+            "a sound WF-net (easy sound)."
         )
 
     activity_key = exec_utils.get_param_value(
-        Parameters.ACTIVITY_KEY, parameters, log_lib.util.xes.DEFAULT_NAME_KEY
+        Parameters.ACTIVITY_KEY, parameters, "concept:name"
     )
-    case_id_key = exec_utils.get_param_value(
-        Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME
-    )
-
     debug_level = parameters.get("debug_level", 0)
+    use_task_ids = bool(exec_utils.get_param_value(Parameters.USE_TASK_IDS, parameters, False))
 
-    # ------------------------------------------------------------------#
-    # 1.  Group traces into variants  →  drastically fewer alignments
-    # ------------------------------------------------------------------#
-    import pm4py
+    # Convert input to EventLog for consistent handling
+    ev_log: EventLog = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
-    log = pm4py.convert_to_dataframe(log)
-
-    variants = pm4py.get_variants(log, activity_key)
+    # 1) Variants -> align fewer traces (one per variant)
+    variants = variants_get.get_variants(
+        ev_log, parameters={constants.PARAMETER_CONSTANT_ACTIVITY_KEY: activity_key}
+    )
     variant_keys = list(variants.keys())
 
-    # reduced log (one trace per variant) – alignment cost dominates
     red_log = EventLog()
-    for var in variant_keys:
-        red_log.append(variants_util.variant_to_trace(var, parameters=parameters))
+    variant_freqs: List[int] = []
+    for vkey in variant_keys:
+        traces = variants[vkey]
+        if not traces:
+            continue
+        red_log.append(traces[0])
+        variant_freqs.append(len(traces))
 
-    # ------------------------------------------------------------------#
-    # 2.  Align every variant trace with the model
-    # ------------------------------------------------------------------#
-    align_params = copy(parameters)
+    # 2) Align each variant trace
+    align_params = dict(parameters)
     align_params["ret_tuple_as_trans_desc"] = True
+    aligned_variants = petri_alignments.apply(red_log, net, im, fm, parameters=align_params)
 
-    aligned_traces = petri_alignments.apply(red_log, net, im, fm, parameters=align_params)
-
-    # Map from transition *name* → Transition object (faster look‑up later on)
     trans_by_name = {t.name: t for t in net.transitions}
 
-    # ------------------------------------------------------------------#
-    # 3.  Build prefix statistics from the *aligned* sequences
-    # ------------------------------------------------------------------#
-    prefixes: Dict[str, Set[str]] = {}
-    prefix_count: Dict[str, int] = {}
+    # 3) Build automaton stats from aligned model projections λ̄(γ)
+    next_by_prefix: Dict[Prefix, Set[str]] = {}
+    prefix_weight: Dict[Prefix, int] = {}
+    start_actions: Set[str] = set()
 
-    for variant_idx, aligned in enumerate(aligned_traces):
+    # Collect all markings reached at each prefix across all aligned traces
+    prefix_markings: Dict[Prefix, Set[Marking]] = {}
+
+    for idx, aligned in enumerate(aligned_variants):
         alignment = aligned["alignment"]
-        seq = _extract_model_sequence(alignment)
+        freq = variant_freqs[idx]
 
-        # frequency of the variant (= number of original traces with this exact sequence)
-        freq = variants[variant_keys[variant_idx]]
-        _update_prefix_stats(seq, freq, prefixes, prefix_count)
+        seq = _extract_model_sequence(alignment, use_task_ids=use_task_ids)
 
-    # ------------------------------------------------------------------#
-    # 4.  Precision calculation – identical to the reference implementation,
-    #     but using the new `prefixes` / `prefix_count`.
-    # ------------------------------------------------------------------#
-    precision = 1.0               # default when no AT found
-    sum_ee = 0                    # escaping edges   (numerator)
-    sum_at = 0                    # activated trans. (denominator)
+        if seq:
+            start_actions.add(seq[0])
 
-    visited_markings: Dict[Marking, Set[str]] = {}
-    visited_prefixes: Set[str] = set()
+        _update_prefix_stats(seq, freq, next_by_prefix, prefix_weight)
 
-    for variant_idx, aligned in enumerate(aligned_traces):
-        alignment = aligned["alignment"]
-        freq = variants[variant_keys[variant_idx]]
+        if len(seq) < 2:
+            continue
+
+        max_prefix_len = len(seq) - 1  # exclude last symbol
 
         marking = copy(im)
-        prefix = None
+        prefix: Prefix = ()
+        seen_visible = 0
 
-        # last index referring to a *log* move (to emulate original behaviour)
-        idxs = [i for i, m in enumerate(alignment) if m[0][0] != ">>"]
-        if not idxs:
+        for step in alignment:
+            model_trans_name, model_label = _get_alignment_model_part(step)
+
+            # Execute any model-side transition (sync or model-only, incl. invisible)
+            if model_trans_name != SKIP:
+                if model_trans_name not in trans_by_name:
+                    raise KeyError(
+                        f"Transition name {model_trans_name!r} from alignment not found in model."
+                    )
+                new_marking = semantics.execute(trans_by_name[model_trans_name], net, marking)
+                if new_marking is None:
+                    raise RuntimeError(
+                        f"Alignment tried to fire transition {model_trans_name!r} "
+                        f"which is not enabled in the current marking."
+                    )
+                marking = new_marking
+
+            # Update prefix only for visible model moves
+            if model_trans_name == SKIP:
+                continue
+            if model_label is None or model_label == SKIP:
+                continue
+
+            seen_visible += 1
+            sym = str(model_trans_name) if use_task_ids else str(model_label)
+            prefix = prefix + (sym,)
+
+            if seen_visible <= max_prefix_len:
+                prefix_markings.setdefault(prefix, set()).add(marking)
+            else:
+                break
+
+    # 4) Compute available actions a_v(s) and escaping edges
+    enabled_cache: Dict[Marking, Set[str]] = {}
+
+    def enabled_symbols_at(m: Marking) -> Set[str]:
+        if m in enabled_cache:
+            return enabled_cache[m]
+        vis_trans = pn_align_utils.get_visible_transitions_eventually_enabled_by_marking(net, m)
+        if use_task_ids:
+            enabled = {str(t.name) for t in vis_trans}
+        else:
+            enabled = {str(t.label) for t in vis_trans if t.label is not None}
+        enabled_cache[m] = enabled
+        return enabled
+
+    sum_at = 0.0
+    sum_ee = 0.0
+
+    for prefix, markings in prefix_markings.items():
+        if prefix not in prefix_weight:
             continue
-        last_log_idx = idxs[-1]
 
-        for i in range(last_log_idx):
-            move = alignment[i]
+        available: Set[str] = set()
+        for m in markings:
+            available |= enabled_symbols_at(m)
 
-            # execute the transition on the net (if any)
-            if move[0][1] != ">>":
-                transition = trans_by_name[move[0][1]]
-                marking = semantics.execute(transition, net, marking)
+        executed = next_by_prefix.get(prefix, set())
+        escaping = available.difference(executed)
 
-            # update prefix when the move corresponds to a visible activity
-            if move[0][0] != ">>":
-                activity = move[1][0]
-                prefix = activity if prefix is None else f"{prefix},{activity}"
+        w = prefix_weight[prefix]
+        sum_at += len(available) * w
+        sum_ee += len(escaping) * w
 
-                if prefix not in visited_prefixes:
-                    # cache enabled set per marking
-                    if marking in visited_markings:
-                        enabled_vis = visited_markings[marking]
-                    else:
-                        enabled_vis = {
-                            t.label
-                            for t in pn_align_utils.get_visible_transitions_eventually_enabled_by_marking(
-                                net, marking
-                            )
-                            if t.label is not None
-                        }
-                        visited_markings[marking] = enabled_vis
+    # 5) Empty prefix ε
+    n_traces = len(ev_log)
+    enabled_ini = enabled_symbols_at(im)
+    escaping_ini = enabled_ini.difference(start_actions)
 
-                    # transitions that *actually* happened (taken from the log) …
-                    log_transitions = prefixes.get(prefix, set())
-                    # … vs those made possible by the model
-                    escaping = enabled_vis.difference(log_transitions)
-
-                    multiplicity = prefix_count.get(prefix, 0)
-
-                    sum_at += len(enabled_vis) * multiplicity
-                    sum_ee += len(escaping) * multiplicity
-
-                    visited_prefixes.add(prefix)
-
-    # ------------------------------------------------------------------#
-    # 5.  Empty prefix (⊥) handling – 100 % identical to PM4Py code
-    # ------------------------------------------------------------------#
-    start_acts = set(get_start_activities(log, parameters=parameters))
-    enabled_ini = {
-        t.label
-        for t in pn_align_utils.get_visible_transitions_eventually_enabled_by_marking(
-            net, im
-        )
-        if t.label is not None
-    }
-    diff_ini = enabled_ini.difference(start_acts)
-
-    if isinstance(log, EventLog):
-        n_traces = len(log)
-    elif is_polars_lazyframe(log):
-        import polars as pl
-        n_traces_result = log.select(pl.col(case_id_key).n_unique()).collect()
-        n_traces = 0
-        if n_traces_result.height > 0 and n_traces_result.width > 0:
-            n_traces = int(n_traces_result.to_series(0)[0] or 0)
-    else:
-        n_traces = int(log[case_id_key].nunique())
     sum_at += len(enabled_ini) * n_traces
-    sum_ee += len(diff_ini) * n_traces
+    sum_ee += len(escaping_ini) * n_traces
 
-    # ------------------------------------------------------------------#
-    # 6.  Final ratio
-    # ------------------------------------------------------------------#
+    precision = 1.0
     if sum_at > 0:
         precision = 1.0 - float(sum_ee) / float(sum_at)
 
-    if debug_level > 0:
+    if debug_level:
         print(
-            f"[Align‑ETPrecision‑Aligned]  AT={sum_at}  EE={sum_ee}  precision={precision:.5f}"
+            "[Align-ETC Precision (aligned automaton)] "
+            f"AT={sum_at:.0f} EE={sum_ee:.0f} precision={precision:.5f}"
         )
 
     return precision
