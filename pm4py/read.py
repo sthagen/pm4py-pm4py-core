@@ -23,7 +23,6 @@ from typing import Tuple, Dict, Optional, Union
 import os
 
 import tempfile
-import importlib.util
 from urllib.parse import urlparse
 
 from pm4py.objects.bpmn.obj import BPMN
@@ -34,6 +33,7 @@ from pm4py.objects.process_tree.obj import ProcessTree
 from pm4py.util import constants
 
 from pandas import DataFrame
+from pm4py.util.rustxes_utils import get_rustxes_backend_name
 from pm4py.utils import __rustxes_usage_warning, __rustxes_non_usage_warning
 
 INDEX_COLUMN = "@@index"
@@ -90,7 +90,8 @@ def read_xes(
         - "line_by_line" – text-based line-by-line importer,
         - "chunk_regex" – chunk-of-bytes importer (default),
         - "iterparse20" – XES 2.0 importer,
-        - "rustxes" – Rust-based importer.
+        - "r4pm" – Rust-based importer via `r4pm.df`,
+        - "rustxes" – compatibility alias for the Rust-based importer.
     :param return_legacy_log_object: Boolean indicating whether to return a legacy `EventLog` object (default: `False`).
     :param return_pl_lazyframe: Returns a Polars LazyFrame (defaul
     :param encoding: Encoding to be used (default: `utf-8`).
@@ -106,9 +107,10 @@ def read_xes(
     local_path = _resolve_path(file_path)
 
     if variant is None:
-        if importlib.util.find_spec("rustxes"):
+        backend_name = get_rustxes_backend_name()
+        if backend_name is not None:
             __rustxes_usage_warning()
-            variant = "rustxes"
+            variant = backend_name
         else:
             __rustxes_non_usage_warning()
             variant = constants.DEFAULT_XES_PARSER
@@ -128,7 +130,7 @@ def read_xes(
         v = xes_importer.Variants.LINE_BY_LINE
     elif variant == "chunk_regex":
         v = xes_importer.Variants.CHUNK_REGEX
-    elif variant == "rustxes":
+    elif variant == "rustxes" or variant == "r4pm":
         v = xes_importer.Variants.RUSTXES
 
     from copy import copy
@@ -478,6 +480,8 @@ def read_ocel2_json(
     from pm4py.objects.ocel.importer.jsonocel import importer as jsonocel_importer
 
     variant = jsonocel_importer.Variants.OCEL20_STANDARD
+    if get_rustxes_backend_name() is not None:
+        variant = jsonocel_importer.Variants.OCEL20_RUSTXES
 
     return jsonocel_importer.apply(
         file_path, variant=variant, parameters={"encoding": encoding}
@@ -532,6 +536,8 @@ def read_ocel2_xml(
     from pm4py.objects.ocel.importer.xmlocel import importer as xml_importer
 
     variant = xml_importer.Variants.OCEL20
+    if get_rustxes_backend_name() is not None:
+        variant = xml_importer.Variants.OCEL20_RUSTXES
 
     return xml_importer.apply(
         file_path, variant=variant, parameters={"encoding": encoding}

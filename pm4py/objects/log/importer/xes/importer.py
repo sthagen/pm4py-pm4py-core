@@ -58,7 +58,7 @@ def __get_variant(variant_str: str):
         variant = Variants.ITERPARSE_20
     elif variant_str == "iterparse_mem_compressed":
         variant = Variants.ITERPARSE_MEM_COMPRESSED
-    elif variant_str == "rustxes":
+    elif variant_str == "rustxes" or variant_str == "r4pm":
         variant = Variants.RUSTXES
 
     return variant

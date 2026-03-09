@@ -28,6 +28,7 @@ import pandas as pd
 from copy import copy
 from pm4py.util.dt_parsing.variants import strpfromiso
 import importlib.util
+from pm4py.util.rustxes_utils import import_rustxes_backend
 
 
 class Parameters(Enum):
@@ -46,9 +47,9 @@ def apply(
     )
     return_pl_lazyframe = exec_utils.get_param_value(Parameters.RETURN_PL_LAZYFRAME, parameters, False)
 
-    import rustxes
+    rustxes_backend, _ = import_rustxes_backend()
 
-    log = rustxes.import_xes(log_path)
+    log = rustxes_backend.import_xes(log_path)
     log = log[0]
 
     if not return_pl_lazyframe:

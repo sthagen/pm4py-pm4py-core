@@ -78,7 +78,7 @@ class TestPolarsProcessDiscovery(unittest.TestCase):
 
     def test_discover_petri_net_genetic(self):
         log = self._lazy_log()
-        net, im, fm = pm4py.discover_petri_net_genetic(log)
+        net, im, fm = pm4py.discover_petri_net_genetic(log, population_size = 10, generations = 10)
         self.assertTrue(net.places and net.transitions)
         self.assertTrue(len(im) > 0)
         self.assertTrue(len(fm) > 0)

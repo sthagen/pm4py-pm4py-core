@@ -23,13 +23,12 @@ __doc__ = """
 The ``pm4py.write`` module contains all functionality related to writing files/objects to disk.
 """
 
-import importlib.util
-
 from pm4py.objects.bpmn.obj import BPMN
 from pm4py.objects.log.obj import EventLog
 from pm4py.objects.ocel.obj import OCEL
 from pm4py.objects.petri_net.obj import PetriNet, Marking
 from pm4py.objects.process_tree.obj import ProcessTree
+from pm4py.util.rustxes_utils import get_rustxes_backend_name, import_rustxes_backend
 from pm4py.utils import __event_log_deprecation_warning
 import pandas as pd
 from typing import Union, Tuple, Dict, Optional
@@ -57,7 +56,7 @@ def write_xes(
     :param file_path: Target file path of the event log (``.xes`` file) on disk.
     :param case_id_key: Column key that identifies the case identifier.
     :param extensions: Extensions defined for the event log.
-    :param variant_str: Variant to be used (default: line-by-line, rustxes)
+    :param variant_str: Variant to be used (default: line-by-line, r4pm/rustxes)
     :param encoding: The encoding to be used (default: utf-8).
 
     .. code-block:: python3
@@ -85,22 +84,25 @@ def write_xes(
     parameters["extensions"] = extensions
     parameters["encoding"] = encoding
 
-    if variant_str is None and importlib.util.find_spec("rustxes"):
-        __rustxes_usage_warning()
-        variant_str = "rustxes"
+    if variant_str is None:
+        backend_name = get_rustxes_backend_name()
+        if backend_name is not None:
+            __rustxes_usage_warning()
+            variant_str = backend_name
 
     if variant_str is None or variant_str == "line_by_line":
         __rustxes_non_usage_warning()
         from pm4py.objects.log.exporter.xes import exporter as xes_exporter
         xes_exporter.apply(log, file_path, variant=xes_exporter.Variants.LINE_BY_LINE, parameters=parameters)
     else:
-        import pm4py, rustxes, polars
+        import pm4py, polars
+        rustxes_backend, _ = import_rustxes_backend()
         if not is_polars_lazyframe(log):
             log = pm4py.convert_to_dataframe(log)
             log = polars.DataFrame(log)
         else:
             log = log.collect()
-        rustxes.export_xes(log, file_path)
+        rustxes_backend.export_xes(log, file_path)
 
 
 def write_pnml(

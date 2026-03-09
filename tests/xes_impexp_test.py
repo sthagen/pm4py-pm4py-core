@@ -3,8 +3,8 @@ from pm4py.objects.log.exporter.xes import exporter as xes_exporter
 from tests.constants import INPUT_DATA_DIR, OUTPUT_DATA_DIR, PROBLEMATIC_XES_DIR, COMPRESSED_INPUT_DATA
 import logging
 import unittest
-import importlib.util
 import os
+from pm4py.util.rustxes_utils import get_rustxes_backend_name
 
 
 class XesImportExportTest(unittest.TestCase):
@@ -53,12 +53,12 @@ class XesImportExportTest(unittest.TestCase):
         del log
 
     def test_rustxes_xes_import(self):
-        if importlib.util.find_spec("rustxes"):
+        if get_rustxes_backend_name() is not None:
             log = xes_importer.apply(os.path.join(INPUT_DATA_DIR, "receipt.xes"), variant=xes_importer.Variants.RUSTXES)
             self.assertEqual(len(log), 1434)
 
     def test_rustxes_xesgz_import(self):
-        if importlib.util.find_spec("rustxes"):
+        if get_rustxes_backend_name() is not None:
             log = xes_importer.apply(os.path.join(INPUT_DATA_DIR, "bpic2012.xes.gz"), variant=xes_importer.Variants.RUSTXES)
             self.assertEqual(len(log), 13087)
 

@@ -39,6 +39,7 @@ from pm4py.util.pandas_utils import (
 )
 from pm4py.util.dt_parsing.variants import strpfromiso
 from pm4py.util import deprecation
+from pm4py.util.rustxes_utils import get_rustxes_backend_name
 
 
 INDEX_COLUMN = "@@index"
@@ -987,8 +988,20 @@ def __rustxes_usage_warning():
         Shared.RUSTXES_WARNING_SHOWN is False
         and constants.SHOW_INTERNAL_WARNINGS
     ):
+        backend_name = get_rustxes_backend_name()
+        message = (
+            "Install the optional requirement `r4pm` to import/export files faster. `rustxes` remains supported as a fallback."
+        )
+        if backend_name == "r4pm":
+            message = (
+                "In the current version, the import/export operation uses `r4pm` by default for importing/exporting files faster."
+            )
+        elif backend_name == "rustxes":
+            message = (
+                "In the current version, the import/export operation uses `rustxes` by default for importing/exporting files faster. Install `r4pm` to use the replacement backend."
+            )
         warnings.warn(
-            "In the current version, the import/export operation uses `rustxes` by default for importing/exporting files faster. Please uninstall `rustxes` to revert the behavior."
+            message
         )
         Shared.RUSTXES_WARNING_SHOWN = True
 
@@ -997,8 +1010,20 @@ def __rustxes_non_usage_warning():
         Shared.RUSTXES_WARNING_SHOWN is False
         and constants.SHOW_INTERNAL_WARNINGS
     ):
+        backend_name = get_rustxes_backend_name()
+        message = (
+            "Install the optional requirement `r4pm` to import/export files faster. `rustxes` remains supported as a fallback."
+        )
+        if backend_name == "r4pm":
+            message = (
+                "The import/export operation is using the line-by-line backend. `r4pm` is available if you want faster import/export."
+            )
+        elif backend_name == "rustxes":
+            message = (
+                "The import/export operation is using the line-by-line backend. Install `r4pm` to use the replacement fast backend. `rustxes` remains supported as a fallback."
+            )
         warnings.warn(
-            "Install the optional requirement `rustxes` to import/export files faster."
+            message
         )
         Shared.RUSTXES_WARNING_SHOWN = True
 
