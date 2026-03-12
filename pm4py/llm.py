@@ -213,6 +213,7 @@ def abstract_variants(
     activity_key: str = "concept:name",
     timestamp_key: str = "time:timestamp",
     case_id_key: str = "case:concept:name",
+        **kwargs
 ) -> str:
     """
     Obtains the variants abstraction of a traditional event log.
@@ -619,6 +620,52 @@ def abstract_log_skeleton(log_skeleton, include_header: bool = True) -> str:
     from pm4py.algo.querying.llm.abstractions import logske_to_descr
 
     return logske_to_descr.apply(log_skeleton, parameters=parameters)
+
+
+def clustering(log: pd.DataFrame, executor=openai_query, case_id_key: str = "case:concept:name", activity_key: str = "concept:name", **kwargs) -> List[Tuple[str, pd.DataFrame]]:
+    """
+    Performs LLM-based clustering on the variants' list.
+
+    Parameters
+    -----------------
+    log
+        Pandas dataframe
+    executor
+        The connector that should be used (openai, google, anthropic)
+    case_id_key
+        Column representing the case ID
+    activity_key
+        Column representing the activity
+
+    Returns
+    -----------------
+    final_clusters
+        A list of tuples. The first element is the name associated to the cluster, the second one is the sub-event-log.
+    """
+    import pm4py, json, re
+
+    prompt = pm4py.llm.abstract_variants(log, include_performance=False, **kwargs)
+    prompt += "\n\nCould you identify clusters of traces in the provided list? "
+    prompt += "Please provide a JSON list, contained in the ```json tags, containing a dictionary for each cluster. "
+    prompt += " The dictionary has a key 'name' and a key 'regex'."
+    prompt += " The 'name' should be a meaningful name for the cluster. The 'regex' should be a regular expression,"
+    prompt += "that I can use to filter the traces."
+
+    result = executor(prompt, **kwargs)
+    result = json.loads(result.split("```json")[1].split("```")[0])
+
+    final_clusters = []
+    agg0 = log.groupby(case_id_key, sort=False)[activity_key].agg(list).reset_index()
+    agg0["concept:name"] = agg0["concept:name"].apply(lambda x: " -> ".join(x))
+
+    for res in result:
+        reg = re.compile(res["regex"])
+        agg = agg0[agg0[activity_key].str.contains(reg)]
+        df = log[log[case_id_key].isin(agg[case_id_key])]
+
+        final_clusters.append((res["name"], df))
+
+    return final_clusters
 
 
 def __execute_prompt_to_db_query(

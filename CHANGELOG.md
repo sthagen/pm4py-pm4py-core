@@ -1,7 +1,85 @@
 # Changelog of pm4py
 
 
-## pm4py 2.7.18.1 (2025.05.08)
+# pm4py 2.7.20 (2026.03.11)
+
+### Added
+* 0fd2714a6ca38189aabee43bb5b84d63eaba5492
+  * added object-centric causal nets and object-centric Petri nets as objects
+  * added genetic miner
+* de34c822fbca2a1a0b86515fb7c69d068a0706c6
+  * New timeframe filters
+* 3e5fb309c2af7d696ff8d6e1e3752f2116eb5c02
+  * Polars statistics
+* 07acb5f36c8a40b4b2c8df4e700ba5cf4367795a
+  * Chaotic activities detection
+* d50fb4a492127193c7d8b18f8fccc94e1013b104
+  * Approaches for object-centric conformance checking
+* b6190a7b4424f8820a38697f73e2937214ec1b92
+  20a5cf543b86cbc1b4d5a218d7244bd087fc93e0
+  * Variant of Align-ETConformance faithful to the original paper's conclusions
+
+### Changed
+* 5057455f90b3c68e348c662b205842611fb6b205
+  * flanking 'rustxes' with 'r4pm'
+
+### Deprecated
+
+### Fixed
+* 7d381f15208ec27800a5eaf6d07c91e8bd4dffeb
+  * bug fixes IMd
+
+### Removed
+
+### Other
+
+
+# pm4py 2.7.19 (2025.06.27)
+
+### Added
+* 94d4ab12330ba8e62d3ff732e64a5fb88ce91196
+  * LLM-based clustering
+* 56b530e457b59fcd67a02c68b2d8652131111d5d
+  * introducing textual embeddings at the case/event level
+
+### Changed
+* c7dc88ca733241271e7bd88498c4087899bc99c7
+  * improving the extraction of temporal features
+* de4f05b4b7236082c6c47944595f496934742c53
+  * warning users on the filtering level for filtering event logs
+* 67685623663a8f39f72673bdfb3de1a963c94d19
+  * revised Outlook calendar event log extraction
+* 005df4ae5b41de410718bc036c98f55308a0f12d
+  * revised Outlook mail extraction
+* 7062f1d38cda0e86e03ec0dfdc21c9021397e71b
+  * revised Chrome history extraction
+* 9d4b2108ac9eac1e1777ae706e39d12e1581929f
+  * revised Firefox history extractor
+* 8efcf9ea8575b3098e0e69a8d663d6ce66fb470c
+  * Pivot table for temporal distribution (+ feature table)
+* 619145a15cb9a584e3e80bbc91b84e9656fc2d0a
+  * partial translation filters from Pandas to Polars LazyFrame
+
+### Deprecated
+
+### Fixed
+* c20c6a070fea14491011845cd79d1dabfe18d5b9
+  * Missing event log conversion in get_diagnostics_dataframe
+* 4059ebe07a2f1d4e3eb0df1b6a3d8eb43993b6de
+  * Missing activity and edge threshold in OC-DFG ELKJS visualization
+* 6601a9745c4d9fffa3fc0b268de4f9772a32b192
+  * Timeframe filter sampling is revised
+
+### Removed
+* df906cb68b144d003beef4e03034bc393bf2fac9
+  * removed extra documentation files
+
+### Other
+
+
+---
+
+# pm4py 2.7.18.1 (2025.05.08)
 
 ### Added
 * c02d02d7d146f8760c82ae9cf096ca7832008ab2

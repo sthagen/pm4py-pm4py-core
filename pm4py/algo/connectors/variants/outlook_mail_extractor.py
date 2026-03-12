@@ -32,14 +32,36 @@ import traceback
 
 
 correspondence = {
+    # mail & posts
     "43": "Mail",
+    "45": "Post",
+    "46": "Delivery Report",
+    "47": "Remote",
+
+    # meetings
     "53": "Meeting Request",
     "54": "Meeting Cancellation",
     "55": "Meeting Declination",
     "56": "Meeting Acceptance",
     "57": "Meeting Tentatively Accepted",
     "181": "Meeting Forward Notification",
-    "46": "Delivery Report",
+
+    # tasks
+    "48": "Task",
+    "49": "Task Request",
+    "50": "Task Request Update",
+    "51": "Task Request Acceptance",
+    "52": "Task Request Declination",
+
+    # appointments & miscellany
+    "26": "Appointment",
+    "40": "Contact",
+    "41": "Document",
+    "42": "Journal",
+    "44": "Note",
+    "69": "Distribution List",
+    "104": "Sharing",
+    "113": "Storage",
 }
 
 
