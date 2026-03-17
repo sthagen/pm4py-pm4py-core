@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Optional
 
 
-COPYRIGHT_MARKER = "Copyright (C)"
 SKIP_DIRS = {".git", "__pycache__", ".mypy_cache", ".pytest_cache"}
 ENCODING_PATTERN = re.compile(r"#.*coding[:=]\s*[-\w.]+")
 
@@ -35,8 +34,6 @@ def _consume_prefix(data: str) -> int:
         break
 
     return index
-
-
 def remove_header(data: str) -> Optional[str]:
     header_start = _consume_prefix(data)
     while header_start < len(data) and data[header_start] in {" ", "\t", "\r", "\n"}:
@@ -48,10 +45,6 @@ def remove_header(data: str) -> Optional[str]:
     quote = data[header_start:header_start + 3]
     header_end = data.find(quote, header_start + 3)
     if header_end == -1:
-        return None
-
-    header_content = data[header_start + 3:header_end]
-    if COPYRIGHT_MARKER not in header_content:
         return None
 
     cut_end = header_end + 3

@@ -1,6 +1,6 @@
 '''
-    PM4Py â€“ A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
+    PM4Py – A Process Mining Library for Python
+Copyright (C) 2026 Process Intelligence Solutions UG (haftungsbeschränkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -25,11 +25,11 @@ from collections import defaultdict
 import copy
 import csv
 from datetime import datetime
-from pm4py.util.timeout import func_timeout, FunctionTimedOut
 import numpy
 import random
 import itertools
 
+# optional dependencies
 try:
     from tqdm import tqdm
 except ImportError:
@@ -39,19 +39,19 @@ except ImportError:
 import pm4py
 from pm4py.util import exec_utils, constants
 from pm4py.util import xes_constants as xes
+from pm4py.utils import is_polars_lazyframe
 from pm4py.algo.discovery.genetic.algorithm import Parameters
 from pm4py.objects.conversion.log import converter as log_converter
 from pm4py.objects.conversion.genetic_matrix.variants.to_petri_net import apply as matrix2petrinet
-from pm4py.algo.discovery.genetic.util import get_src_sink_sets_for_wfnet, iset, rand_partition
+from pm4py.algo.discovery.genetic.util import add_singleton_partition, get_src_sink_sets_for_wfnet, iset, rand_partition, remove_transition_from_partitions
 from pm4py.objects.genetic_matrix.obj import GeneticMatrix
 
 # typing
-from typing import Any, Dict, Iterable, List, Optional, TextIO, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 from pandas.core.frame import DataFrame
 from pm4py.objects.log.obj import EventLog, EventStream
 from pm4py.objects.petri_net.obj import PetriNet, Marking
-from pm4py.algo.discovery.genetic.util import InputMap, OutputMap, Individual
-from pm4py.utils import is_polars_lazyframe
+from pm4py.algo.discovery.genetic.util import TransitionMap, InputMap, OutputMap, Individual
 
 
 def apply(
@@ -80,7 +80,6 @@ def apply(
             - Parameters.MUTATION_RATE
             - Parameters.GENERATIONS
             - Parameters.ELITISM_MIN_SAMPLE
-            - Parameters.TOURNAMENT_TIMEOUT
             - Parameters.LOG_CSV
 
     Returns
@@ -131,9 +130,6 @@ def apply(
     elitism_min_sample = exec_utils.get_param_value(
         Parameters.ELITISM_MIN_SAMPLE, parameters, 5
     )
-    tournament_timeout = exec_utils.get_param_value(
-        Parameters.TOURNAMENT_TIMEOUT, parameters, None
-    )
     log_csv = exec_utils.get_param_value(
         Parameters.LOG_CSV, parameters, None
     )
@@ -150,33 +146,16 @@ def apply(
         log_csv.writerow(['timestamp', 'generation'] + [f'fitness{i}' for i in range(population_size)])
     # @src 6.3. Genetic Operations; https://doi.org/10.1007/11494744_5
     T = tuple(log[activity_key].unique())
-    if tournament_timeout is None or tournament_timeout < 1:
-        tournament_timeout = 3 * len(T) * log.shape[0] * (46 / 1202267 / 26)
-        # based on previous runs: 46s for 1202267 traces with 26 activities
-    if tournament_timeout < 1:
-        tournament_timeout = 1
     history = []
-    best_individual = None
-    best_fitness = -1.0
+    # initial population
     population = individuals(log, population_size, T, { # [(I,O), …]
         "activity_key":activity_key, "timestamp_key":timestamp_key, "case_id_key":case_id_key
     })
+    population, fitness = tournament(tqdm(population, f"└─Tournament {len(history)}"), log, T, sort=True)
+    if log_csv:
+        log_csv.writerow([datetime.now(), len(history)] + fitness)
+    # generations
     for _ in tqdm(range(generations), "Genetic generations"):
-        population, fitness = tournament(
-            tqdm(population, f"└─Tournament {len(history)}"),
-            log,
-            T,
-            sort=True,
-            timeout=tournament_timeout,
-            activity_key=activity_key,
-            timestamp_key=timestamp_key,
-            case_id_key=case_id_key,
-        )
-        if fitness[0] > best_fitness:
-            best_fitness = fitness[0]
-            best_individual = copy.deepcopy(population[0])
-        if log_csv:
-            log_csv.writerow([datetime.now(), len(history)] + fitness)
         if fitness[0] == 1 or (history and all(f == fitness[0] for f in history[-int(generations/2):])):
             break
         history.append(fitness[0])
@@ -193,37 +172,33 @@ def apply(
                 if len(next_population) < population_size:
                     offspring = mutate(offspring, mutation_rate)
                     next_population.append(offspring)
-        population = next_population
-    if best_individual is None:
-        population, fitness = tournament(
-            population,
-            log,
-            T,
-            sort=True,
-            timeout=tournament_timeout,
-            activity_key=activity_key,
-            timestamp_key=timestamp_key,
-            case_id_key=case_id_key,
-        )
-        best_individual = copy.deepcopy(population[0])
-    return matrix2petrinet(GeneticMatrix(*best_individual, T))
+        # sorts population by fitness
+        population, fitness = tournament(tqdm(next_population, f"└─Tournament {len(history)}"), log, T, sort=True)
+        if log_csv:
+            log_csv.writerow([datetime.now(), len(history)] + fitness)
+    return matrix2petrinet(GeneticMatrix(*population[0], T))
 
 def individuals(log: Union[DataFrame, EventLog], sample_size=1, T=None, keys: Dict[str, str] = {"activity_key":xes.DEFAULT_NAME_KEY, "timestamp_key":xes.DEFAULT_TIMESTAMP_KEY, "case_id_key":constants.CASE_CONCEPT_NAME}) -> List[Individual]:
     if not T:
         T = tuple(log[keys['activity_key']].unique())
-    T_idx = {activity: idx for idx, activity in enumerate(T)}
+    # polyfill for itertools.pairwise (requires Python 3.10+)
+    # @src https://docs.python.org/3/library/itertools.html#itertools.pairwise
+    def pairwise(iterable):
+        # pairwise('ABCDEFG') → AB BC CD DE EF FG
+        iterator = iter(iterable)
+        a = next(iterator, None)
+        for b in iterator:
+           yield a, b
+           a = b
     # @src 6.1. Initial Population; https://doi.org/10.1007/11494744_5
     # create matrix C
     C = numpy.zeros((len(T), len(T)))
     for _,group in tqdm(log.sort_values(keys['timestamp_key'], ascending=True).groupby(keys['case_id_key']), desc="Find consecutive activities"):
-        prev_activity = None
-        for _, row in group.iterrows():
-            activity = row[keys['activity_key']]
-            if prev_activity is not None:
-                C[T_idx[prev_activity], T_idx[activity]] += 1
-            prev_activity = activity
-    row_sums = C.sum(axis=1, keepdims=True)
-    Cn = numpy.divide(C, row_sums, out=numpy.zeros_like(C, dtype=float), where=row_sums != 0)
+        for row1,row2 in pairwise(map(lambda r: r[1], group.iterrows())):
+            i = T.index(row1[keys['activity_key']])
+            o = T.index(row2[keys['activity_key']])
+            C[i,o] += 1
+    Cn = numpy.nan_to_num(C / C.sum(axis=1)[:,None])    # normalise row-wise
     samples = []
     for _ in tqdm(range(sample_size), "Initial population"):
         I,O = defaultdict(list), defaultdict(list)
@@ -233,7 +208,7 @@ def individuals(log: Union[DataFrame, EventLog], sample_size=1, T=None, keys: Di
                 I[T[o]].append(T[i])
         I,O = repair(I, O, C, T)
         # partitioning already ensures no T in >1 partitions
-        # s. 4. Causal Matrix, Def. 4; https://doi.org/10.1007/11494744_5
+        # see 4. Causal Matrix, Def. 4; https://doi.org/10.1007/11494744_5
         for i in I.keys():
             I[i] = rand_partition(I[i])
         for o in O.keys():
@@ -246,8 +221,6 @@ def tournament(
     log: Union[DataFrame, EventLog],
     T,
     sort=True,
-    timeout=1,
-    *,
     activity_key: str = xes.DEFAULT_NAME_KEY,
     timestamp_key: str = xes.DEFAULT_TIMESTAMP_KEY,
     case_id_key: str = constants.CASE_CONCEPT_NAME,
@@ -257,20 +230,13 @@ def tournament(
     fitness = []
     for i,(I,O) in enumerate(population):
         model = matrix2petrinet(GeneticMatrix(I,O,T))
-        try:
-            metrics = func_timeout(
-                timeout = timeout,
-                func = pm4py.fitness_token_based_replay,
-                args = (log, *model),
-                kwargs = {
-                    "activity_key": activity_key,
-                    "timestamp_key": timestamp_key,
-                    "case_id_key": case_id_key,
-                },
-            )
-        except FunctionTimedOut:
-            print("\tTimeout for individual", i)
-            metrics = defaultdict(lambda: 0)
+        metrics = pm4py.fitness_token_based_replay(
+            log,
+            *model,
+            activity_key=activity_key,
+            timestamp_key=timestamp_key,
+            case_id_key=case_id_key,
+        )
         fitness.append(
             0.4 * metrics['average_trace_fitness']
             # @see https://pm4py-source.readthedocs.io/en/stable/_modules/pm4py/algo/evaluation/replay_fitness/variants/token_replay.html#evaluate
@@ -320,71 +286,52 @@ def crossover(parent1: Individual, parent2: Individual, T: List[str]) -> Tuple[I
     I2,O2 = offspring2 = copy.deepcopy(parent2)
     # 3. swap and recombine
     if I1[t] and I2[t]:
-        old_I1 = iset.flat(I1[t])
-        old_I2 = iset.flat(I2[t])
         swap_point = random.randrange(min(len(I1[t]), len(I2[t])))
         toI1, toI2 = I2[t][swap_point:], I1[t][swap_point:]
-        # no T can exist twice in I/O[t], s. Def. 4; https://doi.org/10.1007/11494744_5
+        # no T can exist twice in I/O[t], see Def. 4; https://doi.org/10.1007/11494744_5
         # COPY of I_i, else not properly removed in opposite I_j
         I1_flat = iset.flat(I1[t][:swap_point])
-        toI1_dedup = [iset(S - I1_flat) for S in toI1 if S - I1_flat]
+        toI1_dedup = [iset(S - I1_flat) for S in toI1 if S - I1_flat] # skips {}
         I2_flat = iset.flat(I2[t][:swap_point])
-        toI2_dedup = [iset(S - I2_flat) for S in toI2 if S - I2_flat]
+        toI2_dedup = [iset(S - I2_flat) for S in toI2 if S - I2_flat] # skips {}
         # merge
+        old_I1 = iset.flat(I1[t])
+        old_I2 = iset.flat(I2[t])
         I1[t], I2[t] = I1[t][:swap_point] + toI1_dedup, I2[t][:swap_point] + toI2_dedup
+        # @src 6.3. Genetic Operations: Update Related Elements; https://doi.org/10.1007/11494744_5
         new_I1 = iset.flat(I1[t])
         new_I2 = iset.flat(I2[t])
         for c in new_I1 - old_I1:
-            _add_singleton_partition(O1, c, t)
+            add_singleton_partition(O1, c, t)
         for c in old_I1 - new_I1:
-            _remove_value_from_partitions(O1, c, t)
+            remove_transition_from_partitions(O1, c, t)
         for c in new_I2 - old_I2:
-            _add_singleton_partition(O2, c, t)
+            add_singleton_partition(O2, c, t)
         for c in old_I2 - new_I2:
-            _remove_value_from_partitions(O2, c, t)
+            remove_transition_from_partitions(O2, c, t)
     if O1[t] and O2[t]:
-        old_O1 = iset.flat(O1[t])
-        old_O2 = iset.flat(O2[t])
         swap_point = random.randrange(min(len(O1[t]), len(O2[t])))
         toO1, toO2 = O2[t][swap_point:], O1[t][swap_point:]
-        # no T can exist twice in I/O[t], s. Def. 4; https://doi.org/10.1007/11494744_5
+        # no T can exist twice in I/O[t], see Def. 4; https://doi.org/10.1007/11494744_5
         # COPY of I_i, else not properly removed in opposite I_j
         O1_flat = iset.flat(O1[t][:swap_point])
-        toO1_dedup = [iset(S - O1_flat) for S in toO1 if S - O1_flat]
+        toO1_dedup = [iset(S - O1_flat) for S in toO1 if S - O1_flat] # skips {}
         O2_flat = iset.flat(O2[t][:swap_point])
-        toO2_dedup = [iset(S - O2_flat) for S in toO2 if S - O2_flat]
+        toO2_dedup = [iset(S - O2_flat) for S in toO2 if S - O2_flat] # skips {}
         # merge
+        old_O1 = iset.flat(O1[t])
+        old_O2 = iset.flat(O2[t])
         O1[t], O2[t] = O1[t][:swap_point] + toO1_dedup, O2[t][:swap_point] + toO2_dedup
-        new_O1 = iset.flat(O1[t])
-        new_O2 = iset.flat(O2[t])
-        for c in new_O1 - old_O1:
-            _add_singleton_partition(I1, c, t)
-        for c in old_O1 - new_O1:
-            _remove_value_from_partitions(I1, c, t)
-        for c in new_O2 - old_O2:
-            _add_singleton_partition(I2, c, t)
-        for c in old_O2 - new_O2:
-            _remove_value_from_partitions(I2, c, t)
-    return (offspring1, offspring2)
-
-
-def _add_singleton_partition(mapping: Dict[str, List[iset]], key: str, value: str) -> None:
-    partitions = mapping.setdefault(key, [])
-    if any(value in partition for partition in partitions):
-        return
-    partitions.append(iset({value}))
-
-
-def _remove_value_from_partitions(mapping: Dict[str, List[iset]], key: str, value: str) -> None:
-    partitions = mapping.setdefault(key, [])
-    for index, partition in enumerate(partitions):
-        if value in partition:
-            updated = iset(partition - {value})
-            if updated:
-                partitions[index] = updated
-            else:
-                del partitions[index]
-            return
+        # @src 6.3. Genetic Operations: Update Related Elements; https://doi.org/10.1007/11494744_5
+        for c in iset.flat(O1[t]) - old_O1:
+            add_singleton_partition(I1, c, t)
+        for c in old_O1 - iset.flat(O1[t]):
+            remove_transition_from_partitions(I1, c, t)
+        for c in iset.flat(O2[t]) - old_O2:
+            add_singleton_partition(I2, c, t)
+        for c in old_O2 - iset.flat(O2[t]):
+            remove_transition_from_partitions(I2, c, t)
+    return (offspring1, offspring2) # = (I1,O1),(I2,O2) by reference
 
 def mutate(individual: Individual, rate: float = 0.01) -> Individual:
     # @src 6.3. Genetic Operations: Mutation; https://doi.org/10.1007/11494744_5
@@ -400,7 +347,7 @@ def mutate(individual: Individual, rate: float = 0.01) -> Individual:
 def repair(I: InputMap, O: OutputMap, C: numpy.ndarray, T: List[str]) -> Individual:
     """
     Merging partitions until petri-net is (coherent) workflow net
-    s. last requirement in 4. Causal Matrix, Def. 4; https://doi.org/10.1007/11494744_5
+    see last requirement in 4. Causal Matrix, Def. 4; https://doi.org/10.1007/11494744_5
     """
     # WF-Net Definition: each node on path from i to o
     #   → re-connect partitions of each I and O, not I and O together
@@ -411,12 +358,12 @@ def repair(I: InputMap, O: OutputMap, C: numpy.ndarray, T: List[str]) -> Individ
         Tn = {left.pop()}
         while Tn:
             t = Tn.pop() # also removes from Tn
-            left.discard(t) # remove without Exception (s. initial Tn)
+            left.discard(t) # remove without Exception (see initial Tn)
             partition.add(t)
             Tn |= (set(I[t]) | set(O[t])) & left
         partitions.append(partition)
-    T_idx = {activity: idx for idx, activity in enumerate(T)}
-
+    T_idx = {t:i for i,t in enumerate(T)} # faster than T.index(t)
+    
     def rand_connect_one(I: InputMap, O: OutputMap, Ti: Iterable[str], To: Iterable[str], C: numpy.ndarray) -> Individual:
         comb = tuple(itertools.product(Ti, To))
         try:
@@ -430,16 +377,17 @@ def repair(I: InputMap, O: OutputMap, C: numpy.ndarray, T: List[str]) -> Individ
         O[ti].append(to)
         I[to].append(ti)
         return I,O
+    
     while len(partitions) > 1:
         random.shuffle(partitions)
         # merge Ti / To of partition to other partition
-        first, last = get_src_sink_sets_for_wfnet(I, O, partitions[1])
-        for i in first:
+        sources, sinks = get_src_sink_sets_for_wfnet(I, O, partitions[1])
+        for i in sources:
             # connect any→i
-            I,O = rand_connect_one(I, O, [i], partitions[0], C)
-        for o in last:
+            I,O = rand_connect_one(I, O, partitions[0], [i], C)
+        for o in sinks:
             # connect o→any
-            I,O = rand_connect_one(I, O, partitions[0], [o], C)
+            I,O = rand_connect_one(I, O, [o], partitions[0], C)
         # pop first + merge with new first (i.e. old second)
         merging = partitions.pop(0)
         partitions[0] |= merging

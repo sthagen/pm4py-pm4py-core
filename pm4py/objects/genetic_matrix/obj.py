@@ -1,6 +1,6 @@
 '''
-    PM4Py â€“ A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
+    PM4Py – A Process Mining Library for Python
+Copyright (C) 2026 Process Intelligence Solutions UG (haftungsbeschränkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -26,8 +26,8 @@ from typing import Dict, FrozenSet, List
 class GeneticMatrix:
     def __init__(
         self,
-        input_map: Dict[str, List[FrozenSet]],
-        output_map: Dict[str, List[FrozenSet]],
+        input_map: Dict[str, List[FrozenSet[str]]],
+        output_map: Dict[str, List[FrozenSet[str]]],
         transitions: List[str],
     ):
         """

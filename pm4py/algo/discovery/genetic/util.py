@@ -1,6 +1,6 @@
 '''
-    PM4Py â€“ A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschrÃ¤nkt)
+    PM4Py – A Process Mining Library for Python
+Copyright (C) 2026 Process Intelligence Solutions UG (haftungsbeschränkt)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -25,10 +25,9 @@ import random
 import itertools
 
 # typing
-from collections.abc import Iterable
-from typing import Dict, FrozenSet, List, Tuple
-InputMap = Dict[str, List[FrozenSet]]
-OutputMap = Dict[str, List[FrozenSet]]
+from typing import Dict, FrozenSet, Iterable, List, Set, Tuple, Union
+TransitionMap = Dict[str, List[FrozenSet[str]]]
+InputMap = OutputMap = TransitionMap
 Individual = Tuple[InputMap, OutputMap]
 
 class iset(frozenset):
@@ -40,7 +39,7 @@ class iset(frozenset):
     def flat(item: Iterable) -> "iset":
         return iset(itertools.chain(*item))
 
-def rand_partition(pool: Iterable) -> List[iset]:
+def rand_partition(pool: Iterable) -> List[Union[Set[str], FrozenSet[str]]]:
     pool = set(pool)
     #     also ensures no activity in two partitions
     #     s. 4. Causal Matrix, Def. 4; https://doi.org/10.1007/11494744_5
@@ -53,6 +52,22 @@ def rand_partition(pool: Iterable) -> List[iset]:
         partition.append(draw)
         pool -= draw
     return partition
+
+def add_singleton_partition(tmap: TransitionMap, key: str, t: str):
+    partitions = tmap.setdefault(key, []) # tmap[key] or []
+    if not any(t in partition for partition in partitions):
+        partitions.append(iset({t}))
+
+def remove_transition_from_partitions(tmap: TransitionMap, key: str, t: str):
+    partitions = tmap.setdefault(key, []) # tmap[key] or []
+    for i,partition in enumerate(partitions):
+        if t in partition:
+            updated = iset(partition - {t})
+            if updated:
+                partitions[i] = updated
+            else:
+                del partitions[i]
+            return
 
 def get_src_sink_sets_for_wfnet(I: InputMap, O: OutputMap, T: List[str]) -> Tuple[List[str], List[str]]:
     """Determines input set and output set, which need to be connected by a place to create a WF-net"""
@@ -70,8 +85,8 @@ def get_src_sink_sets_for_wfnet(I: InputMap, O: OutputMap, T: List[str]) -> Tupl
             else:
                 successors.extend(S)
         graph += successors
-        # merge if end = start
-        for tn in successors:
+        # merge if path end = start
+        for tn in successors: # tn = end
             for g2 in graphs[:]: # [:] = copy
                 if g2[0] == tn and g2 != graph:
                     graph += g2
@@ -82,6 +97,6 @@ def get_src_sink_sets_for_wfnet(I: InputMap, O: OutputMap, T: List[str]) -> Tupl
     for t in T:
         graphsI = add2graphs(graphsI, t, I)
         graphsO = add2graphs(graphsO, t, O)
-    first = [g[0] for g in graphsO] # ⋃first = reachable via O[∀t]
-    last = [g[0] for g in graphsI] # ⋃first = reachable via I[∀t]
-    return first, last
+    sources = [g[0] for g in graphsO] # ⋃sources = ∀t reachable from O[∀sources]
+    sinks = [g[0] for g in graphsI] # ⋃sinks = ∀t reachable from I[∀sinks]
+    return sources, sinks

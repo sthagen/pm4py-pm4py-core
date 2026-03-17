@@ -441,7 +441,6 @@ def discover_petri_net_genetic(
     mutation_rate: float = 0.01,
     generations: int = 100,
     elitism_min_sample: int = 5,
-    tournament_timeout: int = None,
     log_csv: TextIO = None,
     activity_key: str = "concept:name",
     timestamp_key: str = "time:timestamp",
@@ -460,7 +459,6 @@ def discover_petri_net_genetic(
     :param mutation_rate: Random model mutation rate (default: 0.01).
     :param generations: Iterations of model improvement (default: 100).
     :param elitism_min_sample: Minimum sample size for selecting best models (default: 5).
-    :param tournament_timeout: Timeout in seconds for assessing individuals. If the timeout is reached, the individual will not appear in the next generation (default: factor dependent on number of activities and log size)
     :param log_csv: Output stream for CSV log (default: None).
     :param activity_key: Attribute to be used for the activity (default: "concept:name").
     :param timestamp_key: Attribute to be used for the timestamp (default: "time:timestamp").
@@ -496,7 +494,6 @@ def discover_petri_net_genetic(
     parameters[genetic_parameters.MUTATION_RATE] = mutation_rate
     parameters[genetic_parameters.GENERATIONS] = generations
     parameters[genetic_parameters.ELITISM_MIN_SAMPLE] = elitism_min_sample
-    parameters[genetic_parameters.TOURNAMENT_TIMEOUT] = tournament_timeout
     parameters[genetic_parameters.LOG_CSV] = log_csv
 
     if check_is_pandas_dataframe(log):
