@@ -305,10 +305,11 @@ def from_interleavings(
     parameters: Optional[Dict[Any, Any]] = None,
 ) -> OCEL:
     """
-    Transforms a couple of dataframes, along with the interleavings between them, to an OCEL
+    Transforms a couple of dataframes, along with the interleavings between
+    them, to an OCEL.
 
     Parameters
-    -----------------
+    ----------
     df1
         First of the two dataframes
     df2
@@ -317,6 +318,7 @@ def from_interleavings(
         Interleavings dataframe
     parameters
         Parameters of the algorithm, including:
+
         - Parameters.ACTIVITY_KEY => the attribute to use as activity
         - Parameters.TIMESTAMP_KEY => the attribute to use as timestamp
         - Parameters.CASE_ID_KEY => the attribute to use as case identifier
@@ -324,14 +326,14 @@ def from_interleavings(
         - Parameters.TARGET_OBJECT_TYPE => the name of the object type to which the cases of the first log should be mapped
         - Parameters.TARGET_OBJECT_TYPE_2 => the name of the object type to which the cases of the second log should be mapped
         - Parameters.LEFT_INDEX => the index column of the events of the first dataframe, in the interleavings dataframe
-        - Parameters.RIGHT_INDEX => the index column of the events of the second dataframe, in the interleavings
-                                    dataframe.
+        - Parameters.RIGHT_INDEX => the index column of the events of the second dataframe, in the interleavings dataframe.
         - Parameters.DIRECTION => the direction of the interleavings (LR or RL)
 
     Returns
     -----------------
     ocel
         OCEL (equivalent to the provided event log)
+
     """
     if parameters is None:
         parameters = {}

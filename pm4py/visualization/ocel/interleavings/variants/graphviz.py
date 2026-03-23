@@ -91,11 +91,12 @@ def apply(
     """
     Visualizes the interleavings discovered between two different processes.
     We suppose to provide both event logs, and the discovered interleavings.
-    The visualization includes the DFG of both processes, along with the arcs discovered between them.
-    Both frequency and performance visualization are available.
+    The visualization includes the DFG of both processes, along with the arcs
+    discovered between them. Both frequency and performance visualization are
+    available.
 
     Parameters
-    --------------------
+    ----------
     dataframe1
         Dataframe of the first process
     dataframe2
@@ -104,6 +105,7 @@ def apply(
         Interleavings between the two considered processes
     parameters
         Parameters of the algorithm, including:
+
         - Parameters.FORMAT => the format of the visualization
         - Parameters.BGCOLOR => the background color
         - Parameters.RANKDIR => the rank direction (LR or TB; default: TB)
@@ -113,14 +115,13 @@ def apply(
         - Parameters.ACTIVITY_PERCENTAGE => the percentage of activities to include for the DFG of the single processes
         - Parameters.PATHS_PERCENTAGE => the percentage of paths to include for the DFG of the single processes
         - Parameters.DEPENDENCY_THRESHOLD => the dependency threshold to consider for the DFG of the single processes
-        - Parameters.MIN_FACT_EDGES_INTERLEAVINGS => factor that is multiplied to the minimum number of occurrences of
-                                        edges in the single processes, to decide if the interleavings edge should
-                                        be included. E.g., if 0.3 is provided, only interleavings edges having a frequency
-                                        of at least 0.3 * MIN_EDGE_COUNT_IN_PROCESSES are included.
+        - Parameters.MIN_FACT_EDGES_INTERLEAVINGS => factor that is multiplied to the minimum number of occurrences of edges in the single processes, to decide if the interleavings edge should be included. E.g., if 0.3 is provided, only interleavings edges having a frequency of at least 0.3 * MIN_EDGE_COUNT_IN_PROCESSES are included.
+
     Returns
-    ----------------
+    -----------------
     digraph
         Graphviz Digraph
+
     """
     if parameters is None:
         parameters = {}

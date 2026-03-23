@@ -57,11 +57,11 @@ def apply(
         Activity of which the rework shall be filtered
     parameters
         Parameters of the filter, including:
+
         - Parameters.ACTIVITY_KEY => the attribute to use as activity
         - Parameters.CASE_ID_KEY => the attribute to use as case ID
         - Parameters.MIN_OCCURRENCES => the minimum number of occurrences for the activity
-        - Parameters.POSITIVE => if True, filters the cases of the log having at least MIN_OCCURRENCES occurrences.
-            if False, filters the cases of the log where such behavior does not occur.
+        - Parameters.POSITIVE => if True, filters the cases of the log having at least MIN_OCCURRENCES occurrences. If False, filters the cases of the log where such behavior does not occur.
 
     Returns
     -----------------

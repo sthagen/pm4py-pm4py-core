@@ -118,7 +118,7 @@ def get_kde_numeric_attribute(values, parameters=None):
             Parameters.GRAPH_POINTS, parameters, 200
         )
         values = np.sort(values)
-        
+
         # Check if we have enough unique values for KDE
         unique_values = np.unique(values)
         if len(unique_values) < 2:
@@ -137,7 +137,7 @@ def get_kde_numeric_attribute(values, parameters=None):
                 mid_idx = graph_points // 2
                 ys[mid_idx] = 1.0
                 return xs.tolist(), ys.tolist()
-        
+
         density = gaussian_kde(values)
 
         # ensure we have at least two points for each spacing
@@ -237,7 +237,7 @@ def get_kde_date_attribute(values, parameters=None):
         int_values = sorted(
             [x.replace(tzinfo=None).timestamp() for x in red_values]
         )
-        
+
         # Check if we have enough unique values for KDE
         unique_int_values = np.unique(int_values)
         if len(unique_int_values) < 2:
@@ -257,7 +257,7 @@ def get_kde_date_attribute(values, parameters=None):
                 mid_idx = graph_points // 2
                 ys[mid_idx] = 1.0
                 return [xs_transf, ys.tolist()]
-        
+
         density = gaussian_kde(int_values)
         xs = np.linspace(min(int_values), max(int_values), graph_points)
         xs_transf = pd.to_datetime(xs * 10**9, unit="ns")

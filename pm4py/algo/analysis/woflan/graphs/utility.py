@@ -23,32 +23,47 @@ import numpy as np
 from pm4py.util import nx_utils
 
 
-def compute_incidence_matrix(net):
+def _prepare_place_transition_lists(net):
+    place_list = sorted(list(net.places), key=lambda x: x.name)
+    transition_list = sorted(list(net.transitions), key=lambda x: x.name)
+    place_index = {p: i for i, p in enumerate(place_list)}
+    return place_list, transition_list, place_index
+
+
+def marking_to_key(marking: np.ndarray) -> bytes:
+    """
+    Convert a marking array into a stable bytes key.
+    """
+    return np.asarray(marking, dtype=np.float64).tobytes()
+
+
+def compute_incidence_matrix(net, place_list=None, transition_list=None, place_index=None):
     """
     Given a Petri Net, the incidence matrix is computed. An incidence matrix has n rows (places) and m columns
     (transitions).
     :param net: Petri Net object
     :return: Incidence matrix
     """
-    n = len(net.transitions)
-    m = len(net.places)
-    C = np.zeros((m, n))
-    i = 0
-    transition_list = sorted(list(net.transitions), key=lambda x: x.name)
-    place_list = sorted(list(net.places), key=lambda x: x.name)
-    while i < n:
-        t = transition_list[i]
+    if (
+        place_list is None
+        or transition_list is None
+        or place_index is None
+    ):
+        place_list, transition_list, place_index = _prepare_place_transition_lists(
+            net
+        )
+    n = len(transition_list)
+    m = len(place_list)
+    C = np.zeros((m, n), dtype=np.int64)
+    for j, t in enumerate(transition_list):
         for in_arc in t.in_arcs:
-            # arcs that go to transition
-            C[place_list.index(in_arc.source), i] -= 1 * in_arc.weight
+            C[place_index[in_arc.source], j] -= in_arc.weight
         for out_arc in t.out_arcs:
-            # arcs that lead away from transition
-            C[place_list.index(out_arc.target), i] += 1 * out_arc.weight
-        i += 1
+            C[place_index[out_arc.target], j] += out_arc.weight
     return C
 
 
-def split_incidence_matrix(matrix, net):
+def split_incidence_matrix(matrix, net, transition_list=None):
     """
     We split the incidence matrix columnwise to get the firing information for each transition
     :param matrix: incidence matrix
@@ -57,35 +72,49 @@ def split_incidence_matrix(matrix, net):
     of the transition
     """
     transition_dict = {}
-    lst_transitions = sorted(list(net.transitions), key=lambda x: x.name)
-    i = 0
-    while i < len(net.transitions):
-        transition_dict[lst_transitions[i]] = np.hsplit(
-            np.transpose(matrix), 1
-        )[0][i]
-        i += 1
+    if transition_list is None:
+        transition_list = sorted(list(net.transitions), key=lambda x: x.name)
+    for i, transition in enumerate(transition_list):
+        transition_dict[transition] = matrix[:, i]
     return transition_dict
 
 
 def compute_firing_requirement(net):
-    place_list = sorted(list(net.places), key=lambda x: x.name)
-    transition_dict = {}
-    for transition in net.transitions:
-        temp_array = np.zeros(len(place_list))
+    place_list, transition_list, place_index = _prepare_place_transition_lists(net)
+    req_dense = {}
+    req_sparse = {}
+    deltas = {}
+    for transition in transition_list:
+        dense_req = np.zeros(len(place_list), dtype=np.int64)
+        sparse_req = {}
+        delta = {}
         for arc in transition.in_arcs:
-            temp_array[place_list.index(arc.source)] -= 1 * arc.weight
-        transition_dict[transition] = temp_array
-    return transition_dict
+            idx = place_index[arc.source]
+            dense_req[idx] -= arc.weight
+            sparse_req[idx] = sparse_req.get(idx, 0) + arc.weight
+            delta[idx] = delta.get(idx, 0) - arc.weight
+        for arc in transition.out_arcs:
+            idx = place_index[arc.target]
+            delta[idx] = delta.get(idx, 0) + arc.weight
+        req_dense[transition] = dense_req
+        req_sparse[transition] = list(sparse_req.items())
+        deltas[transition] = list(delta.items())
+    return req_dense, req_sparse, deltas, place_list, transition_list
 
 
-def enabled_markings(firing_dict, req_dict, marking):
-    enabled_transitions = []
-    for transition, requirment in req_dict.items():
-        if all(np.greater_equal(marking, requirment.copy() * -1)):
-            enabled_transitions.append(transition)
+def enabled_markings(req_sparse, deltas, marking):
     new_markings = []
-    for transition in enabled_transitions:
-        new_marking = marking + firing_dict[transition]
+    for transition, requirements in req_sparse.items():
+        enabled = True
+        for idx, required_weight in requirements:
+            if marking[idx] < required_weight:
+                enabled = False
+                break
+        if not enabled:
+            continue
+        new_marking = marking.copy()
+        for idx, change in deltas[transition]:
+            new_marking[idx] += change
         new_markings.append((new_marking, transition))
     return new_markings
 
@@ -100,13 +129,12 @@ def convert_marking(net, marking, original_net=None):
     """
     # marking_list=list(el.name for el in marking.keys())
     #
-    marking_list = sorted([el.name for el in marking.keys()])
+    marking_set = {el.name for el in marking.keys()}
     place_list = sorted(list(el.name for el in net.places))
 
     mark = np.zeros(len(place_list))
-    for index, value in enumerate(mark):
-        if place_list[index] in marking_list:
-            # TODO: Is setting the value to 1 ok in this case?
+    for index, place in enumerate(place_list):
+        if place in marking_set:
             mark[index] = 1
     return mark
 
@@ -118,17 +146,16 @@ def check_for_dead_tasks(net, graph):
     :param graph: Minimal coverability graph. NetworkX MultiDiGraph object.
     :return: list of dead tasks
     """
-    tasks = []
-    lst_transitions = sorted(list(net.transitions), key=lambda x: x.name)
-    for transition in lst_transitions:
-        if transition.label is not None:
-            tasks.append(transition)
-    for node, targets in graph.edges()._adjdict.items():
-        for target_node, activties in targets.items():
-            for option, activity in activties.items():
-                if activity["transition"] in tasks:
-                    tasks.remove(activity["transition"])
-    return tasks
+    tasks = {
+        transition
+        for transition in sorted(list(net.transitions), key=lambda x: x.name)
+        if transition.label is not None
+    }
+    for _, _, data in graph.edges(data=True):
+        transition = data.get("transition")
+        if transition in tasks:
+            tasks.discard(transition)
+    return sorted(list(tasks), key=lambda x: x.name)
 
 
 def check_for_improper_conditions(mcg):

@@ -23,23 +23,21 @@ The documentation of PM4Py can be found at https://processintelligence.solutions
 
 Here is a simple example to spark your interest:
 
-```python
 import pm4py
 
 if __name__ == "__main__":
     log = pm4py.read_xes('<path-to-xes-log-file.xes>')
     net, initial_marking, final_marking = pm4py.discover_petri_net_inductive(log)
     pm4py.view_petri_net(net, initial_marking, final_marking, format="svg")
-```
 
 ## Installation
 PM4Py can be installed on Python 3.9.x / 3.10.x / 3.11.x / 3.12.x / 3.13.x / 3.14.x by invoking:
 
-`pip install -U pm4py`
+pip install -U pm4py
 
 PM4Py is also running on older Python environments with different requirements sets, including:
 
-- Python 3.8 (3.8.10): `third_party/old_python_deps/requirements_py38.txt`
+- Python 3.8 (3.8.10): third_party/old_python_deps/requirements_py38.txt
 
 ## Requirements
 
@@ -53,13 +51,13 @@ PM4Py depends on some other Python packages, with different levels of importance
 
 ## Release Notes
 
-To track the incremental updates, please refer to the `CHANGELOG.md` file.
+To track the incremental updates, please refer to the CHANGELOG.md file.
 
 ## Third Party Dependencies
 
 As scientific library in the Python ecosystem, we rely on external libraries to offer our features.
-In the `/third_party` folder, we list all the licenses of our direct dependencies.
-Please check the `/third_party/LICENSES_TRANSITIVE` file to get a full list of all transitive dependencies and the
+In the /third_party folder, we list all the licenses of our direct dependencies.
+Please check the /third_party/LICENSES_TRANSITIVE file to get a full list of all transitive dependencies and the
 corresponding license.
 
 ## Citing PM4Py
@@ -73,7 +71,6 @@ If you are using PM4Py in your scientific work, please cite PM4Py as follows:
 
 BiBTeX:
 
-```bibtex
 @article{pm4py,  
 title = {PM4Py: A process mining library for Python},  
 journal = {Software Impacts},  
@@ -85,7 +82,6 @@ doi = {https://doi.org/10.1016/j.simpa.2023.100556},
 url = {https://www.sciencedirect.com/science/article/pii/S2665963823000933},  
 author = {Alessandro Berti and Sebastiaan van Zelst and Daniel Schuster},  
 }
-```
 
 ## Legal Notice
 

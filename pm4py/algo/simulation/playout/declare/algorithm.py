@@ -32,7 +32,9 @@ class Variants(Enum):
 def apply(declare_model, variant=Variants.CLASSIC, parameters=None) -> EventLog:
     """
     Produce a playout EventLog of a given DECLARE model.
+
     Optional parameters:
+
       - n_traces (int): number of traces to generate. Default = 1000
       - min_length (int): minimal length of each trace. Default = 3
       - max_length (int): maximal length of each trace. Default = 15

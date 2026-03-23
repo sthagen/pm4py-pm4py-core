@@ -207,10 +207,13 @@ def compute_uncovered_places(invariants, net):
     :return: List of uncovered place over all invariants
     """
     place_list = sorted(list(net.places), key=lambda x: x.name)
-    unncovered_list = place_list.copy()
+    covered_indices = set()
     for invariant in invariants:
         for index, value in enumerate(invariant):
-            if value != 0:
-                if place_list[index] in unncovered_list:
-                    unncovered_list.remove(place_list[index])
-    return unncovered_list
+            if np.any(np.asarray(value) != 0):
+                covered_indices.add(index)
+    return [
+        place_list[index]
+        for index in range(len(place_list))
+        if index not in covered_indices
+    ]

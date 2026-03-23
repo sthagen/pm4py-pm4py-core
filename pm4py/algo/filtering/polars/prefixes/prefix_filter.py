@@ -89,12 +89,12 @@ def apply(
                 == pl.lit(prefix_list)
             )
         prefix_conditions.append(condition)
-    
+
     if prefix_conditions:
         combined_condition = prefix_conditions[0]
         for cond in prefix_conditions[1:]:
             combined_condition = combined_condition | cond
-        
+
         matching_cases = variants_df.filter(combined_condition).select(case_id_glue)
     else:
         matching_cases = pl.DataFrame({case_id_glue: []}).lazy()

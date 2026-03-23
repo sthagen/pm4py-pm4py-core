@@ -27,13 +27,14 @@ import networkx as nx
 def create_oc_causal_net(marker_groups):
     """
     Create an object-centric causal net from a list of marker groups.
-    Does not consider activity counts or the relative occurence threshold.
+    Does not consider activity counts or the relative occurrence threshold.
     May mutate the input data.
 
     Parameters
     ----------
     marker_groups : dict[str, ]
-        Dict of marker groups per activity. Syntax:
+        Dict of marker groups per activity. Syntax::
+
         {
             "activity_name": {
                 "img": [

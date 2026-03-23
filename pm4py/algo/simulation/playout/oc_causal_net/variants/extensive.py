@@ -247,7 +247,7 @@ def _populate_memo_graph(
     enabled_activities = _get_enabled_activities(
         occn, semantics, state, start_activities, act_to_idx, idx_to_act, ot_to_idx
     )
-    
+
     # Limit the number of enabled activities to bf_act
     if bf_act < float("inf"):
         # Stochastically round bf_act to an integer
@@ -483,7 +483,7 @@ def _clean_fake_obligations(
         for ot, obj_ids in ot_to_obj:
             objects.update(obj_ids)
             object_types.add(ot)
-    
+
     assert len(object_types) == 1, "Only one object type should be involved in a start activity binding"
     ot_id = next(iter(object_types))
 
@@ -492,7 +492,7 @@ def _clean_fake_obligations(
     state -= OCCausalNetState(
         {act_id: Counter([(-1, obj_id, ot_id) for obj_id in objects])}
     )
-    
+
     return state
 
 
@@ -589,7 +589,7 @@ def _valid_sequences_to_ocel(valid_sequences_iter, idx_to_act, idx_to_ot, parame
     event_id_counter = 0
     # assigns to each event an increased timestamp from 1970
     curr_timestamp = 10000000
-    
+
     if objects_unique_per_sequence:
         object_id_counter = 0
 
@@ -627,7 +627,7 @@ def _valid_sequences_to_ocel(valid_sequences_iter, idx_to_act, idx_to_ot, parame
                     for obj_id in objects:
                         if objects_unique_per_sequence:
                             obj_id = f"{obj_id}_{object_id_counter}"
-                        
+
                         # Add object
                         if obj_id not in all_objects_seen:
                             all_objects_seen.add(obj_id)

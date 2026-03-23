@@ -97,7 +97,7 @@ def _project_ocpn_on_object_type(
 
     Returns
     ----------
-    tuple[PetriNet, Marking, Marking]
+    tuple[PetriNet, ~pm4py.objects.petri_net.obj.Marking, ~pm4py.objects.petri_net.obj.Marking]
         A tuple containing the Petri net projection, initial marking, and final marking projection for the object type.
     """
     # extract places by ot
@@ -158,7 +158,7 @@ def oc_marking_to_petri(
 
     Returns
     ----------
-    Marking
+    Marking : ~pm4py.objects.petri_net.obj.Marking
         A classic Petri net marking (place -> token count)
     """
     petri_marking = Marking()
@@ -227,10 +227,10 @@ def _get_start_end_activities(
     """
     # activities are those occuring in the given marking
     activities = {ot: {} for ot in ocpn.object_types}
-    
+
     if marking is None:
         return activities
-    
+
     for p in marking.places:
         ot = p.object_type
         if p not in activities[ot]:
@@ -239,5 +239,5 @@ def _get_start_end_activities(
                 "unique_objects": set(),
                 "total_objects": set(),
             }
-            
+
     return activities

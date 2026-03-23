@@ -36,21 +36,17 @@ def compute_place_invariants(net):
         :param net: Petri Net object
         :return: Incidence matrix
         """
-        n = len(net.transitions)
-        m = len(net.places)
-        C = np.zeros((m, n))
-        i = 0
         transition_list = sorted(list(net.transitions), key=lambda x: x.name)
         place_list = sorted(list(net.places), key=lambda x: x.name)
-        while i < n:
-            t = transition_list[i]
+        place_index = {p: i for i, p in enumerate(place_list)}
+        C = np.zeros((len(place_list), len(transition_list)), dtype=np.int64)
+        for i, t in enumerate(transition_list):
             for in_arc in t.in_arcs:
                 # arcs that go to transition
-                C[place_list.index(in_arc.source), i] -= 1
+                C[place_index[in_arc.source], i] -= in_arc.weight
             for out_arc in t.out_arcs:
                 # arcs that lead away from transition
-                C[place_list.index(out_arc.target), i] += 1
-            i += 1
+                C[place_index[out_arc.target], i] += out_arc.weight
         return C
 
     def rref(A, tol=1.0e-12):

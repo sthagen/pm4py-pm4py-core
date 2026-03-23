@@ -80,7 +80,7 @@ def get_variant_statistics(
     """
     if parameters is None:
         parameters = {}
-    
+
     case_id_glue = exec_utils.get_param_value(
         Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME
     )
@@ -97,19 +97,19 @@ def get_variant_statistics(
         .agg(pl.col(activity_key).alias("variant"))
         .collect()
     )
-    
+
     # Count occurrences of each variant
     variant_counts = Counter()
     for row in variants_df.iter_rows():
         variant = tuple(row[1])  # Convert list to tuple for hashing
         variant_counts[variant] += 1
-    
+
     # Convert to list format
     variants_list = [
         {"variant": variant, case_id_glue: count}
         for variant, count in variant_counts.items()
     ]
-    
+
     # Sort by count and variant
     variants_list = sorted(
         variants_list,
@@ -121,7 +121,7 @@ def get_variant_statistics(
         variants_list = variants_list[
             : min(len(variants_list), max_variants_to_return)
         ]
-    
+
     return variants_list
 
 
@@ -150,24 +150,24 @@ def get_variants_df_and_list(
     """
     if parameters is None:
         parameters = {}
-    
+
     case_id_glue = exec_utils.get_param_value(
         Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME
     )
 
     variants_df = get_variants_df(lf, parameters=parameters)
     variants_stats = get_variant_statistics(lf, parameters=parameters)
-    
+
     variants_list = []
     for vd in variants_stats:
         variant = vd["variant"]
         count = vd[case_id_glue]
         variants_list.append([variant, count])
-    
+
     variants_list = sorted(
         variants_list, key=lambda x: (x[1], x[0]), reverse=True
     )
-    
+
     return variants_df, variants_list
 
 
@@ -221,7 +221,7 @@ def get_cases_description(
         start_time = row[1]
         end_time = row[2]
         duration = row[3]
-        
+
         ret.append({
             "caseid": case_id,
             "startTime": start_time,

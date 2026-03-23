@@ -55,7 +55,7 @@ def construct_synchronous_product_net(
     :param initial_marking: The initial marking of the Petri net.
     :param final_marking: The final marking of the Petri net.
     :return: A tuple containing the synchronous Petri net, the initial marking, and the final marking.
-    :rtype: Tuple[PetriNet, Marking, Marking]
+    :rtype: Tuple[PetriNet, ~pm4py.objects.petri_net.obj.Marking, ~pm4py.objects.petri_net.obj.Marking]
 
     .. code-block:: python3
 
@@ -209,11 +209,13 @@ def check_is_sound(petri_net: PetriNet,
     Returns a boolean value.
 
     A Petri net is a WF-net if and only if:
+
         - It has a unique source place.
         - It has a unique end place.
         - Every element in the WF-net is on a path from the source to the sink place.
 
     A WF-net is sound if and only if:
+
         - It contains no live-locks.
         - It contains no deadlocks.
         - It is always possible to reach the final marking from any reachable marking.
@@ -260,11 +262,13 @@ def check_soundness(
     Checks if a given Petri net is a sound Workflow net (WF-net).
 
     A Petri net is a WF-net if and only if:
+
         - It has a unique source place.
         - It has a unique end place.
         - Every element in the WF-net is on a path from the source to the sink place.
 
     A WF-net is sound if and only if:
+
         - It contains no live-locks.
         - It contains no deadlocks.
         - It is always possible to reach the final marking from any reachable marking.
@@ -272,6 +276,7 @@ def check_soundness(
     For a formal definition of a sound WF-net, refer to: http://www.padsweb.rwth-aachen.de/wvdaalst/publications/p628.pdf
 
     The returned tuple consists of:
+
         - A boolean indicating whether the Petri net is a sound WF-net.
         - A dictionary containing diagnostics collected while running WOFLAN, associating diagnostic names with their corresponding details.
 
@@ -567,7 +572,7 @@ def maximal_decomposition(
     :param im: The initial marking of the Petri net.
     :param fm: The final marking of the Petri net.
     :return: A list of tuples, each containing a subnet Petri net, its initial marking, and its final marking.
-    :rtype: List[Tuple[PetriNet, Marking, Marking]]
+    :rtype: List[Tuple[PetriNet, ~pm4py.objects.petri_net.obj.Marking, ~pm4py.objects.petri_net.obj.Marking]]
 
     .. code-block:: python3
 
@@ -593,6 +598,7 @@ def simplicity_petri_net(
     Computes the simplicity metric for a given Petri net model.
 
     Three available approaches are supported:
+
     - **Arc Degree Simplicity**: Described in the paper "ProDiGen: Mining complete, precise and minimal structure process models with a genetic algorithm." by Vázquez-Barreiros, Borja, Manuel Mucientes, and Manuel Lama. Information Sciences, 294 (2015): 315-333.
     - **Extended Cardoso Metric**: Described in the paper "Complexity Metrics for Workflow Nets" by Lassen, Kristian Bisgaard, and Wil MP van der Aalst.
     - **Extended Cyclomatic Metric**: Also described in the paper "Complexity Metrics for Workflow Nets" by Lassen, Kristian Bisgaard, and Wil MP van der Aalst.
@@ -643,12 +649,11 @@ def generate_marking(
 
     :param net: The Petri net for which to generate the marking.
     :param place_or_dct_places: Specifies the places and their token counts for the marking. It can be:
+
         - A single `PetriNet.Place` object, which will have one token.
         - A string representing the name of a place, which will have one token.
         - A dictionary mapping `PetriNet.Place` objects to their respective number of tokens.
-        - A dictionary mapping place names (strings) to their respective number of tokens.
-    :return: The generated Marking object.
-    :rtype: Marking
+        - A dictionary mapping place names (strings) to their respective number of tokens. :return: The generated ~pm4py.objects.petri_net.obj.Marking object. :rtype: ~pm4py.objects.petri_net.obj.Marking
 
     .. code-block:: python3
 
@@ -708,7 +713,7 @@ def reduce_petri_net_implicit_places(
     :param im: The initial marking of the Petri net.
     :param fm: The final marking of the Petri net.
     :return: A tuple containing the reduced Petri net, its initial marking, and its final marking.
-    :rtype: Tuple[PetriNet, Marking, Marking]
+    :rtype: Tuple[PetriNet, ~pm4py.objects.petri_net.obj.Marking, ~pm4py.objects.petri_net.obj.Marking]
 
     .. code-block:: python3
 
@@ -747,13 +752,13 @@ def get_enabled_transitions(
 
 
 def get_activity_labels(*args) -> List[str]:
-    """
-    Gets the activity labels from the specified event log / process model.
+    """Gets the activity labels from the specified event log / process model.
 
     Returns
     ---------------
-    activities
+    activities : list
         Activity labels
+
     """
     import pm4py
 
@@ -770,8 +775,10 @@ def get_activity_labels(*args) -> List[str]:
 def replace_activity_labels(string_dictio, *args):
     """
     Replace the activity labels in the specified process model.
-    The first argument is the dictionary, i.e., {"pay": "pay compensation", "reject": "reject request"}
-    The rest is the specification of the process model
+
+    The first argument is the dictionary, i.e., {"pay": "pay
+    compensation", "reject": "reject request"} The rest is the
+    specification of the process model
     """
     from pm4py.objects.powl.obj import POWL
     from pm4py.objects.bpmn.obj import BPMN
@@ -823,6 +830,7 @@ def behavioral_similarity(*args) -> float:
     Computes the behavioral similarity (footprints-based) between two process models.
 
     Examples:
+
     * pm4py.behavioral_similarity(petri_net, im, fm, process_tree)
     * pm4py.behavioral_similarity(bpmn1, bpmn2)
     * pm4py.behavioral_similarity(process_tree, powl)
@@ -831,6 +839,7 @@ def behavioral_similarity(*args) -> float:
     --------------
     similarity
         Footprints-based behavioral similarity
+
     """
     lst_models = __extract_models(*args)
 
@@ -869,6 +878,7 @@ def structural_similarity(*args) -> float:
     (https://doi.org/10.1007/s10619-012-7089-z)
 
     Examples:
+
     * pm4py.structural_similarity(petri_net, im, fm, process_tree)
     * pm4py.structural_similarity(bpmn1, bpmn2)
     * pm4py.structural_similarity(process_tree, powl)
@@ -877,6 +887,7 @@ def structural_similarity(*args) -> float:
     --------------
     similarity
         Structural similarity
+
     """
     lst_models = __extract_models(*args)
 
@@ -899,6 +910,7 @@ def embeddings_similarity(*args) -> float:
     Intelligent Systems with Applications 23 (2024): 200423.
 
     Examples:
+
     * pm4py.embeddings_similarity(petri_net, im, fm, process_tree)
     * pm4py.embeddings_similarity(bpmn1, bpmn2)
     * pm4py.embeddings_similarity(process_tree, powl)
@@ -907,6 +919,7 @@ def embeddings_similarity(*args) -> float:
     --------------
     similarity
         Structural similarity
+
     """
     lst_models = __extract_models(*args)
 
@@ -925,6 +938,7 @@ def label_sets_similarity(*args, threshold=0.75) -> float:
     Computes the label sets similarity between two process models.
 
     Examples:
+
     * pm4py.labels_similarity(petri_net, im, fm, process_tree)
     * pm4py.labels_similarity(bpmn1, bpmn2)
     * pm4py.labels_similarity(process_tree, powl)
@@ -933,6 +947,7 @@ def label_sets_similarity(*args, threshold=0.75) -> float:
     --------------
     similarity
         Label sets similarity
+
     """
     lst_models = __extract_models(*args)
     labels = []
@@ -949,6 +964,7 @@ def map_labels_from_second_model(*args, threshold=0.75):
     Maps the labels from the second process model into the first.
 
     Example usages:
+
     * pm4py.map_labels_from_second_model(net, im, fm, process_tree)
     * pm4py.map_labels_from_second_model(process_tree, net, im, fm)
     * pm4py.map_labels_from_second_model(powl1, powl2)

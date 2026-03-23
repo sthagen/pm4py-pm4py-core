@@ -56,7 +56,7 @@ class OCPetriNetSemantics(Generic[N]):
         """
         if transition not in pn.transitions:
             return False
-        
+
         any_enabled = False
         for a in transition.in_arcs:
             if marking[a.source] == Counter():
@@ -65,7 +65,7 @@ class OCPetriNetSemantics(Generic[N]):
             else:
                 any_enabled = True
         return any_enabled
-    
+
     @classmethod
     def is_binding_enabled(cls, pn: N, transition: T, marking: OCMarking, objects: Dict[str, Set]) -> bool:
         """
@@ -89,34 +89,34 @@ class OCPetriNetSemantics(Generic[N]):
         """
         # We need to consume at least one token
         at_least_one_object = False
-        
+
         # Check for every in-arc if:
         # - the binding respects the variability of the in-arc
         # - the state contains the necessary tokens
         for a in transition.in_arcs:
             ot = a.object_type
-            
+
             obj_set = objects.get(ot, set())
-            
+
             # Check if variability of arc is respected
             if (not a.is_variable) and (not len(obj_set) == 1):
                 # nv-arc must be bound to exactly one object
                 return False
-            
+
             if not obj_set:
                 # We assign not objects to this variable arc
                 continue
-            
+
             at_least_one_object = True
-            
+
             # Check if state contains all tokens
             place_tokens = marking[a.source].keys()
             if not obj_set <= place_tokens:
                 # tokens not present
                 return False
-        
+
         return at_least_one_object
-    
+
     @classmethod
     def check_and_fire(
         cls, pn: N, transition: T, marking: OCMarking, objects: Dict[str, Set]
@@ -179,13 +179,13 @@ class OCPetriNetSemantics(Generic[N]):
             obj_set = objects.get(a.object_type, set())
             m_out[a.target] += Counter(obj_set)
         return m_out
-    
+
     @classmethod
     def replay(cls, ocpn: N, trace, initial_marking=None, final_marking=None):
         """
         Replays a trace on the object-centric Petri net.
         Starts with the initial marking and check if the trace reaches the final marking.
-        
+
         Parameters
         ----------
         ocpn : N
@@ -202,23 +202,23 @@ class OCPetriNetSemantics(Generic[N]):
             initial_marking = ocpn.initial_marking
         if not final_marking:
             final_marking = ocpn.final_marking
-        
+
         transitions = {t.name: t for t in ocpn.transitions}
-        
+
         # start in the initial marking
         marking = initial_marking
-        
+
         # replay each binding
         for transition_name, objects in trace:
             t = transitions[transition_name]
-            
+
             # Check if the binding is enabled
             if not cls.is_binding_enabled(ocpn, t, marking, objects):
                 return False
-            
+
             # Fire
             marking = cls.fire(ocpn, t, marking, objects)
-        
+
         # Check if we are in the final marking
         return cls._is_final(marking, final_marking)
 
@@ -368,16 +368,16 @@ class OCPetriNetSemantics(Generic[N]):
             if not non_variable_object_types and not variable_object_types:
                 # empty binding
                 return {frozenset()} 
-        
+
             # Recursive case
             # Pick next object type to process. Non-variable object types are processed first.
             is_variable = not non_variable_object_types
             types_to_process = variable_object_types if is_variable else non_variable_object_types
             ot = types_to_process.pop()
-            
+
             try:
                 ot_objects = available_objects.get(ot, set())
-                
+
                 # Get all possible object combinations for this object type
                 if is_variable:
                     # For variable object types, we can pick 0-all objects (powerset)
@@ -388,23 +388,23 @@ class OCPetriNetSemantics(Generic[N]):
                     # No options -> no bindings possible
                     if not current_options:
                         return set()
-                    
+
                 # Recursively get bindings for the remaining object types
                 sub_bindings = recursive_bindings(
                     variable_object_types,
                     non_variable_object_types,
                     available_objects,
                 )
-                
+
                 # cross product current options with sub-bindings
                 bindings = {
                     sub_binding.union(option)
                     for option in current_options
                     for sub_binding in sub_bindings
                 }
-                
+
                 return bindings
-                
+
             finally:
                 # restore the set of object types
                 types_to_process.add(ot)
@@ -439,15 +439,15 @@ class OCPetriNetSemantics(Generic[N]):
         frozenset_bindings = recursive_bindings(
             variable_object_types, non_variable_object_types, common_objects
         )
-        
+
         # Loop through immutable bindings and yield dictionary one by one
         for fs_binding in frozenset_bindings:
             # do not yield the empty binding
             if not fs_binding:
                 continue
-            
+
             binding_dict = defaultdict(set)
             for ot, obj in fs_binding:
                 binding_dict[ot].add(obj)
-                
+
             yield binding_dict

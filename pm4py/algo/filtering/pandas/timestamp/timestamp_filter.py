@@ -39,6 +39,7 @@ import datetime
 class Parameters(Enum):
     TIMESTAMP_KEY = PARAMETER_CONSTANT_TIMESTAMP_KEY
     CASE_ID_KEY = PARAMETER_CONSTANT_CASEID_KEY
+    KEEP_NAN_VALUES = "keep_nan_values"
 
 
 def filter_traces_contained(
@@ -62,6 +63,8 @@ def filter_traces_contained(
         Possible parameters of the algorithm, including:
             Parameters.TIMESTAMP_KEY -> Attribute to use as timestamp
             Parameters.CASE_ID_KEY -> Column that contains the timestamp
+            Parameters.KEEP_NAN_VALUES -> If true, keeps traces which do not contain any event with temporal data for the selected attribute. Default is false
+
 
     Returns
     ----------
@@ -76,21 +79,29 @@ def filter_traces_contained(
     case_id_glue = exec_utils.get_param_value(
         Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME
     )
+    keep_nan_values = exec_utils.get_param_value(
+        Parameters.KEEP_NAN_VALUES, parameters, False
+    )
+
     dt1 = get_dt_from_string(dt1)
     dt2 = get_dt_from_string(dt2)
 
-    grouped_df = df[[case_id_glue, timestamp_key]].groupby(case_id_glue)
-    first = grouped_df.first()
-    last = grouped_df.last()
-    last.columns = [str(col) + "_2" for col in last.columns]
-    stacked = pandas_utils.concat([first, last], axis=1)
-    stacked = stacked[stacked[timestamp_key] >= dt1]
-    stacked = stacked[stacked[timestamp_key + "_2"] <= dt2]
-    i1 = df.set_index(case_id_glue).index
-    i2 = stacked.index
-    ret = df[i1.isin(i2)]
+    agg_df = df.groupby(case_id_glue)[timestamp_key].agg(['min', 'max'])
 
-    ret.attrs = copy(df.attrs) if hasattr(df, "attrs") else {}
+    containment_mask = (agg_df['min'].ge(dt1) & agg_df['max'].le(dt2))
+
+    if keep_nan_values:
+        mask = containment_mask | agg_df['min'].isna() # if min is NaN, max is also NaN
+    else:
+        mask = containment_mask
+
+    case_ids = agg_df.index[mask]
+
+    ret = df[df[case_id_glue].isin(case_ids)].copy()
+
+    if hasattr(df, "attrs"):
+        ret.attrs = copy(df.attrs)
+
     return ret
 
 
@@ -115,6 +126,7 @@ def filter_traces_intersecting(
         Possible parameters of the algorithm, including:
             Parameters.TIMESTAMP_KEY -> Attribute to use as timestamp
             Parameters.CASE_ID_KEY -> Column that contains the timestamp
+            Parameters.KEEP_NAN_VALUES -> If true, keeps traces which do not contain any event with data for the selected timestamp attribute. Default is false
 
     Returns
     ----------
@@ -123,31 +135,35 @@ def filter_traces_intersecting(
     """
     if parameters is None:
         parameters = {}
+
     timestamp_key = exec_utils.get_param_value(
         Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY
     )
     case_id_glue = exec_utils.get_param_value(
         Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME
     )
+    keep_nan_values = exec_utils.get_param_value(
+        Parameters.KEEP_NAN_VALUES, parameters, False
+    )
+
     dt1 = get_dt_from_string(dt1)
     dt2 = get_dt_from_string(dt2)
-    grouped_df = df[[case_id_glue, timestamp_key]].groupby(case_id_glue)
-    first = grouped_df.first()
-    last = grouped_df.last()
-    last.columns = [str(col) + "_2" for col in last.columns]
-    stacked = pandas_utils.concat([first, last], axis=1)
-    stacked1 = stacked[stacked[timestamp_key] > dt1]
-    stacked1 = stacked1[stacked1[timestamp_key] < dt2]
-    stacked2 = stacked[stacked[timestamp_key + "_2"] > dt1]
-    stacked2 = stacked2[stacked2[timestamp_key + "_2"] < dt2]
-    stacked3 = stacked[stacked[timestamp_key] < dt1]
-    stacked3 = stacked3[stacked3[timestamp_key + "_2"] > dt2]
-    stacked = pandas_utils.concat([stacked1, stacked2, stacked3], axis=0)
-    i1 = df.set_index(case_id_glue).index
-    i2 = stacked.index
-    ret = df[i1.isin(i2)]
 
-    ret.attrs = copy(df.attrs) if hasattr(df, "attrs") else {}
+    agg_df = df.groupby(case_id_glue)[timestamp_key].agg(['min', 'max'])
+
+    intersect_mask = (agg_df['min'].lt(dt2)) & (agg_df['max'].gt(dt1))
+
+    if keep_nan_values:
+        mask = intersect_mask | agg_df['min'].isna()
+    else:
+        mask = intersect_mask
+
+    valid_cases = agg_df.index[mask]
+    ret = df[df[case_id_glue].isin(valid_cases)].copy()
+
+    if hasattr(df, "attrs"):
+        ret.attrs = copy(df.attrs)
+
     return ret
 
 
@@ -171,6 +187,7 @@ def apply_events(
     parameters
         Possible parameters of the algorithm, including:
             Parameters.TIMESTAMP_KEY -> Attribute to use as timestamp
+            Parameters.KEEP_NAN_VALUES -> If true, keeps events which do not contain temporal data for the selected attribute. Default is false
 
     Returns
     ----------
@@ -183,11 +200,20 @@ def apply_events(
     timestamp_key = exec_utils.get_param_value(
         Parameters.TIMESTAMP_KEY, parameters, DEFAULT_TIMESTAMP_KEY
     )
+    keep_nan_values = exec_utils.get_param_value(
+        Parameters.KEEP_NAN_VALUES, parameters, False
+    )
     dt1 = get_dt_from_string(dt1)
     dt2 = get_dt_from_string(dt2)
 
-    ret = df[df[timestamp_key] >= dt1]
-    ret = ret[ret[timestamp_key] <= dt2]
+    containment_mask = (df[timestamp_key].ge(dt1) & df[timestamp_key].le(dt2))
+
+    if keep_nan_values:
+        mask = containment_mask | df[timestamp_key].isna()
+    else:
+        mask = containment_mask
+
+    ret = df[mask]
 
     ret.attrs = copy(df.attrs) if hasattr(df, "attrs") else {}
     return ret
@@ -219,6 +245,7 @@ def filter_traces_attribute_in_timeframe(
     parameters
         Possible parameters of the algorithm, including:
             Parameters.TIMESTAMP_KEY -> Attribute to use as timestamp
+            Parameters.KEEP_NAN_VALUES -> If true, keeps traces which do not contain any event with temporal data for the selected attribute. Default is false
 
     Returns
     ------------
@@ -234,17 +261,28 @@ def filter_traces_attribute_in_timeframe(
     case_id_glue = exec_utils.get_param_value(
         Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME
     )
+    keep_nan_values = exec_utils.get_param_value(
+        Parameters.KEEP_NAN_VALUES, parameters, False
+    )
 
     dt1 = get_dt_from_string(dt1)
     dt2 = get_dt_from_string(dt2)
 
-    filtered = df[df[attribute] == attribute_value]
-    filtered = filtered[filtered[timestamp_key] >= dt1]
-    filtered = filtered[filtered[timestamp_key] <= dt2]
-    filtered = df[df[case_id_glue].isin(filtered[case_id_glue])]
+    attribute_filtered = df[df[attribute] == attribute_value]
 
-    filtered.attrs = copy(df.attrs) if hasattr(df, "attrs") else {}
-    return filtered
+    containment_mask = attribute_filtered[timestamp_key].ge(dt1) & attribute_filtered[timestamp_key].le(dt2)
+
+    if keep_nan_values:
+        mask = containment_mask | attribute_filtered[timestamp_key].isna()
+    else:
+        mask = containment_mask
+
+    case_ids = attribute_filtered.loc[mask, case_id_glue].unique()
+
+    ret = df[df[case_id_glue].isin(case_ids)].copy()
+
+    ret.attrs = copy(df.attrs) if hasattr(df, "attrs") else {}
+    return ret
 
 
 def filter_traces_starting_in_timeframe(
@@ -269,6 +307,7 @@ def filter_traces_starting_in_timeframe(
             Parameters.TIMESTAMP_KEY -> Attribute to use as timestamp
             Parameters.CASE_ID_KEY -> Column that contains the case id
             "positive" (bool, default True) -> keep (True) or exclude (False) the matching cases
+            Parameters.KEEP_NAN_VALUES -> If true, keeps traces which do not contain any event with temporal data for the selected attribute. Default is false
 
     Returns
     ----------
@@ -285,22 +324,28 @@ def filter_traces_starting_in_timeframe(
         Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME
     )
     positive = exec_utils.get_param_value("positive", parameters, True)
+    keep_nan_values = exec_utils.get_param_value(
+        Parameters.KEEP_NAN_VALUES, parameters, False
+    )
 
     dt1 = get_dt_from_string(dt1)
     dt2 = get_dt_from_string(dt2)
 
-    grouped_df = df[[case_id_glue, timestamp_key]].groupby(case_id_glue)
-    first = grouped_df.first()
+    agg_df = df.groupby(case_id_glue)[timestamp_key].min().to_frame()
 
-    # cases whose first event starts within [dt1, dt2]
-    matching_cases = first[
-        (first[timestamp_key] >= dt1) & (first[timestamp_key] <= dt2)
-    ].index
+    in_range = agg_df[timestamp_key].ge(dt1) & agg_df[timestamp_key].le(dt2)
+
+    if keep_nan_values:
+        mask = in_range | agg_df[timestamp_key].isna()
+    else:
+        mask = in_range
+
+    case_ids = agg_df.loc[mask].index
 
     if positive:
-        ret = df[df[case_id_glue].isin(matching_cases)]
+        ret = df[df[case_id_glue].isin(case_ids)].copy()
     else:
-        ret = df[~df[case_id_glue].isin(matching_cases)]
+        ret = df[~df[case_id_glue].isin(case_ids)].copy()
 
     ret.attrs = copy(df.attrs) if hasattr(df, "attrs") else {}
     return ret
@@ -328,6 +373,7 @@ def filter_traces_completing_in_timeframe(
             Parameters.TIMESTAMP_KEY -> Attribute to use as timestamp
             Parameters.CASE_ID_KEY -> Column that contains the case id
             "positive" (bool, default True) -> keep (True) or exclude (False) the matching cases
+            Parameters.KEEP_NAN_VALUES -> If true, keeps traces which do not contain any event with temporal data for the selected attribute. Default is false
 
     Returns
     ----------
@@ -344,22 +390,28 @@ def filter_traces_completing_in_timeframe(
         Parameters.CASE_ID_KEY, parameters, CASE_CONCEPT_NAME
     )
     positive = exec_utils.get_param_value("positive", parameters, True)
+    keep_nan_values = exec_utils.get_param_value(
+        Parameters.KEEP_NAN_VALUES, parameters, False
+    )
 
     dt1 = get_dt_from_string(dt1)
     dt2 = get_dt_from_string(dt2)
 
-    grouped_df = df[[case_id_glue, timestamp_key]].groupby(case_id_glue)
-    last = grouped_df.last()
+    agg_df = df.groupby(case_id_glue)[timestamp_key].max().to_frame()
 
-    # cases whose last event completes within [dt1, dt2]
-    matching_cases = last[
-        (last[timestamp_key] >= dt1) & (last[timestamp_key] <= dt2)
-    ].index
+    in_range = agg_df[timestamp_key].ge(dt1) & agg_df[timestamp_key].le(dt2)
+
+    if keep_nan_values:
+        mask = in_range | agg_df[timestamp_key].isna()
+    else:
+        mask = in_range
+
+    case_ids = agg_df.loc[mask].index
 
     if positive:
-        ret = df[df[case_id_glue].isin(matching_cases)]
+        ret = df[df[case_id_glue].isin(case_ids)].copy()
     else:
-        ret = df[~df[case_id_glue].isin(matching_cases)]
+        ret = df[~df[case_id_glue].isin(case_ids)].copy()
 
     ret.attrs = copy(df.attrs) if hasattr(df, "attrs") else {}
     return ret

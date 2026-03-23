@@ -27,14 +27,14 @@ def pre_set(elem, object_type: str = None) -> Set:
     """
     Returns the set of predecessors of an element (place or transition) in an object-centric Petri net.
     Restricted to predecessors connected using arcs of the object type, if specified.
-    
+
     Parameters
     ----------
     elem
         Element (place or transition) for which to get the predecessors
     object_type
         Object type to restrict the predecessors to (optional)
-    
+
     Returns
     -------
     Set
@@ -57,7 +57,7 @@ def post_set(elem, object_type: str = None) -> Set:
         Element (place or transition) for which to get the successors
     object_type
         Object type to restrict the successors to (optional)
-    
+
     Returns
     -------
     Set

@@ -64,7 +64,7 @@ def apply(
 
     # Select only needed columns
     selected_lf = lf.select([activity_key, case_id_key])
-    
+
     # Add cumulative count for each activity within each case
     with_counts = (
         selected_lf
@@ -75,17 +75,17 @@ def apply(
             .alias("__rework_count")
         )
     )
-    
+
     # Filter for rework cases (count > 0, meaning activity occurred more than once)
     rework_cases = with_counts.filter(pl.col("__rework_count") > 1)
-    
+
     # Get unique activity-case pairs for rework
     unique_rework = rework_cases.select([activity_key, case_id_key]).unique()
-    
+
     # Count cases with rework per activity
     result_df = unique_rework.group_by(activity_key).count().collect()
-    
+
     # Convert to dictionary
     ret = dict(zip(result_df[activity_key].to_list(), result_df["count"].to_list()))
-    
+
     return ret

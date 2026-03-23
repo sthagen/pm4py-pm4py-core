@@ -76,9 +76,7 @@ def minimal_coverability_tree(net, initial_marking, original_net=None):
 
     G = nx_utils.MultiDiGraph()
 
-    incidence_matrix = helper.compute_incidence_matrix(net)
-    firing_dict = helper.split_incidence_matrix(incidence_matrix, net)
-    req_dict = helper.compute_firing_requirement(net)
+    _, req_sparse, deltas, _, _ = helper.compute_firing_requirement(net)
 
     initial_mark = helper.convert_marking(net, initial_marking, original_net)
     j = 0
@@ -147,7 +145,7 @@ def minimal_coverability_tree(net, initial_marking, original_net=None):
                     unprocessed_nodes.append(n)
         else:
             enabled_markings = helper.enabled_markings(
-                firing_dict, req_dict, G.nodes[n]["marking"]
+                req_sparse, deltas, G.nodes[n]["marking"]
             )
             for el in enabled_markings:
                 G.add_node(j, marking=el[0])
@@ -157,7 +155,7 @@ def minimal_coverability_tree(net, initial_marking, original_net=None):
                 j += 1
             processed_nodes.add(n)
 
-    return (G, firing_dict, req_dict)
+    return (G, req_sparse, deltas)
 
 
 def apply(net, initial_marking, original_net=None):
@@ -172,12 +170,11 @@ def apply(net, initial_marking, original_net=None):
     def detect_same_labelled_nodes(G):
         same_labels = {}
         for node in G.nodes:
-            if np.array2string(G.nodes[node]["marking"]) not in same_labels:
-                same_labels[np.array2string(G.nodes[node]["marking"])] = [node]
+            marking_key = helper.marking_to_key(G.nodes[node]["marking"])
+            if marking_key not in same_labels:
+                same_labels[marking_key] = [node]
             else:
-                same_labels[np.array2string(G.nodes[node]["marking"])].append(
-                    node
-                )
+                same_labels[marking_key].append(node)
         return same_labels
 
     def merge_nodes_of_same_label(G, same_labels):
@@ -192,16 +189,20 @@ def apply(net, initial_marking, original_net=None):
                     i += 1
         return G
 
-    mct, firing_dict, req_dict = minimal_coverability_tree(
+    mct, req_sparse, deltas = minimal_coverability_tree(
         net, initial_marking, original_net
     )
     mcg = merge_nodes_of_same_label(mct, detect_same_labelled_nodes(mct))
 
     to_remove_edges = []
+    enabled_cache = {}
     for edge in mcg.edges:
-        reachable_markings = helper.enabled_markings(
-            firing_dict, req_dict, mcg.nodes[edge[0]]["marking"]
-        )
+        source = edge[0]
+        if source not in enabled_cache:
+            enabled_cache[source] = helper.enabled_markings(
+                req_sparse, deltas, mcg.nodes[source]["marking"]
+            )
+        reachable_markings = enabled_cache[source]
         not_reachable = True
         for el in reachable_markings:
             if np.array_equal(el[0], mcg.nodes[edge[1]]["marking"]):

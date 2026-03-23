@@ -101,7 +101,7 @@ def get_events_distribution(
 
     values = None
     all_values = None
-    
+
     if distr_type == "days_month":
         serie = lf.select(pl.col(timestamp_key).dt.day().alias("value")).group_by("value").count()
         values_df = serie.collect()
@@ -195,10 +195,10 @@ def get_attribute_values(
         processed_lf = lf.group_by([case_id_glue, attribute_key]).agg(pl.first())
     else:
         processed_lf = lf
-        
+
     value_counts = processed_lf.select(pl.col(attribute_key)).group_by(attribute_key).count().collect()
     attributes_values_dict = dict(zip(value_counts[attribute_key].to_list(), value_counts["count"].to_list()))
-    
+
     return attributes_values_dict
 
 
@@ -234,9 +234,9 @@ def get_kde_numeric_attribute(
     max_no_of_points_to_sample = exec_utils.get_param_value(
         Parameters.MAX_NO_POINTS_SAMPLE, parameters, sys.maxsize
     )
-    
+
     red_lf = lf.filter(pl.col(attribute).is_not_null())
-    
+
     # Get sample if needed
     if max_no_of_points_to_sample < sys.maxsize:
         red_df = red_lf.collect().sample(n=min(max_no_of_points_to_sample, len(red_lf.collect())))
@@ -306,16 +306,16 @@ def get_kde_date_attribute(
     max_no_of_points_to_sample = exec_utils.get_param_value(
         Parameters.MAX_NO_POINTS_SAMPLE, parameters, sys.maxsize
     )
-    
+
     red_lf = lf.filter(pl.col(attribute).is_not_null())
-    
+
     # Get sample if needed
     if max_no_of_points_to_sample < sys.maxsize:
         red_df = red_lf.collect().sample(n=min(max_no_of_points_to_sample, len(red_lf.collect())))
         date_values = sorted(red_df[attribute].to_list())
     else:
         date_values = sorted(red_lf.select(pl.col(attribute)).collect()[attribute].to_list())
-        
+
     return attributes_common.get_kde_date_attribute(
         date_values, parameters=parameters
     )

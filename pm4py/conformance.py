@@ -21,6 +21,7 @@ Contact: info@processintelligence.solutions
 '''
 __doc__ = """
 The ``pm4py.conformance`` module contains the conformance checking algorithms implemented in ``pm4py``.
+
 """
 
 from typing import List, Dict, Any, Union, Optional, Tuple, Set
@@ -80,6 +81,7 @@ def conformance_diagnostics_token_based_replay(
     :param case_id_key: Attribute to be used as the case identifier (default is "case:concept:name").
     :param return_diagnostics_dataframe: If possible, returns a dataframe with the diagnostics instead of the usual output (default is `constants.DEFAULT_RETURN_DIAGNOSTICS_DATAFRAME`).
     :param opt_parameters: Optional parameters for the token-based replay, including:
+
         * **reach_mark_through_hidden**: Boolean to decide if the final marking should be reached through hidden transitions.
         * **stop_immediately_unfit**: Boolean to decide if the replay should stop immediately when non-conformance is detected.
         * **walk_through_hidden_trans**: Boolean to decide if the replay should walk through hidden transitions to enable visible transitions.
@@ -88,30 +90,29 @@ def conformance_diagnostics_token_based_replay(
         * **thread_maximum_ex_time**: Maximum allowed execution time for alignment threads.
         * **cleaning_token_flood**: Decides if token flood cleaning should be performed.
         * **disable_variants**: Disable variants grouping.
-        * **return_object_names**: Decide whether to return names instead of object pointers.
-    :return: A list of dictionaries containing diagnostics for each trace.
-    :rtype: ``List[Dict[str, Any]]``
+        * **return_object_names**: Decide whether to return names instead of object pointers. :return: A list of dictionaries containing diagnostics for each trace. :rtype: ``List[Dict[str, Any]]``
 
     Example:
-        ```python
-        import pm4py
+        .. code-block:: python
 
-        net, im, fm = pm4py.discover_petri_net_inductive(
-            dataframe,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        tbr_diagnostics = pm4py.conformance_diagnostics_token_based_replay(
-            dataframe,
-            net,
-            im,
-            fm,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        ```
+            import pm4py
+
+            net, im, fm = pm4py.discover_petri_net_inductive(
+                dataframe,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+            tbr_diagnostics = pm4py.conformance_diagnostics_token_based_replay(
+                dataframe,
+                net,
+                im,
+                fm,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+
     """
     __event_log_deprecation_warning(log)
 
@@ -197,25 +198,26 @@ def conformance_diagnostics_alignments(
     :rtype: ``List[Dict[str, Any]]``
 
     Example:
-        ```python
-        import pm4py
+        .. code-block:: python
 
-        net, im, fm = pm4py.discover_petri_net_inductive(
-            dataframe,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        alignments_diagnostics = pm4py.conformance_diagnostics_alignments(
-            dataframe,
-            net,
-            im,
-            fm,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        ```
+            import pm4py
+
+            net, im, fm = pm4py.discover_petri_net_inductive(
+                dataframe,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+            alignments_diagnostics = pm4py.conformance_diagnostics_alignments(
+                dataframe,
+                net,
+                im,
+                fm,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+
     """
     __event_log_deprecation_warning(log)
 
@@ -351,6 +353,7 @@ def fitness_token_based_replay(
     Calculate the fitness using token-based replay.
     The fitness is calculated on a log-based level.
     The output dictionary contains the following keys:
+
     - **perc_fit_traces**: Percentage of fit traces (from 0.0 to 100.0).
     - **average_trace_fitness**: Average of the trace fitnesses (between 0.0 and 1.0).
     - **log_fitness**: Overall fitness of the log (between 0.0 and 1.0).
@@ -378,25 +381,26 @@ def fitness_token_based_replay(
     :rtype: ``Dict[str, float]``
 
     Example:
-        ```python
-        import pm4py
+        .. code-block:: python
 
-        net, im, fm = pm4py.discover_petri_net_inductive(
-            dataframe,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        fitness_tbr = pm4py.fitness_token_based_replay(
-            dataframe,
-            net,
-            im,
-            fm,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        ```
+            import pm4py
+
+            net, im, fm = pm4py.discover_petri_net_inductive(
+                dataframe,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+            fitness_tbr = pm4py.fitness_token_based_replay(
+                dataframe,
+                net,
+                im,
+                fm,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+
     """
     __event_log_deprecation_warning(log)
 
@@ -445,6 +449,7 @@ def fitness_alignments(
     """
     Calculate the fitness using alignments.
     The output dictionary contains the following keys:
+
     - **average_trace_fitness**: Average of the trace fitnesses (between 0.0 and 1.0).
     - **log_fitness**: Overall fitness of the log (between 0.0 and 1.0).
     - **percentage_of_fitting_traces**: Percentage of fit traces (from 0.0 to 100.0).
@@ -474,25 +479,26 @@ def fitness_alignments(
     :rtype: ``Dict[str, float]``
 
     Example:
-        ```python
-        import pm4py
+        .. code-block:: python
 
-        net, im, fm = pm4py.discover_petri_net_inductive(
-            dataframe,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        fitness_alignments = pm4py.fitness_alignments(
-            dataframe,
-            net,
-            im,
-            fm,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        ```
+            import pm4py
+
+            net, im, fm = pm4py.discover_petri_net_inductive(
+                dataframe,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+            fitness_alignments = pm4py.fitness_alignments(
+                dataframe,
+                net,
+                im,
+                fm,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+
     """
     __event_log_deprecation_warning(log)
 
@@ -563,25 +569,26 @@ def precision_token_based_replay(
     :rtype: ``float``
 
     Example:
-        ```python
-        import pm4py
+        .. code-block:: python
 
-        net, im, fm = pm4py.discover_petri_net_inductive(
-            dataframe,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        precision_tbr = pm4py.precision_token_based_replay(
-            dataframe,
-            net,
-            im,
-            fm,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        ```
+            import pm4py
+
+            net, im, fm = pm4py.discover_petri_net_inductive(
+                dataframe,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+            precision_tbr = pm4py.precision_token_based_replay(
+                dataframe,
+                net,
+                im,
+                fm,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+
     """
     __event_log_deprecation_warning(log)
 
@@ -654,25 +661,26 @@ def precision_alignments(
     :rtype: ``float``
 
     Example:
-        ```python
-        import pm4py
+        .. code-block:: python
 
-        net, im, fm = pm4py.discover_petri_net_inductive(
-            dataframe,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        precision_alignments = pm4py.precision_alignments(
-            dataframe,
-            net,
-            im,
-            fm,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        ```
+            import pm4py
+
+            net, im, fm = pm4py.discover_petri_net_inductive(
+                dataframe,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+            precision_alignments = pm4py.precision_alignments(
+                dataframe,
+                net,
+                im,
+                fm,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+
     """
     __event_log_deprecation_warning(log)
 
@@ -733,25 +741,26 @@ def generalization_tbr(
     :rtype: ``float``
 
     Example:
-        ```python
-        import pm4py
+        .. code-block:: python
 
-        net, im, fm = pm4py.discover_petri_net_inductive(
-            dataframe,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        generalization_tbr = pm4py.generalization_tbr(
-            dataframe,
-            net,
-            im,
-            fm,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        ```
+            import pm4py
+
+            net, im, fm = pm4py.discover_petri_net_inductive(
+                dataframe,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+            generalization_tbr = pm4py.generalization_tbr(
+                dataframe,
+                net,
+                im,
+                fm,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+
     """
     __event_log_deprecation_warning(log)
 
@@ -804,18 +813,19 @@ def replay_prefix_tbr(
     :rtype: ``Marking``
 
     Example:
-        ```python
-        import pm4py
+        .. code-block:: python
 
-        net, im, fm = pm4py.read_pnml('tests/input_data/running-example.pnml')
-        marking = pm4py.replay_prefix_tbr(
-            ['register request', 'check ticket'],
-            net,
-            im,
-            fm,
-            activity_key='concept:name'
-        )
-        ```
+            import pm4py
+
+            net, im, fm = pm4py.read_pnml('tests/input_data/running-example.pnml')
+            marking = pm4py.replay_prefix_tbr(
+                ['register request', 'check ticket'],
+                net,
+                im,
+                fm,
+                activity_key='concept:name'
+            )
+
     """
     purpose_log = EventLog()
     trace = Trace()
@@ -854,6 +864,7 @@ def __convert_to_fp(*args) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
 
     Note:
         This is an internal method and is deprecated.
+
     """
     import pm4py
 
@@ -880,25 +891,26 @@ def conformance_diagnostics_footprints(
     :rtype: ``Union[List[Dict[str, Any]], Dict[str, Any]]``
 
     Example:
-        ```python
-        import pm4py
+        .. code-block:: python
 
-        net, im, fm = pm4py.discover_petri_net_inductive(
-            dataframe,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        footprints_diagnostics = pm4py.conformance_diagnostics_footprints(
-            dataframe,
-            net,
-            im,
-            fm,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        ```
+            import pm4py
+
+            net, im, fm = pm4py.discover_petri_net_inductive(
+                dataframe,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+            footprints_diagnostics = pm4py.conformance_diagnostics_footprints(
+                dataframe,
+                net,
+                im,
+                fm,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+
     """
     fp1 = __convert_to_fp(args[0])
     fp2 = __convert_to_fp(args[1:])
@@ -922,6 +934,7 @@ def fitness_footprints(*args) -> Dict[str, float]:
     """
     Calculate fitness using footprints.
     The output is a dictionary containing two keys:
+
     - **perc_fit_traces**: Percentage of fit traces (over the log).
     - **log_fitness**: The fitness value over the log.
 
@@ -930,25 +943,26 @@ def fitness_footprints(*args) -> Dict[str, float]:
     :rtype: ``Dict[str, float]``
 
     Example:
-        ```python
-        import pm4py
+        .. code-block:: python
 
-        net, im, fm = pm4py.discover_petri_net_inductive(
-            dataframe,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        fitness_fp = pm4py.fitness_footprints(
-            dataframe,
-            net,
-            im,
-            fm,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        ```
+            import pm4py
+
+            net, im, fm = pm4py.discover_petri_net_inductive(
+                dataframe,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+            fitness_fp = pm4py.fitness_footprints(
+                dataframe,
+                net,
+                im,
+                fm,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+
     """
     fp_conf = conformance_diagnostics_footprints(*args)
     fp1 = __convert_to_fp(args[0])
@@ -969,25 +983,26 @@ def precision_footprints(*args) -> float:
     :rtype: ``float``
 
     Example:
-        ```python
-        import pm4py
+        .. code-block:: python
 
-        net, im, fm = pm4py.discover_petri_net_inductive(
-            dataframe,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        precision_fp = pm4py.precision_footprints(
-            dataframe,
-            net,
-            im,
-            fm,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        ```
+            import pm4py
+
+            net, im, fm = pm4py.discover_petri_net_inductive(
+                dataframe,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+            precision_fp = pm4py.precision_footprints(
+                dataframe,
+                net,
+                im,
+                fm,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+
     """
     fp1 = __convert_to_fp(args[0])
     fp2 = __convert_to_fp(args[1:])
@@ -1014,6 +1029,7 @@ def __check_is_fit_process_tree(trace, tree) -> bool:
 
     Note:
         This is an internal method and is deprecated.
+
     """
     __event_log_deprecation_warning(trace)
 
@@ -1070,6 +1086,7 @@ def __check_is_fit_petri_net(
 
     Note:
         This is an internal method and is deprecated.
+
     """
     __event_log_deprecation_warning(trace)
 
@@ -1118,6 +1135,7 @@ def check_is_fitting(
 
     Note:
         This is an internal method and is deprecated.
+
     """
     from pm4py.util import variants_util
     from pm4py.convert import convert_to_process_tree, convert_to_petri_net
@@ -1160,31 +1178,34 @@ def conformance_temporal_profile(
     The result is a list of time-based deviations for every case.
 
     For example, consider a log with a single case:
+
     - A (timestamp: 2000-01)
     - B (timestamp: 2002-01)
 
-    Given the temporal profile:
-    ```python
-    {
-        ('A', 'B'): (1.5, 0.5),  # (mean, std)
-        ('A', 'C'): (5.0, 0.0),
-        ('A', 'D'): (2.0, 0.0)
-    }
-    ```
-    and setting `zeta` to 1, the difference between the timestamps of A and B (2 years) exceeds the allowed time (1.5 months + 0.5 months), resulting in a deviation.
+    Given the temporal profile::
 
-    :param log: Log object.
-    :param temporal_profile: Temporal profile. For example, if the log has two cases:
-        - Case 1: A (timestamp: 1980-01), B (timestamp: 1980-03), C (timestamp: 1980-06)
-        - Case 2: A (timestamp: 1990-01), B (timestamp: 1990-02), D (timestamp: 1990-03)
-      The temporal profile might look like:
-        ```python
         {
             ('A', 'B'): (1.5, 0.5),  # (mean, std)
             ('A', 'C'): (5.0, 0.0),
             ('A', 'D'): (2.0, 0.0)
         }
-        ```
+
+    and setting `zeta` to 1, the difference between the timestamps of A and B (2 years) exceeds the allowed time (1.5 months + 0.5 months), resulting in a deviation.
+
+    :param log: Log object.
+    :param temporal_profile: Temporal profile. For example, if the log has two cases:
+
+        - Case 1: A (timestamp: 1980-01), B (timestamp: 1980-03), C (timestamp: 1980-06)
+        - Case 2: A (timestamp: 1990-01), B (timestamp: 1990-02), D (timestamp: 1990-03)
+
+        The temporal profile might look like::
+
+            {
+                ('A', 'B'): (1.5, 0.5),  # (mean, std)
+                ('A', 'C'): (5.0, 0.0),
+                ('A', 'D'): (2.0, 0.0)
+            }
+
     :param zeta: Number of standard deviations allowed from the average (default is 1.0). For example, `zeta=1` allows deviations within one standard deviation from the mean.
     :param activity_key: Attribute to be used for the activity (default is "concept:name").
     :param timestamp_key: Attribute to be used for the timestamp (default is "time:timestamp").
@@ -1194,24 +1215,25 @@ def conformance_temporal_profile(
     :rtype: ``List[List[Tuple[float, float, float, float]]]``
 
     Example:
-        ```python
-        import pm4py
+        .. code-block:: python
 
-        temporal_profile = pm4py.discover_temporal_profile(
-            dataframe,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        conformance_temporal_profile = pm4py.conformance_temporal_profile(
-            dataframe,
-            temporal_profile,
-            zeta=1,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        ```
+            import pm4py
+
+            temporal_profile = pm4py.discover_temporal_profile(
+                dataframe,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+            conformance_temporal_profile = pm4py.conformance_temporal_profile(
+                dataframe,
+                temporal_profile,
+                zeta=1,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+
     """
     __event_log_deprecation_warning(log)
 
@@ -1271,19 +1293,20 @@ def conformance_declare(
     :rtype: ``List[Dict[str, Any]]``
 
     Example:
-        ```python
-        import pm4py
+        .. code-block:: python
 
-        log = pm4py.read_xes("C:/receipt.xes")
-        declare_model = pm4py.discover_declare(log)
-        conf_result = pm4py.conformance_declare(
-            log,
-            declare_model,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        ```
+            import pm4py
+
+            log = pm4py.read_xes("C:/receipt.xes")
+            declare_model = pm4py.discover_declare(log)
+            conf_result = pm4py.conformance_declare(
+                log,
+                declare_model,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+
     """
     __event_log_deprecation_warning(log)
 
@@ -1337,6 +1360,7 @@ def conformance_log_skeleton(
     Verbeek, H. M. W., and R. Medeiros de Carvalho. "Log skeletons: A classification approach to process discovery." arXiv preprint arXiv:1806.08247 (2018).
 
     A log skeleton is a declarative model consisting of six different constraints:
+
     - **directly_follows**: Specifies strict bounds on activities directly following each other. For example, 'A should be directly followed by B' and 'B should be directly followed by C'.
     - **always_before**: Specifies that certain activities may only be executed if some other activities have been executed earlier in the case history. For example, 'C should always be preceded by A'.
     - **always_after**: Specifies that certain activities should always trigger the execution of other activities in the future history of the case. For example, 'A should always be followed by C'.
@@ -1354,24 +1378,25 @@ def conformance_log_skeleton(
     :rtype: ``List[Set[Any]]``
 
     Example:
-        ```python
-        import pm4py
+        .. code-block:: python
 
-        log_skeleton = pm4py.discover_log_skeleton(
-            dataframe,
-            noise_threshold=0.1,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        conformance_lsk = pm4py.conformance_log_skeleton(
-            dataframe,
-            log_skeleton,
-            activity_key='concept:name',
-            case_id_key='case:concept:name',
-            timestamp_key='time:timestamp'
-        )
-        ```
+            import pm4py
+
+            log_skeleton = pm4py.discover_log_skeleton(
+                dataframe,
+                noise_threshold=0.1,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+            conformance_lsk = pm4py.conformance_log_skeleton(
+                dataframe,
+                log_skeleton,
+                activity_key='concept:name',
+                case_id_key='case:concept:name',
+                timestamp_key='time:timestamp'
+            )
+
     """
     __event_log_deprecation_warning(log)
 
@@ -1422,6 +1447,7 @@ def conformance_ocdfg(
     Performs OC-DFG-based conformance checking between an object-centric event log (or OC-DFG) and a normative OC-DFG.
 
     An object-centric directly-follows graph is expressed as a dictionary containing the following properties:
+
     - activities: complete set of activities derived from the object-centric event log
     - object_types: complete set of object types derived from the object-centric event log
     - edges: dictionary connecting each object type to a set of directly-followed arcs between activities
@@ -1464,10 +1490,12 @@ def conformance_otg(
 
     An OTG summarizes how object types are related across different interaction graphs extracted from the OCEL.
     Specifically, an OTG is a tuple containing:
+
     - The set of object types
     - The edges along with the frequency, where each edge is (object_type1, relationship, object_type2).
 
     Relationship can be:
+
     * object_interaction (objects related in some event)
     * object_descendants (lifecycle of the first event starts before the other object)
     * object_inheritance (lifecycle of the first object ends exactly when the second one starts)
@@ -1521,6 +1549,7 @@ def conformance_etot(
 
     The ET-OT graph captures the relationships between event types and object types along with their frequencies.
     Specifically, an ET-OT graph is a tuple consisting of:
+
     - Set of activities
     - Set of object types
     - Set of relationships, where an edge (a, ot) indicates that events of type a are associated with objects of type ot

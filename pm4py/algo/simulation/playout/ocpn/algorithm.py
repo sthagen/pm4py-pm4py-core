@@ -52,7 +52,7 @@ def apply(ocpn: OCPetriNet, initial_marking: OCMarking, final_marking: OCMarking
     variant
         Variant of the algorithm to use:
             - Variants.EXTENSIVE: gets all the traces from the model. Can be expensive
-            
+
     Returns
     -----------
     OCEL

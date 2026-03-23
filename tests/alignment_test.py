@@ -8,6 +8,7 @@ from pm4py.objects import petri_net
 from pm4py.objects.log.importer.xes import importer as xes_importer
 from tests.constants import INPUT_DATA_DIR
 from pm4py.objects.conversion.process_tree import converter as process_tree_converter
+from config import test_config
 
 
 class AlignmentTest(unittest.TestCase):
@@ -72,7 +73,6 @@ class AlignmentTest(unittest.TestCase):
         al = pm4py.conformance_diagnostics_alignments(log, tree, return_diagnostics_dataframe=False)
 
     def test_tree_align_reviewing_classifier_different_key(self):
-        import pm4py
         log = xes_importer.apply("compressed_input_data/04_reviewing.xes.gz")
         for trace in log:
             for event in trace:
@@ -83,15 +83,15 @@ class AlignmentTest(unittest.TestCase):
         al = search_graph_pt.apply(log, tree, parameters={search_graph_pt.Parameters.ACTIVITY_KEY: "@@classifier"})
 
     def test_tree_align3(self):
-        import pm4py
         log = xes_importer.apply("compressed_input_data/01_running-example.xes.gz")
         from pm4py.algo.discovery.inductive import algorithm as inductive_miner
         tree = inductive_miner.apply(log)
         from pm4py.algo.conformance.alignments.process_tree.variants import dynamic_programming
         al = dynamic_programming.apply(log, tree)
 
-    def test_tree_align3(self):
-        import pm4py
+    def test_tree_align3_mip(self):
+        if test_config.IS_PIPELINE_RUN:
+            self.skipTest("Skipping the test in pipelines since pulp can not be installed")
         log = xes_importer.apply("compressed_input_data/01_running-example.xes.gz")
         from pm4py.algo.discovery.inductive import algorithm as inductive_miner
         tree = inductive_miner.apply(log)

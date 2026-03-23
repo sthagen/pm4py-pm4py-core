@@ -35,22 +35,22 @@ class Variants(Enum):
 
 def apply(log: Union[EventLog, pd.DataFrame], variant=Variants.CLASSIC, parameters: Optional[Dict[Any, Any]] = None):
     """
-    Comparative visualization of process variants based on the average time between the different steps
+    Comparative visualization of process variants based on the average time
+    between the different steps.
 
     Parameters
-    -----------------
+    ----------
     log
         Event log
     variant
         Variant of the algorithm to be used (Variants.CLASSIC)
     parameters
         Variant-specific parameters, including:
+
         - Parameters.ALIGNMENT_CRITERIA => specifies if variants should be aligned on the "start", "end", or a specific activity.
         - Parameters.MAX_VARIANTS => max variants to visualize in the graph
         - Parameters.FORMAT => the format of the visualization
-        - Parameters.NODE_HEIGHT, Parameters.NODE_WIDTH, Parameters.EDGE_PENWIDTH, Parameters.MIN_HORIZONTAL_DISTANCE,
-            Parameters.MAX_HORIZONTAL_DISTANCE, Parameters.LAYOUT_EXT_MULTIPLIER, Parameters.SHOW_LEGEND,
-            Parameters.ENABLE_GRAPH_TITLE, Parameters.GRAPH_TITLE
+        - Parameters.NODE_HEIGHT, Parameters.NODE_WIDTH, Parameters.EDGE_PENWIDTH, Parameters.MIN_HORIZONTAL_DISTANCE, Parameters.MAX_HORIZONTAL_DISTANCE, Parameters.LAYOUT_EXT_MULTIPLIER, Parameters.SHOW_LEGEND, Parameters.ENABLE_GRAPH_TITLE, Parameters.GRAPH_TITLE
 
     """
     if parameters is None:

@@ -26,7 +26,7 @@ from enum import Enum
 class Variants(Enum):
     TO_OC_CAUSAL_NET = to_oc_causal_net
     TO_ALTERNATIVE_FORMAT =  to_alternative_format
-    
+
 def apply(ocpn, parameters=None, variant=Variants.TO_OC_CAUSAL_NET):
     """
     Method for converting an Object-centric Petri Net to Object-centric Causal Net

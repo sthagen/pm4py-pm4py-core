@@ -1406,17 +1406,19 @@ def filter_ocel_object_per_type_count(
     ocel: OCEL, min_num_obj_type: Dict[str, int]
 ) -> OCEL:
     """
-    Filters the events of the object-centric logs that are related to at least the specified number of objects per type.
+    Filters the events of the object-centric logs that are related to at
+    least the specified number of objects per type.
 
-    Example:
-    pm4py.filter_object_per_type_count(ocel, {"order": 1, "element": 2})
+    Example::
 
-    Would keep the following events:
+        pm4py.filter_object_per_type_count(ocel, {"order": 1, "element": 2})
 
-      ocel:eid ocel:timestamp ocel:activity ocel:type:element ocel:type:order
-    0       e1     1980-01-01  Create Order  [i4, i1, i3, i2]            [o1]
-    1      e11     1981-01-01  Create Order          [i6, i5]            [o2]
-    2      e14     1981-01-04  Create Order          [i8, i7]            [o3]
+    Would keep the following events::
+
+          ocel:eid ocel:timestamp ocel:activity ocel:type:element ocel:type:order
+        0       e1     1980-01-01  Create Order  [i4, i1, i3, i2]            [o1]
+        1      e11     1981-01-01  Create Order          [i6, i5]            [o2]
+        2      e14     1981-01-04  Create Order          [i8, i7]            [o3]
 
     :param ocel: Object-centric event log.
     :param min_num_obj_type: Minimum number of objects per type.
@@ -1430,6 +1432,7 @@ def filter_ocel_object_per_type_count(
             ocel,
             {'order': 1, 'element': 2}
         )
+
     """
     from pm4py.algo.filtering.ocel import objects_ot_count
 
@@ -1667,12 +1670,16 @@ def filter_trace_segments(
     case_id_key: str = "case:concept:name",
 ) -> Union[EventLog, pd.DataFrame]:
     """
-    Filters an event log based on a set of trace segments. A trace is a sequence of activities and "..."
+    Filters an event log based on a set of trace segments. A trace is a
+    sequence of activities and "...".
+
     where:
+
     - "..." before an activity indicates that other activities can precede the given activity.
     - "..." after an activity indicates that other activities can follow the given activity.
 
     Examples:
+
     - pm4py.filter_trace_segments(log, [["A", "B"]]) retains only cases with the exact process variant A,B.
     - pm4py.filter_trace_segments(log, [["...", "A", "B"]]) retains only cases ending with activities A,B.
     - pm4py.filter_trace_segments(log, [["A", "B", "..."]]) retains only cases starting with activities A,B.
@@ -1699,6 +1706,7 @@ def filter_trace_segments(
             [["...", "check ticket", "decide", "reinitiate request", "..."]]
         )
         print(filtered_log)
+
     """
     __event_log_deprecation_warning(log)
 

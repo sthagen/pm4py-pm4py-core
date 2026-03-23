@@ -85,10 +85,10 @@ def get_partial_order_dataframe(
 
     # Sort by case ID and timestamps
     lf = lf.sort([case_id_glue, start_timestamp_key, timestamp_key])
-    
+
     # Add index for ordering within cases
     lf = lf.with_row_count("__index__")
-    
+
     # Self-join to get all pairs within same cases
     lf_self = lf.select([
         pl.col(case_id_glue).alias(case_id_glue + "_2"),
@@ -97,7 +97,7 @@ def get_partial_order_dataframe(
         pl.col(timestamp_key).alias(timestamp_key + "_2"),
         pl.col("__index__").alias("__index___2")
     ])
-    
+
     # Join on case ID
     partial_order_df = lf.join(
         lf_self, 
@@ -105,13 +105,13 @@ def get_partial_order_dataframe(
         right_on=case_id_glue + "_2",
         how="inner"
     )
-    
+
     # Filter to ensure proper ordering and temporal relationships
     partial_order_df = partial_order_df.filter(
         (pl.col("__index__") < pl.col("__index___2")) &
         (pl.col(timestamp_key) <= pl.col(start_timestamp_key + "_2"))
     )
-    
+
     # Calculate flow time
     if business_hours and business_hours_slot is not None:
         # For business hours, we need to collect and apply Python function
@@ -125,7 +125,7 @@ def get_partial_order_dataframe(
                 row[ts_idx], row[start_ts_2_idx], business_hours_slot, workcalendar
             )
             flow_times.append(flow_time)
-        
+
         df_collected = df_collected.with_columns(
             pl.Series(constants.DEFAULT_FLOW_TIME, flow_times)
         )
@@ -137,11 +137,11 @@ def get_partial_order_dataframe(
             .dt.total_seconds()
             .alias(constants.DEFAULT_FLOW_TIME)
         )
-    
+
     # Keep only first following if specified
     if keep_first_following:
         partial_order_df = partial_order_df.group_by("__index__").first()
-    
+
     return partial_order_df
 
 
@@ -196,7 +196,7 @@ def apply(
 
     # Group by activity pairs and count
     ret_dict_df = partial_order_dataframe.group_by([activity_key, activity_key + "_2"]).count().collect()
-    
+
     ret_dict = {}
     for row in ret_dict_df.iter_rows():
         key = (row[0], row[1])

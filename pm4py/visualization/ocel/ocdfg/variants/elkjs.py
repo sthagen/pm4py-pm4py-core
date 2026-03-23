@@ -86,14 +86,15 @@ def apply(
     ocdfg: Dict[str, Any], parameters: Optional[Dict[Any, Any]] = None
 ) -> str:
     """
-    Visualizes an OC-DFG using ELK.JS
+    Visualizes an OC-DFG using ELK.JS.
 
     Parameters
-    ---------------
+    ----------
     ocdfg
         OC-DFG
     parameters
         Parameters of the algorithm:
+
         - Parameters.ACT_METRIC => the metric to use for the activities. Available values:
             - "events" => number of events (default)
             - "unique_objects" => number of unique objects
@@ -113,9 +114,10 @@ def apply(
             - sum
 
     Returns
-    ---------------
+    -------
     viz
         Visualization file
+
     """
     if parameters is None:
         parameters = {}

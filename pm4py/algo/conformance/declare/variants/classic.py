@@ -35,6 +35,95 @@ class Parameters(Enum):
     ACTIVITY_KEY = constants.PARAMETER_CONSTANT_ACTIVITY_KEY
 
 
+def __is_alt_response_satisfied(
+    trace: List[str], act_idxs: Dict[str, List[int]], act: str, act2: str
+) -> bool:
+    """
+    Alternate response(act, act2):
+      for each occurrence of act, there exists an occurrence of act2 AFTER it,
+      and BEFORE the next occurrence of act (if any).
+    Vacuously satisfied if act does not occur.
+    """
+    a_idxs = act_idxs.get(act, [])
+    if not a_idxs:
+        return True
+    b_idxs = act_idxs.get(act2, [])
+    if not b_idxs:
+        return False
+
+    b_ptr = 0
+    n = len(trace)
+    for i, a in enumerate(a_idxs):
+        next_a = a_idxs[i + 1] if i + 1 < len(a_idxs) else n
+        while b_ptr < len(b_idxs) and b_idxs[b_ptr] <= a:
+            b_ptr += 1
+        if b_ptr >= len(b_idxs) or b_idxs[b_ptr] >= next_a:
+            return False
+    return True
+
+
+def __is_chain_response_satisfied(
+    trace: List[str], act_idxs: Dict[str, List[int]], act: str, act2: str
+) -> bool:
+    """
+    Chain response(act, act2):
+      for each occurrence of act, act2 occurs immediately after.
+    Vacuously satisfied if act does not occur.
+    """
+    a_idxs = act_idxs.get(act, [])
+    if not a_idxs:
+        return True
+    n = len(trace)
+    for a in a_idxs:
+        if a + 1 >= n or trace[a + 1] != act2:
+            return False
+    return True
+
+
+def __is_alt_precedence_satisfied(
+    trace: List[str], act_idxs: Dict[str, List[int]], act: str, act2: str
+) -> bool:
+    """
+    Alternate precedence(act, act2):
+      for each occurrence of act2, there exists an occurrence of act BEFORE it,
+      and AFTER the previous occurrence of act2 (if any).
+    Vacuously satisfied if act2 does not occur.
+    """
+    b_idxs = act_idxs.get(act2, [])
+    if not b_idxs:
+        return True
+    a_idxs = act_idxs.get(act, [])
+    if not a_idxs:
+        return False
+
+    a_ptr = 0
+    prev_b = -1
+    for b in b_idxs:
+        while a_ptr < len(a_idxs) and a_idxs[a_ptr] <= prev_b:
+            a_ptr += 1
+        if a_ptr >= len(a_idxs) or a_idxs[a_ptr] >= b:
+            return False
+        prev_b = b
+    return True
+
+
+def __is_chain_precedence_satisfied(
+    trace: List[str], act_idxs: Dict[str, List[int]], act: str, act2: str
+) -> bool:
+    """
+    Chain precedence(act, act2):
+      for each occurrence of act2, act occurs immediately before.
+    Vacuously satisfied if act2 does not occur.
+    """
+    b_idxs = act_idxs.get(act2, [])
+    if not b_idxs:
+        return True
+    for b in b_idxs:
+        if b == 0 or trace[b - 1] != act:
+            return False
+    return True
+
+
 def __check_existence(
     trace: List[str],
     model: Dict[str, Dict[Any, Dict[str, int]]],
@@ -93,9 +182,7 @@ def __check_responded_existence(
     if RESPONDED_EXISTENCE in model:
         for act_couple in model[RESPONDED_EXISTENCE]:
             if act_couple[0] in trace and act_couple[1] not in trace:
-                trace_dict["deviations"].append(
-                    [RESPONDED_EXISTENCE, act_couple]
-                )
+                trace_dict["deviations"].append([RESPONDED_EXISTENCE, act_couple])
 
 
 def __check_coexistence(
@@ -133,8 +220,8 @@ def __check_response(
 ):
     if RESPONSE in model:
         for act_couple in model[RESPONSE]:
-            if act_couple[0] in trace:
-                if (not act_couple[1] in trace) or max(
+            if act_couple[0] in act_idxs:
+                if (act_couple[1] not in act_idxs) or max(
                     act_idxs[act_couple[0]]
                 ) > max(act_idxs[act_couple[1]]):
                     trace_dict["deviations"].append([RESPONSE, act_couple])
@@ -149,8 +236,8 @@ def __check_precedence(
 ):
     if PRECEDENCE in model:
         for act_couple in model[PRECEDENCE]:
-            if act_couple[1] in trace:
-                if (not act_couple[0] in trace) or min(
+            if act_couple[1] in act_idxs:
+                if (act_couple[0] not in act_idxs) or min(
                     act_idxs[act_couple[0]]
                 ) > min(act_idxs[act_couple[1]]):
                     trace_dict["deviations"].append([PRECEDENCE, act_couple])
@@ -163,13 +250,22 @@ def __check_succession(
     act_idxs: Dict[str, List[int]],
     parameters: Optional[Dict[Any, Any]] = None,
 ):
+    # Do not report deviations when BOTH activities are absent (classic "inactive" case)
     if SUCCESSION in model:
         for act_couple in model[SUCCESSION]:
-            if (
-                (not act_couple[0] in trace or not act_couple[1] in trace)
-                or min(act_idxs[act_couple[0]]) > min(act_idxs[act_couple[1]])
-                or max(act_idxs[act_couple[0]]) > max(act_idxs[act_couple[1]])
-            ):
+            a_in = act_couple[0] in act_idxs
+            b_in = act_couple[1] in act_idxs
+
+            if not a_in and not b_in:
+                continue
+
+            if (not a_in) or (not b_in):
+                trace_dict["deviations"].append([SUCCESSION, act_couple])
+                continue
+
+            if min(act_idxs[act_couple[0]]) > min(act_idxs[act_couple[1]]) or max(
+                act_idxs[act_couple[0]]
+            ) > max(act_idxs[act_couple[1]]):
                 trace_dict["deviations"].append([SUCCESSION, act_couple])
 
 
@@ -181,32 +277,10 @@ def __check_alt_response(
     parameters: Optional[Dict[Any, Any]] = None,
 ):
     if ALTRESPONSE in model:
-        for act_couple in model[RESPONSE]:
-            spec_idxs = []
-            if act_couple[0] in trace:
-                spec_idxs = spec_idxs + [
-                    (act_couple[0], i) for i in act_idxs[act_couple[0]]
-                ]
-            if act_couple[1] in trace:
-                spec_idxs = spec_idxs + [
-                    (act_couple[1], i) for i in act_idxs[act_couple[1]]
-                ]
-            spec_idxs = sorted(spec_idxs, key=lambda x: (x[1], x[0]))
-            while spec_idxs:
-                if spec_idxs[0][0] != act_couple[0]:
-                    del spec_idxs[0]
-                else:
-                    break
-            is_ok = True
-            for i in range(len(spec_idxs)):
-                if i % 2 == 0 and (
-                    spec_idxs[i][0] != act_couple[0]
-                    or i == len(spec_idxs) - 1
-                    or spec_idxs[i + 1][0] != act_couple[1]
-                ):
-                    is_ok = False
-                    break
-            if not is_ok:
+        for act_couple in model[ALTRESPONSE]:
+            if not __is_alt_response_satisfied(
+                trace, act_idxs, act_couple[0], act_couple[1]
+            ):
                 trace_dict["deviations"].append([ALTRESPONSE, act_couple])
 
 
@@ -219,32 +293,9 @@ def __check_chain_response(
 ):
     if CHAINRESPONSE in model:
         for act_couple in model[CHAINRESPONSE]:
-            spec_idxs = []
-            if act_couple[0] in trace:
-                spec_idxs = spec_idxs + [
-                    (act_couple[0], i) for i in act_idxs[act_couple[0]]
-                ]
-            if act_couple[1] in trace:
-                spec_idxs = spec_idxs + [
-                    (act_couple[1], i) for i in act_idxs[act_couple[1]]
-                ]
-            spec_idxs = sorted(spec_idxs, key=lambda x: (x[1], x[0]))
-            while spec_idxs:
-                if spec_idxs[0][0] != act_couple[0]:
-                    del spec_idxs[0]
-                else:
-                    break
-            is_ok = True
-            for i in range(len(spec_idxs)):
-                if i % 2 == 0 and (
-                    spec_idxs[i][0] != act_couple[0]
-                    or i == len(spec_idxs) - 1
-                    or spec_idxs[i + 1][0] != act_couple[1]
-                    or spec_idxs[i + 1][1] != spec_idxs[i][1] + 1
-                ):
-                    is_ok = False
-                    break
-            if not is_ok:
+            if not __is_chain_response_satisfied(
+                trace, act_idxs, act_couple[0], act_couple[1]
+            ):
                 trace_dict["deviations"].append([CHAINRESPONSE, act_couple])
 
 
@@ -257,31 +308,9 @@ def __check_alt_precedence(
 ):
     if ALTPRECEDENCE in model:
         for act_couple in model[ALTPRECEDENCE]:
-            spec_idxs = []
-            if act_couple[0] in trace:
-                spec_idxs = spec_idxs + [
-                    (act_couple[0], i) for i in act_idxs[act_couple[0]]
-                ]
-            if act_couple[1] in trace:
-                spec_idxs = spec_idxs + [
-                    (act_couple[1], i) for i in act_idxs[act_couple[1]]
-                ]
-            spec_idxs = sorted(spec_idxs, key=lambda x: (x[1], x[0]))
-            while len(spec_idxs) > 1:
-                if spec_idxs[1][0] != act_couple[1]:
-                    del spec_idxs[0]
-                else:
-                    break
-            is_ok = True
-            for i in range(len(spec_idxs)):
-                if i % 2 == 0 and (
-                    spec_idxs[i][0] != act_couple[0]
-                    or i == len(spec_idxs) - 1
-                    or spec_idxs[i + 1][0] != act_couple[1]
-                ):
-                    is_ok = False
-                    break
-            if not is_ok:
+            if not __is_alt_precedence_satisfied(
+                trace, act_idxs, act_couple[0], act_couple[1]
+            ):
                 trace_dict["deviations"].append([ALTPRECEDENCE, act_couple])
 
 
@@ -294,32 +323,9 @@ def __check_chain_precedence(
 ):
     if CHAINPRECEDENCE in model:
         for act_couple in model[CHAINPRECEDENCE]:
-            spec_idxs = []
-            if act_couple[0] in trace:
-                spec_idxs = spec_idxs + [
-                    (act_couple[0], i) for i in act_idxs[act_couple[0]]
-                ]
-            if act_couple[1] in trace:
-                spec_idxs = spec_idxs + [
-                    (act_couple[1], i) for i in act_idxs[act_couple[1]]
-                ]
-            spec_idxs = sorted(spec_idxs, key=lambda x: (x[1], x[0]))
-            while len(spec_idxs) > 1:
-                if spec_idxs[1][0] != act_couple[1]:
-                    del spec_idxs[0]
-                else:
-                    break
-            is_ok = True
-            for i in range(len(spec_idxs)):
-                if i % 2 == 0 and (
-                    spec_idxs[i][0] != act_couple[0]
-                    or i == len(spec_idxs) - 1
-                    or spec_idxs[i + 1][0] != act_couple[1]
-                    or spec_idxs[i + 1][1] != spec_idxs[i][1] + 1
-                ):
-                    is_ok = False
-                    break
-            if not is_ok:
+            if not __is_chain_precedence_satisfied(
+                trace, act_idxs, act_couple[0], act_couple[1]
+            ):
                 trace_dict["deviations"].append([CHAINPRECEDENCE, act_couple])
 
 
@@ -332,26 +338,12 @@ def __check_alt_succession(
 ):
     if ALTSUCCESSION in model:
         for act_couple in model[ALTSUCCESSION]:
-            spec_idxs = []
-            if act_couple[0] in trace:
-                spec_idxs = spec_idxs + [
-                    (act_couple[0], i) for i in act_idxs[act_couple[0]]
-                ]
-            if act_couple[1] in trace:
-                spec_idxs = spec_idxs + [
-                    (act_couple[1], i) for i in act_idxs[act_couple[1]]
-                ]
-            spec_idxs = sorted(spec_idxs, key=lambda x: (x[1], x[0]))
-            is_ok = True
-            for i in range(len(spec_idxs)):
-                if i % 2 == 0 and (
-                    spec_idxs[i][0] != act_couple[0]
-                    or i == len(spec_idxs) - 1
-                    or spec_idxs[i + 1][0] != act_couple[1]
-                ):
-                    is_ok = False
-                    break
-            if not is_ok:
+            ok = __is_alt_response_satisfied(
+                trace, act_idxs, act_couple[0], act_couple[1]
+            ) and __is_alt_precedence_satisfied(
+                trace, act_idxs, act_couple[0], act_couple[1]
+            )
+            if not ok:
                 trace_dict["deviations"].append([ALTSUCCESSION, act_couple])
 
 
@@ -364,28 +356,73 @@ def __check_chain_succession(
 ):
     if CHAINSUCCESSION in model:
         for act_couple in model[CHAINSUCCESSION]:
-            spec_idxs = []
-            if act_couple[0] in trace:
-                spec_idxs = spec_idxs + [
-                    (act_couple[0], i) for i in act_idxs[act_couple[0]]
-                ]
-            if act_couple[1] in trace:
-                spec_idxs = spec_idxs + [
-                    (act_couple[1], i) for i in act_idxs[act_couple[1]]
-                ]
-            spec_idxs = sorted(spec_idxs, key=lambda x: (x[1], x[0]))
-            is_ok = True
-            for i in range(len(spec_idxs)):
-                if i % 2 == 0 and (
-                    spec_idxs[i][0] != act_couple[0]
-                    or i == len(spec_idxs) - 1
-                    or spec_idxs[i + 1][0] != act_couple[1]
-                    or spec_idxs[i + 1][1] != spec_idxs[i][1] + 1
-                ):
-                    is_ok = False
-                    break
-            if not is_ok:
+            ok = __is_chain_response_satisfied(
+                trace, act_idxs, act_couple[0], act_couple[1]
+            ) and __is_chain_precedence_satisfied(
+                trace, act_idxs, act_couple[0], act_couple[1]
+            )
+            if not ok:
                 trace_dict["deviations"].append([CHAINSUCCESSION, act_couple])
+
+
+# =========================
+# FIXED: NONSUCCESSION / NONCHAINSUCCESSION
+# Align conformance with classic discovery, where they are computed as:
+#   nonsuccession = -succession
+#   nonchainsuccession = -chainsuccession
+# =========================
+
+def __check_non_succession(
+    trace: List[str],
+    model: Dict[str, Dict[Any, Dict[str, int]]],
+    trace_dict: Dict[str, List[Any]],
+    act_idxs: Dict[str, List[int]],
+    parameters: Optional[Dict[Any, Any]] = None,
+):
+    if NONSUCCESSION in model:
+        for act_couple in model[NONSUCCESSION]:
+            a, b = act_couple
+            a_in = a in act_idxs
+            b_in = b in act_idxs
+
+            # in classic discovery: succession(a,b)=0 only when both are absent => nonsuccession(a,b)=0
+            if not a_in and not b_in:
+                continue
+
+            # nonsuccession(a,b) is violated iff succession(a,b) is satisfied
+            # succession satisfied iff both present AND precedence satisfied AND response satisfied
+            if a_in and b_in:
+                precedence_ok = min(act_idxs[a]) < min(act_idxs[b])
+                response_ok = max(act_idxs[a]) < max(act_idxs[b])
+                if precedence_ok and response_ok:
+                    trace_dict["deviations"].append([NONSUCCESSION, act_couple])
+
+
+def __check_non_chain_succession(
+    trace: List[str],
+    model: Dict[str, Dict[Any, Dict[str, int]]],
+    trace_dict: Dict[str, List[Any]],
+    act_idxs: Dict[str, List[int]],
+    parameters: Optional[Dict[Any, Any]] = None,
+):
+    if NONCHAINSUCCESSION in model:
+        for act_couple in model[NONCHAINSUCCESSION]:
+            a, b = act_couple
+            a_in = a in act_idxs
+            b_in = b in act_idxs
+
+            # inactive case (classic discovery yields 0)
+            if not a_in and not b_in:
+                continue
+
+            # nonchainsuccession(a,b) is violated iff chainsuccession(a,b) is satisfied.
+            # chainsuccession satisfied requires BOTH activities to occur and:
+            #   chainresponse(a,b) satisfied AND chainprecedence(a,b) satisfied
+            if a_in and b_in:
+                if __is_chain_response_satisfied(trace, act_idxs, a, b) and __is_chain_precedence_satisfied(
+                    trace, act_idxs, a, b
+                ):
+                    trace_dict["deviations"].append([NONCHAINSUCCESSION, act_couple])
 
 
 def apply_list(
@@ -403,13 +440,11 @@ def apply_list(
         total_num_constraints += len(model[k])
 
     for trace in projected_log:
-        act_idxs = {}
+        act_idxs: Dict[str, List[int]] = {}
         for i in range(len(trace)):
-            if trace[i] not in act_idxs:
-                act_idxs[trace[i]] = []
-            act_idxs[trace[i]].append(i)
+            act_idxs.setdefault(trace[i], []).append(i)
 
-        ret = {}
+        ret: Dict[str, Any] = {}
         ret["no_constr_total"] = total_num_constraints
         ret["deviations"] = []
 
@@ -429,7 +464,10 @@ def apply_list(
         __check_alt_succession(trace, model, ret, act_idxs, parameters)
         __check_chain_succession(trace, model, ret, act_idxs, parameters)
         __check_absence(trace, model, ret, parameters)
-        __check_non_coexistence(trace, model, ret, parameters)
+
+        # Fixed + aligned with discovery:
+        __check_non_succession(trace, model, ret, act_idxs, parameters)
+        __check_non_chain_succession(trace, model, ret, act_idxs, parameters)
 
         ret["no_dev_total"] = len(ret["deviations"])
         ret["dev_fitness"] = (
@@ -451,30 +489,6 @@ def apply(
 ) -> List[Dict[str, Any]]:
     """
     Applies conformance checking against a DECLARE model.
-
-    Paper:
-    F. M. Maggi, A. J. Mooij and W. M. P. van der Aalst, "User-guided discovery of declarative process models," 2011 IEEE Symposium on Computational Intelligence and Data Mining (CIDM), Paris, France, 2011, pp. 192-199, doi: 10.1109/CIDM.2011.5949297.
-
-    Parameters
-    --------------
-    log
-        Event log / Pandas dataframe
-    model
-        DECLARE model
-    parameters
-        Possible parameters of the algorithm, including:
-        - Parameters.ACTIVITY_KEY => the attribute to be used as activity
-        - Parameters.CASE_ID_KEY => the attribute to be used as case identifier
-
-    Returns
-    -------------
-    lst_conf_res
-        List containing for every case a dictionary with different keys:
-        - no_constr_total => the total number of constraints of the DECLARE model
-        - deviations => a list of deviations
-        - no_dev_total => the total number of deviations
-        - dev_fitness => the fitness (1 - no_dev_total / no_constr_total)
-        - is_fit => True if the case is perfectly fit
     """
     if parameters is None:
         parameters = {}
@@ -493,28 +507,13 @@ def apply(
     )
 
     ret = apply_list(projected_log, model, parameters=parameters)
-
     return ret
 
 
-def get_diagnostics_dataframe(
-    log, conf_result, parameters=None
-) -> pd.DataFrame:
+def get_diagnostics_dataframe(log, conf_result, parameters=None) -> pd.DataFrame:
     """
     Gets the diagnostics dataframe from a log and the results
     of DECLARE-based conformance checking
-
-    Parameters
-    --------------
-    log
-        Event log
-    conf_result
-        Results of conformance checking
-
-    Returns
-    --------------
-    diagn_dataframe
-        Diagnostics dataframe
     """
     if parameters is None:
         parameters = {}
@@ -523,7 +522,9 @@ def get_diagnostics_dataframe(
         Parameters.CASE_ID_KEY, parameters, xes_constants.DEFAULT_TRACEID_KEY
     )
 
-    log = log_converter.apply(log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters)
+    log = log_converter.apply(
+        log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
+    )
 
     diagn_stream = []
 

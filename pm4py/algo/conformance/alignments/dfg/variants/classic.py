@@ -762,7 +762,8 @@ def project_alignments_on_dfg(log: Union[EventLog, pd.DataFrame],
                                                               Parameters], Any]] = None,
                               ) -> Tuple[Dict[Tuple[str, str], Dict[str, int]], Dict[str, Dict[str, int]]]:
     """
-    Projects alignment results onto the directly-follows graph (DFG) and activity dictionary.
+    Projects alignment results onto the directly-follows graph (DFG) and
+    activity dictionary.
 
     This method performs a DFG-based alignment between an event log (or DataFrame) and a process model
     represented by a directly-follows graph. The alignment moves are categorized into three types:
@@ -795,15 +796,10 @@ def project_alignments_on_dfg(log: Union[EventLog, pd.DataFrame],
     -------
     Tuple[Dict[Tuple[str, str], Dict[str, int]], Dict[str, Dict[str, int]]]
         A tuple containing:
-          - conformance_dfg: A dictionary where each key is an edge (tuple of activities) from the DFG,
-            and the value is a dictionary with keys:
-                'sync' : count of synchronous moves on that edge.
-                'mm'   : count of model moves on that edge.
-          - conformance_activities: A dictionary where each key is an activity and the value is a dictionary
-            with keys:
-                'sync' : count of synchronous moves for the activity.
-                'mm'   : count of model moves for the activity.
-                'lm'   : count of log moves for the activity.
+
+          - conformance_dfg: A dictionary where each key is an edge (tuple of activities) from the DFG, and the value is a dictionary with keys: 'sync': count of synchronous moves on that edge, 'mm': count of model moves on that edge.
+          - conformance_activities: A dictionary where each key is an activity and the value is a dictionary with keys: 'sync': count of synchronous moves for the activity, 'mm': count of model moves for the activity, 'lm': count of log moves for the activity.
+
     """
     if parameters is None:
         parameters = {}

@@ -421,6 +421,7 @@ def convert_log_to_ocel(
     :return: An ``OCEL`` object.
 
     .. code-block:: python3
+
         import pm4py
 
         ocel = pm4py.convert_log_to_ocel(
@@ -471,6 +472,7 @@ def convert_ocel_to_networkx(
     :return: A ``nx.DiGraph`` object representing the OCEL.
 
     .. code-block:: python3
+
         import pm4py
 
         nx_digraph = pm4py.convert_ocel_to_networkx(ocel, variant='ocel_to_nx')
@@ -513,6 +515,7 @@ def convert_log_to_networkx(
     :return: A ``nx.DiGraph`` object representing the event log.
 
     .. code-block:: python3
+
         import pm4py
 
         nx_digraph = pm4py.convert_log_to_networkx(
@@ -604,6 +607,7 @@ def convert_petri_net_to_networkx(
     :return: A ``nx.DiGraph`` object representing the Petri net.
 
     .. code-block:: python3
+
         import pm4py
 
         net, im, fm = pm4py.read_pnml('tests/input_data/running-example.pnml')
@@ -653,6 +657,7 @@ def convert_petri_net_type(
     :return: A tuple of the converted (``PetriNet``, ``Marking``, ``Marking``).
 
     .. code-block:: python3
+
         import pm4py
 
         net, im, fm = pm4py.read_pnml('tests/input_data/running-example.pnml')

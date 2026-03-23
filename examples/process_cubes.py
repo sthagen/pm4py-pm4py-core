@@ -97,27 +97,6 @@ def execute_script():
         traceback.print_exc()
         #input()
 
-    try:
-        # let's try to build another process cube
-        # as rows, we divide cases based on their arrival rate (time between start of the current case and the start of the previously started case)
-        # as columns, we divide cases based on their finish rate (time between end of the nextly terminated case and the end of the current case)
-
-        cube_df3, cell_case_dict3 = process_cube_builder.apply(feature_table, x_col="@@arrival_rate", y_col="@@finish_rate", agg_col="@@sojourn_time", parameters={
-            "x_bins": [0, 200000, 500000, 800000, 1000000],
-            "y_bins": [0, 300000, 600000, 900000, 1000000]
-        })
-
-        print(cube_df3)
-        #print(cell_case_dict3)
-
-        # now, let's focus on the cases which distance from the previously started case and from the nextly terminated
-        # case is lower than one day
-        cell = [x for x in cell_case_dict3 if x[0].left < 86400 < x[0].right and x[1].left < 86400 < x[1].right][0]
-        filt_df3 = dataframe[dataframe["case:concept:name"].isin(cell_case_dict3[cell])]
-        print(filt_df3)
-    except:
-        traceback.print_exc()
-
 
 if __name__ == "__main__":
     execute_script()

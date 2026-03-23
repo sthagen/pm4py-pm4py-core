@@ -52,13 +52,13 @@ def apply(
 
     # Get pre statistics
     pre_stats = pre.apply(lf, activity, parameters=parameters)
-    
+
     # Get post statistics  
     post_stats = post.apply(lf, activity, parameters=parameters)
-    
+
     # Combine results
     result = {}
     result.update(pre_stats)
     result.update(post_stats)
-    
+
     return result

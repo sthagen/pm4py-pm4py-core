@@ -41,21 +41,21 @@ def apply(
     Groups the consecutive events of the same case having the same activity, providing option to keep the first/last event of each group
 
     Parameters
-    ---------------
+    ----------
     log_obj
         Log object (EventLog, EventStream, Pandas dataframe)
     parameters
         Parameters of the algorithm, including:
+
         - Parameters.CASE_ID_KEY => the case identifier to be used
         - Parameters.ACTIVITY_KEY => the attribute to be used as activity
-        - Parameters.FILTER_TYPE => the type of filter to be applied:
-            first => keeps the first event of each group
-            last => keeps the last event of each group
+        - Parameters.FILTER_TYPE => the type of filter to be applied: first => keeps the first event of each group last => keeps the last event of each group
 
     Returns
-    ---------------
+    -----------------
     filtered_dataframe
         Filtered dataframe object
+
     """
     if parameters is None:
         parameters = {}

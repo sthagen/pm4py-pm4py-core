@@ -48,10 +48,8 @@ def apply(
         Event log
     variant
         Variant of the algorithm to be used:
-        - Variants.OPEN_PATHS: transforms the event log to an interval tree in which the intervals are the
-                directly-follows paths in the log (open at the complete timestamp of the source event,
-                and closed at the start timestamp of the target event),
-                 and having as associated data the source and the target event.
+
+        - Variants.OPEN_PATHS: transforms the event log to an interval tree in which the intervals are the directly-follows paths in the log (open at the complete timestamp of the source event, and closed at the start timestamp of the target event), and having as associated data the source and the target event.
 
     Returns
     -----------------

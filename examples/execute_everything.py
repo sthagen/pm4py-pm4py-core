@@ -3,14 +3,17 @@ import os
 import sys
 import traceback
 import importlib.util
+import argparse
 
 
 
 EXECUTE_EXAMPLES = True
+PRINT_FAILURE_TRACES = True
 
 class OutcomeMeasurement:
     SUCCESS = 0
     FAILED = 0
+    FAILURE_TRACES = []
 
 
 def polars_process_cubes():
@@ -954,17 +957,23 @@ def execute_script(f):
         OutcomeMeasurement.SUCCESS += 1
     except ImportError:
         import time
-        traceback.print_exc()
+        trace = traceback.format_exc()
+        print(trace)
         OutcomeMeasurement.FAILED += 1
+        OutcomeMeasurement.FAILURE_TRACES.append(trace)
         time.sleep(3)
     except KeyError:
         import time
-        traceback.print_exc()
+        trace = traceback.format_exc()
+        print(trace)
         OutcomeMeasurement.FAILED += 1
+        OutcomeMeasurement.FAILURE_TRACES.append(trace)
         time.sleep(3)
     except:
-        traceback.print_exc()
+        trace = traceback.format_exc()
+        print(trace)
         OutcomeMeasurement.FAILED += 1
+        OutcomeMeasurement.FAILURE_TRACES.append(trace)
         input("\npress INPUT if you want to continue")
 
 
@@ -1000,8 +1009,22 @@ def print_versions():
     print(pm4py.util.pandas_utils.DATAFRAME)
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(
+        prog='Example Tests',
+        description='Runs example tests')
+
+    # some libraries can not be installed in the pipeline, so some tests are disabled in pipelines
+    parser.add_argument('-p', '--pipeline',
+                        action='store_true')
+
+    args = parser.parse_args()
+    return args.pipeline
+
 def main():
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))))
+
+    in_pipeline = parse_args()
 
     import pm4py
     import numpy
@@ -1014,6 +1037,8 @@ def main():
     #pm4py.util.constants.DEFAULT_TIMESTAMP_PARSE_FORMAT = None
 
     print_versions()
+
+    skipped = 0
 
     if EXECUTE_EXAMPLES:
         if importlib.util.find_spec("polars"):
@@ -1033,7 +1058,10 @@ def main():
         execute_script(simplified_interface)
         execute_script(bpmn_js_visualization)
         execute_script(read_write_ocel)
-        execute_script(discovery_data_petri_net)
+        if not in_pipeline:
+            execute_script(discovery_data_petri_net)
+        else:
+            skipped += 1
         execute_script(data_petri_nets)
         execute_script(inhibitor_reset_arcs)
         execute_script(logs_petri_visual_comparison)
@@ -1064,10 +1092,16 @@ def main():
         execute_script(ocel20_import_export)
         execute_script(revised_playout)
         execute_script(timestamp_case_grouping_filter)
-        execute_script(trace_clustering)
+        if not in_pipeline:
+            execute_script(trace_clustering)
+        else:
+            skipped += 1
         execute_script(validation_ocel20_relational)
         execute_script(interval_events_overlap)
-        execute_script(kneighb_regression)
+        if not in_pipeline:
+            execute_script(kneighb_regression)
+        else:
+            skipped += 1
         execute_script(log_to_int_tree_open_paths)
         execute_script(concept_drift)
         execute_script(dfg_align_metrics)
@@ -1087,7 +1121,10 @@ def main():
         execute_script(ocel_validation)
         execute_script(process_tree_frequency_annotation)
         execute_script(tree_manual_generation)
-        execute_script(workalendar_example)
+        if not in_pipeline:
+            execute_script(workalendar_example)
+        else:
+            skipped += 1
         execute_script(merging_case_relations)
         execute_script(activity_position)
         execute_script(link_analysis_vbfa)
@@ -1159,6 +1196,8 @@ def main():
 
     print("\n\nExamples executed correctly: %d\tExamples failed: %d\t" % (OutcomeMeasurement.SUCCESS, OutcomeMeasurement.FAILED))
 
+    print(f"Skipped {skipped} examples.")
+
     # Compute the total and pass ratio
     total_runs = OutcomeMeasurement.SUCCESS + OutcomeMeasurement.FAILED
     if total_runs > 0:
@@ -1166,10 +1205,15 @@ def main():
     else:
         pass_ratio = 0.0
 
+    if PRINT_FAILURE_TRACES:
+        for i, trace in enumerate(OutcomeMeasurement.FAILURE_TRACES):
+            print(f"Failure {i}:")
+            print(trace)
+
     print(f"Overall pass ratio: {round(pass_ratio * 100, 2)}%")
 
     # If pass ratio is above 90%, exit code is 0; otherwise 1
-    if pass_ratio > 0.9:
+    if pass_ratio == 1:
         #print("exiting with code 0")
         sys.exit(0)
     else:

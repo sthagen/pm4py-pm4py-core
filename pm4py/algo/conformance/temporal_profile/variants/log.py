@@ -51,36 +51,36 @@ def apply(
     Implements the approach described in:
     Stertz, Florian, Jürgen Mangler, and Stefanie Rinderle-Ma. "Temporal Conformance Checking at Runtime based on Time-infused Process Models." arXiv preprint arXiv:2008.07262 (2020).
 
-
     Parameters
-    ---------------
+    ----------
     log
         Event log
     temporal_profile
         Temporal profile
     parameters
         Parameters of the algorithm, including:
-         - Parameters.ACTIVITY_KEY => the attribute to use as activity
-         - Parameters.START_TIMESTAMP_KEY => the attribute to use as start timestamp
-         - Parameters.TIMESTAMP_KEY => the attribute to use as timestamp
-         - Parameters.ZETA => multiplier for the standard deviation
-         - Parameters.BUSINESS_HOURS => calculates the difference of time based on the business hours, not the total time.
-                                        Default: False
-        - Parameters.BUSINESS_HOURS_SLOTS =>
-        work schedule of the company, provided as a list of tuples where each tuple represents one time slot of business
-        hours. One slot i.e. one tuple consists of one start and one end time given in seconds since week start, e.g.
-        [
-            (7 * 60 * 60, 17 * 60 * 60),
-            ((24 + 7) * 60 * 60, (24 + 12) * 60 * 60),
-            ((24 + 13) * 60 * 60, (24 + 17) * 60 * 60),
-        ]
-        meaning that business hours are Mondays 07:00 - 17:00 and Tuesdays 07:00 - 12:00 and 13:00 - 17:00
+
+        - Parameters.ACTIVITY_KEY: the attribute to use as activity
+        - Parameters.START_TIMESTAMP_KEY: the attribute to use as start timestamp
+        - Parameters.TIMESTAMP_KEY: the attribute to use as timestamp
+        - Parameters.ZETA: multiplier for the standard deviation
+        - Parameters.BUSINESS_HOURS: calculates the difference of time based on the business hours, not the total time (Default: False).
+        - Parameters.BUSINESS_HOURS_SLOTS => work schedule of the company.
+          The following list defines that business hours are Mondays 07:00 - 17:00
+          and Tuesdays 07:00 - 12:00 and 13:00 - 17:00::
+
+            [
+                (7 * 60 * 60, 17 * 60 * 60),
+                ((24 + 7) * 60 * 60, (24 + 12) * 60 * 60),
+                ((24 + 13) * 60 * 60, (24 + 17) * 60 * 60),
+            ]
 
     Returns
-    ---------------
+    -------
     list_dev
         A list containing, for each trace, all the deviations.
         Each deviation is a tuple with four elements:
+
         - 1) The source activity of the recorded deviation
         - 2) The target activity of the recorded deviation
         - 3) The time passed between the occurrence of the source activity and the target activity

@@ -97,13 +97,13 @@ def apply(
         events_df = lf.select([start_timestamp_key, timestamp_key, case_id_key]).collect()
         start_col_name = start_timestamp_key
         end_col_name = timestamp_key
-    
+
     # Convert timestamps to events tuples
     events = []
     for row in events_df.iter_rows():
         start_idx = events_df.columns.index(start_col_name)
         end_idx = events_df.columns.index(end_col_name)
-        
+
         start_ts = row[start_idx].timestamp() if hasattr(row[start_idx], 'timestamp') else row[start_idx]
         end_ts = row[end_idx].timestamp() if hasattr(row[end_idx], 'timestamp') else row[end_idx]
         events.append((start_ts, end_ts))

@@ -112,32 +112,30 @@ def read_attribute_key_value(
 def import_log_from_file_object(
     f, encoding, file_size=sys.maxsize, parameters=None
 ):
-    """
-    Import a log object from a (XML) file object
+    r"""
+    Deserialize a text/binary string representing a XES log.
 
     Parameters
-    -----------
-    f
-        file object
-    encoding
-        Encoding
-    file_size
-        Size of the file (measured on disk)
-    parameters
-        Parameters of the algorithm, including
-            Parameters.TIMESTAMP_SORT -> Specify if we should sort log by timestamp
-            Parameters.TIMESTAMP_KEY -> If sort is enabled, then sort the log by using this key
-            Parameters.REVERSE_SORT -> Specify in which direction the log should be sorted
-            Parameters.MAX_TRACES -> Specify the maximum number of traces to import from the log (read in order in the XML file)
-            Parameters.MAX_BYTES -> Maximum number of bytes to read
-            Parameters.SKYP_BYTES -> Number of bytes to skip
-            Parameters.SET_ATTRIBUTES_TO_READ -> Names of the attributes that should be parsed. If not specified,
-                                                then, all the attributes are parsed.
+    ----------
+    log_string : str or bytes
+        String that contains the XES.
+    parameters : dict, optional
+        Parameters of the algorithm, including:
+
+        - Parameters.TIMESTAMP_SORT: Specify if we should sort log by timestamp.
+        - Parameters.TIMESTAMP_KEY: If sort is enabled, then sort the log by using this key.
+        - Parameters.REVERSE_SORT: Specify in which direction the log should be sorted.
+        - Parameters.INSERT_TRACE_INDICES: Specify if trace indexes should be added as event attribute for each event.
+        - Parameters.MAX_TRACES: Specify the maximum number of traces to import.
+        - Parameters.DECOMPRESS_SERIALIZATION: Specify if the string needs to be decompressed.
+        - Parameters.SET_ATTRIBUTES_TO_READ: Names of the attributes that should be parsed.
+          If not specified, then all attributes are parsed.
+        - Parameters.ENCODING: Regulates the encoding of the log (default: utf-8).
 
     Returns
-    -----------
+    -------
     log
-        Log file
+        Trace log object.
     """
     values_dict = {}
     date_parser = dt_parser.get()
@@ -250,28 +248,29 @@ def import_log_from_file_object(
 
 
 def import_log(filename, parameters=None):
-    """
-    Import a log object from a XML file
-    containing the traces, the events and the simple attributes of them
+    r"""
+    Import a log object from a XML file containing the traces, the events
+    and the simple attributes of them.
 
     Parameters
-    -----------
+    ----------
     filename
         XES file to parse
     parameters
-        Parameters of the algorithm, including
-            Parameters.TIMESTAMP_SORT -> Specify if we should sort log by timestamp
-            Parameters.TIMESTAMP_KEY -> If sort is enabled, then sort the log by using this key
-            Parameters.REVERSE_SORT -> Specify in which direction the log should be sorted
-            Parameters.MAX_TRACES -> Specify the maximum number of traces to import from the log (read in order in the XML file)
-            Parameters.MAX_BYTES -> Maximum number of bytes to read
-            Parameters.SKYP_BYTES -> Number of bytes to skip
-            Parameters.SET_ATTRIBUTES_TO_READ -> Names of the attributes that should be parsed. If not specified,
-                                                then, all the attributes are parsed.
-            Parameters.ENCODING -> Regulates the encoding of the log (default: utf-8)
+        Parameters of the algorithm, including:
+
+        - Parameters.TIMESTAMP_SORT: Specify if we should sort log by timestamp.
+        - Parameters.TIMESTAMP_KEY: If sort is enabled, then sort the log by using this key.
+        - Parameters.REVERSE_SORT: Specify in which direction the log should be sorted.
+        - Parameters.MAX_TRACES: Specify the maximum number of traces to import from the log (read in order in the XML file).
+        - Parameters.MAX_BYTES: Maximum number of bytes to read.
+        - Parameters.SKYP_BYTES: Number of bytes to skip.
+        - Parameters.SET_ATTRIBUTES_TO_READ: Names of the attributes that should be parsed.
+          If not specified, then all the attributes are parsed.
+        - Parameters.ENCODING: Regulates the encoding of the log (default: utf-8).
 
     Returns
-    -----------
+    -------
     log
         Log file
     """
@@ -301,23 +300,23 @@ def import_log(filename, parameters=None):
 
 def import_from_string(log_string, parameters=None):
     """
-    Deserialize a text/binary string representing a XES log
+    Deserialize a text/binary string representing a XES log.
 
     Parameters
-    -----------
+    ----------
     log_string
         String that contains the XES
     parameters
-        Parameters of the algorithm, including
-            Parameters.TIMESTAMP_SORT -> Specify if we should sort log by timestamp
-            Parameters.TIMESTAMP_KEY -> If sort is enabled, then sort the log by using this key
-            Parameters.REVERSE_SORT -> Specify in which direction the log should be sorted
-            Parameters.INSERT_TRACE_INDICES -> Specify if trace indexes should be added as event attribute for each event
-            Parameters.MAX_TRACES -> Specify the maximum number of traces to import from the log (read in order in the XML file)
-            Parameters.DECOMPRESS_SERIALIZATION -> Specify if the string needs to be decompressed during the parsing
-            Parameters.SET_ATTRIBUTES_TO_READ -> Names of the attributes that should be parsed. If not specified,
-                                                then, all the attributes are parsed.
-            Parameters.ENCODING -> Regulates the encoding of the log (default: utf-8)
+        Parameters of the algorithm, including:
+
+            Parameters.TIMESTAMP_SORT: Specify if we should sort log by timestamp
+            Parameters.TIMESTAMP_KEY: If sort is enabled, then sort the log by using this key
+            Parameters.REVERSE_SORT: Specify in which direction the log should be sorted
+            Parameters.INSERT_TRACE_INDICES: Specify if trace indexes should be added as event attribute for each event
+            Parameters.MAX_TRACES: Specify the maximum number of traces to import from the log (read in order in the XML file)
+            Parameters.DECOMPRESS_SERIALIZATION: Specify if the string needs to be decompressed during the parsing
+            Parameters.SET_ATTRIBUTES_TO_READ: Names of the attributes that should be parsed. If not specified, then, all the attributes are parsed.
+            Parameters.ENCODING: Regulates the encoding of the log (default: utf-8)
 
     Returns
     -----------

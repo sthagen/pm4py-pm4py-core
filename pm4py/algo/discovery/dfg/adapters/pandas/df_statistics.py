@@ -74,9 +74,10 @@ def get_dfg_graph(
         Window of the DFG (default 1)
 
     Returns
-    -----------
-    dfg
+    -------
+    dfg : dict
         DFG in the chosen measure (may be only the frequency, only the performance, or both)
+
     """
     # added support to specify an activity key for the target event which is different
     # from the activity key of the source event.

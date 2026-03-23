@@ -35,10 +35,7 @@ def apply(net, initial_marking, original_net=None):
     initial_marking = helper.convert_marking(
         net, initial_marking, original_net
     )
-    firing_dict = helper.split_incidence_matrix(
-        helper.compute_incidence_matrix(net), net
-    )
-    req_dict = helper.compute_firing_requirement(net)
+    _, req_sparse, deltas, _, _ = helper.compute_firing_requirement(net)
     look_up_indices = {}
     j = 0
     reachability_graph = nx_utils.MultiDiGraph()
@@ -47,17 +44,18 @@ def apply(net, initial_marking, original_net=None):
     working_set = set()
     working_set.add(j)
 
-    look_up_indices[np.array2string(initial_marking)] = j
+    look_up_indices[helper.marking_to_key(initial_marking)] = j
 
     j += 1
     while len(working_set) > 0:
         m = working_set.pop()
         possible_markings = helper.enabled_markings(
-            firing_dict, req_dict, reachability_graph.nodes[m]["marking"]
+            req_sparse, deltas, reachability_graph.nodes[m]["marking"]
         )
         for marking in possible_markings:
-            if np.array2string(marking[0]) not in look_up_indices:
-                look_up_indices[np.array2string(marking[0])] = j
+            marking_key = helper.marking_to_key(marking[0])
+            if marking_key not in look_up_indices:
+                look_up_indices[marking_key] = j
                 reachability_graph.add_node(j, marking=marking[0])
                 working_set.add(j)
                 reachability_graph.add_edge(m, j, transition=marking[1])
@@ -65,7 +63,7 @@ def apply(net, initial_marking, original_net=None):
             else:
                 reachability_graph.add_edge(
                     m,
-                    look_up_indices[np.array2string(marking[0])],
+                    look_up_indices[marking_key],
                     transition=marking[1],
                 )
     return reachability_graph

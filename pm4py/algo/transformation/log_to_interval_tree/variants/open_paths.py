@@ -53,11 +53,11 @@ def log_to_intervals(
         Event log
     parameters
         Parameters of the algorithm, including:
+
         - Parameters.ACTIVITY_KEY => the attribute to be used as activity (default: xes_constants.DEFAULT_NAME_KEY)
         - Parameters.START_TIMESTAMP_KEY => the attribute to be used as start timestamp (default: xes_constants.DEFAULT_TIMESTAMP_KEY)
         - Parameters.TIMESTAMP_KEY => the attribute to be used as completion timestamp (default: xes_constants.DEFAULT_TIMESTAMP_KEY)
-        - Parameters.EPSILON => the small gap that is removed from the timestamp of the source event and added to the
-            timestamp of the target event to make interval querying possible
+        - Parameters.EPSILON => the small gap that is removed from the timestamp of the source event and added to the timestamp of the target event to make interval querying possible
         - Parameters.FILTER_ACTIVITY_COUPLE => (optional) keeps only the paths between the specified tuple of two activities.
 
     Returns
@@ -161,11 +161,11 @@ def apply(
         Event log
     parameters
         Parameters of the algorithm, including:
+
         - Parameters.ACTIVITY_KEY => the attribute to be used as activity (default: xes_constants.DEFAULT_NAME_KEY)
         - Parameters.START_TIMESTAMP_KEY => the attribute to be used as start timestamp (default: xes_constants.DEFAULT_TIMESTAMP_KEY)
         - Parameters.TIMESTAMP_KEY => the attribute to be used as completion timestamp (default: xes_constants.DEFAULT_TIMESTAMP_KEY)
-        - Parameters.EPSILON => the small gap that is removed from the timestamp of the source event and added to the
-            timestamp of the target event to make interval querying possible
+        - Parameters.EPSILON => the small gap that is removed from the timestamp of the source event and added to the timestamp of the target event to make interval querying possible
         - Parameters.FILTER_ACTIVITY_COUPLE => (optional) keeps only the paths between the specified tuple of two activities.
 
     Returns

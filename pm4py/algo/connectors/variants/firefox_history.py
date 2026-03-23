@@ -67,7 +67,7 @@ def apply(parameters: Optional[Dict[Any, str]] = None) -> pd.DataFrame:
     profile found.
 
     Attributes created per event (column → description)
-    --------------------------------------------------
+    ---------------------------------------------------
     * **case:concept:name** – Identifier of the Firefox profile folder (or
       "DEFAULT" when a single DB path is supplied). Serves as *case ID* in
       process-mining terminology.

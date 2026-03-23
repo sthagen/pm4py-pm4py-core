@@ -1,6 +1,5 @@
-```rst
 Installation
-===========
+============
 
 pip
 ---
@@ -20,15 +19,15 @@ In order to do so, please follow `this instruction <https://stackoverflow.com/qu
 
 Docker
 ------
+
 To install PM4Py via Docker, use:
 
 .. code-block:: console
 
-   $ docker pull pm4py/pm4py-core:latest
+   docker pull pm4py/pm4py-core:latest
 
 To run PM4Py via Docker, use:
 
 .. code-block:: console
 
-   $ docker run -it pm4py/pm4py-core:latest bash
-```
+   docker run -it pm4py/pm4py-core:latest bash

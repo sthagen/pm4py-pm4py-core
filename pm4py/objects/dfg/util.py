@@ -116,14 +116,17 @@ def get_transitive_relations(
     dfg: DFG,
 ) -> Tuple[Dict[Any, Collection[Any]], Dict[Any, Collection[Any]]]:
     """
-    Computes the full transitive relations in both directions (all activities reachable from a given activity and all
-    activities that can reach the activity)
+    Computes the full transitive relations in both directions (all
+    activities reachable from a given activity and all activities that can
+    reach the activity).
 
-    :param dfg: ``DFG`` object
+    :param dfg: Directly Follows Graph (DFG) object.
+    :type dfg: dict
 
-    :rtype: ``Tuple[Dict[Any, Collection[Any]], Dict[Any, Collection[Any]]] first argument maps an activity on all other
-    activities that are able to reach the activity ('transitive pre set')
-        second argument maps an activity on all other activities that it can reach (transitively) ('transitive post set')
+    :return: A tuple containing:
+        - First argument: maps an activity to all other activities that are able to reach it ('transitive pre-set').
+        - Second argument: maps an activity to all other activities that it can reach ('transitive post-set').
+    :rtype: ``Tuple[Dict[Any, Collection[Any]], Dict[Any, Collection[Any]]]``
     """
     G = nx_utils.DiGraph()
     alph = get_vertices(dfg)

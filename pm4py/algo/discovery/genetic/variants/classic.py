@@ -71,6 +71,7 @@ def apply(
     parameters
         Possible parameters of the algorithm,
         including:
+
             - Parameters.ACTIVITY_KEY
             - Parameters.TIMESTAMP_KEY
             - Parameters.CASE_ID_KEY

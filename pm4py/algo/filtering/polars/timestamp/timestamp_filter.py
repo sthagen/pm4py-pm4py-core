@@ -80,16 +80,16 @@ def filter_traces_contained(
             pl.col(timestamp_key).max().alias("last_timestamp")
         ])
     )
-    
+
     # Filter cases where both first and last timestamp are within bounds
     valid_cases = case_boundaries.filter(
         (pl.col("first_timestamp") >= dt1) &
         (pl.col("last_timestamp") <= dt2)
     ).select(case_id_glue)
-    
+
     # Keep only events from valid cases
     ret = df.join(valid_cases, on=case_id_glue, how="inner")
-    
+
     return ret
 
 
@@ -130,7 +130,7 @@ def filter_traces_intersecting(
     )
     dt1 = get_dt_from_string(dt1)
     dt2 = get_dt_from_string(dt2)
-    
+
     # Group by case and get first and last timestamp
     case_boundaries = (
         df.group_by(case_id_glue)
@@ -139,7 +139,7 @@ def filter_traces_intersecting(
             pl.col(timestamp_key).max().alias("last_timestamp")
         ])
     )
-    
+
     # A trace intersects if:
     # 1. It has an event within the interval (first > dt1 and first < dt2) OR
     # 2. It has an event within the interval (last > dt1 and last < dt2) OR
@@ -149,10 +149,10 @@ def filter_traces_intersecting(
         ((pl.col("last_timestamp") > dt1) & (pl.col("last_timestamp") < dt2)) |
         ((pl.col("first_timestamp") < dt1) & (pl.col("last_timestamp") > dt2))
     ).select(case_id_glue)
-    
+
     # Keep only events from valid cases
     ret = df.join(valid_cases, on=case_id_glue, how="inner")
-    
+
     return ret
 
 

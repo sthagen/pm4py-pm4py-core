@@ -42,8 +42,8 @@ def apply(
         parameters: Optional[Dict[Any, Any]] = None
 ):
     """
-    Constructs a process cube by slicing data along two dimensions
-    (x_col, y_col) and aggregating a third (agg_col). Additionally:
+    Constructs a process cube by slicing data along two dimensions (x_col,
+    y_col) and aggregating a third (agg_col). Additionally:
 
     1) If x_col (or y_col) is an actual column in df, we do numeric binning.
        You can manually specify bin edges via parameters[Parameters.X_BINS]
@@ -66,14 +66,12 @@ def apply(
         The column to aggregate (mean, sum, etc.).
     parameters: Dict[Any, Any]
         Optional parameters of the method, including:
+
         * Parameters.X_BINS: List of numeric bin edges for x_col.
         * Parameters.Y_BINS: List of numeric bin edges for y_col.
-        * Parameters.MAX_DIVISIONS_X: If x_col is numeric and X_BINS not provided,
-          how many bins to divide it into.
-        * Parameters.MAX_DIVISIONS_Y: If y_col is numeric and Y_BINS not provided,
-          how many bins to divide it into.
-        * Parameters.AGGREGATION_FUNCTION: The aggregation function,
-          e.g., 'mean', 'sum', 'min', 'max'.
+        * Parameters.MAX_DIVISIONS_X: If x_col is numeric and X_BINS not provided, how many bins to divide it into.
+        * Parameters.MAX_DIVISIONS_Y: If y_col is numeric and Y_BINS not provided, how many bins to divide it into.
+        * Parameters.AGGREGATION_FUNCTION: The aggregation function, e.g., 'mean', 'sum', 'min', 'max'.
 
     Returns
     -------
@@ -82,6 +80,7 @@ def apply(
         and y bins as columns, containing aggregated values of agg_col.
     cell_case_dict : dict
         A dictionary mapping (x_bin, y_bin) -> set of case IDs that fall in that cell.
+
     """
     if parameters is None:
         parameters = {}
@@ -95,7 +94,7 @@ def apply(
 
     # Work with a view instead of copy when possible
     df = feature_table
-    
+
     # Pre-compute column lists and masks for better performance
     numeric_x = x_col in df.columns
     numeric_y = y_col in df.columns
@@ -126,7 +125,7 @@ def apply(
                 x_bins = np.linspace(x_min, x_max, max_divisions_x + 1)
                 # Ensure bins are unique
                 x_bins = np.unique(x_bins)
-        
+
         # Create binned column directly without temporary column
         x_binned = pd.cut(df[x_col], bins=x_bins, include_lowest=True)
         x_valid_mask = pd.notna(x_binned)
@@ -153,7 +152,7 @@ def apply(
                 y_bins = np.linspace(y_min, y_max, max_divisions_y + 1)
                 # Ensure bins are unique
                 y_bins = np.unique(y_bins)
-        
+
         y_binned = pd.cut(df[y_col], bins=y_bins, include_lowest=True)
         y_valid_mask = pd.notna(y_binned)
         y_all_bins = y_binned.cat.categories
@@ -178,143 +177,143 @@ def apply(
         # Both numeric - create DataFrame directly
         x_bins_valid = x_binned[valid_mask]
         y_bins_valid = y_binned[valid_mask]
-        
+
         temp_df = pd.DataFrame({
             "case:concept:name": case_ids,
             "x_bin": x_bins_valid,
             "y_bin": y_bins_valid,
             agg_col: agg_values
         })
-        
+
     elif numeric_x and not numeric_y:
         # X numeric, Y prefix-based - use more efficient vectorized approach
         x_bins_valid = x_binned[valid_mask]
         y_valid_cols_valid = y_valid_cols_mask[valid_mask]
-        
+
         # Use numpy operations for much faster processing
         y_valid_array = y_valid_cols_valid.values
         row_counts = np.sum(y_valid_array, axis=1)
         total_rows = np.sum(row_counts)
-        
+
         if total_rows == 0:
             return pd.DataFrame(), {}
-        
+
         # Pre-allocate arrays for better performance
         case_ids_expanded = np.empty(total_rows, dtype=object)
         x_bins_expanded = np.empty(total_rows, dtype=object)
         y_cols_expanded = np.empty(total_rows, dtype=object)
         agg_values_expanded = np.empty(total_rows, dtype=float)
-        
+
         # Fill arrays using vectorized operations
         idx = 0
         y_prefix_cols_array = np.array(y_prefix_cols)
-        
+
         for i in range(len(case_ids)):
             if row_counts[i] > 0:
                 valid_y_indices = np.where(y_valid_array[i])[0]
                 n_valid = len(valid_y_indices)
-                
+
                 case_ids_expanded[idx:idx+n_valid] = case_ids[i]
                 x_bins_expanded[idx:idx+n_valid] = x_bins_valid.iloc[i]
                 y_cols_expanded[idx:idx+n_valid] = y_prefix_cols_array[valid_y_indices]
                 agg_values_expanded[idx:idx+n_valid] = agg_values[i]
                 idx += n_valid
-            
+
         temp_df = pd.DataFrame({
             "case:concept:name": case_ids_expanded,
             "x_bin": x_bins_expanded,
             "y_bin": y_cols_expanded,
             agg_col: agg_values_expanded
         })
-        
+
     elif not numeric_x and numeric_y:
         # X prefix-based, Y numeric - use more efficient vectorized approach
         x_valid_cols_valid = x_valid_cols_mask[valid_mask]
         y_bins_valid = y_binned[valid_mask]
-        
+
         # Use numpy operations for much faster processing
         x_valid_array = x_valid_cols_valid.values
         row_counts = np.sum(x_valid_array, axis=1)
         total_rows = np.sum(row_counts)
-        
+
         if total_rows == 0:
             return pd.DataFrame(), {}
-        
+
         # Pre-allocate arrays for better performance
         case_ids_expanded = np.empty(total_rows, dtype=object)
         x_cols_expanded = np.empty(total_rows, dtype=object)
         y_bins_expanded = np.empty(total_rows, dtype=object)
         agg_values_expanded = np.empty(total_rows, dtype=float)
-        
+
         # Fill arrays using vectorized operations
         idx = 0
         x_prefix_cols_array = np.array(x_prefix_cols)
-        
+
         for i in range(len(case_ids)):
             if row_counts[i] > 0:
                 valid_x_indices = np.where(x_valid_array[i])[0]
                 n_valid = len(valid_x_indices)
-                
+
                 case_ids_expanded[idx:idx+n_valid] = case_ids[i]
                 x_cols_expanded[idx:idx+n_valid] = x_prefix_cols_array[valid_x_indices]
                 y_bins_expanded[idx:idx+n_valid] = y_bins_valid.iloc[i]
                 agg_values_expanded[idx:idx+n_valid] = agg_values[i]
                 idx += n_valid
-            
+
         temp_df = pd.DataFrame({
             "case:concept:name": case_ids_expanded,
             "x_bin": x_cols_expanded,
             "y_bin": y_bins_expanded,
             agg_col: agg_values_expanded
         })
-        
+
     else:
         # Both prefix-based - most complex case, use highly optimized vectorized approach
         x_valid_cols_valid = x_valid_cols_mask[valid_mask]
         y_valid_cols_valid = y_valid_cols_mask[valid_mask]
-        
+
         # Use numpy operations for much faster processing
         x_valid_array = x_valid_cols_valid.values
         y_valid_array = y_valid_cols_valid.values
-        
+
         # Calculate total number of combinations for pre-allocation
         x_row_counts = np.sum(x_valid_array, axis=1)
         y_row_counts = np.sum(y_valid_array, axis=1)
         row_combinations = x_row_counts * y_row_counts
         total_rows = np.sum(row_combinations)
-        
+
         if total_rows == 0:
             return pd.DataFrame(), {}
-        
+
         # Pre-allocate arrays for maximum performance
         case_ids_expanded = np.empty(total_rows, dtype=object)
         x_cols_expanded = np.empty(total_rows, dtype=object)
         y_cols_expanded = np.empty(total_rows, dtype=object)
         agg_values_expanded = np.empty(total_rows, dtype=float)
-        
+
         # Use vectorized operations with pre-converted arrays
         x_prefix_cols_array = np.array(x_prefix_cols)
         y_prefix_cols_array = np.array(y_prefix_cols)
-        
+
         idx = 0
         for i in range(len(case_ids)):
             if row_combinations[i] > 0:
                 valid_x_indices = np.where(x_valid_array[i])[0]
                 valid_y_indices = np.where(y_valid_array[i])[0]
-                
+
                 # Create cartesian product using numpy operations
                 x_mesh, y_mesh = np.meshgrid(valid_x_indices, valid_y_indices, indexing='ij')
                 x_flat = x_mesh.flatten()
                 y_flat = y_mesh.flatten()
                 n_combinations = len(x_flat)
-                
+
                 # Fill arrays efficiently
                 case_ids_expanded[idx:idx+n_combinations] = case_ids[i]
                 x_cols_expanded[idx:idx+n_combinations] = x_prefix_cols_array[x_flat]
                 y_cols_expanded[idx:idx+n_combinations] = y_prefix_cols_array[y_flat]
                 agg_values_expanded[idx:idx+n_combinations] = agg_values[i]
                 idx += n_combinations
-            
+
         temp_df = pd.DataFrame({
             "case:concept:name": case_ids_expanded,
             "x_bin": x_cols_expanded,
@@ -327,12 +326,12 @@ def apply(
 
     # Optimized aggregation using more efficient groupby operations
     grouped = temp_df.groupby(["x_bin", "y_bin"], sort=False)
-    
+
     # Compute aggregations separately for better performance
     agg_values_result = grouped[agg_col].agg(agg_fn).reset_index()
     case_sets_result = grouped["case:concept:name"].apply(lambda x: set(x)).reset_index()
     case_sets_result.rename(columns={"case:concept:name": "case_set"}, inplace=True)
-    
+
     # Merge results efficiently
     agg_result = pd.merge(agg_values_result, case_sets_result, on=["x_bin", "y_bin"])
 
@@ -355,7 +354,7 @@ def apply(
     valid_x_mask = agg_result["x_bin"].isin(pivot_df.index)
     valid_y_mask = agg_result["y_bin"].isin(pivot_df.columns)
     valid_mask = valid_x_mask & valid_y_mask
-    
+
     valid_agg_result = agg_result[valid_mask]
     cell_case_dict = dict(zip(
         zip(valid_agg_result["x_bin"], valid_agg_result["y_bin"]),

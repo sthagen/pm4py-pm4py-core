@@ -199,8 +199,11 @@ def detect(
     parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
 ) -> List[Tuple[Tuple[str, str], int, Dict[str, Any]]]:
     """
-    Provided an activity-resource grouping of the events of the event log, returns
+    Provided an activity-resource grouping of the events of the event log,
+    returns.
+
     a list having as elements the activity-resources with the batches that are detected, divided in:
+
     - Simultaneous (all the events in the batch have identical start and end timestamps)
     - Batching at start (all the events in the batch have identical start timestamp)
     - Batching at end (all the events in the batch have identical end timestamp)
@@ -212,22 +215,25 @@ def detect(
     Definition and Event Log Identification. In SIMPDA (pp. 137-140).
 
     Parameters
-    -------------------
+    ----------
     actres_grouping
         Activity-resource grouping of events
     parameters
         Parameters of the algorithm
 
     Returns
-    ------------------
+    -------
     list_batches
         A (sorted) list containing tuples. Each tuple contain:
+
         - Index 0: the activity-resource for which at least one batch has been detected
         - Index 1: the number of batches for the given activity-resource
         - Index 2: a list containing all the batches. Each batch is described by:
-            # The start timestamp of the batch
-            # The complete timestamp of the batch
-            # The list of events that are executed in the batch
+
+          * The start timestamp of the batch
+          * The complete timestamp of the batch
+          * The list of events that are executed in the batch
+
     """
     if parameters is None:
         parameters = {}

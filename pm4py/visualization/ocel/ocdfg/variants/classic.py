@@ -211,14 +211,15 @@ def apply(
     ocdfg: Dict[str, Any], parameters: Optional[Dict[Any, Any]] = None
 ) -> Digraph:
     """
-    Visualizes an OC-DFG as a Graphviz di-graph
+    Visualizes an OC-DFG as a Graphviz di-graph.
 
     Parameters
-    ---------------
+    ----------
     ocdfg
         OC-DFG
     parameters
         Parameters of the algorithm:
+
         - Parameters.FORMAT => the format of the output visualization (default: "png")
         - Parameters.BGCOLOR => the default background color (default: "bgcolor")
         - Parameters.RANKDIR => direction of the graph ("LR" for left-to-right; "TB" for top-to-bottom)
@@ -230,10 +231,8 @@ def apply(
             - "event_couples" => number of event couples (default)
             - "unique_objects" => number of unique objects
             - "total_objects" => number of total objects
-        - Parameters.ACT_THRESHOLD => the threshold to apply on the activities frequency (default: 0). Only activities
-        having a frequency >= than this are kept in the graph.
-        - Parameters.EDGE_THRESHOLD => the threshold to apply on the edges frequency (default 0). Only edges
-        having a frequency >= than this are kept in the graph.
+        - Parameters.ACT_THRESHOLD => the threshold to apply on the activities frequency (default: 0). Only activities having a frequency >= than this are kept in the graph.
+        - Parameters.EDGE_THRESHOLD => the threshold to apply on the edges frequency (default 0). Only edges having a frequency >= than this are kept in the graph.
         - Parameters.ANNOTATION => the annotation to use for the visualization. Values:
             - "frequency": frequency annotation
             - "performance": performance annotation
@@ -245,9 +244,10 @@ def apply(
             - sum
 
     Returns
-    ---------------
+    -----------------
     viz
         Graphviz DiGraph
+
     """
     if parameters is None:
         parameters = {}

@@ -67,12 +67,11 @@ def apply(
         Parameters of the algorithm
     variant
         Variant of the algorithm to use:
-            - Variants.BASIC_PLAYOUT: selects random traces from the model, without looking at the
-            frequency of the transitions
-            - Variants.STOCHASTIC_PLAYOUT: selects random traces from the model, looking at the
-            stochastic frequency of the transitions. Requires the provision of the stochastic map
-            or the log.
+
+            - Variants.BASIC_PLAYOUT: selects random traces from the model, without looking at the frequency of the transitions
+            - Variants.STOCHASTIC_PLAYOUT: selects random traces from the model, looking at the stochastic frequency of the transitions. Requires the provision of the stochastic map or the log.
             - Variants.EXTENSIVE: gets all the traces from the model. can be expensive
+
     """
     return exec_utils.get_variant(variant).apply(
         net,

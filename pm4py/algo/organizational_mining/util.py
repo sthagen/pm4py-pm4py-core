@@ -113,29 +113,32 @@ def get_res_act_from_log(
     parameters: Optional[Dict[Any, str]] = None,
 ) -> Tuple[Dict[str, Dict[str, int]], Dict[str, Dict[str, int]]]:
     """
-    From the log object, where events have a group, a resource and an activity attribute,
+    From the log object, where events have a group, a resource and an
+    activity attribute,
+
     gets two dictionaries:
-    - The first, where the first key is the resource, the second key is the activity and the third is the number of
-        events of the given activity done by the given resource
-    - The second, where the first key is the activity, the second key is the resource and the third is the number of
-        events of the given activity done by the given resource
+
+    - The first, where the first key is the resource, the second key is the activity and the third is the number of events of the given activity done by the given resource
+    - The second, where the first key is the activity, the second key is the resource and the third is the number of events of the given activity done by the given resource
 
     Parameters
-    ---------------
+    ----------
     log_obj
         Log object
     parameters
         Parameters of the algorithm, including:
+
         - Parameters.RESOURCE_KEY => the resource attribute
         - Parameters.ACTIVITY_KEY => the activity attribute
         - Parameters.GROUP_KEY => the group
 
     Returns
-    ---------------
+    -----------------
     res_act
         Dictionary resources-activities-occurrences
     act_res
         Dictionary activities-resources-occurrences
+
     """
     if parameters is None:
         parameters = {}

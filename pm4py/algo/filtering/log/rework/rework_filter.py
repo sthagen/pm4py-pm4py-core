@@ -37,30 +37,31 @@ def apply(
     log: EventLog, activity: str, parameters: Optional[Dict[Any, Any]] = None
 ) -> EventLog:
     """
-    Applies the rework filter on the provided event log and activity.
-    This filter the cases of the log having at least Parameters.MIN_OCCURRENCES (default: 2) occurrences
-    of the given activity.
+    Applies the rework filter on the provided event log and activity. This
+    filter the cases of the log having at least Parameters.MIN_OCCURRENCES
+    (default: 2) occurrences of the given activity.
 
     It is also possible (setting Parameters.POSITIVE to False) to retrieve the cases of the log not having the
     given activity or having the activity occurred less than Parameters.MIN_OCCURRENCES times.
 
     Parameters
-    -------------------
+    ----------
     log
         Event log
     activity
         Activity of which the rework shall be filtered
     parameters
         Parameters of the filter, including:
+
         - Parameters.ACTIVITY_KEY => the attribute to use as activity
         - Parameters.MIN_OCCURRENCES => the minimum number of occurrences for the activity
-        - Parameters.POSITIVE => if True, filters the cases of the log having at least MIN_OCCURRENCES occurrences.
-            if False, filters the cases of the log where such behavior does not occur.
+        - Parameters.POSITIVE => if True, filters the cases of the log having at least MIN_OCCURRENCES occurrences. if False, filters the cases of the log where such behavior does not occur.
 
     Returns
     -----------------
     filtered_log
         Filtered event log
+
     """
     if parameters is None:
         parameters = {}

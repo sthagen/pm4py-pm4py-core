@@ -42,29 +42,31 @@ def apply(
     parameters: Optional[Dict[Any, Any]] = None,
 ) -> EventLog:
     """
-    Filters an event log on a set of traces. A trace is a sequence of activities and "...", in which:
+    Filters an event log on a set of traces. A trace is a sequence of
+    activities and "...", in which:
+
     - a "..." before an activity tells that other activities can precede the given activity
     - a "..." after an activity tells that other activities can follow the given activity
 
     For example:
+
     - apply(log, [["A", "B"]]) <- filters only the cases of the event log having exactly the process variant A,B
     - apply(log, [["...", "A", "B"]]) <- filters only the cases of the event log ending with the activities A,B
     - apply(log, [["A", "B", "..."]]) <- filters only the cases of the event log starting with the activities A,B
-    - apply(log, [["...", "A", "B", "C", "..."], ["...", "D", "E", "F", "..."]]
-                                <- filters only the cases of the event log in which at any point
-                                    there is A followed by B followed by C, and in which at any other point there is
-                                    D followed by E followed by F
+    - apply(log, [["...", "A", "B", "C", "..."], ["...", "D", "E", "F", "..."]] <- filters only the cases of the event log in which at any point there is A followed by B followed by C, and in which at any other point there is D followed by E followed by F
 
     Parameters
-    -----------------
+    ----------
     log
         Event log
     admitted_traces
         Collection of traces admitted from the filter (with the aforementioned criteria)
     parameters
         Parameters of the method, including:
+
         - Parameters.ACTIVITY_KEY => the attribute that should be used as activity
         - Parameters.POSITIVE => indicates if the filter should keep/discard the cases satisfying the filter
+
     """
     if parameters is None:
         parameters = {}

@@ -95,9 +95,10 @@ def compute_uncovered_places_in_component(s_components, net):
     :param net: Petri Net representation of PM4Py
     :return: List of uncovered places
     """
-    place_list = sorted(list(net.places), key=lambda x: x.name)
+    all_places = set(net.places)
+    covered = set()
     for component in s_components:
         for el in component:
-            if el in place_list:
-                place_list.remove(el)
-    return place_list
+            if el in all_places:
+                covered.add(el)
+    return sorted(list(all_places - covered), key=lambda x: x.name)

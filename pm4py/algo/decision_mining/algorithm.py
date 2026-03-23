@@ -426,9 +426,9 @@ def get_decisions_table(
 
 def prepare_event_log(log):
     """
-    If trace attributes are considered, we want to differentiate them from event attributes.
-    For trace attributes, we prepend "t_".
-    For event attributes, we prepend "e_".
+    If trace attributes are considered, we want to differentiate them from
+    event attributes. For trace attributes, we prepend ``t_``. For event
+    attributes, we prepend ``e_``.
 
     This helps avoid collisions when both trace and event attributes share the same name.
 
@@ -461,8 +461,8 @@ def prepare_event_log(log):
 
 def prepare_attributes(attributes):
     """
-    If trace attributes are considered, we assume all the user-provided attributes refer to event attributes
-    and prepend "e_" to them.
+    If trace attributes are considered, we assume all the user-provided
+    attributes refer to event attributes and prepend ``e_`` to them.
 
     Parameters
     ----------
@@ -470,9 +470,10 @@ def prepare_attributes(attributes):
         List of original attribute names.
 
     Returns
-    -------
+    -----------------
     list
-        List of attribute names, each prefixed by "e_".
+        List of attribute names, each prefixed by ``e_``.
+
     """
     new_attributes = []
     for attribute in attributes:

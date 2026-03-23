@@ -42,32 +42,35 @@ def apply(
     parameters: Optional[Dict[Any, Any]] = None,
 ) -> OCEL:
     """
-    Filters the events of the object-centric logs which are related to at least
-    the specified amount of objects per type.
+    Filters the events of the object-centric logs which are related to at
+    least the specified amount of objects per type.
 
-    E.g. apply(ocel, {"order": 1, "element": 2})
+    Example::
 
-    Would keep the following events:
+        apply(ocel, {"order": 1, "element": 2})
 
-      ocel:eid ocel:timestamp ocel:activity ocel:type:element ocel:type:order
-    0       e1     1980-01-01  Create Order  [i4, i1, i3, i2]            [o1]
-    1      e11     1981-01-01  Create Order          [i6, i5]            [o2]
-    2      e14     1981-01-04  Create Order          [i8, i7]            [o3]
+    Would keep the following events::
+
+          ocel:eid ocel:timestamp ocel:activity ocel:type:element ocel:type:order
+        0       e1     1980-01-01  Create Order  [i4, i1, i3, i2]            [o1]
+        1      e11     1981-01-01  Create Order          [i6, i5]            [o2]
+        2      e14     1981-01-04  Create Order          [i8, i7]            [o3]
 
     Parameters
-    ------------------
+    ----------
     ocel
         Object-centric event log
     min_num_obj_type
         Minimum number of objects per type
     parameters
         Parameters of the filter, including:
-        - Parameters.EVENT_ID => the event identifier
-        - Parameters.OBJECT_ID => the object identifier
-        - Parameters.OBJECT_TYPE => the object type
+
+        - Parameters.EVENT_ID: the event identifier
+        - Parameters.OBJECT_ID: the object identifier
+        - Parameters.OBJECT_TYPE: the object type
 
     Returns
-    -----------------
+    -------
     filtered_event_log
         Filtered object-centric event log
     """

@@ -105,7 +105,7 @@ def apply(
 
     Returns
     -------
-    dfg
+    dfg: dict
         DFG graph
     """
     if variant == Variants.CLEAN and pandas_utils.check_is_pandas_dataframe(

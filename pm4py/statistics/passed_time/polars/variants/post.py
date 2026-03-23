@@ -97,23 +97,23 @@ def apply(
     # Basic DFG computation for succeeding activities
     if start_timestamp_key is None:
         start_timestamp_key = timestamp_key
-    
+
     # Sort by case and timestamp
     sorted_lf = lf.sort([case_id_glue, timestamp_key])
-    
+
     # Create pairs of consecutive activities
     with_next = sorted_lf.with_columns([
         pl.col(activity_key).shift(-1).over(case_id_glue).alias(activity_key + "_next"),
         pl.col(start_timestamp_key).shift(-1).over(case_id_glue).alias(start_timestamp_key + "_next"),
     ])
-    
+
     # Filter for target activity as current activity
     target_flows = with_next.filter(
         pl.col(activity_key) == activity
     ).filter(
         pl.col(activity_key + "_next").is_not_null()
     )
-    
+
     # Calculate time differences
     if business_hours:
         # For business hours, we need to collect and apply the function
@@ -127,22 +127,22 @@ def apply(
         flows_df = target_flows.with_columns(
             (pl.col(start_timestamp_key + "_next") - pl.col(timestamp_key)).dt.total_seconds().alias("flow_time")
         ).collect()
-    
+
     # Group by succeeding activity and compute statistics
     stats = flows_df.group_by(activity_key + "_next").agg([
         pl.col("flow_time").mean().alias("avg_time"),
         pl.col("flow_time").count().alias("frequency")
     ])
-    
+
     post = []
     sum_perf_post = 0.0
     sum_acti_post = 0.0
-    
+
     for row in stats.iter_rows():
         post_activity = row[0]
         avg_time = row[1]
         frequency = row[2]
-        
+
         post.append([post_activity, float(avg_time), int(frequency)])
         sum_perf_post += float(avg_time) * int(frequency)
         sum_acti_post += int(frequency)

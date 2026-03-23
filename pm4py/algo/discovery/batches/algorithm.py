@@ -46,8 +46,10 @@ def apply(
     parameters: Optional[Dict[Any, Any]] = None,
 ) -> List[Tuple[Tuple[str, str], int, Dict[str, Any]]]:
     """
-    Provided an event log / dataframe, returns
+    Provided an event log / dataframe, returns.
+
     a list having as elements the activity-resources with the batches that are detected, divided in:
+
     - Simultaneous (all the events in the batch have identical start and end timestamps)
     - Batching at start (all the events in the batch have identical start timestamp)
     - Batching at end (all the events in the batch have identical end timestamp)
@@ -59,30 +61,33 @@ def apply(
     Definition and Event Log Identification. In SIMPDA (pp. 137-140).
 
     Parameters
-    -------------------
+    ----------
     log
         Event log / dataframe object
     parameters
         Parameters of the algorithm:
+
         - ACTIVITY_KEY => the attribute that should be used as activity
         - RESOURCE_KEY => the attribute that should be used as resource
         - START_TIMESTAMP_KEY => the attribute that should be used as start timestamp
         - TIMESTAMP_KEY => the attribute that should be used as timestamp
         - CASE_ID_KEY => the attribute that should be used as case identifier
-        - MERGE_DISTANCE => the maximum time distance between non-overlapping intervals in order for them to be
-            considered belonging to the same batch (default: 15*60   15 minutes)
+        - MERGE_DISTANCE => the maximum time distance between non-overlapping intervals in order for them to be considered belonging to the same batch (default: 15*60   15 minutes)
         - MIN_BATCH_SIZE => the minimum number of events for a batch to be considered (default: 2)
 
     Returns
-    ------------------
+    -----------------
     list_batches
         A (sorted) list containing tuples. Each tuple contain:
+
         - Index 0: the activity-resource for which at least one batch has been detected
         - Index 1: the number of batches for the given activity-resource
         - Index 2: a list containing all the batches. Each batch is described by:
-            # The start timestamp of the batch
-            # The complete timestamp of the batch
-            # The list of events that are executed in the batch
+
+          * The start timestamp of the batch
+          * The complete timestamp of the batch
+          * The list of events that are executed in the batch
+
     """
     if parameters is None:
         parameters = {}

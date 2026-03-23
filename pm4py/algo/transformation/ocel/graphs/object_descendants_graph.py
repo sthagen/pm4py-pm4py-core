@@ -29,9 +29,10 @@ def apply(
     """
     Calculates the object descendant graph.
     This is calculated as follows:
+
     - Given the set of objects related to an event, they belong to two different categories:
-        - The "seen" objects (they have appeared in some earlier event)
-        - The "unseen" objects (they appear for the first time in the current event).
+        * The "seen" objects (they have appeared in some earlier event)
+        * The "unseen" objects (they appear for the first time in the current event).
     - Every "seen" object is connected to every "unseen" object.
 
     Parameters

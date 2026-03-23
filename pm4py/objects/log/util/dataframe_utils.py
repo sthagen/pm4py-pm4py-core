@@ -384,14 +384,14 @@ def dataframe_to_activity_case_table(
     - a "case" table, containing the cases and their attributes
 
     Parameters
-    --------------
+    ----------
     df
         Dataframe
     parameters
         Parameters of the algorithm that should be used, including:
+
         - Parameters.CASE_ID_KEY => the column to be used as case ID (shall be included both in the activity table and the case table)
-        - Parameters.CASE_PREFIX => if a list of attributes at the case level is not provided, then all the ones of the dataframe
-                                    starting with one of these are considered.
+        - Parameters.CASE_PREFIX => if a list of attributes at the case level is not provided, then all the ones of the dataframe starting with one of these are considered.
         - Parameters.CASE_ATTRIBUTES => the attributes of the dataframe to be used as case columns
 
     Returns
@@ -400,6 +400,7 @@ def dataframe_to_activity_case_table(
         Activity table
     case_table
         Case table
+
     """
     if parameters is None:
         parameters = {}

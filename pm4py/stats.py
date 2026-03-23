@@ -67,8 +67,7 @@ def get_start_activities(
     timestamp_key: str = "time:timestamp",
     case_id_key: str = "case:concept:name",
 ) -> Dict[str, int]:
-    """
-    Returns the start activities and their frequencies from a log object.
+    """Returns the start activities and their frequencies from a log object.
 
     :param log: Log object (EventLog or pandas DataFrame).
     :param activity_key: Attribute to be used for the activity.
@@ -118,8 +117,7 @@ def get_end_activities(
     timestamp_key: str = "time:timestamp",
     case_id_key: str = "case:concept:name",
 ) -> Dict[str, int]:
-    """
-    Returns the end activities and their frequencies from a log object.
+    """Returns the end activities and their frequencies from a log object.
 
     :param log: Log object (EventLog or pandas DataFrame).
     :param activity_key: Attribute to be used for the activity.
@@ -164,8 +162,7 @@ def get_end_activities(
 
 
 def get_event_attributes(log: Union[EventLog, pd.DataFrame]) -> List[str]:
-    """
-    Returns the list of event-level attributes in the log.
+    """Returns the list of event-level attributes in the log.
 
     :param log: Log object (EventLog or pandas DataFrame).
     :return: A list of event attribute names.
@@ -188,8 +185,7 @@ def get_event_attributes(log: Union[EventLog, pd.DataFrame]) -> List[str]:
 
 
 def get_trace_attributes(log: Union[EventLog, pd.DataFrame]) -> List[str]:
-    """
-    Returns the list of trace-level attributes in the log.
+    """Returns the list of trace-level attributes in the log.
 
     :param log: Log object (EventLog or pandas DataFrame).
     :return: A list of trace attribute names.
@@ -223,8 +219,8 @@ def get_event_attribute_values(
     count_once_per_case: bool = False,
     case_id_key: str = "case:concept:name",
 ) -> Dict[str, int]:
-    """
-    Returns the values and their frequencies for a specified event attribute.
+    """Returns the values and their frequencies for a specified event
+    attribute.
 
     :param log: Log object (EventLog or pandas DataFrame).
     :param attribute: The event attribute to analyze.
@@ -264,8 +260,8 @@ def get_trace_attribute_values(
     attribute: str,
     case_id_key: str = "case:concept:name",
 ) -> Dict[str, int]:
-    """
-    Returns the values and their frequencies for a specified trace attribute.
+    """Returns the values and their frequencies for a specified trace
+    attribute.
 
     :param log: Log object (EventLog or pandas DataFrame).
     :param attribute: The trace attribute to analyze.
@@ -329,8 +325,7 @@ def get_variants(
     case_id_key: str = "case:concept:name",
     max_repetitions: int = sys.maxsize,
 ) -> Union[Dict[Tuple[str], List[Trace]], Dict[Tuple[str], int]]:
-    """
-    Retrieves the variants from the log.
+    """Retrieves the variants from the log.
 
     :param log: Event log (EventLog or pandas DataFrame).
     :param activity_key: Attribute to be used for the activity.
@@ -367,8 +362,7 @@ def get_variants_as_tuples(
     case_id_key: str = "case:concept:name",
     max_repetitions: int = sys.maxsize,
 ) -> Union[Dict[Tuple[str], List[Trace]], Dict[Tuple[str], int]]:
-    """
-    Retrieves the variants from the log, where the variant keys are tuples.
+    """Retrieves the variants from the log, where the variant keys are tuples.
 
     :param log: Event log (EventLog or pandas DataFrame).
     :param activity_key: Attribute to be used for the activity.
@@ -433,9 +427,9 @@ def split_by_process_variant(
     variant_column: str = "@@variant_column",
     index_in_trace_column: str = "@@index_in_trace",
 ) -> Iterator[Tuple[Collection[str], pd.DataFrame]]:
-    """
-    Splits an event log into sub-dataframes for each process variant.
-    The result is an iterator over the variants along with their corresponding sub-dataframes.
+    """Splits an event log into sub-dataframes for each process variant. The
+    result is an iterator over the variants along with their corresponding sub-
+    dataframes.
 
     :param log: Event log (EventLog or pandas DataFrame).
     :param activity_key: Attribute to be used for the activity.
@@ -503,9 +497,11 @@ def get_variants_paths_duration(
     cumulative_occ_path_column: str = "@@cumulative_occ_path_column",
     times_agg: str = "mean",
 ) -> pd.DataFrame:
-    """
-    Associates a pandas DataFrame aggregated by variants and their positions within each variant.
+    """Associates a pandas DataFrame aggregated by variants and their positions
+    within each variant.
+
     Each row includes:
+
     - The variant
     - The position within the variant
     - The source activity of the path
@@ -613,8 +609,7 @@ def get_variants_paths_duration(
 
 
 def get_stochastic_language(*args, **kwargs) -> Dict[List[str], float]:
-    """
-    Retrieves the stochastic language from the provided object.
+    """Retrieves the stochastic language from the provided object.
 
     The stochastic language represents the probabilities of different traces or sequences within the process.
 
@@ -668,10 +663,11 @@ def get_minimum_self_distances(
     timestamp_key: str = "time:timestamp",
     case_id_key: str = "case:concept:name",
 ) -> Dict[str, int]:
-    """
-    Computes the minimum self-distance for each activity observed in an event log.
+    """Computes the minimum self-distance for each activity observed in an
+    event log.
 
     The self-distance of an activity `a` in a trace is defined as follows:
+
     - In a trace <a>, it's infinity.
     - In a trace <a, a>, it's 0.
     - In a trace <a, b, a>, it's 1.
@@ -726,8 +722,7 @@ def get_minimum_self_distance_witnesses(
     timestamp_key: str = "time:timestamp",
     case_id_key: str = "case:concept:name",
 ) -> Dict[str, Set[str]]:
-    """
-    Derives the minimum self-distance witnesses for each activity.
+    """Derives the minimum self-distance witnesses for each activity.
 
     A 'witness' is an activity that occurs between two occurrences of the same activity at the minimum self-distance.
     For example, if the minimum self-distance of activity `a` is 2, then in a trace <a, b, c, a>,
@@ -785,8 +780,8 @@ def get_case_arrival_average(
     timestamp_key: str = "time:timestamp",
     case_id_key: str = "case:concept:name",
 ) -> float:
-    """
-    Calculates the average time difference between the start times of two consecutive cases.
+    """Calculates the average time difference between the start times of two
+    consecutive cases.
 
     This metric is based on the definition:
     Cycle time = Average time between completion of units.
@@ -812,6 +807,7 @@ def get_case_arrival_average(
             case_id_key='case:concept:name',
             timestamp_key='time:timestamp'
         )
+
     """
     __event_log_deprecation_warning(log)
 
@@ -848,9 +844,9 @@ def get_rework_cases_per_activity(
     timestamp_key: str = "time:timestamp",
     case_id_key: str = "case:concept:name",
 ) -> Dict[str, int]:
-    """
-    Identifies activities that have rework occurrences, i.e., activities that occur more than once within the same case.
-    The output is a dictionary mapping each such activity to the number of cases in which rework occurred.
+    """Identifies activities that have rework occurrences, i.e., activities
+    that occur more than once within the same case. The output is a dictionary
+    mapping each such activity to the number of cases in which rework occurred.
 
     :param log: Log object (EventLog or pandas DataFrame).
     :param activity_key: Attribute to be used for the activity.
@@ -905,8 +901,8 @@ def get_case_overlap(
     timestamp_key: str = "time:timestamp",
     case_id_key: str = "case:concept:name",
 ) -> List[int]:
-    """
-    Associates each case in the log with the number of cases that are concurrently open.
+    """Associates each case in the log with the number of cases that are
+    concurrently open.
 
     :param log: Log object (EventLog or pandas DataFrame).
     :param activity_key: Attribute to be used for the activity.
@@ -958,8 +954,7 @@ def get_cycle_time(
     timestamp_key: str = "time:timestamp",
     case_id_key: str = "case:concept:name",
 ) -> float:
-    """
-    Calculates the cycle time of the event log.
+    """Calculates the cycle time of the event log.
 
     Cycle time is defined as the average time between the completion of units.
 
@@ -984,6 +979,7 @@ def get_cycle_time(
             case_id_key='case:concept:name',
             timestamp_key='time:timestamp'
         )
+
     """
     __event_log_deprecation_warning(log)
 
@@ -1020,8 +1016,8 @@ def get_service_time(
     start_timestamp_key: str = "time:timestamp",
     case_id_key: str = "case:concept:name",
 ) -> Dict[str, float]:
-    """
-    Computes the service time for each activity in the event log using the specified aggregation measure.
+    """Computes the service time for each activity in the event log using the
+    specified aggregation measure.
 
     Service time refers to the duration an activity takes within a case.
 
@@ -1090,21 +1086,25 @@ def get_all_case_durations(
     timestamp_key: str = "time:timestamp",
     case_id_key: str = "case:concept:name",
 ) -> List[float]:
-    """
-    Retrieves the durations of all cases in the event log.
+    """Retrieves the durations of all cases in the event log.
 
     :param log: Event log (EventLog or pandas DataFrame).
     :param business_hours: If True, computes durations based on business hours; otherwise, uses calendar time.
     :param business_hour_slots: Work schedule of the company as a list of tuples. Each tuple represents a time slot in seconds since the week start.
-                                Example: [
-                                    (7 * 60 * 60, 17 * 60 * 60),
-                                    ((24 + 7) * 60 * 60, (24 + 12) * 60 * 60),
-                                    ((24 + 13) * 60 * 60, (24 + 17) * 60 * 60),
-                                ]
+                                Example::
+
+                                    [
+                                        (7 * 60 * 60, 17 * 60 * 60),
+                                        ((24 + 7) * 60 * 60, (24 + 12) * 60 * 60),
+                                        ((24 + 13) * 60 * 60, (24 + 17) * 60 * 60),
+                                    ]
+
                                 This example means:
+
                                 - Monday 07:00 - 17:00
                                 - Tuesday 07:00 - 12:00
                                 - Tuesday 13:00 - 17:00
+
     :param activity_key: Attribute to be used for the activity.
     :param timestamp_key: Attribute to be used for the timestamp.
     :param case_id_key: Attribute to be used as the case identifier.
@@ -1169,28 +1169,32 @@ def get_case_duration(
     timestamp_key: str = "time:timestamp",
     case_id_key: Optional[str] = None,
 ) -> float:
-    """
-    Retrieves the duration of a specific case.
+    """Retrieves the duration of a specific case.
 
     :param log: Event log (EventLog or pandas DataFrame).
     :param case_id: Identifier of the case whose duration is to be retrieved.
     :param business_hours: If True, computes duration based on business hours; otherwise, uses calendar time.
     :param business_hour_slots: Work schedule of the company as a list of tuples. Each tuple represents a time slot in seconds since the week start.
-                                Example: [
-                                    (7 * 60 * 60, 17 * 60 * 60),
-                                    ((24 + 7) * 60 * 60, (24 + 12) * 60 * 60),
-                                    ((24 + 13) * 60 * 60, (24 + 17) * 60 * 60),
-                                ]
+                                Example::
+
+                                    [
+                                        (7 * 60 * 60, 17 * 60 * 60),
+                                        ((24 + 7) * 60 * 60, (24 + 12) * 60 * 60),
+                                        ((24 + 13) * 60 * 60, (24 + 17) * 60 * 60),
+                                    ]
+
                                 This example means:
+
                                 - Monday 07:00 - 17:00
                                 - Tuesday 07:00 - 12:00
                                 - Tuesday 13:00 - 17:00
+
     :param activity_key: Attribute to be used for the activity.
     :param timestamp_key: Attribute to be used for the timestamp.
     :param case_id_key: Attribute to be used as the case identifier.
     :return: The duration of the specified case.
 
-    .. code-block:: python3
+    Example::
 
         import pm4py
 
@@ -1247,9 +1251,9 @@ def get_frequent_trace_segments(
     timestamp_key: str = "time:timestamp",
     case_id_key: str = "case:concept:name",
 ) -> TCounter:
-    """
-    Retrieves frequent trace segments (sub-sequences of activities) from an event log.
-    Each trace segment is preceded and followed by "...", indicating that it can be part of a larger sequence.
+    """Retrieves frequent trace segments (sub-sequences of activities) from an
+    event log. Each trace segment is preceded and followed by "...", indicating
+    that it can be part of a larger sequence.
 
     :param log: Event log (EventLog or pandas DataFrame).
     :param min_occ: Minimum number of occurrences for a trace segment to be included.
@@ -1307,8 +1311,8 @@ def get_activity_position_summary(
     timestamp_key: str = "time:timestamp",
     case_id_key: str = "case:concept:name",
 ) -> Dict[int, int]:
-    """
-    Summarizes the positions of a specific activity across all cases in the event log.
+    """Summarizes the positions of a specific activity across all cases in the
+    event log.
 
     For each occurrence of the activity, records its position within the trace.
     For example, if 'A' occurs 1000 times in position 1 and 500 times in position 2,
@@ -1373,24 +1377,26 @@ def get_process_cube(
     ----------
     feature_table : pd.DataFrame
         A table containing one row per case and columns for:
+
         - 'case:concept:name' (case identifiers)
         - Numeric metrics (e.g. '@@arrival_rate', '@@finish_rate')
         - Prefix-based indicators (e.g. 'concept:name_<activity>', 'org:resource_<resource>')
         - Aggregation target (e.g. '@@sojourn_time')
-        Typically constructed via:
-        ```python
-        enriched_df = pm4py.extract_outcome_enriched_dataframe(log_df)
-        feature_table = pm4py.extract_features_dataframe(enriched_df, include_case_id=True)
-        ```
+
+        Typically constructed via::
+
+            enriched_df = pm4py.extract_outcome_enriched_dataframe(log_df)
+            feature_table = pm4py.extract_features_dataframe(enriched_df, include_case_id=True)
 
     x_col : str
         Name of the X dimension:
+
         - **Numeric mode**: If this exact column exists (e.g. '@@arrival_rate'), cases will be binned by value into equally sized ranges.
-        - **Prefix mode**: If not present, treated as prefix for indicator columns (e.g. 'concept:name'), grouping each column starting with this prefix.
-          Each bin corresponds to presence/absence of that prefix-based feature.
+        - **Prefix mode**: If not present, treated as prefix for indicator columns (e.g. 'concept:name'), grouping each column starting with this prefix. Each bin corresponds to presence/absence of that prefix-based feature.
 
     y_col : str
         Name of the Y dimension (same rules as x_col):
+
         - Numeric if present in columns (e.g. '@@finish_rate').
         - Prefix-based otherwise (e.g. 'case:channel').
 
@@ -1403,6 +1409,7 @@ def get_process_cube(
 
     parameters : Dict[Any, Any], optional
         Additional settings for numeric binning and aggregation:
+
         - Parameters.MAX_DIVISIONS_X (int): Number of bins for X in numeric mode.
         - Parameters.MAX_DIVISIONS_Y (int): Number of bins for Y in numeric mode.
         - Parameters.AGGREGATION_FUNCTION (str): One of 'mean', 'sum', 'min', 'max'.
@@ -1411,43 +1418,45 @@ def get_process_cube(
     -------
     pivot_df : pd.DataFrame
         Rows are X bins, columns are Y bins; each cell holds the aggregated agg_col value.
-
     cell_case_dict : Dict[Tuple, Set]
         Maps each (x_bin, y_bin) to the set of case IDs included in that cell, allowing drill-down.
 
     Examples
     --------
-    # 1) Activity vs. Resource, aggregating sojourn time:
-    cube_df, cell_cases = pm4py.get_process_cube(
-        feature_table,
-        x_col="concept:name",             # prefix mode: one bin per activity
-        y_col="org:resource",             # prefix mode: one bin per resource
-        agg_col="@@sojourn_time",          # total case time per cell
-        parameters={
-            "aggregation_function": "sum"
-        }
-    )
+    1) Activity vs. Resource, aggregating sojourn time::
 
-    # 2) Binary presence of a specific activity vs. channel:
-    cube_df2, cell_cases2 = pm4py.get_process_cube(
-        feature_table,
-        x_col="concept:name_T06Determinenecessityofstopadvice",  # prefix for this specific activity
-        y_col="case:channel",         # prefix mode: one bin per channel value
-        agg_col="@@sojourn_time"
-    )
+        cube_df, cell_cases = pm4py.get_process_cube(
+            feature_table,
+            x_col="concept:name",             # prefix mode: one bin per activity
+            y_col="org:resource",             # prefix mode: one bin per resource
+            agg_col="@@sojourn_time",          # total case time per cell
+            parameters={
+                "aggregation_function": "sum"
+            }
+        )
 
-    # 3) Numeric arrival vs. finish rate:
-    cube_df3, cell_cases3 = pm4py.get_process_cube(
-        feature_table,
-        x_col="@@arrival_rate",       # numeric mode: divide into bins
-        y_col="@@finish_rate",         # numeric mode: divide into bins
-        agg_col="@@sojourn_time",
-        parameters={
-            "max_divisions_x": 5,
-            "max_divisions_y": 5,
-            "aggregation_function": "mean"
-        }
-    )
+    2) Binary presence of a specific activity vs. channel::
+
+        cube_df2, cell_cases2 = pm4py.get_process_cube(
+            feature_table,
+            x_col="concept:name_T06Determinenecessityofstopadvice",
+            y_col="case:channel",
+            agg_col="@@sojourn_time"
+        )
+
+    3) Numeric arrival vs. finish rate::
+
+        cube_df3, cell_cases3 = pm4py.get_process_cube(
+            feature_table,
+            x_col="@@arrival_rate",
+            y_col="@@finish_rate",
+            agg_col="@@sojourn_time",
+            parameters={
+                "max_divisions_x": 5,
+                "max_divisions_y": 5,
+                "aggregation_function": "mean"
+            }
+        )
     """
     if is_polars_lazyframe(feature_table):
         from pm4py.statistics.process_cube.polars import algorithm

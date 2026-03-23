@@ -46,34 +46,35 @@ def apply(
     parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
 ) -> Dict[str, float]:
     """
-    Gets the service time per activity on an event log object
+    Gets the service time per activity on an event log object.
 
     Parameters
-    --------------
+    ----------
     dataframe
         Pandas dataframe
     parameters
         Parameters of the algorithm, including:
+
         - Parameters.ACTIVITY_KEY => activity key
         - Parameters.START_TIMESTAMP_KEY => start timestamp key
         - Parameters.TIMESTAMP_KEY => timestamp key
-        - Parameters.BUSINESS_HOURS => calculates the difference of time based on the business hours, not the total time.
-                                        Default: False
-        - Parameters.BUSINESS_HOURS_SLOTS =>
-        work schedule of the company, provided as a list of tuples where each tuple represents one time slot of business
-        hours. One slot i.e. one tuple consists of one start and one end time given in seconds since week start, e.g.
-        [
-            (7 * 60 * 60, 17 * 60 * 60),
-            ((24 + 7) * 60 * 60, (24 + 12) * 60 * 60),
-            ((24 + 13) * 60 * 60, (24 + 17) * 60 * 60),
-        ]
-        meaning that business hours are Mondays 07:00 - 17:00 and Tuesdays 07:00 - 12:00 and 13:00 - 17:00
         - Parameters.AGGREGATION_MEASURE => performance aggregation measure (sum, min, max, mean, median)
+        - Parameters.BUSINESS_HOURS => calculates the difference of time based on the business hours, not the total time. Default: False
+        - Parameters.BUSINESS_HOURS_SLOTS => work schedule of the company.
+          The following list defines that business hours are Mondays 07:00 - 17:00
+          and Tuesdays 07:00 - 12:00 and 13:00 - 17:00::
+
+            [
+                (7 * 60 * 60, 17 * 60 * 60),
+                ((24 + 7) * 60 * 60, (24 + 12) * 60 * 60),
+                ((24 + 13) * 60 * 60, (24 + 17) * 60 * 60),
+            ]
 
     Returns
-    --------------
+    -------
     soj_time_dict
         Service time dictionary
+
     """
     if parameters is None:
         parameters = {}

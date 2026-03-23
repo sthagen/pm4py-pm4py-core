@@ -24,6 +24,7 @@ from enum import Enum
 from pm4py.objects.petri_net.utils import petri_utils
 import copy
 import numpy as np
+from collections import deque
 
 # Importing for place invariants related stuff (s-components, uniform and
 # weighted place invariants)
@@ -594,11 +595,12 @@ def step_7(woflan_object, return_asap_when_unsound=False):
             woflan_object.get_net(),
         )
     )
-    if len(check_for_improper_conditions(woflan_object.get_mcg())) == 0:
+    improper = check_for_improper_conditions(woflan_object.get_mcg())
+    if len(improper) == 0:
         woflan_object.diagnostic_messages.append("No improper coditions.")
         if woflan_object.print_diagnostics:
             print("No improper conditions.")
-        if woflan_object.get_left:
+        if woflan_object.get_left():
             return step_8(
                 woflan_object,
                 return_asap_when_unsound=return_asap_when_unsound,
@@ -609,16 +611,9 @@ def step_7(woflan_object, return_asap_when_unsound=False):
                 return_asap_when_unsound=return_asap_when_unsound,
             )
     else:
-        woflan_object.diagnostic_messages.append(
-            "Improper WPD. The following are the improper conditions: {}.".format(
-                check_for_improper_conditions(
-                    woflan_object.get_mcg())))
+        woflan_object.diagnostic_messages.append("Improper WPD. The following are the improper conditions: {}.".format(improper))
         if woflan_object.print_diagnostics:
-            print(
-                "Improper WPD. The following are the improper conditions: {}.".format(
-                    check_for_improper_conditions(woflan_object.get_mcg())
-                )
-            )
+            print("Improper WPD. The following are the improper conditions: {}.".format(improper))
         if return_asap_when_unsound:
             return False
         return step_9(
@@ -627,14 +622,9 @@ def step_7(woflan_object, return_asap_when_unsound=False):
 
 
 def step_8(woflan_object, return_asap_when_unsound=False):
-    if check_for_substates(woflan_object.get_mcg()):
-        return step_10(
-            woflan_object, return_asap_when_unsound=return_asap_when_unsound
-        )
-    else:
-        return step_10(
-            woflan_object, return_asap_when_unsound=return_asap_when_unsound
-        )
+    return step_10(
+        woflan_object, return_asap_when_unsound=return_asap_when_unsound
+    )
 
 
 def step_9(woflan_object, return_asap_when_unsound=False):
@@ -813,39 +803,34 @@ def compute_non_live_sequences(woflan_object):
         if all(np.equal(woflan_object.get_r_g().nodes[node]["marking"], f_m)):
             sucessfull_terminate_state = node
             break
-    # red nodes are those from which the final marking is not reachable
-    red_nodes = []
-    for node in woflan_object.get_r_g().nodes:
-        if not nx_utils.has_path(
-            woflan_object.get_r_g(), node, sucessfull_terminate_state
-        ):
-            red_nodes.append(node)
-    # Compute directed spanning tree
-    spanning_tree = nx_utils.Edmonds(woflan_object.get_r_g()).find_optimum()
-    queue = set()
-    paths = {}
-    # root node
-    queue.add(0)
-    paths[0] = []
-    processed_nodes = set()
+    if sucessfull_terminate_state is None:
+        return []
+    reversed_graph = woflan_object.get_r_g().reverse(copy=False)
+    can_reach_final = nx_utils.descendants(
+        reversed_graph, sucessfull_terminate_state
+    )
+    can_reach_final.add(sucessfull_terminate_state)
+    red_nodes = set(woflan_object.get_r_g().nodes) - can_reach_final
+
+    queue = deque()
+    queue.append((0, []))
+    shortest_path_len = {0: 0}
     red_paths = []
-    while len(queue) > 0:
-        v = queue.pop()
-        for node in spanning_tree.neighbors(v):
-            if node not in paths and node not in processed_nodes:
-                paths[node] = paths[v].copy()
-                # we can use directly 0 here, since we are working on a
-                # spanning tree and there should be no more edges to a node
-                paths[node].append(
-                    woflan_object.get_r_g().get_edge_data(v, node)[0][
-                        "transition"
-                    ]
-                )
-                if node not in red_nodes:
-                    queue.add(node)
-                else:
-                    red_paths.append(paths[node])
-        processed_nodes.add(v)
+    while queue:
+        node, path = queue.popleft()
+        if node in red_nodes:
+            red_paths.append(path)
+            continue
+        for successor in woflan_object.get_r_g().successors(node):
+            edge_data = woflan_object.get_r_g().get_edge_data(node, successor)
+            if not edge_data:
+                continue
+            transition = next(iter(edge_data.values()))["transition"]
+            next_path = path + [transition]
+            if successor in shortest_path_len and len(next_path) >= shortest_path_len[successor]:
+                continue
+            shortest_path_len[successor] = len(next_path)
+            queue.append((successor, next_path))
     return red_paths
 
 
@@ -869,70 +854,53 @@ def compute_unbounded_sequences(woflan_object):
             woflan_object.get_net(), woflan_object.get_initial_marking()
         )
     )
+    tree = woflan_object.get_restricted_coverability_tree()
     f_m = convert_marking(
         woflan_object.get_net(), woflan_object.get_final_marking()
     )
-    infinite_markings = []
-    for node in woflan_object.get_restricted_coverability_tree().nodes:
-        if (
-            np.inf
-            in woflan_object.get_restricted_coverability_tree().nodes[node][
-                "marking"
-            ]
-        ):
-            infinite_markings.append(node)
-    larger_markings = check_for_markings_larger_than_final_marking(
-        woflan_object.get_restricted_coverability_tree(), f_m
+    infinite_markings = {
+        node
+        for node, data in tree.nodes(data=True)
+        if np.inf in data["marking"]
+    }
+    larger_markings = set(
+        check_for_markings_larger_than_final_marking(tree, f_m)
     )
-    green_markings = []
-    for node in woflan_object.get_restricted_coverability_tree().nodes:
-        add_to_green = True
-        for marking in infinite_markings:
-            if nx_utils.has_path(
-                woflan_object.get_restricted_coverability_tree(), node, marking
-            ):
-                add_to_green = False
-        for marking in larger_markings:
-            if nx_utils.has_path(
-                woflan_object.get_restricted_coverability_tree(), node, marking
-            ):
-                add_to_green = False
-        if add_to_green:
-            green_markings.append(node)
-    red_markings = []
-    for node in woflan_object.get_restricted_coverability_tree().nodes:
-        add_to_red = True
-        for node_green in green_markings:
-            if nx_utils.has_path(
-                woflan_object.get_restricted_coverability_tree(),
-                node,
-                node_green,
-            ):
-                add_to_red = False
-                break
-        if add_to_red:
-            red_markings.append(node)
+    bad_nodes = infinite_markings | larger_markings
+
+    postorder_nodes = list(nx_utils.topological_sort(tree))[::-1]
+    subtree_has_bad = {}
+    subtree_has_green = {}
+    green_markings = set()
+
+    for node in postorder_nodes:
+        children = list(tree.successors(node))
+        has_bad = node in bad_nodes or any(subtree_has_bad.get(child, False) for child in children)
+        is_green = not has_bad
+        if is_green:
+            green_markings.add(node)
+        subtree_has_bad[node] = has_bad
+        subtree_has_green[node] = is_green or any(
+            subtree_has_green.get(child, False) for child in children
+        )
+
+    red_markings = {
+        node for node in tree.nodes if not subtree_has_green.get(node, False)
+    }
     # Make the path as short as possible. If we reach a red state, we stop and
     # do not go further in the "red zone".
-    queue = set()
-    queue.add(0)
-    paths = {}
-    paths[0] = []
+    queue = deque()
+    queue.append((0, []))
     paths_to_red = []
-    while len(queue) > 0:
-        v = queue.pop()
-        successors = (
-            woflan_object.get_restricted_coverability_tree().successors(v)
-        )
+    while queue:
+        v, path = queue.popleft()
+        if v in red_markings:
+            paths_to_red.append(path)
+            continue
+        successors = tree.successors(v)
         for suc in successors:
-            paths[suc] = paths[v].copy()
-            paths[suc].append(
-                woflan_object.get_restricted_coverability_tree().get_edge_data(
-                    v, suc
-                )["transition"]
-            )
-            if suc in red_markings:
-                paths_to_red.append(paths[suc])
-            else:
-                queue.add(suc)
+            edge_data = tree.get_edge_data(v, suc)
+            transition = edge_data["transition"] if edge_data else None
+            next_path = path + [transition]
+            queue.append((suc, next_path))
     return paths_to_red

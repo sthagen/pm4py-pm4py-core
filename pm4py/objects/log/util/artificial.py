@@ -41,19 +41,20 @@ def insert_artificial_start_end(
     log: EventLog, parameters: Optional[Dict[Any, Any]] = None
 ) -> EventLog:
     """
-    Inserts the artificial start/end activities in an event log
+    Inserts the artificial start/end activities in an event log.
 
     Parameters
-    -------------------
+    ----------
     log
         Event log
-     parameters
+    parameters
         Parameters of the algorithm, including:
+
         - Parameters.ACTIVITY_KEY: the activity
         - Parameters.TIMESTAMP_KEY: the timestamp
 
     Returns
-    ------------------
+    -------
     log
         Enriched log
     """

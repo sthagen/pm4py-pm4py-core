@@ -911,8 +911,8 @@ def get_pivot_timestamp_distribution(
         timestamp_col="time:timestamp"
 ) -> pd.DataFrame:
     """
-    Creates a pivot table showing the distribution of timestamp occurrences for each case,
-    grouped by a specified time frequency.
+    Creates a pivot table showing the distribution of timestamp occurrences
+    for each case, grouped by a specified time frequency.
 
     Parameters
     ----------
@@ -921,6 +921,7 @@ def get_pivot_timestamp_distribution(
     frequency_alias : str, default 'M'
         The frequency at which to group (bin) the timestamps. This value should be a valid
         pandas frequency alias, such as:
+
             - 'A' or 'Y'   : Yearly (e.g., 2024)
             - 'Q'          : Quarterly (e.g., 2024Q2)
             - 'M'          : Monthly (e.g., 2024-06)
@@ -928,13 +929,7 @@ def get_pivot_timestamp_distribution(
             - 'D'          : Daily (e.g., 2024-06-18)
             - 'H'          : Hourly (e.g., 2024-06-18 15:00)
             - 'T', 'min'   : Minutely (e.g., 2024-06-18 15:30)
-            - 'S'          : Secondly (e.g., 2024-06-18 15:30:00)
-        For a complete list, see:
-        https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects
-    case_id_col : str, default 'case:concept:name'
-        The name of the column identifying each case.
-    timestamp_col : str, default 'time:timestamp'
-        The name of the column containing the event timestamps (must be pandas datetime dtype).
+            - 'S'          : Secondly (e.g., 2024-06-18 15:30:00) For a complete list, see: https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects case_id_col : str, default 'case:concept:name' The name of the column identifying each case. timestamp_col : str, default 'time:timestamp' The name of the column containing the event timestamps (must be pandas datetime dtype).
 
     Returns
     -------
@@ -945,6 +940,7 @@ def get_pivot_timestamp_distribution(
     Example
     -------
     get_pivot_timestamp_distribution(df, frequency_alias='D')
+
     """
     # Create column for binning
     dataframe["@@binning"] = dataframe[timestamp_col].dt.to_period(frequency_alias).astype(str)

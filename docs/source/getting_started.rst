@@ -1,13 +1,14 @@
-Getting Started
-===============
+
+Getting Started with Process Mining using PM4Py
+===============================================
 
 Understanding Process Mining
 ----------------------------
 
 .. raw:: html
 
-    <!--<iframe width="560" height="315" src="https://www.youtube.com/embed/XLHtvt36g6U" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>-->
-    <a href="https://www.youtube.com/embed/XLHtvt36g6U" target="_blank" rel="noopener noreferrer">→ Watch on YouTube: PM4Py tutorials - tutorial #1 What is Process Mining?</a>
+    <!--<iframe width="560" height="315" src="https://www.youtube.com/watch?v=XLHtvt36g6U" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>-->
+    <a href="https://www.youtube.com/watch?v=XLHtvt36g6U" target="_blank" rel="noopener noreferrer">→ Watch on YouTube: PM4Py tutorials - tutorial #1 What is Process Mining?</a>
 
 
 In this section, we explain what process mining is all about.
@@ -82,8 +83,8 @@ Loading CSV Files
 
 .. raw:: html
 
-	<!--<iframe width="560" height="315" src="https://www.youtube.com/embed/bWOKVx0PO6g" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>-->
-    <a href="https://www.youtube.com/embed/bWOKVx0PO6g" target="_blank" rel="noopener noreferrer">→ Watch on YouTube: PM4Py tutorials - tutorial #2 Importing CSV Files</a>
+	<!--<iframe width="560" height="315" src="https://www.youtube.com/watch?v=bWOKVx0PO6g" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>-->
+    <a href="https://www.youtube.com/watch?v=bWOKVx0PO6g" target="_blank" rel="noopener noreferrer">→ Watch on YouTube: PM4Py tutorials - tutorial #2 Importing CSV Files</a>
 
 
 Given that we have familiarized ourselves with event logs and a way to represent event logs in a CSV file, it is time to start doing some process mining! We are going to load the event data, and we are going to count how many cases are present in the event log, as well as the number of events. Note that, for all this, we are effectively using a third-party library called `pandas <https://pandas.pydata.org>`_. We do so because pandas is the de-facto standard for loading/manipulating CSV-based data. Hence, *any process mining algorithm implemented in PM4Py, using an event log as an input, can work directly with a pandas DataFrame!*
@@ -138,8 +139,8 @@ Loading XES Files
 
 .. raw:: html
 
-    <!--<iframe width="560" height="315" src="https://www.youtube.com/embed/pmpN3A_h2sQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>-->
-    <a href="https://www.youtube.com/embed/pmpN3A_h2sQ" target="_blank" rel="noopener noreferrer">→ Watch on YouTube: PM4Py tutorials - tutorial #3 Importing XES Files</a>
+    <!--<iframe width="560" height="315" src="https://www.youtube.com/watch?v=pmpN3A_h2sQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>-->
+    <a href="https://www.youtube.com/watch?v=pmpN3A_h2sQ" target="_blank" rel="noopener noreferrer">→ Watch on YouTube: PM4Py tutorials - tutorial #3 Importing XES Files</a>
 
 Next to CSV files, event data can also be stored in an XML-based format, i.e., in XES files. In an XES file, we can describe a containment relation, i.e., a log contains a number of traces, which in turn contain several events. Furthermore, an object, i.e., a log, trace, or event, is allowed to have attributes. The advantage is that certain data attributes that are constant for a log or a trace can be stored at that level. For example, assume that we only know the total costs of a case, rather than the costs of the individual events. If we want to store this information in a CSV file, we either need to replicate this information (i.e., we can only store data in rows, which directly refer to events), or we need to explicitly define that certain columns only get a value once, i.e., referring to case-level attributes. The XES standard more naturally supports the storage of this type of information.
 
@@ -169,8 +170,8 @@ Exporting Event Data
 
 .. raw:: html
 
-    <!--<iframe width="560" height="315" src="https://www.youtube.com/embed/gVnfG6xLIxI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>-->
-    <a href="https://www.youtube.com/embed/gVnfG6xLIxI" target="_blank" rel="noopener noreferrer">→ Watch on YouTube: PM4Py tutorials - tutorial #6 Exporting Event Data</a>
+    <!--<iframe width="560" height="315" src="https://www.youtube.com/watch?v=gVnfG6xLIxI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>-->
+    <a href="https://www.youtube.com/watch?v=gVnfG6xLIxI" target="_blank" rel="noopener noreferrer">→ Watch on YouTube: PM4Py tutorials - tutorial #6 Exporting Event Data</a>
 
 
 Now we are able to import event data into PM4Py, let us take a look at the opposite: exporting event data. Exporting event logs can be very useful, e.g., we might want to convert a CSV file into an XES file or we might want to filter out certain (noisy) cases and save the filtered event log. Like importing, exporting event data is possible in two ways, i.e., exporting to CSV (using pandas) and exporting to XES. In the upcoming sections, we show how to export an event log stored as a pandas DataFrame into a CSV file, a pandas DataFrame as an XES file, a PM4Py event log object as a CSV file, and finally, a PM4Py event log object as an XES file.
@@ -192,7 +193,7 @@ Note that the example code imports the running example CSV file as a pandas Data
         event_log.to_csv('C:/Users/demo/Desktop/running-example-exported.csv')
 
 Storing a Pandas DataFrame as a .xes file
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It is also possible to store a pandas DataFrame to an XES file. This is simply done by calling the **pm4py.write_xes()** function. You can pass the DataFrame as an input parameter to the function, i.e., PM4Py handles the internal conversion of the DataFrame to an event log object prior to writing it to disk. Note that this construct only works if you have formatted the DataFrame, i.e., as highlighted earlier in the importing CSV section.
 
@@ -207,7 +208,7 @@ It is also possible to store a pandas DataFrame to an XES file. This is simply d
         pm4py.write_xes(event_log, 'C:/Users/demo/Desktop/running-example-exported.xes')
 
 Storing an Event Log Object as a CSV File
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In some cases, we might want to store an event log object, e.g., obtained by importing an XES file, as a CSV file. For example, certain (commercial) process mining tools only support CSV importing. For this purpose, PM4Py offers conversion functionality that allows you to convert your event log object into a DataFrame, which you can subsequently export using pandas.
 
@@ -238,8 +239,8 @@ Pre-Built Event Log Filters
 
 .. raw:: html
 
-    <!--<iframe width="560" height="315" src="https://www.youtube.com/embed/alkZkhK2mAo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>-->
-    <a href="https://www.youtube.com/embed/alkZkhK2mAo" target="_blank" rel="noopener noreferrer">→ Watch on YouTube: PM4Py tutorials - tutorial #5: Playing with Event Data; Shipped Filters</a>
+    <!--<iframe width="560" height="315" src="https://www.youtube.com/watch?v=alkZkhK2mAo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>-->
+    <a href="https://www.youtube.com/watch?v=alkZkhK2mAo" target="_blank" rel="noopener noreferrer">→ Watch on YouTube: PM4Py tutorials - tutorial #5: Playing with Event Data; Shipped Filters</a>
 
 There are various pre-built filters in PM4Py, which make commonly needed process mining filtering functionality a lot easier. In the upcoming list, we briefly give an overview of these functions. We describe how to call them, their main input parameters, and their return objects.
 
@@ -305,15 +306,15 @@ Since we have studied basic conceptual knowledge of process mining and event dat
 
 .. raw:: html
 
-    <!--<iframe width="560" height="315" src="https://www.youtube.com/embed/BJMp763Ye_o" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>-->
-    <a href="https://www.youtube.com/embed/BJMp763Ye_o" target="_blank" rel="noopener noreferrer">→ Watch on YouTube: PM4Py tutorials - tutorial #7 Process Discovery</a>
+    <!--<iframe width="560" height="315" src="https://www.youtube.com/watch?v=BJMp763Ye_o" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>-->
+    <a href="https://www.youtube.com/watch?v=BJMp763Ye_o" target="_blank" rel="noopener noreferrer">→ Watch on YouTube: PM4Py tutorials - tutorial #7 Process Discovery</a>
 
 Obtaining a Process Model
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 There are three different process modeling notations that are currently supported in PM4Py. These notations are: BPMN, i.e., models such as the ones shown earlier in this tutorial, Process Trees, and Petri nets.
 A Petri net is a more mathematical modeling representation compared to BPMN. Often the behavior of a Petri net is more difficult to comprehend compared to BPMN models. However, due to their mathematical nature, Petri nets are typically less ambiguous (i.e., confusion about their described behavior is not possible). Process Trees represent a strict subset of Petri nets and describe process behavior in a hierarchical manner. In this tutorial, we will focus primarily on BPMN models and Process Trees. For more information about Petri nets and their application to (business) process modeling (from a ‘workflow’ perspective), we refer to `this article <https://www.researchgate.net/profile/Wil_Aalst/publication/220337578_The_Application_of_Petri_Nets_to_Workflow_Management/links/0deec517a563a45197000000/The-Application-of-Petri-Nets-to-Workflow-Management.pdf?_sg%5B0%5D=2TrqDbNsoZEr67XgOwI_9qxtlO_S1HJFHn8edW7aE0fMWzmsY0D1GhrsbRXdtZhTLvQ1KcSm9pkLzooDMl-eRg.DhnNamQg4EvK8MAwucwkB1VDke7eNq0E4jxMAa2IMXXZtvr9k1PPiwZpQEt1Z2iqkdkN-SOlWyjFloP-BivLow&_sg%5B1%5D=XeHToX2_7feAtM6yO395-HEYttSzdWJeiLaGlD_7Dn3hRXYnVXya0-dHm5RWmjX22gF3ton7d7FSzF6FjL_NYZCQzRvJuPg4zPWnk_HCe0xj.DhnNamQg4EvK8MAwucwkB1VDke7eNq0E4jxMAa2IMXXZtvr9k1PPiwZpQEt1Z2iqkdkN-SOlWyjFloP-BivLow&_iepl=>`_.
 
-Interestingly, none of the algorithms implemented in PM4Py directly discovers a BPMN model. However, any process tree can easily be translated to a BPMN model. Since we have already discussed the basic operators of BPMN models, we will start with the discovery of a process tree, which we convert to a BPMN model. Later, we will study the ‘underlying’ process tree. The algorithm that we are going to use is the ‘Inductive Miner’; More details about the (inner workings of the) algorithm can be found in `this presentation <http://www.processmining.org/_media/presentations/2013/petri_nets.pptx>`_ and in `this article <http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.396.197&rep=rep1&type=pdf>`_. Consider the following code snippet. We discover a BPMN model (using a conversion from process tree to BPMN) using the Inductive Miner, based on the running example event data set.
+Interestingly, none of the algorithms implemented in PM4Py directly discovers a BPMN model. However, any process tree can easily be translated to a BPMN model. Since we have already discussed the basic operators of BPMN models, we will start with the discovery of a process tree, which we convert to a BPMN model. Later, we will study the ‘underlying’ process tree. The algorithm that we are going to use is the ‘Inductive Miner’; More details about the (inner workings of the) algorithm can be found in `this article <http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.396.197&rep=rep1&type=pdf>`_. Consider the following code snippet. We discover a BPMN model (using a conversion from process tree to BPMN) using the Inductive Miner, based on the running example event data set.
 
 .. code-block:: python3
 
@@ -356,7 +357,7 @@ We examine the process tree model from top to bottom. The first circle, i.e., th
 
 Obtaining a Process Map
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Many `commercial process mining solutions <https://www.gartner.com/reviews/market/process-mining>`_ do not provide extended support for discovering process models. Often, as a main visualization of processes, process maps are used. A process map contains activities and connections (by means of arcs) between them. A connection between two activities usually means that there is some form of precedence relation. In its simplest form, it means that the 'source' activity directly precedes the 'target' activity. Let us quickly take a look at a concrete example! Consider the following code snippet, in which we learn a ‘Directly Follows Graph’ (DFG)-based process map:
+Many `commercial process mining solutions <https://www.gartner.com/reviews/market/process-mining-platforms>`_ do not provide extended support for discovering process models. Often, as a main visualization of processes, process maps are used. A process map contains activities and connections (by means of arcs) between them. A connection between two activities usually means that there is some form of precedence relation. In its simplest form, it means that the 'source' activity directly precedes the 'target' activity. Let us quickly take a look at a concrete example! Consider the following code snippet, in which we learn a ‘Directly Follows Graph’ (DFG)-based process map:
 
 .. code-block:: python3
 
@@ -397,5 +398,6 @@ Conformance Checking
 
 .. raw:: html
 
-    <!--<iframe width="560" height="315" src="https://www.youtube.com/embed/0YNvijqX3FY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>-->
-    <a href="https://www.youtube.com/embed/0YNvijqX3FY" target="_blank" rel="noopener noreferrer">→ Watch on YouTube: PM4Py tutorials - tutorial #8 Conformance Checking</a>
+    <!--<iframe width="560" height="315" src="https://www.youtube.com/watch?v=0YNvijqX3FY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>-->
+    <a href="https://www.youtube.com/watch?v=0YNvijqX3FY" target="_blank" rel="noopener noreferrer">→ Watch on YouTube: PM4Py tutorials - tutorial #8 Conformance Checking</a>
+

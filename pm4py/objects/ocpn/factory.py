@@ -33,7 +33,7 @@ def create(ocpn: Dict[str, Any]) -> OCPetriNet:
     specified in pm4py.algo.discovery.ocel.ocpn.variants.classic.
     Only considers the properties `activities`, `petri_nets`, and `double_arcs_on_activity`.
     All other information is ignored.
-    
+
     Parameters
     -----------------
     ocpn
@@ -47,31 +47,31 @@ def create(ocpn: Dict[str, Any]) -> OCPetriNet:
     activities = ocpn["activities"]
     petri_nets = ocpn["petri_nets"]
     double_arcs_on_activity = ocpn["double_arcs_on_activity"]
-    
+
     places = dict()
     unlabeled_transitions = dict()
     arcs = []
     initial_marking = OCMarking()
     final_marking = OCMarking()
-    
+
     # Labeled transitions
     labeled_transitions = {label: OCPetriNet.Transition(label=label, name=str(uuid.uuid4())) for label in activities}
-    
+
     for ot, net in petri_nets.items():
         pn, im, fm = net
-        
+
         # transitions
         for t in pn.transitions:
             if not t.label:
                 # labeled transitions are already in labeled_transitions
                 name = f"{ot}_{t.name}" # make name unique
                 unlabeled_transitions[name] = OCPetriNet.Transition(name=name)
-        
+
         # places 
         for p in pn.places:
             name = f"{ot}_{p.name}" # make name unique
             places[name] = OCPetriNet.Place(name=name, object_type=ot)
-            
+
         # arcs
         for arc in pn.arcs:
             is_double = False
@@ -91,20 +91,20 @@ def create(ocpn: Dict[str, Any]) -> OCPetriNet:
                     target = unlabeled_transitions[f"{ot}_{arc.target.name}"]
             else:
                 raise ValueError("Unknown arc source type")
-            
+
             # check for double arc
-        
+
             a = OCPetriNet.Arc(source=source, target=target, object_type=ot, is_variable=is_double)
             arcs.append(a)
             source.add_out_arc(a)
             target.add_in_arc(a)
-        
+
         # markings
         for p in im:
             initial_marking += OCMarking({places[f"{ot}_{p.name}"]: Counter([f"{ot}_{i}" for i in range(im[p])])})
         for p in fm:
             final_marking += OCMarking({places[f"{ot}_{p.name}"]: Counter([f"{ot}_{i}" for i in range(fm[p])])})
-    
+
     # create the OCPetriNet object
     ocpn_obj = OCPetriNet(
         places = set(places.values()),

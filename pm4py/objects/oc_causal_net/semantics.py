@@ -218,15 +218,15 @@ class OCCausalNetSemantics(Generic[N]):
             act_id = act_to_idx[act]
         else:
             act_id = act
-            
-        
+
+
         # preprocess Counter for this activity to a lookup table where values 
         # are sets of objects with outstanding obligations to this act
         objects = defaultdict(set)
         for rel_act, obj_id, ot_id in state[act_id].keys():
             objects[(rel_act, ot_id)].add(obj_id)
-            
-        
+
+
 
         imgs = occn.input_marker_groups[act]
 
@@ -296,7 +296,7 @@ class OCCausalNetSemantics(Generic[N]):
         # check each group
         for mg in marker_groups:
             mg_dict = mg.dict_representation
-            
+
             # Check that markers for all required related activities exist
             # and all required ots are present
             failure = False

@@ -588,10 +588,11 @@ def build(
     parameters: Optional[Dict[Any, Any]] = None,
 ) -> ExtendedMarkingEquationSolver:
     """
-    Builds the extended marking equation out of a trace and a synchronous product net
+    Builds the extended marking equation out of a trace and a synchronous
+    product net.
 
     Parameters
-    ---------------
+    ----------
     trace
         Trace
     sync_net
@@ -602,19 +603,18 @@ def build(
         Final marking (of sync net)
     parameters
         Parameters of the algorithm, including:
+
         - Parameters.CASE_ID_KEY => attribute to use as case identifier
         - Parameters.ACTIVITY_KEY => attribute to use as activity
         - Parameters.COSTS => (if provided) the cost function (otherwise the default cost function is applied)
-        - Parameters.SPLIT_IDX => (if provided) the split points as indices of elements of the trace
-            (e.g. for ["A", "B", "C", "D", "E"], specifying [1,3] as split points means splitting at "B" and "D").
-            If not provided, some split points at uniform distances are found.
-        - Parameters.MAX_K_VALUE => the maximum number of split points that is allowed (trim the specified indexes
-            if necessary).
+        - Parameters.SPLIT_IDX => (if provided) the split points as indices of elements of the trace (e.g. for ["A", "B", "C", "D", "E"], specifying [1,3] as split points means splitting at "B" and "D"). If not provided, some split points at uniform distances are found.
+        - Parameters.MAX_K_VALUE => the maximum number of split points that is allowed (trim the specified indexes if necessary).
         - Parameters.INCIDENCE_MATRIX => (if provided) the incidence matrix associated to the sync product net
         - Parameters.A => (if provided) the A numpy matrix of the incidence matrix
         - Parameters.CONSUMPTION_MATRIX => (if provided) the consumption matrix associated to the sync product net
         - Parameters.C => (if provided) the C numpy matrix of the consumption matrix
         - Parameters.FULL_BOOTSTRAP_REQUIRED => The preset/postset of places/transitions need to be inserted
+
     """
     if parameters is None:
         parameters = {}

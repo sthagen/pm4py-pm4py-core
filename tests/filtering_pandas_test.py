@@ -1,5 +1,6 @@
 import os
 import unittest
+import pandas as pd
 
 from pm4py.algo.filtering.pandas.attributes import attributes_filter
 from pm4py.algo.filtering.pandas.cases import case_filter
@@ -150,6 +151,50 @@ class DataframePrefilteringTest(unittest.TestCase):
         df1 = timestamp_filter.apply_events(df, "2011-03-09 00:00:00", "2012-01-18 23:59:59")
         df2 = timestamp_filter.filter_traces_intersecting(df, "2011-03-09 00:00:00", "2012-01-18 23:59:59")
         df3 = timestamp_filter.filter_traces_contained(df, "2011-03-09 00:00:00", "2012-01-18 23:59:59")
+
+        dt1 = pd.Timestamp("2011-03-09 00:00:00").tz_localize('UTC')
+        dt2 = pd.Timestamp("2012-01-18 23:59:59").tz_localize('UTC')
+
+        self.assertTrue(df1["time:timestamp"].ge(dt1).all())
+        self.assertTrue(df1["time:timestamp"].le(dt2).all())
+
+        self.assertTrue(df3["time:timestamp"].ge(dt1).all())
+        self.assertTrue(df3["time:timestamp"].le(dt2).all())
+
+        del df1
+        del df2
+        del df3
+
+
+    def test_filtering_timeframe_keep_nan(self):
+        input_log = os.path.join(INPUT_DATA_DIR, "receipt.csv")
+        df = pandas_utils.read_csv(input_log)
+
+        df = dataframe_utils.convert_timestamp_columns_in_df(df, timest_format=constants.DEFAULT_TIMESTAMP_PARSE_FORMAT)
+
+        df.loc[len(df), ["case:concept:name", "case:concept"]] = {"case:concept:name": "some_new_case_id",
+                                                                  "case:concept": "Confirmation of receipt"}
+
+        df1 = timestamp_filter.apply_events(df, "2011-03-09 00:00:00", "2012-01-18 23:59:59",
+                                            parameters={timestamp_filter.Parameters.KEEP_NAN_VALUES: True})
+        df2 = timestamp_filter.filter_traces_intersecting(df, "2011-03-09 00:00:00", "2012-01-18 23:59:59",
+                                                          parameters={timestamp_filter.Parameters.KEEP_NAN_VALUES: True})
+        df3 = timestamp_filter.filter_traces_contained(df, "2011-03-09 00:00:00", "2012-01-18 23:59:59",
+                                                       parameters={timestamp_filter.Parameters.KEEP_NAN_VALUES: True})
+
+        dt1 = pd.Timestamp("2011-03-09 00:00:00").tz_localize('UTC')
+        dt2 = pd.Timestamp("2012-01-18 23:59:59").tz_localize('UTC')
+
+        self.assertTrue(df1["time:timestamp"].dropna().ge(dt1).all())
+        self.assertTrue(df1["time:timestamp"].dropna().le(dt2).all())
+        self.assertIn("some_new_case_id", set(df1["case:concept:name"]))
+
+        self.assertIn("some_new_case_id", set(df2["case:concept:name"]))
+
+        self.assertTrue(df3["time:timestamp"].dropna().ge(dt1).all())
+        self.assertTrue(df3["time:timestamp"].dropna().le(dt2).all())
+        self.assertIn("some_new_case_id", set(df3["case:concept:name"]))
+
         del df1
         del df2
         del df3

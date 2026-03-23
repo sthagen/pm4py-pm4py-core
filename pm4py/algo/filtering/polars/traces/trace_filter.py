@@ -43,7 +43,7 @@ def get_variants_df(
 ) -> pl.DataFrame:
     """
     Gets variants dataframe from a LazyFrame
-    
+
     Parameters
     ----------
     df
@@ -54,7 +54,7 @@ def get_variants_df(
         Activity key
     parameters
         Possible parameters of the algorithm
-    
+
     Returns
     ----------
     variants_df
@@ -62,7 +62,7 @@ def get_variants_df(
     """
     if parameters is None:
         parameters = {}
-    
+
     # Create variants by grouping activities per case
     variants_df = (
         df.sort([case_id_key, xes_constants.DEFAULT_TIMESTAMP_KEY])
@@ -76,7 +76,7 @@ def get_variants_df(
         )
         .collect()
     )
-    
+
     return variants_df
 
 
@@ -119,17 +119,17 @@ def apply(
     positive = exec_utils.get_param_value(
         Parameters.POSITIVE, parameters, True
     )
-    
+
     # Get or calculate variants dataframe
     variants_df = parameters.get("variants_df")
     if variants_df is None:
         variants_df = get_variants_df(df, case_id_key=case_id_glue, activity_key=activity_key, parameters=parameters)
-    
+
     # Build regex pattern from admitted traces
     filter_regex = "|".join(
         [f"({translate_infix_to_regex(inf)})" for inf in admitted_traces]
     )
-    
+
     # Apply regex matching
     # Since Polars doesn't have a direct apply with lambda for regex, we need to use a different approach
     matching_cases = []
@@ -137,17 +137,17 @@ def apply(
         variant = row["variant"]
         if bool(re.search(filter_regex, variant)):
             matching_cases.append(row[case_id_glue])
-    
+
     # Get the data type of the case ID column from the original dataframe
     case_id_dtype = df.select(pl.col(case_id_glue)).dtypes[0]
-    
+
     # Create a DataFrame with matching cases
     if matching_cases:
         matching_df = pl.DataFrame({case_id_glue: matching_cases}).lazy()
     else:
         # Create empty DataFrame with the correct schema
         matching_df = pl.DataFrame({case_id_glue: []}, schema={case_id_glue: case_id_dtype}).lazy()
-    
+
     # Filter based on positive/negative
     if positive:
         # Keep only matching cases
@@ -155,5 +155,5 @@ def apply(
     else:
         # Keep only non-matching cases
         ret = df.join(matching_df, on=case_id_glue, how="anti")
-    
+
     return ret

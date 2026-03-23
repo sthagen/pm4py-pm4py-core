@@ -154,13 +154,14 @@ def construct_standard_cost_function(synchronous_product_net, skip):
 
 
 def pretty_print_alignments(alignments):
-    """
-    Takes an alignment and prints it to the console, e.g.:
-     A  | B  | C  | D  |
-    --------------------
-     A  | B  | C  | >> |
-    :param alignment: <class 'list'>
-    :return: Nothing
+    """Takes an alignment and prints it to the console, e.g.::
+
+         A  | B  | C  | D  |
+        --------------------
+         A  | B  | C  | >> |
+
+    :param alignment: The alignment object (list of moves).
+    :return: Nothing.
     """
     if isinstance(alignments, list):
         for alignment in alignments:
@@ -496,13 +497,16 @@ class TweakedSearchTuple:
 
 def get_visible_transitions_eventually_enabled_by_marking(net, marking):
     """
-    Get visible transitions eventually enabled by marking (passing possibly through hidden transitions)
+    Get visible transitions eventually enabled by marking (passing possibly
+    through hidden transitions)
+
     Parameters
     ----------
     net
         Petri net
     marking
         Current marking
+
     """
     all_enabled_transitions = sorted(
         list(semantics.enabled_transitions(net, marking)),

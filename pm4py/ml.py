@@ -92,6 +92,7 @@ def get_prefixes_from_log(
     Retrieves prefixes of traces in a log up to a specified length.
 
     The returned log contains prefixes of each trace:
+
     - If a trace has a length less than or equal to the specified length, it is included as-is.
     - If a trace exceeds the specified length, it is truncated to that length.
 
@@ -212,8 +213,9 @@ def extract_features_dataframe(
     include_case_id: bool = False, count_occurrences: bool = False,
     **kwargs
 ) -> pd.DataFrame:
-    """
-    Extracts a dataframe containing features for each case in the provided log object.
+    r"""
+    Extracts a dataframe containing features for each case in the provided
+    log object.
 
     This function processes the log to generate a set of features that can be used for machine learning tasks.
     Features can include both case-level and event-level attributes, with options for one-hot encoding.
@@ -230,7 +232,7 @@ def extract_features_dataframe(
     :param case_id_key: (Optional) Attribute to be used as the case identifier. If not provided, the default is used.
     :param resource_key: Attribute to be used as the resource identifier.
     :param include_case_id: Whether to include the case identifier column in the features table.
-    :param **kwargs: Additional keyword arguments to pass to the feature extraction algorithm.
+    :param \**kwargs: Additional keyword arguments to pass to the feature extraction algorithm.
     :return: A Pandas DataFrame containing the extracted features for each case.
     :rtype: ``pd.DataFrame``
 
@@ -448,6 +450,7 @@ def extract_target_vector(
     Extracts the target vector from a log object for a specific machine learning use case.
 
     Supported variants include:
+
     - 'next_activity': Predicts the next activity in a case.
     - 'next_time': Predicts the timestamp of the next activity.
     - 'remaining_time': Predicts the remaining time for the case.

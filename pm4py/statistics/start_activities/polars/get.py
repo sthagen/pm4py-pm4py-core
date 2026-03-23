@@ -78,7 +78,7 @@ def get_start_activities(
         .count()
         .collect()
     )
-    
+
     # Convert to dictionary
     startact_dict = dict(
         zip(
@@ -86,5 +86,5 @@ def get_start_activities(
             start_activities_df["count"].to_list()
         )
     )
-    
+
     return startact_dict

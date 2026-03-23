@@ -49,13 +49,14 @@ def apply(
         Log object (EventLog, EventStream, Pandas dataframe)
     parameters
         Parameters of the algorithm, including:
+
         - Parameters.CASE_ID_KEY => the case identifier to be used
         - Parameters.ACTIVITY_KEY => the attribute to be used as activity
         - Parameters.TIMESTAMP_KEY => the attribute to be used as timestamp
         - Parameters.FILTER_TYPE => the type of filter to be applied:
-            first => keeps the first event of each group
-            last => keeps the last event of each group
-            concat => creates an event having as activity the concatenation of the activities happening in the group
+            * first => keeps the first event of each group
+            * last => keeps the last event of each group
+            * concat => creates an event having as activity the concatenation of the activities happening in the group
 
     Returns
     ---------------

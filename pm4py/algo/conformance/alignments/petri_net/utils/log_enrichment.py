@@ -40,24 +40,25 @@ def apply(
 ) -> EventLog:
     """
     Enriches a log with the results of the alignment against a model,
-    obtained with the parameter 'ret_tuple_as_trans_desc' set to True
-    (so the identifiers of the transitions of the model are known).
-    In particular, the events that are not move-on-log are enriched with
-    the identifier of the corresponding element of the model.
+    obtained with the parameter ``ret_tuple_as_trans_desc`` set to True (so the
+    identifiers of the transitions of the model are known). In particular, the
+    events that are not move-on-log are enriched with the identifier of the
+    corresponding element of the model.
 
     Parameters
-    ----------------
+    ----------
     log
         Event log
     aligned_traces
-        Result of the alignments, done with the parameter 'ret_tuple_as_trans_Desc_ set to True.
+        Result of the alignments, done with the parameter ``ret_tuple_as_trans_desc`` set to True.
     parameters
         Parameters of the algorithm:
+
         - Parameters.TARGET_ATTRIBUTE: attribute that should be used for the enrichment
         - Parameters.ENABLE_DEEPCOPY: deepcopy the event log to not enrich the original log.
 
     Returns
-    ----------------
+    -------
     enriched_log
         Log enriched with an additional attribute (the identifier of the corresponding element of the model)
     """

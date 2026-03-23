@@ -1,5 +1,5 @@
 '''
-    PM4Py – A Process Mining Library for Python
+PM4Py – A Process Mining Library for Python
 Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
 
 This program is free software: you can redistribute it and/or modify
@@ -19,6 +19,7 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
+from collections import deque
 from pm4py.util import nx_utils
 
 
@@ -63,13 +64,79 @@ def apply(net):
     :return: List
     """
     graph, booking = create_network_graph(net)
+    adjacency = {node: {} for node in graph.nodes}
+    for u, v, data in graph.edges(data=True):
+        adjacency[u][v] = data.get("capacity", 1)
+
+    places = sorted(list(net.places), key=lambda x: x.name)
+    transitions = sorted(list(net.transitions), key=lambda x: x.name)
+    sources = [booking[p] + 1 for p in places] + [
+        booking[t] + 1 for t in transitions
+    ]
+    reachability = _compute_reachability(adjacency, sources)
+
     pairs = []
-    for place in net.places:
-        for transition in net.transitions:
-            p = booking[place]
-            t = booking[transition]
-            if nx_utils.maximum_flow_value(graph, p + 1, t) > 1:
-                pairs.append((p + 1, t))
-            if nx_utils.maximum_flow_value(graph, t + 1, p) > 1:
-                pairs.append((t + 1, p))
+    for place in places:
+        p_source = booking[place] + 1
+        p_target = booking[place]
+        reachable_from_place = reachability[p_source]
+        for transition in transitions:
+            t_source = booking[transition] + 1
+            t_target = booking[transition]
+            if t_target in reachable_from_place:
+                if _has_flow_value_at_least_two(adjacency, p_source, t_target):
+                    pairs.append((p_source, t_target))
+            if p_target in reachability[t_source]:
+                if _has_flow_value_at_least_two(adjacency, t_source, p_target):
+                    pairs.append((t_source, p_target))
     return pairs
+
+
+def _compute_reachability(adjacency, sources):
+    reachability = {}
+    for source in sources:
+        seen = set()
+        queue = deque([source])
+        while queue:
+            node = queue.popleft()
+            for neighbor in adjacency.get(node, {}):
+                if neighbor not in seen:
+                    seen.add(neighbor)
+                    queue.append(neighbor)
+        reachability[source] = seen
+    return reachability
+
+
+def _has_flow_value_at_least_two(adjacency, source, target, cutoff=2):
+    """
+    Lightweight unit-capacity max flow that stops once the cutoff is reached.
+    """
+    if source == target:
+        return False
+    residual = {u: neighbors.copy() for u, neighbors in adjacency.items()}
+    for u, neighbors in adjacency.items():
+        for v in neighbors:
+            residual.setdefault(v, {})
+            residual[v].setdefault(u, 0)
+    flow = 0
+    while flow < cutoff:
+        parent = {source: None}
+        queue = deque([source])
+        while queue and target not in parent:
+            node = queue.popleft()
+            for neighbor, capacity in residual.get(node, {}).items():
+                if capacity > 0 and neighbor not in parent:
+                    parent[neighbor] = node
+                    if neighbor == target:
+                        break
+                    queue.append(neighbor)
+        if target not in parent:
+            break
+        v = target
+        while v != source:
+            u = parent[v]
+            residual[u][v] -= 1
+            residual[v][u] = residual[v].get(u, 0) + 1
+            v = u
+        flow += 1
+    return flow >= cutoff

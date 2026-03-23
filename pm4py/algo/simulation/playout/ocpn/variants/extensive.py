@@ -72,17 +72,19 @@ def apply(
         Final marking of the object-centric Petri net
     parameters
         Parameters of the algorithm:
-            Parameters.MAX_BINDINGS_PER_ACTIVITY -> Maximum bindings per activity (mandatory)
-            Parameters.EXISTS_TRACE -> If True, return a boolean indicating if at least one trace exists instead of an OCEL
-            Parameters.OBJECTS_UNIQUE_PER_TRACE: If True, objects in the resulting OCEL are make unique per trace (default: False)
-            Parameters.RETURN_TRACES -> If True, return traces instead of OCEL
-            Parameters.BRANCHING_FACTOR_TRANSITIONS -> Maximum number of transitions to explore from a single
-                state (default: sys.maxsize, i.e., no limit). If set to a float, it will be stochastically rounded to an integer for every state.
-            Parameters.BRANCHING_FACTOR_BINDINGS -> Maximum number of bindings to explore for a single transition
-                (default: sys.maxsize, i.e., no limit). If set to a float, it will be stochastically rounded to an integer for every state.
-            Parameters.OCPETRINET_SEMANTICS -> Object-centric Petri net semantics
-            Parameters.IS_FINAL_FUNC -> Function that given a marking and the final marking returns whether the final marking is reached.
-                (default: marking == final_marking)
+
+       - Parameters.MAX_BINDINGS_PER_ACTIVITY -> Maximum bindings per activity (mandatory)
+       - Parameters.EXISTS_TRACE -> If True, return a boolean indicating if at least one trace exists instead of an OCEL
+       - Parameters.OBJECTS_UNIQUE_PER_TRACE: If True, objects in the resulting OCEL are make unique per trace (default: False)
+       - Parameters.RETURN_TRACES -> If True, return traces instead of OCEL
+       - Parameters.BRANCHING_FACTOR_TRANSITIONS -> Maximum number of transitions to explore from a single
+         state (default: sys.maxsize, i.e., no limit). If set to a float, it will be stochastically rounded to an integer for every state.
+       - Parameters.BRANCHING_FACTOR_BINDINGS -> Maximum number of bindings to explore for a single transition
+         (default: sys.maxsize, i.e., no limit). If set to a float, it will be stochastically rounded to an integer for every state.
+       - Parameters.OCPETRINET_SEMANTICS -> Object-centric Petri net semantics
+       - Parameters.IS_FINAL_FUNC -> Function that given a marking and the final marking returns whether the final marking is reached.
+         (default: marking == final_marking)
+
     """
     if parameters is None:
         parameters = {}
@@ -152,11 +154,11 @@ def apply(
         is_final,
         memo,
     )
-    
+
     # If we are only interested in whether a trace exists, return immediately
     if exists_trace:
         return trace_exists
-    
+
 
     # == Phase 2: Reconstruct traces from memo ==
     feasible_traces_iter = _reconstruct_traces(
@@ -172,7 +174,7 @@ def apply(
         ot = p.object_type
         for obj_id in obj_ids:
             id_to_obj_type[obj_id] = ot
-    
+
     if return_traces:
         # Inverse the transition_to_idx mapping to get transition labels
         idx_to_transition = {v: k for k, v in transition_to_idx.items()}

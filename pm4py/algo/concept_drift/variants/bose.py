@@ -48,27 +48,20 @@ def apply(log: Union[EventLog, pd.DataFrame], parameters: Optional[Dict[Any, Any
     This method detects sudden changes (concept drifts) in a process by analyzing an event log over time. It splits the log into sub-logs, extracts global features (e.g., Relation Type Count), and applies statistical tests (permutation tests) over sliding windows to identify change points where the process behavior significantly differs.
 
     **Parameters**
-    -------------
+    --------------
     log : Union[EventLog, pd.DataFrame]
         The input event log, which can be either a PM4Py EventLog object or a Pandas DataFrame. The log contains traces, where each trace is a sequence of events representing a process instance.
     parameters : Optional[Dict[Any, Any]], default=None
         Configuration parameters for the algorithm. If None, default values are used. Possible keys include:
-        - `Parameters.SUB_LOG_SIZE` : int, default=50
-            Number of traces per sub-log.
-        - `Parameters.WINDOW_SIZE` : int, default=8
-            Number of sub-logs in each window for statistical comparison.
-        - `Parameters.NUM_PERMUTATIONS` : int, default=100
-            Number of permutations for the permutation test.
-        - `Parameters.THRESH_P_VALUE` : float, default=0.5
-            Threshold for p-values to consider a change point significant (lower values indicate stronger evidence of drift).
-        - `Parameters.MAX_NO_CHANGE_POINTS` : int, default=5
-            Maximum number of change points to detect.
-        - `Parameters.ACTIVITY_KEY` : str, default='concept:name'
-            Key to identify the activity attribute in the event log.
-        - `Parameters.TIMESTAMP_KEY` : str, default='time:timestamp'
-            Key to identify the timestamp attribute in the event log.
-        - `Parameters.CASE_ID_KEY` : str, default='case:concept:name'
-            Key to identify the case ID attribute in the event log.
+
+        - `Parameters.SUB_LOG_SIZE` : int, default=50 Number of traces per sub-log.
+        - `Parameters.WINDOW_SIZE` : int, default=8 Number of sub-logs in each window for statistical comparison.
+        - `Parameters.NUM_PERMUTATIONS` : int, default=100 Number of permutations for the permutation test.
+        - `Parameters.THRESH_P_VALUE` : float, default=0.5 Threshold for p-values to consider a change point significant (lower values indicate stronger evidence of drift).
+        - `Parameters.MAX_NO_CHANGE_POINTS` : int, default=5 Maximum number of change points to detect.
+        - `Parameters.ACTIVITY_KEY` : str, default='concept:name' Key to identify the activity attribute in the event log.
+        - `Parameters.TIMESTAMP_KEY` : str, default='time:timestamp' Key to identify the timestamp attribute in the event log.
+        - `Parameters.CASE_ID_KEY` : str, default='case:concept:name' Key to identify the case ID attribute in the event log.
 
     **Returns**
     ------------
@@ -80,7 +73,8 @@ def apply(log: Union[EventLog, pd.DataFrame], parameters: Optional[Dict[Any, Any
         A list of p-values associated with each detected change point, indicating the statistical significance of the drift (lower values suggest stronger evidence of a change).
 
     **Notes**
-    --------
+    ---------
+
     - The method uses a permutation test to compare feature vectors (e.g., Relation Type Count) extracted from sub-logs within sliding windows. Change points are identified where the p-value falls below the threshold.
     """
     if parameters is None:
@@ -157,10 +151,11 @@ def compute_follows_relation(trace, Sigma):
     Compute the 'eventually follows' relation for a single trace.
 
     GLOBAL FOLLOWS (original):
-    - For each activity 'a' encountered so far,
-      mark that 'a' is followed by the current activity.
+
+    - For each activity 'a' encountered so far, mark that 'a' is followed by the current activity.
 
     DIRECT FOLLOWS (commented out):
+
     - For each consecutive pair (a, b), add (a, b).
     """
     follows_in_trace = set()
@@ -186,7 +181,9 @@ def compute_follows_relation(trace, Sigma):
 def extract_global_features(sub_log, Sigma):
     """
     Extract the Relation Type Count (RC) feature vector for a sub-log.
+
     For each activity b in Sigma, we compute:
+
      - ca = # of activities a where b ALWAYS follows a (in all traces that contain 'a')
      - cs = # of activities a where b SOMETIMES follows a
      - cn = # of activities a where b NEVER follows a

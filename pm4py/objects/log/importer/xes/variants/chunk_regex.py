@@ -205,27 +205,28 @@ def import_log_from_file_object(
 
 def import_log(filename, parameters=None):
     """
-    Import a log object from a XML file
-    containing the traces, the events and the simple attributes of them
+    Import a log object from a XML file containing the traces, the events
+    and the simple attributes of them.
 
     Parameters
-    -----------
+    ----------
     filename
         XES file to parse
     parameters
-        Parameters of the algorithm, including
-            Parameters.TIMESTAMP_SORT -> Specify if we should sort log by timestamp
-            Parameters.TIMESTAMP_KEY -> If sort is enabled, then sort the log by using this key
-            Parameters.REVERSE_SORT -> Specify in which direction the log should be sorted
-            Parameters.MAX_TRACES -> Specify the maximum number of traces to import from the log (read in order in the XML file)
-            Parameters.MAX_BYTES -> Maximum number of bytes to read
-            Parameters.SKYP_BYTES -> Number of bytes to skip
-            Parameters.SET_ATTRIBUTES_TO_READ -> Names of the attributes that should be parsed. If not specified,
-                                                then, all the attributes are parsed.
-            Parameters.ENCODING -> Regulates the encoding of the log (default: utf-8)
+        Parameters of the algorithm, including:
+
+        - Parameters.TIMESTAMP_SORT: Specify if we should sort log by timestamp.
+        - Parameters.TIMESTAMP_KEY: If sort is enabled, then sort the log by using this key.
+        - Parameters.REVERSE_SORT: Specify in which direction the log should be sorted.
+        - Parameters.MAX_TRACES: Specify the maximum number of traces to import.
+        - Parameters.MAX_BYTES: Maximum number of bytes to read.
+        - Parameters.SKYP_BYTES: Number of bytes to skip.
+        - Parameters.SET_ATTRIBUTES_TO_READ: Names of the attributes that should be parsed.
+          If not specified, then all attributes are parsed.
+        - Parameters.ENCODING: Regulates the encoding of the log (default: utf-8).
 
     Returns
-    -----------
+    -------
     log
         Log file
     """

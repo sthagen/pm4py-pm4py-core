@@ -1,9 +1,12 @@
+import argparse
 import inspect
 import os
 import time
 import sys
 import unittest
 import importlib.util
+
+from config import test_config
 
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
@@ -440,15 +443,28 @@ if failed > 0:
     time.sleep(7.5)
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('-p', '--pipeline', action='store_true')
+
+    args = parser.parse_args()
+    return args.pipeline
+
+
 def main():
     if EXECUTE_TESTS:
+        in_pipeline = parse_args()
+        test_config.IS_PIPELINE_RUN = in_pipeline
+
         runner = unittest.TextTestRunner()
         result = runner.run(suite)
 
         # Count test-level failures
         test_failures = len(result.failures)
         test_errors = len(result.errors)
-        test_runs = result.testsRun
+        test_skipped = len(result.skipped)
+        test_runs = result.testsRun - test_skipped # apparently skipped tests count as successfully run tests
 
         # The number of actual test-method-level fails
         test_level_failed = test_failures + test_errors
@@ -473,6 +489,7 @@ def main():
         print(f"Total tests (including import fails): {total_tests_including_imports}")
         print(f"Total passed (including import fails): {total_pass_including_imports}")
         print(f"Total failed (including import fails): {total_fails_including_imports}")
+        print(f"Total skipped: {test_skipped}")
         print(f"Overall pass ratio: {round(pass_ratio * 100, 2)}%")
 
     # Print library versions
@@ -499,8 +516,8 @@ def main():
     print("pm4py version: " + str(pm4py.__version__))
     print("Python version: " + str(sys.version))
 
-    # Exit code logic: 0 if pass ratio > 98%, else 1
-    if pass_ratio > 0.98:
+    # Exit code logic: 0 if pass ratio is 100%, else 1
+    if EXECUTE_TESTS and pass_ratio == 1:
         #print("exiting with system code 0")
         sys.exit(0)
     else:

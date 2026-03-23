@@ -418,7 +418,6 @@ List of Methods
 ------------------------------------------
 
 .. autosummary::
-   :toctree: generated
 
    pm4py.read
    pm4py.read.read_bpmn
@@ -427,8 +426,8 @@ List of Methods
    pm4py.read.read_ptml
    pm4py.read.read_xes
    pm4py.read.read_ocel_csv
-   pm4py.read.read_ocel_jsonocel
-   pm4py.read.read_ocel_xmlocel
+   pm4py.read.read_ocel_json
+   pm4py.read.read_ocel_xml
    pm4py.read.read_ocel_sqlite
    pm4py.read.read_ocel2_xml
    pm4py.read.read_ocel2_sqlite
@@ -440,8 +439,8 @@ List of Methods
    pm4py.write.write_ptml
    pm4py.write.write_xes
    pm4py.write.write_ocel_csv
-   pm4py.write.write_ocel_jsonocel
-   pm4py.write.write_ocel_xmlocel
+   pm4py.write.write_ocel_json
+   pm4py.write.write_ocel_xml
    pm4py.write.write_ocel_sqlite
    pm4py.write.write_ocel2_xml
    pm4py.write.write_ocel2_sqlite
@@ -699,3 +698,33 @@ List of Methods
    pm4py.utils.project_on_event_attribute
    pm4py.utils.sample_cases
    pm4py.utils.sample_events
+
+.. toctree::
+   :hidden:
+   :maxdepth: 2
+
+   api/pm4py.algo
+   api/pm4py.objects
+   api/pm4py.statistics
+   api/pm4py.streaming
+   api/pm4py.util
+   api/pm4py.visualization
+   api/pm4py.analysis
+   api/pm4py.cli
+   api/pm4py.conformance
+   api/pm4py.connectors
+   api/pm4py.convert
+   api/pm4py.discovery
+   api/pm4py.filtering
+   api/pm4py.hof
+   api/pm4py.llm
+   api/pm4py.meta
+   api/pm4py.ml
+   api/pm4py.ocel
+   api/pm4py.org
+   api/pm4py.read
+   api/pm4py.sim
+   api/pm4py.stats
+   api/pm4py.utils
+   api/pm4py.vis
+   api/pm4py.write

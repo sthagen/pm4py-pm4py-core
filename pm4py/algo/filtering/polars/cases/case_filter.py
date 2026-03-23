@@ -66,10 +66,10 @@ def filter_on_ncases(
         .limit(max_no_cases)
         .select(case_id_glue)
     )
-    
+
     # Keep only events from selected cases
     ret = df.join(cases_to_keep, on=case_id_glue, how="inner")
-    
+
     return ret
 
 
@@ -104,13 +104,13 @@ def filter_on_case_size(
         .count()
         .filter(pl.col("count") >= min_case_size)
     )
-    
+
     if max_case_size is not None:
         case_sizes = case_sizes.filter(pl.col("count") <= max_case_size)
-    
+
     # Keep only cases that meet size criteria
     ret = df.join(case_sizes.select(case_id_glue), on=case_id_glue, how="inner")
-    
+
     return ret
 
 
@@ -151,7 +151,7 @@ def filter_on_case_performance(
     if business_hours:
         # Business hours calculation not implemented in this version
         raise NotImplementedError("Business hours calculation is not yet implemented for Polars filtering")
-    
+
     # Calculate case durations
     case_durations = (
         df.group_by(case_id_glue)
@@ -168,10 +168,10 @@ def filter_on_case_performance(
         )
         .select(case_id_glue)
     )
-    
+
     # Keep only cases that meet performance criteria
     ret = df.join(case_durations, on=case_id_glue, how="inner")
-    
+
     return ret
 
 
@@ -202,7 +202,7 @@ def filter_case_performance(
     """
     if parameters is None:
         parameters = {}
-    
+
     timestamp_key = exec_utils.get_param_value(
         Parameters.TIMESTAMP_KEY,
         parameters,

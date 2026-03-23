@@ -41,18 +41,20 @@ def play_out(
     Performs the playout of the provided model, generating a set of traces.
 
     The function accepts one of the following inputs:
+
     - A Petri net with initial and final markings.
     - A Directly-Follows Graph (DFG) represented as a dictionary.
     - A process tree.
 
     :param args:
+
         - For Petri net playout: a `PetriNet`, an initial `Marking`, and a final `Marking`.
         - For DFG playout: a `dict` representing the DFG, followed by additional required arguments.
-        - For process tree playout: a single `ProcessTree`.
-    :param kwargs: Optional parameters of the method, including:
+        - For process tree playout: a single `ProcessTree`. :param kwargs: Optional parameters of the method, including:
         - `parameters`: A dictionary containing parameters of the playout, such as:
             - `smap`: (optional) A stochastic map to be used for probabilistic transition selection.
             - `log`: (optional) An `EventLog` used to compute the stochastic map if `smap` is not provided.
+
     :rtype: ``EventLog``
 
     .. code-block:: python3

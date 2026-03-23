@@ -29,16 +29,19 @@ import importlib.util
 
 def apply(parameters: Optional[Dict[str, Any]] = None) -> pd.DataFrame:
     """
-    Extract a process mining dataframe from all the events recorded in the Windows registry.
+    Extract a process mining dataframe from all the events recorded in the
+    Windows registry.
 
-    CASE ID (case:concept:name) => name of the computer emitting the events.
-    ACTIVITY (concept:name)  => concatenation of the source name of the event and the event identifier
-                (see https://learn.microsoft.com/en-us/previous-versions/windows/desktop/eventlogprov/win32-ntlogevent)
-    TIMESTAMP (time:timestamp) => timestamp of generation of the event
-    RESOURCE (org:resource) => username involved in the event
+    parameters
+        Parameters of the algorithm, including:
+
+        - CASE ID (case:concept:name) => name of the computer emitting the events.
+        - ACTIVITY (concept:name)  => concatenation of the source name of the event and the event identifier (see https://learn.microsoft.com/en-us/previous-versions/windows/desktop/eventlogprov/win32-ntlogevent)
+        - TIMESTAMP (time:timestamp) => timestamp of generation of the event
+        - RESOURCE (org:resource) => username involved in the event
 
     Returns
-    ----------------
+    -------
     dataframe
         Pandas dataframe
     """

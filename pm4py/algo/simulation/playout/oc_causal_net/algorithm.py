@@ -50,7 +50,7 @@ def apply(occn: OCCausalNet, objects, parameters: Optional[Dict[Any, Any]] = Non
     variant
         Variant of the algorithm to use:
             - Variants.EXTENSIVE: gets all the traces from the model. can be expensive
-            
+
     Returns
     -----------
     OCEL

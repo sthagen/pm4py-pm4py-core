@@ -46,7 +46,7 @@ def form_html(gviz, name=None):
 
     Returns
     -----------
-    name
+    name : str
         Path where the GraphvizJS output is saved
     """
     if name is None:

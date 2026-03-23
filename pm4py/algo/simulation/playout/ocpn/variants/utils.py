@@ -87,7 +87,7 @@ def feasible_traces_to_ocel(
     event_id_counter = 0
     # assigns to each event an increased timestamp from 1970
     curr_timestamp = 10000000
-    
+
     if objects_unique_per_trace:
         object_id_counter = 0
 

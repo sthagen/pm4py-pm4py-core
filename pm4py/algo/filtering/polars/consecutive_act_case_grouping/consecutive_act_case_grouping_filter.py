@@ -44,11 +44,12 @@ def apply(
         Polars LazyFrame
     parameters
         Parameters of the algorithm, including:
+
         - Parameters.CASE_ID_KEY => the case identifier to be used
         - Parameters.ACTIVITY_KEY => the attribute to be used as activity
         - Parameters.FILTER_TYPE => the type of filter to be applied:
-            first => keeps the first event of each group
-            last => keeps the last event of each group
+            * first => keeps the first event of each group
+            * last => keeps the last event of each group
 
     Returns
     ---------------
@@ -70,7 +71,7 @@ def apply(
 
     # Add row number to maintain order
     df = df.with_columns(pl.lit(1).cum_sum().alias("_row_num"))
-    
+
     # Create a column that changes when case or activity changes
     df = df.with_columns(
         (

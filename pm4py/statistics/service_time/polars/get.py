@@ -42,34 +42,35 @@ def apply(
     parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
 ) -> Dict[str, float]:
     """
-    Gets the service time per activity on a Polars LazyFrame
+    Gets the service time per activity on a Polars LazyFrame.
 
     Parameters
-    --------------
+    ----------
     lf
         Polars LazyFrame
     parameters
         Parameters of the algorithm, including:
+
         - Parameters.ACTIVITY_KEY => activity key
         - Parameters.START_TIMESTAMP_KEY => start timestamp key
         - Parameters.TIMESTAMP_KEY => timestamp key
-        - Parameters.BUSINESS_HOURS => calculates the difference of time based on the business hours, not the total time.
-                                        Default: False
-        - Parameters.BUSINESS_HOURS_SLOTS =>
-        work schedule of the company, provided as a list of tuples where each tuple represents one time slot of business
-        hours. One slot i.e. one tuple consists of one start and one end time given in seconds since week start, e.g.
-        [
-            (7 * 60 * 60, 17 * 60 * 60),
-            ((24 + 7) * 60 * 60, (24 + 12) * 60 * 60),
-            ((24 + 13) * 60 * 60, (24 + 17) * 60 * 60),
-        ]
-        meaning that business hours are Mondays 07:00 - 17:00 and Tuesdays 07:00 - 12:00 and 13:00 - 17:00
+        - Parameters.BUSINESS_HOURS => calculates the difference of time based on the business hours, not the total time. Default: False
         - Parameters.AGGREGATION_MEASURE => performance aggregation measure (sum, min, max, mean, median)
+        - Parameters.BUSINESS_HOURS_SLOTS => work schedule of the company.
+          The following list defines that business hours are Mondays 07:00 - 17:00
+          and Tuesdays 07:00 - 12:00 and 13:00 - 17:00::
+
+            [
+                (7 * 60 * 60, 17 * 60 * 60),
+                ((24 + 7) * 60 * 60, (24 + 12) * 60 * 60),
+                ((24 + 13) * 60 * 60, (24 + 17) * 60 * 60),
+            ]
 
     Returns
-    --------------
+    -----------------
     soj_time_dict
         Service time dictionary
+
     """
     if parameters is None:
         parameters = {}
@@ -114,11 +115,11 @@ def apply(
         else:
             df_collected = lf.collect()
             diff_values = []
-            
+
             for row in df_collected.iter_rows():
                 start_idx = df_collected.columns.index(start_timestamp_key)
                 end_idx = df_collected.columns.index(timestamp_key)
-                
+
                 diff = soj_time_business_hours_diff(
                     row[start_idx],
                     row[end_idx],
@@ -126,7 +127,7 @@ def apply(
                     workcalendar,
                 )
                 diff_values.append(diff)
-        
+
         df_with_diff = df_collected.with_columns(
             pl.Series("__diff", diff_values)
         ).lazy()
@@ -155,7 +156,7 @@ def apply(
         result = df_with_diff.group_by(activity_key).agg(pl.col("__diff").mean())
 
     result_df = result.collect()
-    
+
     # Convert to dictionary
     ret_dict = {}
     for row in result_df.iter_rows():

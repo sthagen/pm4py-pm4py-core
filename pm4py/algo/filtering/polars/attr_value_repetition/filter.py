@@ -78,7 +78,7 @@ def apply(
 
     # Filter events with the specified value
     filtered_df = df.filter(pl.col(attribute_key) == value)
-    
+
     # Count occurrences per case
     case_counts = (
         filtered_df

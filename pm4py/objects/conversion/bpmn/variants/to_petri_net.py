@@ -65,30 +65,28 @@ def build_digraph_from_petri_net(net):
 
 def apply(bpmn_graph, parameters=None):
     """
-    Converts a BPMN graph to an accepting Petri net
+    Converts a BPMN graph to an accepting Petri net.
 
     Parameters
-    --------------
+    ----------
     bpmn_graph
         BPMN graph
     parameters
         Parameters of the algorithm:
+
         - Parameters.USE_ID => (default: False) uses the IDs of the objects instead of their labels in the conversion
         - Parameters.ENABLE_REDUCTION => reduces the invisible transitions
-        - Parameters.RETURN_FLOW_TRANS_MAP => returns additional information on the conversion:
-                                                (iv) the places of the obtained Petri net that are corresponding to each
-                                                    BPMN flow.
-                                                (v) the transitions of the Petri net related to the nodes of the BPMN
-                                                    diagram.
+        - Parameters.RETURN_FLOW_TRANS_MAP => returns additional information on the conversion: (iv) the places of the obtained Petri net that are corresponding to each BPMN flow. (v) the transitions of the Petri net related to the nodes of the BPMN diagram.
 
     Returns
-    --------------
+    -----------------
     net
         Petri net
     im
         Initial marking
     fm
         Final marking
+
     """
     if parameters is None:
         parameters = {}

@@ -67,15 +67,16 @@ def apply(
     parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
 ) -> Tuple[PetriNet, Marking, Marking]:
     """
-    Discovers a Petri net using Heuristics Miner
+    Discovers a Petri net using Heuristics Miner.
 
     Parameters
-    ------------
+    ----------
     log
         Event log
     parameters
         Possible parameters of the algorithm,
         including:
+
             - Parameters.ACTIVITY_KEY
             - Parameters.TIMESTAMP_KEY
             - Parameters.CASE_ID_KEY
@@ -94,6 +95,7 @@ def apply(
         Initial marking
     fm
         Final marking
+
     """
     if parameters is None:
         parameters = {}
@@ -147,10 +149,10 @@ def apply_dfg(
     parameters: Optional[Dict[Any, Any]] = None,
 ) -> Tuple[PetriNet, Marking, Marking]:
     """
-    Discovers a Petri net using Heuristics Miner
+    Discovers a Petri net using Heuristics Miner.
 
     Parameters
-    ------------
+    ----------
     dfg
         Directly-Follows Graph
     activities
@@ -164,6 +166,7 @@ def apply_dfg(
     parameters
         Possible parameters of the algorithm,
         including:
+
             - Parameters.ACTIVITY_KEY
             - Parameters.TIMESTAMP_KEY
             - Parameters.CASE_ID_KEY
@@ -182,6 +185,7 @@ def apply_dfg(
         Initial marking
     fm
         Final marking
+
     """
     if parameters is None:
         parameters = {}
@@ -203,15 +207,16 @@ def apply_heu(
     log: EventLog, parameters: Optional[Dict[Any, Any]] = None
 ) -> HeuristicsNet:
     """
-    Discovers an Heuristics Net using Heuristics Miner
+    Discovers an Heuristics Net using Heuristics Miner.
 
     Parameters
-    ------------
+    ----------
     log
         Event log
     parameters
         Possible parameters of the algorithm,
         including:
+
             - Parameters.ACTIVITY_KEY
             - Parameters.TIMESTAMP_KEY
             - Parameters.CASE_ID_KEY
@@ -223,9 +228,10 @@ def apply_heu(
             - Parameters.LOOP_LENGTH_TWO_THRESH
 
     Returns
-    ------------
+    -----------------
     heu
         Heuristics Net
+
     """
     if parameters is None:
         parameters = {}
@@ -278,15 +284,16 @@ def apply_heu_pandas(
     parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
 ) -> HeuristicsNet:
     """
-    Discovers an Heuristics Net using Heuristics Miner
+    Discovers an Heuristics Net using Heuristics Miner.
 
     Parameters
-    ------------
+    ----------
     df
         Pandas dataframe
     parameters
         Possible parameters of the algorithm,
         including:
+
             - Parameters.ACTIVITY_KEY
             - Parameters.TIMESTAMP_KEY
             - Parameters.CASE_ID_KEY
@@ -301,6 +308,7 @@ def apply_heu_pandas(
     ------------
     heu
         Heuristics Net
+
     """
     if parameters is None:
         parameters = {}
@@ -430,10 +438,10 @@ def apply_heu_dfg(
     parameters=None,
 ) -> HeuristicsNet:
     """
-    Discovers an Heuristics Net using Heuristics Miner
+    Discovers an Heuristics Net using Heuristics Miner.
 
     Parameters
-    ------------
+    ----------
     dfg
         Directly-Follows Graph
     activities
@@ -453,6 +461,7 @@ def apply_heu_dfg(
     parameters
         Possible parameters of the algorithm,
         including:
+
             - Parameters.ACTIVITY_KEY
             - Parameters.TIMESTAMP_KEY
             - Parameters.CASE_ID_KEY
@@ -467,6 +476,7 @@ def apply_heu_dfg(
     ------------
     heu
         Heuristics Net
+
     """
     if parameters is None:
         parameters = {}

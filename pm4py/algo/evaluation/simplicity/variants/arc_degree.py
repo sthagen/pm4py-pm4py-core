@@ -34,26 +34,27 @@ def apply(
     parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
 ) -> float:
     """
-    Gets simplicity from a Petri net
+    Gets simplicity from a Petri net.
 
     Sánchez-González, Laura, et al. "Prediction of business process model quality based on structural metrics." International Conference on Conceptual Modeling. Berlin, Heidelberg: Springer Berlin Heidelberg, 2010.
-    
+
     Vázquez-Barreiros, Borja, Manuel Mucientes, and Manuel Lama. "ProDiGen: Mining complete, precise and minimal
     structure process models with a genetic algorithm." Information Sciences 294 (2015): 315-333.
 
     Parameters
-    -----------
+    ----------
     petri_net
         Petri net
     parameters
         Possible parameters of the algorithm:
-            - K: defines the value to be substracted in the formula: the lower is the value,
-            the lower is the simplicity value. k is the baseline arc degree (that is subtracted from the others)
+
+            - K: defines the value to be substracted in the formula: the lower is the value, the lower is the simplicity value. k is the baseline arc degree (that is subtracted from the others)
 
     Returns
-    -----------
+    -----------------
     simplicity
         Simplicity measure associated to the Petri net
+
     """
     if parameters is None:
         parameters = {}

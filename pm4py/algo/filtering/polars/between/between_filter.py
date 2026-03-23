@@ -80,7 +80,7 @@ def apply(
 
     # Sort by case and timestamp
     df = df.sort([case_id_key, xes_constants.DEFAULT_TIMESTAMP_KEY])
-    
+
     # Add row number within each case
     df = df.with_columns(
         pl.int_range(pl.len()).over(case_id_key).alias("_event_idx")
@@ -99,7 +99,7 @@ def apply(
         .then(pl.col("_event_idx"))
         .otherwise(None)
         .alias("_act1_pos"),
-        
+
         # Mark positions where act2 occurs  
         pl.when(pl.col("_is_act2"))
         .then(pl.col("_event_idx"))
@@ -162,7 +162,7 @@ def apply(
         (pl.col("_segment_start").cast(pl.Utf8) + "_" + pl.col("_next_segment_end").cast(pl.Utf8))
         .alias("_segment_id")
     )
-    
+
     # For each segment, check if it actually starts with act1 and ends with act2
     # Get the first and last activity of each segment
     segment_check = (
@@ -179,7 +179,7 @@ def apply(
         .select([case_id_key, "_segment_id_check"])
         .rename({"_segment_id_check": "_segment_id"})
     )
-    
+
     # Keep only segments that pass the check
     df = df.join(segment_check, on=[case_id_key, "_segment_id"], how="inner")
 

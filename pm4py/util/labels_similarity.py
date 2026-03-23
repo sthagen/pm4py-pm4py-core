@@ -32,12 +32,11 @@ def label_sets_similarity(
         labels_b: List[str],
         threshold: float = 0.75,
 ) -> float:
-    """
-    Dice-style similarity ∈ [0,1] that tolerates near-matches.
+    r"""
+    Dice-style similarity in [0, 1] that tolerates near-matches.
 
-    * Each label in A is greedily paired with its most similar,
-      still-unmatched label in B (SequenceMatcher ratio ≥ `threshold`).
-    * Similarity  =  2·|matched| / (|A| + |B|).
+    * Each label in A is greedily paired with its most similar, still-unmatched label in B (SequenceMatcher ratio >= `threshold`).
+    * Similarity = ``2·|matched| / (|A| + |B|)``.
     """
     remaining_b: Set[str] = set(labels_b)
     matches = 0

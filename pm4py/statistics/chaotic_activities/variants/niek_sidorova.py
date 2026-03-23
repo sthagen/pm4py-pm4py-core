@@ -35,11 +35,13 @@ class Parameters(Enum):
 
 def apply(log: Union[pd.DataFrame, EventLog], parameters: Optional[Dict[Any, Any]] = None) -> List[Dict[str, Any]]:
     """
-    Compute information–theoretic metrics used to detect *chaotic activities* in an event log, as defined in
+    Compute information–theoretic metrics used to detect *chaotic
+    activities* in an event log, as defined in:
 
     Tax, Niek, Natalia Sidorova, and Wil MP van der Aalst. "Discovering more precise process models from event logs by filtering out chaotic activities." Journal of Intelligent Information Systems 52.1 (2019): 107-139.
 
     The result maps each activity to:
+
     * freq                – absolute frequency #(a,L)
     * entropy             – H(a,L)  (direct entropy)
     * entropy_smooth      – Hₛ(a,L) (Laplace‑smoothed entropy)
@@ -47,18 +49,19 @@ def apply(log: Union[pd.DataFrame, EventLog], parameters: Optional[Dict[Any, Any
     * chaotic_score       – simple aggregate = (entropy_smooth+entropy_gain)/2
 
     Parameters
-    -----------------
+    ----------
     log
         Event log or Pandas dataframe
     parameters
         Variant-specific parameters, including:
-        - Parameters.ALPHA => Laplace/Lidstone smoothing parameter α. *None* reproduces the raw entropy H(a,L); a typical choice following the paper is α = 1/|A|.
-        - Parameters.ACTIVITY_KEY => the attribute to be used as activity. Default: "concept:name"
+
+        - Parameters.ALPHA: Laplace/Lidstone smoothing parameter α. *None* reproduces the raw entropy H(a,L); a typical choice following the paper is ``α = 1/|A|``.
+        - Parameters.ACTIVITY_KEY: the attribute to be used as activity. Default: "concept:name"
 
     Returns
-    -----------------
+    -------
     chaotic_activities
-        List of dictionaries, each representing an activity, sorted decreasingly based on the chaotic score (less is better).
+        List of dictionaries, each representing an activity, sorted decreasingly based on the chaotic score.
     """
     if parameters is None:
         parameters = {}
@@ -82,11 +85,12 @@ def chaotic_metrics(traces, alpha=None):
     alpha : float | None
         Laplace/Lidstone smoothing parameter α.
         *None* reproduces the raw entropy H(a,L);
-        a typical choice following the paper is α = 1/|A|.
+        a typical choice following the paper is ``α = 1/|A|``.
 
     Returns
     -------
     dict[str, dict]   (activity  →  metrics)
+
     """
     # ------------------------------------------------------------------ pre‑compute counts
     act_count, pair_count = _pair_counts(traces)

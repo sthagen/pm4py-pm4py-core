@@ -85,12 +85,12 @@ def apply(
                 == pl.lit(suffix_list)
             )
         suffix_conditions.append(condition)
-    
+
     if suffix_conditions:
         combined_condition = suffix_conditions[0]
         for cond in suffix_conditions[1:]:
             combined_condition = combined_condition | cond
-        
+
         matching_cases = variants_df.filter(combined_condition).select(case_id_glue)
     else:
         matching_cases = pl.DataFrame({case_id_glue: []}).lazy()

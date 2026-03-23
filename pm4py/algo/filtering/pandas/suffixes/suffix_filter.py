@@ -55,10 +55,10 @@ def apply(
         Dataframe
     parameters
         Parameters of the algorithm:
+
         - Parameters.CASE_ID_KEY => the case identifier column.
         - Parameters.ACTIVITY_KEY => the activity column.
-        - Parameters.INDEX_IN_TRACE_KEY => attribute that should act as container of the index of the event inside
-                                            the case.
+        - Parameters.INDEX_IN_TRACE_KEY => attribute that should act as container of the index of the event inside the case.
         - Parameters.TEMP_COLUMN => temporary column which is used for internal purposes.
         - Parameters.FIRST_OR_LAST => filter on the first or last occurrence of an activity in the dataframe.
         - Parameters.STRICT => applies the filter in a strict (<) or lean (<=) way (boolean).

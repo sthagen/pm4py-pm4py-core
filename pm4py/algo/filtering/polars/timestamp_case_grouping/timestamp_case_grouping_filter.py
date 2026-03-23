@@ -49,13 +49,14 @@ def apply(
         LazyFrame
     parameters
         Parameters of the algorithm, including:
+
         - Parameters.CASE_ID_KEY => the case identifier to be used
         - Parameters.ACTIVITY_KEY => the attribute to be used as activity
         - Parameters.TIMESTAMP_KEY => the attribute to be used as timestamp
         - Parameters.FILTER_TYPE => the type of filter to be applied:
-            first => keeps the first event of each group
-            last => keeps the last event of each group
-            concat => creates an event having as activity the concatenation of the activities happening in the group
+            * first => keeps the first event of each group
+            * last => keeps the last event of each group
+            * concat => creates an event having as activity the concatenation of the activities happening in the group
 
     Returns
     -----------
@@ -88,15 +89,15 @@ def apply(
         # Get all columns except activity for the first event, then concatenate activities
         # First, get the grouped dataframe
         grouped = df.group_by([case_id_key, timestamp_key], maintain_order=True)
-        
+
         # Get all columns from first event
         first_df = grouped.first()
-        
+
         # Get concatenated activities
         concat_activities = grouped.agg(
             pl.col(activity_key).sort().str.concat(" & ").alias(activity_key)
         )
-        
+
         # Update the activity column in first_df with concatenated values
         df = first_df.drop(activity_key).join(
             concat_activities,

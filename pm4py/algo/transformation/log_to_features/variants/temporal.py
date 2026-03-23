@@ -62,6 +62,7 @@ def apply(
         Event log / Event stream / Pandas dataframe
     parameters
         Parameters of the algorithm, including:
+
         - Parameters.GROUPER_FREQ => the time interval to be used for the grouping (default: "W")
         - Parameters.ARRIVAL_RATE => column of the dataframe which is going to host the arrival rate
         - Parameters.FINISH_RATE => column of the dataframe which is going to host the finishing rate
@@ -72,8 +73,7 @@ def apply(
         - Parameters.ACTIVITY_COLUMN => activity column in the dataframe (default: concept:name)
         - Parameters.TIMESTAMP_COLUMN => timestamp column in the dataframe (default: time:timestamp)
         - Parameters.RESOURCE_COLUMN => resource column in the dataframe (default: org:resource)
-        - Parameters.START_TIMESTAMP_COLUMN => start timestamp column in the dataframe
-          (if not provided, the timestamp column is used)
+        - Parameters.START_TIMESTAMP_COLUMN => start timestamp column in the dataframe (if not provided, the timestamp column is used)
 
     Returns
     ----------------

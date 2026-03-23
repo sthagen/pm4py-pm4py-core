@@ -55,7 +55,7 @@ def get_end_activities(
 
     Returns
     ----------
-    end_activities
+    end_activities : dict
         Dictionary of end attributes associated with their count
     """
     if parameters is None:

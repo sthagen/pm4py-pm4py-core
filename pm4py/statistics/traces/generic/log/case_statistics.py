@@ -121,31 +121,32 @@ def get_cases_description(
     log: EventLog,
     parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
 ) -> Dict[str, Dict[str, Any]]:
-    """
-    Get a description of traces present in the log
+    r"""
+    Get a description of traces present in the log.
 
     Parameters
-    -----------
+    ----------
     log
         Log
     parameters
         Parameters of the algorithm, including:
-        Parameters.CASE_ID_KEY -> Trace attribute in which the case ID is contained
-        Parameters.TIMESTAMP_KEY -> Column that identifies the timestamp
-        Parameters.ENABLE_SORT -> Enable sorting of traces
-        Parameters.SORT_BY_INDEX ->         Sort the traces using this index:
-            0 -> case ID
-            1 -> start time
-            2 -> end time
-            3 -> difference
-        Parameters.SORT_ASCENDING -> Set sort direction (boolean; it true then the sort direction is ascending, otherwise
-        descending)
-        Parameters.MAX_RET_CASES -> Set the maximum number of returned traces
+
+        - Parameters.CASE_ID_KEY: Trace attribute in which the case ID is contained.
+        - Parameters.TIMESTAMP_KEY: Column that identifies the timestamp.
+        - Parameters.ENABLE_SORT: Enable sorting of traces.
+        - Parameters.SORT_BY_INDEX: Sort the traces using this index:
+            - 0: case ID
+            - 1: start time
+            - 2: end time
+            - 3: difference
+        - Parameters.SORT_ASCENDING: Set sort direction (boolean; if true then the sort direction is ascending,
+          otherwise descending).
+        - Parameters.MAX_RET_CASES: Set the maximum number of returned traces.
 
     Returns
-    -----------
+    -------
     ret
-        Dictionary of traces associated to their start timestamp, their end timestamp and their duration
+        Dictionary of traces associated to their start timestamp, their end timestamp and their duration.
     """
 
     if parameters is None:

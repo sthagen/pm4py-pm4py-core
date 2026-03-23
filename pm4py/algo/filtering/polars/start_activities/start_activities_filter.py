@@ -78,7 +78,7 @@ def apply(
         .filter(pl.col("start_activity").is_in(values))
         .select(case_id_glue)
     )
-    
+
     if positive:
         ret = df.join(matching_cases, on=case_id_glue, how="inner")
     else:

@@ -72,7 +72,7 @@ def pandas_numpy_variants_apply_polars(
 
     # Sort by case and timestamp to ensure proper order
     sorted_lf = lf.sort([case_id_key, timestamp_key])
-    
+
     # Group by case and collect activities as lists
     # In Polars, aggregating without specifying a function collects into lists by default
     case_variants_df = (
@@ -80,19 +80,19 @@ def pandas_numpy_variants_apply_polars(
         .agg(pl.col(activity_key))
         .collect()
     )
-    
+
     case_variant = {}
     variants_counter = Counter()
-    
+
     for row in case_variants_df.iter_rows():
         case_id = row[0]
         activities = tuple(row[1])  # Convert list to tuple
         case_variant[case_id] = activities
         variants_counter[activities] += 1
-    
+
     # Return as Python dictionaries
     variants_dict = {x: y for x, y in variants_counter.items()}
-    
+
     return variants_dict, case_variant
 
 

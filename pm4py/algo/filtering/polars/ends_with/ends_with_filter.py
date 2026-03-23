@@ -65,7 +65,7 @@ def get_variants_df(
     """
     if parameters is None:
         parameters = {}
-    
+
     # Create variants by concatenating activities per case
     variants_df = (
         df.sort([case_id_key, "time:timestamp"])  # Ensure events are ordered
@@ -77,7 +77,7 @@ def get_variants_df(
         )
         .collect()
     )
-    
+
     return variants_df
 
 
@@ -120,7 +120,7 @@ def apply(
     positive = exec_utils.get_param_value(
         Parameters.POSITIVE, parameters, True
     )
-    
+
     # Get or calculate variants dataframe
     variants_df = parameters.get("variants_df")
     if variants_df is None:
@@ -141,7 +141,7 @@ def apply(
             suffix_expr = pl.col("variant").str.ends_with(suffix)
         else:
             suffix_expr = suffix_expr | pl.col("variant").str.ends_with(suffix)
-    
+
     matching_cases = variants_df.filter(suffix_expr).select(case_id_glue)
 
     if positive:

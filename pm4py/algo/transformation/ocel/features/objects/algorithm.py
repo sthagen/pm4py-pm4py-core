@@ -79,17 +79,18 @@ class Parameters(Enum):
 
 def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     """
-    Extract a feature table related to the objects of an OCEL
+    Extract a feature table related to the objects of an OCEL.
 
     Implements the approach described in:
     Berti, A., Herforth, J., Qafari, M.S. et al. Graph-based feature extraction on object-centric event logs. Int J Data Sci Anal (2023). https://doi.org/10.1007/s41060-023-00428-2
 
     Parameters
-    ------------------
+    ----------
     ocel
         OCEL
     parameters
         Parameters of the algorithm, including:
+
         - Parameters.ENABLE_ALL => enable the extraction of all the belowmentioned features
         - Parameters.ENABLE_LIFECYCLE_METRICS => enables the computation of the lifecycle metrics
         - Parameters.ENABLE_OBJECT_LIFECYCLE_LENGTH => enables the object lifecycle length feature
@@ -101,23 +102,15 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
         - Parameters.ENABLE_OBJECT_GENERAL_INHERITANCE_GRAPH => enables the object general inheritance graph feature
         - Parameters.ENABLE_OBJECT_COBIRTH_GRAPH => enables the object cobirth graph feature
         - Parameters.ENABLE_OBJECT_CODEATH_GRAPH => enables the object codeath graph feature
-        - Parameters.ENABLE_OBJECT_LIFECYCLE_ACTIVITIES => enables the features associated to the activities in the
-                                                            lifecycle of an object
-        - Parameters.ENABLE_OBJECT_STR_ATTRIBUTES => enables the one-hot-encoding of a specified collection of string
-                                                    attributes for each object.
-        - Parameters.ENABLE_OBJECT_NUM_ATTRIBUTES => enables the extraction of a specified collection of numeric
-                                                    attributes for each object.
-        - Parameters.ENABLE_OBJECT_INTERACTION_GRAPH_OT => enables the extraction of the number of interacting objects
-                                                            per object type.
+        - Parameters.ENABLE_OBJECT_LIFECYCLE_ACTIVITIES => enables the features associated to the activities in the lifecycle of an object
+        - Parameters.ENABLE_OBJECT_STR_ATTRIBUTES => enables the one-hot-encoding of a specified collection of string attributes for each object.
+        - Parameters.ENABLE_OBJECT_NUM_ATTRIBUTES => enables the extraction of a specified collection of numeric attributes for each object.
+        - Parameters.ENABLE_OBJECT_INTERACTION_GRAPH_OT => enables the extraction of the number of interacting objects per object type.
         - Parameters.FILTER_PER_TYPE => once obtained, filter only the objects that belongs to a specific type
-        - Parameters.ENABLE_RELATED_EVENTS_FEATURES => enables the extraction of features for the related events to a
-                                                        given object.
-        - Parameters.ENABLE_RELATED_ACTIVITIES_FEATURES => enables the extraction of features for the last occurrence
-                                                        of an activity in the events related to the object.
-        - Parameters.ENABLE_OBJ_CON_IN_GRAPH_FEATURES => enables the extraction of features from the neighboring
-                                                        objects.
-        - Parameters.ENABLE_OBJECT_LIFECYCLE_PATHS => enables the features associated to the paths in the
-                                                            lifecycle of an object
+        - Parameters.ENABLE_RELATED_EVENTS_FEATURES => enables the extraction of features for the related events to a given object.
+        - Parameters.ENABLE_RELATED_ACTIVITIES_FEATURES => enables the extraction of features for the last occurrence of an activity in the events related to the object.
+        - Parameters.ENABLE_OBJ_CON_IN_GRAPH_FEATURES => enables the extraction of features from the neighboring objects.
+        - Parameters.ENABLE_OBJECT_LIFECYCLE_PATHS => enables the features associated to the paths in the lifecycle of an object
 
     Returns
     ------------------
@@ -125,6 +118,7 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
         Values of the features
     feature_names
         Names of the features
+
     """
     if parameters is None:
         parameters = {}

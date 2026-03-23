@@ -106,11 +106,11 @@ def eventually_follows(
 
     # Check the ordering constraint
     valid_cases = cases_with_all.select(case_id_glue).unique()
-    
+
     for i in range(len(attribute_values) - 1):
         curr_val = attribute_values[i]
         next_val = attribute_values[i + 1]
-        
+
         # Get events for current and next values
         curr_events = df.filter(pl.col(attribute_key) == curr_val).select([
             case_id_glue, "_index", timestamp_key
@@ -118,7 +118,7 @@ def eventually_follows(
         next_events = df.filter(pl.col(attribute_key) == next_val).select([
             case_id_glue, "_index", timestamp_key
         ])
-        
+
         # Join and check ordering
         ordered_pairs = (
             curr_events.join(next_events, on=case_id_glue, suffix="_next")
@@ -126,7 +126,7 @@ def eventually_follows(
             .select(case_id_glue)
             .unique()
         )
-        
+
         valid_cases = valid_cases.join(ordered_pairs, on=case_id_glue, how="inner")
 
     # Apply positive/negative filter
@@ -190,31 +190,31 @@ def A_next_B_next_C(
 
     # Create the pattern to match
     pattern_length = len(attribute_values)
-    
+
     # For each case, check if the pattern exists
     valid_cases = []
-    
+
     # This is a simplified implementation - for production use, 
     # a more efficient sliding window approach would be better
     df_collected = df.collect()
-    
+
     for case_id in df_collected[case_id_glue].unique():
         case_df = df_collected.filter(pl.col(case_id_glue) == case_id).sort("_pos")
         activities = case_df[attribute_key].to_list()
-        
+
         # Check if pattern exists in sequence
         pattern_found = False
         for i in range(len(activities) - pattern_length + 1):
             if activities[i:i + pattern_length] == attribute_values:
                 pattern_found = True
                 break
-        
+
         if pattern_found:
             valid_cases.append(case_id)
-    
+
     # Convert back to LazyFrame
     valid_cases_df = pl.DataFrame({case_id_glue: valid_cases}).lazy()
-    
+
     if positive:
         ret = df.join(valid_cases_df, on=case_id_glue, how="inner")
     else:
@@ -271,34 +271,34 @@ def four_eyes_principle(
 
     # For each case, check if activities are performed by different resources
     valid_cases = None
-    
+
     for i in range(len(attribute_values)):
         for j in range(i + 1, len(attribute_values)):
             act1 = attribute_values[i]
             act2 = attribute_values[j]
-            
+
             # Get resources for both activities
             df1 = df.filter(pl.col(attribute_key) == act1).select([
                 case_id_glue, resource_key
             ]).unique()
-            
+
             df2 = df.filter(pl.col(attribute_key) == act2).select([
                 case_id_glue, resource_key
             ]).unique()
-            
+
             # Join to find all combinations of resources for these activities
             pairs = df1.join(df2, on=case_id_glue, suffix="_2")
-            
+
             if positive:
                 # For positive, we want ALL pairs to have different resources
                 # So we check if ANY pair has the same resource and exclude those cases
                 same_resource_cases = pairs.filter(
                     pl.col(resource_key) == pl.col(resource_key + "_2")
                 ).select(case_id_glue).unique()
-                
+
                 # Get all cases that have both activities
                 all_cases_with_both = pairs.select(case_id_glue).unique()
-                
+
                 # Valid cases are those that have both activities but no same resource
                 valid_pairs = all_cases_with_both.join(
                     same_resource_cases, on=case_id_glue, how="anti"
@@ -308,7 +308,7 @@ def four_eyes_principle(
                 valid_pairs = pairs.filter(
                     pl.col(resource_key) == pl.col(resource_key + "_2")
                 ).select(case_id_glue).unique()
-            
+
             if valid_cases is None:
                 valid_cases = valid_pairs
             else:

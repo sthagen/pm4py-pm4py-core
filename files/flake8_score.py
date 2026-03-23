@@ -57,6 +57,6 @@ def lint_package_with_score(package_path, config_path=None, threshold=8):
 if __name__ == "__main__":
     package_path = "../pm4py"
     config_file = "flake8.ini"
-    quality_threshold = 950
+    quality_threshold = 350
 
     lint_package_with_score(package_path, config_path=config_file, threshold=quality_threshold)

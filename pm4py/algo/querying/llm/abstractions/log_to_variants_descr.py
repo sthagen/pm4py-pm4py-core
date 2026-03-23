@@ -49,13 +49,15 @@ def abstraction_from_variants_freq_perf_list(
 ) -> str:
     """
     Obtains a textual abstraction from a list of variants provided along their frequency and performance values.
-    Each variant of the list is expressed in the form:
+    Each variant of the list is expressed in the form::
+
         (('A', 'B', 'C'), 1000, 86400.0, 172800.0)
+
     where ('A', 'B', 'C') is the tuple of activities executed in the variant, 1000 is the number of occurrences of
     this variant in the event log, 86400.0 is an aggregation (mean) of the throughput times of the cases belonging to
     this variant, 172800.0 is an aggregation (stdev, so standard deviation) of the throughput times of these cases.
 
-    Minimal viable example:
+    Minimal viable example::
 
         from pm4py.algo.querying.llm.abstractions import log_to_variants_descr
 
@@ -63,13 +65,13 @@ def abstraction_from_variants_freq_perf_list(
         print(log_to_variants_descr.abstraction_from_variants_freq_perf_list(vars_list))
 
     Parameters
-    ---------------
+    ----------
     vars_list
         List of variants, expressed as explained above
     parameters
         Optional parameters of the algorithm, including:
-            - Parameters.RELATIVE_FREQUENCY => decides if the the frequency of the variants should be normalized to a relative
-                                                frequency
+
+            - Parameters.RELATIVE_FREQUENCY => decides if the the frequency of the variants should be normalized to a relative frequency
             - Parameters.PRIMARY_PERFORMANCE_AGGREGATION => primary performance metric to be used to express the performance of the arcs (e.g., mean). Available options: mean, median, stdev, min, max, sum
             - Parameters.SECONDARY_PERFORMANCE_AGGREGATION => secondary performance metric to be used to express the performance of the arcs (e.g., stdev). Available options: mean, median, stdev, min, max, sum
             - Parameters.MAX_LEN => desidered length of the textual abstraction
@@ -81,6 +83,7 @@ def abstraction_from_variants_freq_perf_list(
     --------------
     textual_abstraction
         Textual abstraction of the variants
+
     """
     if parameters is None:
         parameters = {}
@@ -181,34 +184,40 @@ def apply(
     parameters: Optional[Dict[Any, Any]] = None,
 ) -> str:
     """
-    Gets the textual abstraction of the variants of a specified log object.
+    Gets the textual abstraction of the directly-follows graph computed on
+    the provided log object.
 
-    Minimal viable example:
+    Minimal viable example::
 
         import pm4py
-        from pm4py.algo.querying.llm.abstractions import log_to_variants_descr
+        from pm4py.algo.querying.llm.abstractions import log_to_dfg_descr
 
         log = pm4py.read_xes('tests/input_data/running-example.xes')
-        print(log_to_variants_descr.apply(log))
+        print(log_to_dfg_descr.apply(log))
 
     Parameters
-    ---------------
+    ----------
     log_obj
-        Log object
+        Log object (event log / Pandas dataframe)
     parameters
-        Optional parameters of the algorithm, including:
-        - Parameters.ACTIVITY_KEY => the attribute of the log to be used as activity
-        - Parameters.TIMESTAMP_KEY => the attribute of the log to be used as timestamp
-        - Parameters.CASE_ID_KEY => the attribute of the log to be used as case identifier
-        - Parameters.RELATIVE_FREQUENCY => decides if the the frequency of the variants should be normalized to a relative
-                                            frequency
-        - Parameters.PRIMARY_PERFORMANCE_AGGREGATION => primary performance metric to be used to express the performance of the arcs (e.g., mean). Available options: mean, median, stdev, min, max, sum
-        - Parameters.SECONDARY_PERFORMANCE_AGGREGATION => secondary performance metric to be used to express the performance of the arcs (e.g., stdev). Available options: mean, median, stdev, min, max, sum
+        Optional Parameters of the algorithm, including:
+
+            - Parameters.ACTIVITY_KEY => the attribute to be used as activity
+            - Parameters.TIMESTAMP_KEY => the attribute to be used as timestamp
+            - Parameters.CASE_ID_KEY => the attribute to be used as case ID
+            - Parameters.RELATIVE_FREQUENCY => (boolean) decides if the frequency DFG should be normalized to a relative frequency
+            - Parameters.INCLUDE_FREQUENCY => includes the frequency of the arcs in the textual abstraction
+            - Parameters.INCLUDE_PERFORMANCE => includes the performance of the arcs in the textual abstraction
+            - Parameters.MAX_LEN => desidered length of the textual abstraction
+            - Parameters.RESPONSE_HEADER => includes an header in the textual abstraction, which explains the context
+            - Parameters.PRIMARY_PERFORMANCE_AGGREGATION => primary performance metric to be used to express the performance of the arcs (e.g., mean). Available options: mean, median, stdev, min, max, sum
+            - Parameters.SECONDARY_PERFORMANCE_AGGREGATION => secondary performance metric to be used to express the performance of the arcs (e.g., stdev). Available options: mean, median, stdev, min, max, sum
 
     Returns
-    --------------
+    -----------------
     textual_abstraction
-        Textual abstraction of the variants of an event log object
+        Textual abstraction
+
     """
     if parameters is None:
         parameters = {}

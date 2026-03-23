@@ -41,8 +41,9 @@ def apply(
     parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
 ) -> pd.DataFrame:
     """
-    Splits the cases of a log (Pandas dataframe) into subcases based on the provision of an activity.
-    There are as many subcases as many occurrences of a given activity occur.
+    Splits the cases of a log (Pandas dataframe) into subcases based on the
+    provision of an activity. There are as many subcases as many occurrences of
+    a given activity occur.
 
     Example:
     Original log:
@@ -72,13 +73,14 @@ def apply(
 
 
     Parameters
-    ----------------
+    ----------
     df
         Dataframe
     activity
         Activity (or collection of activities)
     parameters
         Parameters of the algorithm, including:
+
         - Parameters.ACTIVITY_KEY => activity key
         - Parameters.CASE_ID_KEY => case id
         - Parameters.SUBCASE_CONCAT_STR => concatenator between the case id and the subtrace index in the filtered df
@@ -87,7 +89,7 @@ def apply(
             - "next" means that the following event (to the given activity) goes to the next subcase.
 
     Returns
-    ----------------
+    -----------------
     filtered_df
         Dataframe in which the cases are split into subcases
 

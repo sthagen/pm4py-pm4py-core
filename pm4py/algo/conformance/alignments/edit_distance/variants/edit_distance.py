@@ -324,15 +324,18 @@ def project_log_on_variant(
     parameters: Optional[Dict[Union[str, Parameters], Any]] = None,
 ) -> EventLog:
     """
-    Projects the traces of an event log to the specified variant, in order to assess the conformance of the different
-    directly-follows relationships and their performance (as the timestamps are recorded).
-    The result is a event log where each 'projected' trace can be replayed on the given variant.
-    Each event of a 'projected' trace has the '@@is_conforming' attribute set to:
-    - True when the activity is mimicked by the original trace (sync move)
-    - False when the activity is not reflected in the original trace (move-on-model)
-    Move-on-log (activities of the trace that are not mimicked by the variant) are skipped altogether.
+    Projects the traces of an event log to the specified variant, in order
+    to assess the conformance of the different directly-follows relationships
+    and their performance (as the timestamps are recorded). The result is a
+    event log where each 'projected' trace can be replayed on the given
+    variant.
 
-    Minimum Viable Example:
+    Each event of a 'projected' trace has the '@@is_conforming' attribute set to:
+
+    - True when the activity is mimicked by the original trace (sync move)
+    - False when the activity is not reflected in the original trace (move-on-model) Move-on-log (activities of the trace that are not mimicked by the variant) are skipped altogether.
+
+    Minimum Viable Example::
 
         import pm4py
         from pm4py.algo.conformance.alignments.edit_distance.variants import edit_distance
@@ -347,20 +350,22 @@ def project_log_on_variant(
 
 
     Parameters
-    ---------------
+    ----------
     log
         Event log
     variant
         Considered variant
     parameters
         Parameters of the method, including:
+
             - Parameters.ACTIVITY_KEY => the attribute of the event log to be used as activity
             - Parameters.TIMESTAMP_KEY => the attribute of the event log to be used as timestamp
 
     Returns
-    ---------------
+    -------
     projected_log
         Projected event log with the aforementioned features
+
     """
     if parameters is None:
         parameters = {}

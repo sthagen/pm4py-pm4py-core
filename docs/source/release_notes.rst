@@ -106,18 +106,16 @@ Finally, PM4Py 2.3.0 has arrived! The 2.3.0 release contains various significant
    
    We have re-implemented and restructured the code of the inductive miner. The new version is closer to the reference implementation in ProM and is more performant than the previous version.
 
-6. *Business Hours Revised*; 
-   
-   The business hours functionality in PM4Py has been completely revised. In PM4Py 2.2.X, one could only specify the working days and hours, which were fixed. In PM4Py 2.3.X, one can define weekday-based activity slots (e.g., to model breaks). One slot, i.e., one tuple, consists of one start and one end time given in seconds since week start, e.g., 
-   
-   ```
-   [
-       (7 * 60 * 60, 17 * 60 * 60),
-       ((24 + 7) * 60 * 60, (24 + 12) * 60 * 60),
-       ((24 + 13) * 60 * 60, (24 + 17) * 60 * 60),
-   ]
-   ```
-   
+6. *Business Hours Revised*
+
+   The business hours functionality in PM4Py has been completely revised. In PM4Py 2.2.X, one could only specify the working days and hours, which were fixed. In PM4Py 2.3.X, one can define weekday-based activity slots (e.g., to model breaks). One slot, i.e., one tuple, consists of one start and one end time given in seconds since week start, e.g.::
+
+       [
+           (7 * 60 * 60, 17 * 60 * 60),
+           ((24 + 7) * 60 * 60, (24 + 12) * 60 * 60),
+           ((24 + 13) * 60 * 60, (24 + 17) * 60 * 60),
+       ]
+
    meaning that business hours are Mondays 07:00 - 17:00 and Tuesdays 07:00 - 12:00 and 13:00 - 17:00.
 
 7. *Auto-Generated Docs*; 

@@ -757,26 +757,28 @@ def project_on_event_attribute(
     case_id_key=None,
 ) -> List[List[str]]:
     """
-    Projects the event log onto a specified event attribute. The result is a list containing a list for each case, where each case is represented as a list of values for the specified attribute.
+    Projects the event log onto a specified event attribute. The result is a
+    list containing a list for each case, where each case is represented as a
+    list of values for the specified attribute.
 
     **Example**:
 
-    ```python
-    pm4py.project_on_event_attribute(log, "concept:name")
-    ```
+    .. code-block:: python
+
+        pm4py.project_on_event_attribute(log, "concept:name")
 
     **Output**:
 
-    ```python
-    [
-        ['register request', 'examine casually', 'check ticket', 'decide', 'reinitiate request', 'examine thoroughly', 'check ticket', 'decide', 'pay compensation'],
-        ['register request', 'check ticket', 'examine casually', 'decide', 'pay compensation'],
-        ['register request', 'examine thoroughly', 'check ticket', 'decide', 'reject request'],
-        ['register request', 'examine casually', 'check ticket', 'decide', 'pay compensation'],
-        ['register request', 'examine casually', 'check ticket', 'decide', 'reinitiate request', 'check ticket', 'examine casually', 'decide', 'reinitiate request', 'examine casually', 'check ticket', 'decide', 'reject request'],
-        ['register request', 'check ticket', 'examine thoroughly', 'decide', 'reject request']
-    ]
-    ```
+    .. code-block:: python
+
+        [
+            ['register request', 'examine casually', 'check ticket', 'decide', 'reinitiate request', 'examine thoroughly', 'check ticket', 'decide', 'pay compensation'],
+            ['register request', 'check ticket', 'examine casually', 'decide', 'pay compensation'],
+            ['register request', 'examine thoroughly', 'check ticket', 'decide', 'reject request'],
+            ['register request', 'examine casually', 'check ticket', 'decide', 'pay compensation'],
+            ['register request', 'examine casually', 'check ticket', 'decide', 'reinitiate request', 'check ticket', 'examine casually', 'decide', 'reinitiate request', 'examine casually', 'check ticket', 'decide', 'reject request'],
+            ['register request', 'check ticket', 'examine thoroughly', 'decide', 'reject request']
+        ]
 
     :param log: Event log or Pandas DataFrame.
     :param attribute_key: The attribute to be used for projection.

@@ -51,38 +51,43 @@ def build_network_analysis_from_link_analysis(
     merged_df: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None
 ) -> Dict[Tuple[str, str], Dict[str, Any]]:
     """
-    Builds the network analysis from the results of the link analysis (internal method)
+    Builds the network analysis from the results of the link analysis
+    (internal method)
 
     Parameters
-    ------------------
+    ----------
     merged_df
         Dataframe obtained from the link analysis
     parameters
         Parameters of the method, including:
-            - Parameters.NODE_COLUMN_SOURCE => the attribute to be used for the node definition of the source event (default: the resource of the log, org:resource)
-            - Parameters.NODE_COLUMN_TARGET => the attribute to be used for the node definition of the target event (default: the resource of the log, org:resource)
-            - Parameters.EDGE_COLUMN => the attribute to be used for the edge definition (default: the activity of the log, concept:name)
-            - Parameters.EDGE_REFERENCE => the event into which the edge attribute should be picked:
-                - _out  =>  the source event
-                - _in   =>  the target event
-            - Parameters.TIMESTAMP_COLUMN => the timestamp column
-            - Parameters.TIMESTAMP_DIFF_COLUMN => timestamp diff column
-            - Parameters.INCLUDE_PERFORMANCE => considers the performance of the edge
-            - Parameters.BUSINESS_HOURS => boolean value that enables the business hours
-            - Parameters.BUSINESS_HOURS_SLOTS =>
-            work schedule of the company, provided as a list of tuples where each tuple represents one time slot of business
-            hours. One slot i.e. one tuple consists of one start and one end time given in seconds since week start, e.g.
+
+        - Parameters.NODE_COLUMN_SOURCE => the attribute to be used for the node definition of the source event (default: the resource of the log, org:resource)
+        - Parameters.NODE_COLUMN_TARGET => the attribute to be used for the node definition of the target event (default: the resource of the log, org:resource)
+        - Parameters.EDGE_COLUMN => the attribute to be used for the edge definition (default: the activity of the log, concept:name)
+        - Parameters.EDGE_REFERENCE => the event into which the edge attribute should be picked:
+
+            * _out  =>  the source event
+            * _in   =>  the target event
+
+        - Parameters.TIMESTAMP_COLUMN => the timestamp column
+        - Parameters.TIMESTAMP_DIFF_COLUMN => timestamp diff column
+        - Parameters.INCLUDE_PERFORMANCE => considers the performance of the edge
+        - Parameters.BUSINESS_HOURS => boolean value that enables the business hours
+        - Parameters.BUSINESS_HOURS_SLOTS => work schedule of the company.
+          The following list defines that business hours are Mondays 07:00 - 17:00
+          and Tuesdays 07:00 - 12:00 and 13:00 - 17:00::
+
             [
                 (7 * 60 * 60, 17 * 60 * 60),
                 ((24 + 7) * 60 * 60, (24 + 12) * 60 * 60),
                 ((24 + 13) * 60 * 60, (24 + 17) * 60 * 60),
             ]
-            meaning that business hours are Mondays 07:00 - 17:00 and Tuesdays 07:00 - 12:00 and 13:00 - 17:00
 
     Returns
     -----------------
     network_analysis
         Edges of the network analysis (first key: edge; second key: type; value: number of occurrences)
+
     """
     if parameters is None:
         parameters = {}
@@ -188,6 +193,7 @@ def apply(
         Dataframe
     parameters
         Parameters of the method, including:
+
         - Parameters.SORTING_COLUMN => the column that should be used to sort the log
         - Parameters.IN_COLUMN => the target column of the link (default: the case identifier; events of the same case are linked)
         - Parameters.OUT_COLUMN => the source column of the link (default: the case identifier; events of the same case are linked)
@@ -196,21 +202,23 @@ def apply(
         - Parameters.NODE_COLUMN_TARGET => the attribute to be used for the node definition of the target event (default: the resource of the log, org:resource)
         - Parameters.EDGE_COLUMN => the attribute to be used for the edge definition (default: the activity of the log, concept:name)
         - Parameters.EDGE_REFERENCE => the event into which the edge attribute should be picked:
-                - _out  =>  the source event
-                - _in   =>  the target event
+
+                * _out  =>  the source event
+                * _in   =>  the target event
+
         - Parameters.TIMESTAMP_COLUMN => the timestamp column
         - Parameters.TIMESTAMP_DIFF_COLUMN => timestamp diff column
         - Parameters.INCLUDE_PERFORMANCE => considers the performance of the edge
         - Parameters.BUSINESS_HOURS => boolean value that enables the business hours
-        - Parameters.BUSINESS_HOURS_SLOTS =>
-        work schedule of the company, provided as a list of tuples where each tuple represents one time slot of business
-        hours. One slot i.e. one tuple consists of one start and one end time given in seconds since week start, e.g.
-        [
-            (7 * 60 * 60, 17 * 60 * 60),
-            ((24 + 7) * 60 * 60, (24 + 12) * 60 * 60),
-            ((24 + 13) * 60 * 60, (24 + 17) * 60 * 60),
-        ]
-        meaning that business hours are Mondays 07:00 - 17:00 and Tuesdays 07:00 - 12:00 and 13:00 - 17:00
+        - Parameters.BUSINESS_HOURS_SLOTS => work schedule of the company.
+          The following list defines that business hours are Mondays 07:00 - 17:00
+          and Tuesdays 07:00 - 12:00 and 13:00 - 17:00::
+
+            [
+                (7 * 60 * 60, 17 * 60 * 60),
+                ((24 + 7) * 60 * 60, (24 + 12) * 60 * 60),
+                ((24 + 13) * 60 * 60, (24 + 17) * 60 * 60),
+            ]
 
     Returns
     -----------------

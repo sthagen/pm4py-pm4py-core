@@ -53,38 +53,34 @@ class Parameters(Enum):
 
 def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     """
-    Extracts a feature table related to the events of an OCEL
+    Extracts a feature table related to the events of an OCEL.
 
     Parameters
-    ---------------
+    ----------
     ocel
         Object-centric event log
     parameters
         Parameters for extracting the feature table, including:
+
         - Parameters.ENABLE_ALL => enables all the belowmentioned features
         - Parameters.ENABLE_EVENT_ACTIVITY => enables the one-hot-encoding of the activities of the event
         - Parameters.ENABLE_EVENT_TIMESTAMP => enables the encoding of the timestamp of the event as feature
         - Parameters.ENABLE_EVENT_NUM_REL_OBJS => enables the "overall number of related objects" feature
         - Parameters.ENABLE_EVENT_NUM_REL_OBJS_TYPE => enables the "number of related objects per type" feature
-        - Parameters.ENABLE_EVENT_STR_ATTRIBUTES => enables the one-hot-encoding of a given collection of string event
-                                                    attributes (specified inside the "str_ev_attr" parameter)
-        - Parameters.ENABLE_EVENT_NUM_ATTRIBUTES => enables the extraction of a given collection of numeric event
-                                                    attributes in the feature table
-        - Parameters.ENABLE_EVENT_START_OT => calculates some features which establish if the event starts the
-                                                lifecycle of some objects of a type.
-        - Parameters.ENABLE_EVENT_END_OT => calculates some features which establish if the event completes the
-                                                lifecycle of some objects of a type.
-        - Parameters.ENABLE_NEW_INTERACTIONS => number of new interactions between the related objects which
-                                        appears in a given event.
-        - Parameters.ENABLE_RELATED_OBJECTS_FEATURES => associates to the event some features calculated on the
-                                                related objects.
+        - Parameters.ENABLE_EVENT_STR_ATTRIBUTES => enables the one-hot-encoding of a given collection of string event attributes (specified inside the "str_ev_attr" parameter)
+        - Parameters.ENABLE_EVENT_NUM_ATTRIBUTES => enables the extraction of a given collection of numeric event attributes in the feature table
+        - Parameters.ENABLE_EVENT_START_OT => calculates some features which establish if the event starts the lifecycle of some objects of a type.
+        - Parameters.ENABLE_EVENT_END_OT => calculates some features which establish if the event completes the lifecycle of some objects of a type.
+        - Parameters.ENABLE_NEW_INTERACTIONS => number of new interactions between the related objects which appears in a given event.
+        - Parameters.ENABLE_RELATED_OBJECTS_FEATURES => associates to the event some features calculated on the related objects.
 
     Returns
-    ------------------
+    -----------------
     data
         Values of the features
     feature_names
         Names of the features
+
     """
     if parameters is None:
         parameters = {}

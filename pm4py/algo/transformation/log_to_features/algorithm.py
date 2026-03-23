@@ -53,10 +53,9 @@ def apply(
         Event log
     variant
         Variant of the feature extraction to use:
-        - Variants.EVENT_BASED => (default) extracts, for each trace, a list of numerical vectors containing for each
-            event the corresponding features
-        - Variants.TRACE_BASED => extracts for each trace a single numerical vector containing the features
-            of the trace
+
+        - Variants.EVENT_BASED => (default) extracts, for each trace, a list of numerical vectors containing for each event the corresponding features
+        - Variants.TRACE_BASED => extracts for each trace a single numerical vector containing the features of the trace
         - Variants.TEMPORAL => extracts temporal features from the traditional event log
 
     Returns

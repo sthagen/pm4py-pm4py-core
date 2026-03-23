@@ -141,9 +141,10 @@ def apply_trace(
     variant=DEFAULT_VARIANT,
 ):
     """
-    apply alignments to a trace
+    Apply alignments to a trace.
+
     Parameters
-    -----------
+    ----------
     trace
         :class:`pm4py.log.log.Trace` trace of events
     petri_net
@@ -163,13 +164,15 @@ def apply_trace(
             mapping of each transition in the model to corresponding model cost
             Parameters.PARAM_TRACE_COST_FUNCTION ->
             mapping of each index of the trace to a positive cost value
+
     Returns
-    -----------
+    -------
     alignment
         :class:`dict` with keys **alignment**, **cost**, **visited_states**, **queued_states** and
         **traversed_arcs**
         The alignment is a sequence of labels of the form (a,t), (a,>>), or (>>,t)
         representing synchronous/log/model-moves.
+
     """
     if parameters is None:
         parameters = copy({PARAMETER_CONSTANT_ACTIVITY_KEY: DEFAULT_NAME_KEY})
@@ -224,9 +227,10 @@ def apply_log(
     variant=DEFAULT_VARIANT,
 ):
     """
-    apply alignments to a log
+    Apply alignments to a log.
+
     Parameters
-    -----------
+    ----------
     log
         object of the form :class:`pm4py.log.log.EventLog` event log
     petri_net
@@ -241,12 +245,13 @@ def apply_log(
         :class:`dict` parameters of the algorithm,
 
     Returns
-    -----------
+    -------
     alignment
         :class:`list` of :class:`dict` with keys **alignment**, **cost**, **visited_states**, **queued_states** and
         **traversed_arcs**
         The alignment is a sequence of labels of the form (a,t), (a,>>), or (>>,t)
         representing synchronous/log/model-moves.
+
     """
     if parameters is None:
         parameters = dict()

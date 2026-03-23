@@ -174,17 +174,26 @@ def run_simulation_generators(sim_gens):
 # -- Main apply function --
 def apply(log, net, im, fm, parameters=None):
     """
-    Performs a Monte Carlo simulation of an accepting Petri net using a generator-based scheduler.
+    Performs a Monte Carlo simulation of an accepting Petri net using a
+    generator-based scheduler.
 
-    Parameters:
-        log         : Event log.
-        net         : Petri net.
-        im          : Initial marking.
-        fm          : Final marking.
-        parameters  : Dictionary of simulation parameters.
+    Parameters
+    ----------
+    log : EventLog
+        Event log.
+    net : PetriNet
+        Petri net.
+    im : Marking
+        Initial marking.
+    fm : Marking
+        Final marking.
+    parameters : dict, optional
+        Dictionary of simulation parameters.
 
-    Returns:
-        A tuple (simulated_log, simulation_result) where simulation_result is a dictionary:
+    Returns
+    -------
+    tuple
+        A tuple (simulated_log, simulation_result) where simulation_result is a dictionary::
 
             simulation_result = {
                 "output_places_interval_trees": places_interval_trees,

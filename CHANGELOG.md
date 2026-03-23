@@ -1,7 +1,130 @@
 # Changelog of pm4py
 
+# pm4py 2.7.22 (2026.03.20)
 
-# pm4py 2.7.20 (2026.03.11)
+### Added
+* 865063cead75f630fa806adab2bd7835149ebffd
+  * CI/CD test cases
+* 78a2b4516fce5b7d089093e62ba38de37ecc5c2e
+  * added test case for Woflan
+* 8787819fd54cdb7893fe7261406004e94ae805c6
+  * added MURATA test cases
+  
+### Changed
+* ab5dc93321918c267d51a66a161d4105f6838e05
+  * improvement format_dataframe for Polars
+* 4293158672bbcf10a9cce0b0b33ee42ee1ac846f
+  * performance improvement WOFLAN
+* a8482a2f0609e943c3184db59077733283f7b0e9
+  * keep NAN values in attributes
+* 681107a108ffb2c51a2367e2f8e09d7f33815aec
+  ce8585807fbc3ca6640f8032a4eecca12923d202
+  7a8baf1d7bd665258695c62019f97fe4a919535c
+  03be978c75b9f804fe64d8fed57732e0197c419f
+  * updates for Numpy 2.4 and Pandas 3.x
+* f70e9a6fb45357f1d65d75e620e515714253ccc3
+  * revised BPMN layouting (nicer)
+
+### Deprecated
+
+### Fixed
+* 1d0d186d1ec7d68bec44866a0d02001b49bd4222
+  * bug fix temporal profile on Polars
+* 47a6b7fa5dfe2c0be078e41c3d4338ec6093b8f4
+  * fixed fea extraction and process cube
+* 403861b6637a338fca3034e978ecf25470bc8c24
+  * bug fixes Heuristics Net to Petri Net conversion
+* 72ef9a29e377d1d36c842a6109e6477005949133
+  * bug fix alignments approximation on process trees
+* 52c8f3c2e96b99641d544f5a8763c5868ebfaf83
+  677e6f700f3bfa1df6990a19118c7df205223b58
+  b4ee504e6a20c0cca42530943cfa2d0821854168
+  a44a70bea4af654994e0e624923f9fc8d361ee8a
+  d7cf2dbc5c40372fa775894c531a8864f57ef178
+  d29139419ffc2169c5f7b247a04051ca3617184d
+  b52f2b9e01b47c9aba50d9ee70dfcf20ca1107dc
+  4f6d52a6d56373ebdde40bc078e14a972d86c677
+  413236077caa978f304e8b23c2e6524fe55031ef
+  56d13ad9f586415a36020233d81dd513f053209f
+  ff2e22815ffc7e469edae17bc9d111cb44e98b45
+  bffd377abb3304a7650296724fef96dc9fdb2036
+  * bug fixes OCEL 2.0 importing/exporting
+* c611e9957ad78003053477677798ef56819e8182
+  * Incorrectly calculating cycle time and waiting time
+* 6f11809aaf1748460ef08afeb018b54adfa313b4
+  * bug fix DECLARE discovery/conformance
+* a34c250c4c135bb3470d030efa3ea43ca8311444
+  5486e7fc7fa69a453c45f4dc117a094651c147ea
+  * bug fixes Murata
+* 14fb5321da7de2bb04a1df4bd455427c4d183985
+  * LTL checking filtering bug fix
+* a3fd52911d1f8bd19932369b00f8874c4185db4f
+  * paths performance filter bug fix
+* 44c93eb2441a03f1df17b6a7ee4bd77185dede8d
+  64beb6f9d45e0580124ec5d3391410f1dd88658b
+  * fixed extended Cyclomatic and Cardoso metrics
+
+### Removed
+
+### Other
+* 12c17ca6e287143f41d782e086f83dc8627ea1f3
+  d8ea730cc526f5e36dc99f5d0c347156ba504c28
+  * update generate dependencies script
+
+
+# pm4py 2.7.21 (2025.10.10)
+
+### Added
+* cc97057cb5ac19c080e37bddb3ccba09d135a94b
+  * Polars stats/filters in simplified interface.
+* 82d169c96e2b5d4fc5292755bcdc5c0fca22e220
+  0744e58a58242a73f9edd845e352321d8173ab59
+  * DFG computation in Polars
+* 3d1fcd007fba7fc25970a71d660dbb663f4500ba
+  * Performance spectrum computation in Polars
+* 99b56bdf1ea17401c384baf2a3fe6b195405edb4
+  fca1ee8432008436860ad9234185f592f6f408f2
+  e0f2b4d00f0ab6f7292a5a37ca63a74f1a59e04c
+  * different process discovery algorithms on Polars
+* e0f2b4d00f0ab6f7292a5a37ca63a74f1a59e04c
+  * first alignments on Polars lazyframes
+* c1a45f25f91f28e98a71660b023e18f05b872cc4
+  * porting project_on_event_attribute util to Polars
+* 47dab1429c5e9775984b7e20f0a2af465d1cc53e
+  * miscellaneous process discovery on Polars lazy
+* e00af66654565b70bc6e3ac8cb6ec2ff380e1b97
+  * batch detection on Polars lazy
+* 53af236f39b8fd865011a08cc51ff803d00402d8
+  * MSD for Polars lazyframes
+* 1f4c041a5f5c90934548b17c0a77ea0d990741c0
+  * footprints on Polars
+* e92447af5b33dd1fbf1f9174ea78f51933309b06
+  * Polars feature extraction
+* 3b4afd4cb8fcb07ffad9f91b74bad011d455eb46
+  * process cubes in Polars
+
+### Changed
+* bd96b5cfda406c3d5cc654acb8bef57c6e13acaf
+  * example for process cubes
+
+### Deprecated
+
+### Fixed
+* 1bb9fa3abb223c944413013298e686c7a1c9b48f
+  * Bug fix filter_paths_performance
+* 3ce5fbe917742a3a1d717a81ca14c96d7611968a
+  * Fix Python-3.11-specific issue on variants duration graph visualization
+* b4df572e46ff17eae0446b84bfa930e9da0af2dd
+  * fixed citation for structural equation metric
+* 66121b4920a1ce2c345858127032eaf54a8595a5
+  * space management in Pandas feature extraction
+
+### Removed
+
+### Other
+
+
+# pm4py 2.7.20 (2025.08.31)
 
 ### Added
 * 0fd2714a6ca38189aabee43bb5b84d63eaba5492

@@ -39,7 +39,7 @@ def openai_query(
     extra_payload: Optional[Dict[Any, Any]] = None,
     **kwargs
 ) -> str:
-    """
+    r"""
     Executes the provided prompt, obtaining the answer from the OpenAI APIs.
 
     :param prompt: The prompt to be executed.
@@ -47,7 +47,7 @@ def openai_query(
     :param openai_model: (Optional) OpenAI model to be used (default: "gpt-3.5-turbo").
     :param api_url: (Optional) OpenAI API URL.
     :param extra_payload: (Optional) Additional payload fields merged into the request body.
-    :param **kwargs: Additional parameters to pass to the OpenAI API.
+    :param \**kwargs: Additional parameters to pass to the OpenAI API.
     :return: The response from the OpenAI API as a string.
 
     .. code-block:: python3
@@ -899,13 +899,14 @@ def automated_hypotheses_formulation(
 def explain_visualization(
     vis_saver, *args, connector=openai_query, **kwargs
 ) -> str:
-    """
-    Explains a process mining visualization using LLMs by saving it as a .png image and providing the image to the Large Language Model along with a description.
+    r"""Explains a process mining visualization using LLMs by saving it as a
+    .png image and providing the image to the Large Language Model along with a
+    description.
 
     :param vis_saver: The visualizer function used to save the visualization to disk.
     :param args: Positional arguments required by the visualizer function.
     :param connector: (Optional) The connector method to communicate with the large language model (default: openai_query).
-    :param **kwargs: Additional keyword arguments for the visualizer function or the connector (e.g., annotations, API key).
+    :param \**kwargs: Additional keyword arguments for the visualizer function or the connector (e.g., annotations, API key).
     :return: The explanation of the visualization as a string.
 
     .. code-block:: python3

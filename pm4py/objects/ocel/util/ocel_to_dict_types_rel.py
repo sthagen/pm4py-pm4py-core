@@ -29,14 +29,12 @@ from pm4py.util import pandas_utils
 def apply(
     ocel: OCEL,
 ) -> Dict[str, Dict[Union[str, Tuple[str, str]], pd.DataFrame]]:
-    """
-    Gets from an object-centric event log (OCEL)
-    a dictionary associating to every event/object/e2o/o2o/change type
-    a dataframe containing the associated information.
-    This effectively splits the information of different event/object types
-    in dense dataframes.
+    r"""Gets from an object-centric event log (OCEL) a dictionary associating to
+    every event/object/e2o/o2o/change type a dataframe containing the
+    associated information. This effectively splits the information of
+    different event/object types in dense dataframes.
 
-    Running example:
+    Running example::
 
         import pm4py
         from pm4py.objects.ocel.util import ocel_to_dict_types_rel
@@ -52,16 +50,17 @@ def apply(
             print(table)
 
     Parameters
-    -------------
-    ocel
-        Object-centric event log
+    ----------
+    ocel : OCEL
+        Object-centric event log.
 
     Returns
-    -----------
-    dct_types_rel
+    -------
+    dct_types_rel : dict
         Dictionary associating to every type the corresponding dense table.
 
         Keys at the first level:
+
         - ev_types: pointing to the different event types of the object-centric event log
         - obj_types: pointing to the different object types of the object-centric event log
         - e2o: pointing to the different event-object relationships of the object-centric event log
@@ -69,9 +68,10 @@ def apply(
         - object_changes: pointing to temporal changes in the attributes of the different object types of an OCEL
 
         Keys at the second level:
-        - for "ev_types", "obj_types" and "object_changes": the name of the event/object type related to the dense table
-        - for "e2o": a tuple in which the first element is an event type, and the second element is an object type
-        - for "o2o": a tuple in which the two elements are interconnected object types
+
+        - for "ev_types", "obj_types" and "object_changes": the name of the event/object type related to the dense table.
+        - for "e2o": a tuple in which the first element is an event type, and the second element is an object type.
+        - for "o2o": a tuple in which the two elements are interconnected object types.
 
         Value: a Pandas dataframe (dense table).
     """

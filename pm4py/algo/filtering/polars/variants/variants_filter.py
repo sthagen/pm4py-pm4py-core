@@ -79,7 +79,7 @@ def apply(
 
     # Convert admitted variants to strings
     variant_strings = [constants.DEFAULT_VARIANT_SEP.join(v) for v in admitted_variants]
-    
+
     # Filter for matching variants
     matching_cases = variants_df.filter(
         pl.col("variant").is_in(variant_strings)
@@ -159,7 +159,7 @@ def apply_auto_filter(
     activity_key = exec_utils.get_param_value(
         Parameters.ACTIVITY_KEY, parameters, constants.DEFAULT_NAME_KEY
     )
-    
+
     # Get variant counts
     variant_counts = (
         df.sort([case_id_glue, "time:timestamp"])
@@ -173,13 +173,13 @@ def apply_auto_filter(
         .count()
         .sort("count", descending=True)
     )
-    
+
     # Calculate cumulative percentage
     total_cases = variant_counts.select(pl.sum("count")).collect()[0, 0]
     variant_counts = variant_counts.with_columns(
         (pl.col("count").cumsum() / total_cases).alias("cumulative_percentage")
     )
-    
+
     # Keep variants covering 80% of cases
     selected_variants = (
         variant_counts
@@ -188,7 +188,7 @@ def apply_auto_filter(
         .collect()["variant"]
         .to_list()
     )
-    
+
     # Apply filter
     return apply_from_variant_list(df, selected_variants, parameters)
 
@@ -236,7 +236,7 @@ def apply_from_variant_list(
             .alias("variant")
         )
     )
-    
+
     # Filter for matching variants
     matching_cases = variants_df.filter(
         pl.col("variant").is_in(variants)
