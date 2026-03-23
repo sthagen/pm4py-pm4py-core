@@ -5,7 +5,9 @@ from pm4py.objects.log.obj import EventLog
 
 
 def execute_script():
-    log = pm4py.read_xes("../tests/input_data/receipt.xes")
+    log = pm4py.read_xes(
+        "../tests/input_data/receipt.xes", return_legacy_log_object=True
+    )
     log = EventLog(log[0:100])
 
     epsilon = 0.5

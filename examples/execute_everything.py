@@ -950,6 +950,42 @@ def streaming_declare():
     print("\n\nstreaming_declare")
     streaming_declare.execute_script()
 
+def alignment_discounted_a_star():
+    from examples import alignment_discounted_a_star
+    print("\n\nalignment_discounted_a_star")
+    alignment_discounted_a_star.execute_script()
+
+def antialignments_and_precision():
+    from examples import antialignments_and_precision
+    print("\n\nantialignments_and_precision")
+    antialignments_and_precision.execute_script()
+
+def multialignments():
+    from examples import multialignments
+    print("\n\nmultialignments")
+    multialignments.execute_script()
+
+def timeline_dfg():
+    from examples import timeline_dfg
+    print("\n\ntimeline_dfg")
+    timeline_dfg.execute_script()
+
+def genetic_miner():
+    from examples import genetic_miner
+    print("\n\ngenetic_miner")
+    genetic_miner.execute_script()
+
+def obj_centr_conf_check():
+    from examples import obj_centr_conf_check
+    print("\n\nobj_centr_conf_check")
+    obj_centr_conf_check.execute_script()
+
+
+def ocpn_manual_construction():
+    from examples import ocpn_manual_construction
+    print("\n\nocpn_manual_construction")
+    ocpn_manual_construction.execute_script()
+
 
 def execute_script(f):
     try:
@@ -1043,6 +1079,13 @@ def main():
     if EXECUTE_EXAMPLES:
         if importlib.util.find_spec("polars"):
             execute_script(polars_process_cubes)
+        execute_script(alignment_discounted_a_star)
+        execute_script(antialignments_and_precision)
+        execute_script(multialignments)
+        execute_script(timeline_dfg)
+        execute_script(genetic_miner)
+        execute_script(obj_centr_conf_check)
+        execute_script(ocpn_manual_construction)
         execute_script(log_to_fit_precise_pn)
         execute_script(inductive_miner_dfg_lc)
         execute_script(log_projection_dfg_variant)

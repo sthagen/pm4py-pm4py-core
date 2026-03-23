@@ -117,6 +117,12 @@ def apply(trace, petri_net, initial_marking, final_marking, parameters=None):
 
     parameters = copy(parameters)
     synchro = exec_utils.get_param_value(Parameters.SYNCHRONOUS, parameters, None)
+    ret_tuple_as_trans_desc = exec_utils.get_param_value(
+        Parameters.PARAM_ALIGNMENT_RESULT_IS_SYNC_PROD_AWARE, parameters, False
+    )
+    max_align_time_trace = exec_utils.get_param_value(
+        Parameters.PARAM_MAX_ALIGN_TIME_TRACE, parameters, sys.maxsize
+    )
     if  synchro is None or synchro:
         activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, DEFAULT_NAME_KEY)
         trace_cost_function = exec_utils.get_param_value(Parameters.PARAM_TRACE_COST_FUNCTION, parameters, None)
@@ -158,7 +164,15 @@ def apply(trace, petri_net, initial_marking, final_marking, parameters=None):
         expo = exec_utils.get_param_value(Parameters.EXPONENT, parameters, None)
         if expo is None:
             expo=2
-        alignment = __search_without_synchr(petri_net, initial_marking, final_marking,trace, expo=expo)
+        alignment = __search_without_synchr(
+            petri_net,
+            initial_marking,
+            final_marking,
+            trace,
+            ret_tuple_as_trans_desc=ret_tuple_as_trans_desc,
+            max_align_time_trace=max_align_time_trace,
+            expo=expo,
+        )
     return alignment
 
 
@@ -336,6 +350,34 @@ def apply_sync_prod(sync_prod, initial_marking, final_marking, skip, ret_tuple_a
                                 expo=expo)
 
 
+def __describe_alignment_move(move):
+    if isinstance(move, tuple) and len(move) == 2:
+        log_move, model_move = move
+        model_name = model_move.name if hasattr(model_move, "name") else model_move
+        model_label = model_move.label if hasattr(model_move, "label") else model_move
+        return (log_move, model_name), (log_move, model_label)
+
+    return move.name, move.label
+
+
+def __reconstruct_alignment(state, visited, queued, traversed, ret_tuple_as_trans_desc=False):
+    cost = state.g
+    alignment = []
+    while state.p is not None and state.t is not None:
+        move_name, move_label = __describe_alignment_move(state.t)
+        alignment.insert(0, (move_name, move_label) if ret_tuple_as_trans_desc else move_label)
+        state = state.p
+
+    return {
+        "alignment": alignment,
+        "cost": cost,
+        "visited_states": visited,
+        "queued_states": queued,
+        "traversed_arcs": traversed,
+        "lp_solved": 0,
+    }
+
+
 def __search_with_synchr(sync_net, ini, fin, skip, ret_tuple_as_trans_desc=False,
                          max_align_time_trace=sys.maxsize, expo=2):
     '''
@@ -410,7 +452,7 @@ def __search_with_synchr(sync_net, ini, fin, skip, ret_tuple_as_trans_desc=False
 
             heapq.heappush(open_set, tp)
 
-def __search_without_synchr(net, ini, fin, log_trace, skip= utils.SKIP, ret_tuple_as_trans_desc=True,
+def __search_without_synchr(net, ini, fin, log_trace, skip= utils.SKIP, ret_tuple_as_trans_desc=False,
                             max_align_time_trace=sys.maxsize,expo=2):
     '''
     In this function that can be called with the following way:
@@ -458,8 +500,13 @@ def __search_without_synchr(net, ini, fin, log_trace, skip= utils.SKIP, ret_tupl
             continue
 
         if current_marking[0] == fin and current_marking[1] == len(trace):
-            return utils.__reconstruct_alignment(curr, visited, queued, traversed,
-                                                 ret_tuple_as_trans_desc=ret_tuple_as_trans_desc)
+            return __reconstruct_alignment(
+                curr,
+                visited,
+                queued,
+                traversed,
+                ret_tuple_as_trans_desc=ret_tuple_as_trans_desc,
+            )
 
         closed[current_marking]=curr.l
 

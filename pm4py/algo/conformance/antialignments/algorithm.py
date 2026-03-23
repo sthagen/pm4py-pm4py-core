@@ -80,7 +80,13 @@ def apply_log(log, petri_net, initial_marking, final_marking, parameters=None, v
 
     start_time = time.time()
 
-    antialignments = exec_utils.get_variant(variant).apply(log, petri_net, initial_marking, final_marking, parameters=None)
+    antialignments = exec_utils.get_variant(variant).apply(
+        log,
+        petri_net,
+        initial_marking,
+        final_marking,
+        parameters=parameters,
+    )
 
     total_time = start_time - time.time()
 

@@ -5,7 +5,7 @@ from pm4py.objects.log.importer.xes import importer as xes_importer
 from pm4py.objects.petri_net.importer import importer as petri_importer
 
 
-def testSynchronousDiscountedAlignment():
+def synchronous_discounted_alignment():
     '''
     This function runs an alignment based on the discounted edit distance
     By using the synchronous product
@@ -27,7 +27,7 @@ def testSynchronousDiscountedAlignment():
     print(alignments1)
     print("Time:",(time.time()-start))
 
-def testNoSynchronousDiscountedAlignment():
+def no_synchronous_discounted_alignment():
     '''
     This function runs an alignment based on the discounted edit distance
     By using the Petri net and petri_net.utils.align_utils.discountedEditDistance function
@@ -46,7 +46,10 @@ def testNoSynchronousDiscountedAlignment():
     print("Time:",(time.time()-start))
 
 
+def execute_script():
+    synchronous_discounted_alignment()
+    no_synchronous_discounted_alignment()
+
+
 if __name__ == '__main__':
-    # example on the first trace
-    testSynchronousDiscountedAlignment()
-    testNoSynchronousDiscountedAlignment()
+    execute_script()

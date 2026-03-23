@@ -56,8 +56,8 @@ def apply(log, petri_net, ini, fin, parameters=None):
     # get variants
     variants_idxs = variants_module.get_variants_from_log_trace_idx(log, parameters=parameters)
     variants = []
-    for index_variant, var in enumerate(variants_idxs):
-        variants.append(var.split(","))
+    for var in variants_idxs:
+        variants.append(list(var))
 
     # get the number of times we can reach the same marking, very usefull for choices and loops
     marking_limit =  exec_utils.get_param_value(Parameters.MARKING_LIMIT, parameters, None)
