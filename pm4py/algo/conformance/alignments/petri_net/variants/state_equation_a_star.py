@@ -1,6 +1,6 @@
 '''
 PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+Copyright (C) 2026 Process Intelligence Solutions GmbH
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,20 +19,6 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-"""This module contains code that allows us to compute alignments on the basis
-of a regular A* search on the state-space of the synchronous product net of a
-trace and a Petri net. The main algorithm follows [1]_. When running the log-
-based variant, the code is running in parallel on a trace based level.
-Furthermore, by default, the code applies heuristic estimation, and prefers
-those states that have the smallest h-value in case the f-value of two states
-is equal.
-
-References
-----------
-.. [1] Sebastiaan J. van Zelst et al., "Tuning Alignment Computation: An Experimental Evaluation",
-      ATAED@Petri Nets/ACSD 2017: 6-20. http://ceur-ws.org/Vol-1847/paper01.pdf
-
-"""
 
 import heapq
 import sys

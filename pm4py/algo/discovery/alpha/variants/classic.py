@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+PM4Py – A Process Mining Library for Python
+Copyright (C) 2026 Process Intelligence Solutions GmbH
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,16 +19,6 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-"""
-This module implements the "classic" alpha miner [1]_. It converts the
-input event log, which should be a log, to the (well-known) directly follows
-abstraction. For example, when we have a trace of the form (control-flow
-perspective) <...a,b,...>, we observe the relation a>b, i.e. activity a
-precedes activity b. From the directly follows relations, the alpha relations
-parallelism (||), conflict (x) and causality (->) are deduced. These relations
-form the basics for finding the places in the net. Finally, a start and end
-place is added.
-"""
 
 import time
 from itertools import product

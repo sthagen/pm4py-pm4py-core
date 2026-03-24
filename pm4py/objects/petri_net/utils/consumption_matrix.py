@@ -1,6 +1,6 @@
 '''
-    PM4Py – A Process Mining Library for Python
-Copyright (C) 2024 Process Intelligence Solutions UG (haftungsbeschränkt)
+PM4Py – A Process Mining Library for Python
+Copyright (C) 2026 Process Intelligence Solutions GmbH
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -19,13 +19,6 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-"""
-Implements the consumption matrix as explained in the following paper:
-
-van Dongen, Boudewijn F. "Efficiently computing alignments." International Conference on Business Process Management.
-Springer, Cham, 2018.
-https://link.springer.com/chapter/10.1007/978-3-319-98648-7_12
-"""
 
 from typing import Dict
 
