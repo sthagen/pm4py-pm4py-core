@@ -1,4 +1,5 @@
 import os
+import numpy as np
 from pm4py.algo.analysis.woflan import algorithm as woflan
 from pm4py.objects.log.importer.xes import importer as xes_import
 from pm4py.algo.discovery.inductive import algorithm as inductive_miner
@@ -7,7 +8,9 @@ from pm4py.objects.petri_net.obj import PetriNet, Marking
 from pm4py.objects.petri_net.utils import petri_utils
 from pm4py.algo.analysis.woflan.graphs.minimal_coverability_graph import minimal_coverability_graph
 import unittest
+from unittest import mock
 from pm4py.objects.conversion.process_tree import converter as process_tree_converter
+from pm4py.util import nx_utils
 
 
 class WoflanTest(unittest.TestCase):
@@ -185,6 +188,42 @@ class WoflanTest(unittest.TestCase):
         initial_marking = Marking()
         initial_marking[p_1] = 1
         mcg = minimal_coverability_graph.apply(net, initial_marking)
+
+    def test_compute_unbounded_sequences(self):
+        tree = nx_utils.DiGraph()
+        tree.add_node(0, marking=np.array([0]))
+        tree.add_node(1, marking=np.array([0]))
+        tree.add_node(2, marking=np.array([np.inf]))
+        tree.add_edge(0, 1, transition="good")
+        tree.add_edge(0, 2, transition="bad")
+
+        class FakeWoflan:
+            def __init__(self):
+                self._tree = None
+
+            def get_net(self):
+                return None
+
+            def get_initial_marking(self):
+                return None
+
+            def get_final_marking(self):
+                return None
+
+            def set_restricted_coverability_tree(self, tree):
+                self._tree = tree
+
+            def get_restricted_coverability_tree(self):
+                return self._tree
+
+        with mock.patch.object(
+            woflan, "restricted_coverability_tree", return_value=tree
+        ), mock.patch.object(
+            woflan, "convert_marking", return_value=np.array([1])
+        ):
+            sequences = woflan.compute_unbounded_sequences(FakeWoflan())
+
+        self.assertEqual([["bad"]], sequences)
 
 
 if __name__ == '__main__':

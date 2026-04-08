@@ -26,7 +26,7 @@ author = 'Process Intelligence Solutions'
 # The short X.Y version
 version = '2.7'
 # The full version, including alpha/beta/rc tags
-release = '2.7.20'
+release = '2.7.22'
 
 # -- General configuration ---------------------------------------------------
 
@@ -121,6 +121,7 @@ html_theme_options = {
 }
 
 if generate_for_website:
+    html_favicon = '_static/favicon.ico'
     html_theme_options.update({
         "switcher": {
             "json_url": "/static/api/versions.json",

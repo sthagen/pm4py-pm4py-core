@@ -70,6 +70,10 @@ def bfs_tree(*args, **kwargs):
     return DEFAULT_NX_ENVIRONMENT.bfs_tree(*args, **kwargs)
 
 
+def topological_sort(*args, **kwargs):
+    return DEFAULT_NX_ENVIRONMENT.topological_sort(*args, **kwargs)
+
+
 def contracted_nodes(*args, **kwargs):
     return DEFAULT_NX_ENVIRONMENT.contracted_nodes(*args, **kwargs)
 

@@ -45,6 +45,7 @@ class Parameters(Enum):
     ACTIVITY_KEY = PARAMETER_CONSTANT_ACTIVITY_KEY
     DECREASING_FACTOR = "decreasingFactor"
     POSITIVE = "positive"
+    IS_OR_FILTER = "isOrFilter"
 
 
 def apply(
@@ -60,17 +61,21 @@ def apply(
     df
         Dataframe
     admitted_traces
-        List of admitted traces (to include/exclude)
+        List of admitted traces (to include/exclude), per default keeps all cases that match at
+        least one of these traces. Use '...' to model eventually-follows relations.
     parameters
         Parameters of the algorithm, including:
-            Parameters.CASE_ID_KEY -> Column that contains the Case ID
-            Parameters.ACTIVITY_KEY -> Column that contains the activity
-            Parameters.POSITIVE -> Specifies if the filter should be applied including traces (positive=True)
-            or excluding traces (positive=False)
-            variants_df -> If provided, avoid recalculation of the variants dataframe
+
+            - Parameters.CASE_ID_KEY -> Column that contains the Case ID
+            - Parameters.ACTIVITY_KEY -> Column that contains the activity
+            - Parameters.POSITIVE -> Specifies if the filter should be applied including traces (positive=True)
+              or excluding traces (positive=False)
+            - Parameters.IS_OR_FILTER -> Default is True. If False, each case must match all admitted_traces
+              instead of just one.
+            - variants_df -> If provided, avoid recalculation of the variants dataframe
 
     Returns
-    -----------
+    -------
     df
         Filtered dataframe
     """
@@ -88,6 +93,9 @@ def apply(
         if "variants_df" in parameters
         else get_variants_df(df, parameters=parameters)
     )
+    is_or_filter = exec_utils.get_param_value(
+        Parameters.IS_OR_FILTER, parameters, True
+    )
 
     if variants_df.empty:
         ret = df.iloc[0:0] if positive else df
@@ -102,12 +110,16 @@ def apply(
             lambda x: constants.DEFAULT_VARIANT_SEP.join(list(x))
         )
 
-    filter_regex = "|".join(
-        [f"({translate_infix_to_regex(inf)})" for inf in admitted_traces]
-    )
-    variants_df["matches_infix"] = variants_df["variant"].apply(
-        lambda t: bool(re.search(filter_regex, t))
-    )
+    if is_or_filter:
+        filter_regex = "|".join([f"({translate_infix_to_regex(inf)})" for inf in admitted_traces])
+        variants_df["matches_infix"] = variants_df["variant"].apply(
+            lambda t: bool(re.search(filter_regex, t))
+        )
+    else:
+        variants_df["matches_infix"] = variants_df["variant"].apply(
+            lambda t: all(re.search(translate_infix_to_regex(inf), t) for inf in admitted_traces)
+        )
+
     variants_df = variants_df[variants_df["matches_infix"]]
 
     i1 = df.set_index(case_id_glue).index

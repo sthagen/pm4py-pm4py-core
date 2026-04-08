@@ -42,6 +42,35 @@ class DataframePrefilteringTest(unittest.TestCase):
         dataframe = variants_filter.apply(dataframe, chosen_variants)
         del dataframe
 
+    def test_filtering_trace(self):
+        # to avoid static method warnings in tests,
+        # that by construction of the unittest package have to be expressed in such way
+        from pm4py.algo.filtering.pandas.traces import trace_filter
+        self.dummy_variable = "dummy_value"
+        input_log = os.path.join(INPUT_DATA_DIR, "running-example.csv")
+        dataframe = pandas_utils.read_csv(input_log)
+        dataframe = dataframe_utils.convert_timestamp_columns_in_df(dataframe, timest_format=constants.DEFAULT_TIMESTAMP_PARSE_FORMAT)
+
+        admitted_traces = [['register request', '...'], ['register request', '...', 'reject request']]
+        dataframe_or = trace_filter.apply(dataframe, admitted_traces)
+        dataframe_and = trace_filter.apply(dataframe, admitted_traces, parameters={trace_filter.Parameters.IS_OR_FILTER: False})
+
+        variants_or = case_statistics.get_variant_statistics(dataframe_or)
+        variants_and = case_statistics.get_variant_statistics(dataframe_and)
+
+        self.assertTrue(all(map(lambda v: v["variant"][0] == 'register request', variants_or)))
+
+        self.assertTrue(all(map(lambda v: v["variant"][0] == 'register request', variants_and)))
+        self.assertTrue(all(map(lambda v: 'reject request' in v["variant"][1:], variants_and)))
+
+        self.assertGreaterEqual(len(variants_or), len(variants_and))
+
+        del dataframe
+        del dataframe_or
+        del dataframe_and
+        del variants_or
+        del variants_and
+
     def test_filtering_attr_events(self):
         # to avoid static method warnings in tests,
         # that by construction of the unittest package have to be expressed in such way
