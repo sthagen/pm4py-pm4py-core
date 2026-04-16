@@ -80,7 +80,7 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
     objects_ot1 = {}
 
     for el in objects_ot0:
-        if not el[1] in objects_ot1:
+        if el[1] not in objects_ot1:
             objects_ot1[el[1]] = []
         objects_ot1[el[1]].append(el[0])
 

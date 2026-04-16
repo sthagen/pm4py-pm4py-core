@@ -5,11 +5,11 @@ import os
 
 
 def execute_script():
-    log = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"))
-    declare = pm4py.discover_declare(log, min_support_ratio=0.3, min_confidence_ratio=1.0)
-    event_stream = pm4py.convert_to_event_stream(log)
+    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"))
+    declare: "dict[str, dict[Any, dict[str, int]]]" = pm4py.discover_declare(log, min_support_ratio=0.3, min_confidence_ratio=1.0)
+    event_stream: "EventStream" = pm4py.convert_to_event_stream(log)
     conf_obj = declare_streaming_cc.apply(declare)
-    live_stream = LiveEventStream()
+    live_stream: "LiveEventStream" = LiveEventStream()
     live_stream.register(conf_obj)
     live_stream.start()
     for index, event in enumerate(event_stream):

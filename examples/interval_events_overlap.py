@@ -4,7 +4,7 @@ import os
 
 
 def execute_script():
-    log = pm4py.read_xes(os.path.join("..", "tests", "input_data", "interval_event_log.xes"))
+    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "interval_event_log.xes"))
     # gets the overlap of each interval event with the other events of the log
     overlap = interval_events_overlap.apply(log, parameters={
         interval_events_overlap.Parameters.START_TIMESTAMP_KEY: "start_timestamp"})

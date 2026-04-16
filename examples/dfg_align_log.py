@@ -12,18 +12,24 @@ import importlib.util
 
 
 def execute_script():
-    log = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"))
+    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"))
     print("number of cases", len(log))
     print("number of events", sum(len(x) for x in log))
     print("number of variants", len(pm4py.get_variants_as_tuples(log)))
-    ac = get.get_attribute_values(log, "concept:name")
+    ac: "dict[Any, int]" = get.get_attribute_values(log, "concept:name")
+    dfg: "dict"
+    sa: "dict"
+    ea: "dict"
     dfg, sa, ea = pm4py.discover_dfg(log)
-    perc = 0.5
+    perc: "float" = 0.5
     dfg, sa, ea, ac = dfg_filtering.filter_dfg_on_activities_percentage(dfg, sa, ea, ac, perc)
     dfg, sa, ea, ac = dfg_filtering.filter_dfg_on_paths_percentage(dfg, sa, ea, ac, perc)
-    aa = time.time()
-    aligned_traces = dfg_alignment.apply(log, dfg, sa, ea)
-    bb = time.time()
+    aa: "float" = time.time()
+    aligned_traces: "dict[str, Any] | list[dict[str, Any]]" = dfg_alignment.apply(log, dfg, sa, ea)
+    bb: "float" = time.time()
+    net: "PetriNet"
+    im: "Marking"
+    fm: "Marking"
     net, im, fm = pm4py.convert_to_petri_net(dfg, sa, ea)
     for trace in aligned_traces:
         if trace["cost"] != trace["internal_cost"]:
@@ -39,10 +45,10 @@ def execute_script():
                                                                       "format": examples_conf.TARGET_IMG_FORMAT})
         visualizer.view(gviz)
 
-    cc = time.time()
+    cc: "float" = time.time()
     aligned_traces2 = petri_alignments.apply(log, net, im, fm,
                                              variant=petri_alignments.Variants.VERSION_DIJKSTRA_LESS_MEMORY)
-    dd = time.time()
+    dd: "float" = time.time()
     print(dd - cc)
     print(sum(x["visited_states"] for x in aligned_traces2))
     print(sum(x["cost"] // align_utils.STD_MODEL_LOG_MOVE_COST for x in aligned_traces2))

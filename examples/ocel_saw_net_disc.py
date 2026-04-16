@@ -6,8 +6,8 @@ import importlib.util
 
 
 def execute_script():
-    ocel = pm4py.read_ocel("../tests/input_data/ocel/ocel_order_simulated.csv")
-    res = saw_nets_disc.apply(ocel)
+    ocel: "OCEL" = pm4py.read_ocel("../tests/input_data/ocel/ocel_order_simulated.csv")
+    res: "dict[str, Any]" = saw_nets_disc.apply(ocel)
 
     if importlib.util.find_spec("graphviz"):
         for ot in res["ot_saw_nets"]:

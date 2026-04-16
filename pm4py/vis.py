@@ -43,12 +43,14 @@ In general, for Graphviz-based visualizations, if you provide a format extension
 """
 
 import os
+import re
 import sys
 from typing import Optional, Union, List, Dict, Any, Tuple, Set
 
 import pandas as pd
 
 from pm4py.objects.bpmn.obj import BPMN
+from pm4py.objects.ocpn.obj import OCPetriNet
 from pm4py.objects.powl.obj import POWL
 from pm4py.objects.heuristics_net.obj import HeuristicsNet
 from pm4py.objects.log.obj import EventLog
@@ -67,9 +69,10 @@ from pm4py.util import constants
 
 
 def _extract_format(format_or_path: str) -> str:
-    if "." in format_or_path:
-        return os.path.splitext(format_or_path)[1][1:].lower()
-    return str(format_or_path).lower()
+    format_or_path = str(format_or_path)
+    ext = os.path.splitext(format_or_path)[1][1:].lower()
+    fmt = ext if ext else format_or_path.lower()
+    return fmt if re.fullmatch(r"[a-z0-9_+-]+", fmt) else ""
 
 
 def _setup_parameters(
@@ -1522,7 +1525,7 @@ def save_vis_ocdfg(
 
 
 def view_ocpn(
-    ocpn: Dict[str, Any],
+    ocpn: Union[Dict[str, Any], OCPetriNet],
     format: str = constants.DEFAULT_FORMAT_GVIZ_VIEW,
     bgcolor: str = "white",
     rankdir: str = constants.DEFAULT_RANKDIR_GVIZ,
@@ -1562,7 +1565,7 @@ def view_ocpn(
 
 
 def save_vis_ocpn(
-    ocpn: Dict[str, Any],
+    ocpn: Union[Dict[str, Any], OCPetriNet],
     file_path: str,
     bgcolor: str = "white",
     rankdir: str = constants.DEFAULT_RANKDIR_GVIZ,

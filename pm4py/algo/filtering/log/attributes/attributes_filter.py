@@ -488,8 +488,8 @@ def apply_trace_attribute(
                 filtered_log.append(trace)
         else:
             if (
-                not attribute_key in trace.attributes
-                or not trace.attributes[attribute_key] in values
+                attribute_key not in trace.attributes
+                or trace.attributes[attribute_key] not in values
             ):
                 filtered_log.append(trace)
 

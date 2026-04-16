@@ -9,35 +9,47 @@ import traceback
 
 
 def execute_script():
-    ENABLE_VISUALIZATION = True
+    ENABLE_VISUALIZATION: "bool" = True
 
     try:
         # reads a XES into an event log
-        log1 = pm4py.read_xes("../tests/input_data/running-example.xes")
+        log1: "pandas.DataFrame" = pm4py.read_xes("../tests/input_data/running-example.xes")
 
         # reads a CSV into a dataframe
-        df = pandas_utils.read_csv("../tests/input_data/running-example.csv")
+        df: "pandas.DataFrame" = pandas_utils.read_csv("../tests/input_data/running-example.csv")
         df = dataframe_utils.convert_timestamp_columns_in_df(df, timest_format=constants.DEFAULT_TIMESTAMP_PARSE_FORMAT, timest_columns=["time:timestamp"])
         df["case:concept:name"] = df["case:concept:name"].astype("string")
 
         # converts the dataframe to an event log
-        log2 = pm4py.convert_to_event_log(df)
+        log2: "EventLog" = pm4py.convert_to_event_log(df)
 
         # converts the log read from XES into a stream and dataframe respectively
-        stream1 = pm4py.convert_to_event_stream(log1)
-        df2 = pm4py.convert_to_dataframe(log1)
+        stream1: "EventStream" = pm4py.convert_to_event_stream(log1)
+        df2: "pandas.DataFrame" = pm4py.convert_to_dataframe(log1)
 
         # writes the log1 to a XES file
         pm4py.write_xes(log1, "ru1.xes")
 
         log1 = pm4py.format_dataframe(log1)
 
+        dfg: "dict"
+        dfg_sa: "dict"
+        dfg_ea: "dict"
         dfg, dfg_sa, dfg_ea = pm4py.discover_dfg(log1)
+        petri_alpha: "PetriNet"
+        im_alpha: "Marking"
+        fm_alpha: "Marking"
         petri_alpha, im_alpha, fm_alpha = pm4py.discover_petri_net_alpha(log1)
+        petri_inductive: "PetriNet"
+        im_inductive: "Marking"
+        fm_inductive: "Marking"
         petri_inductive, im_inductive, fm_inductive = pm4py.discover_petri_net_inductive(log1)
+        petri_heuristics: "PetriNet"
+        im_heuristics: "Marking"
+        fm_heuristics: "Marking"
         petri_heuristics, im_heuristics, fm_heuristics = pm4py.discover_petri_net_heuristics(log1)
-        tree_inductive = pm4py.discover_process_tree_inductive(log1)
-        heu_net = pm4py.discover_heuristics_net(log1)
+        tree_inductive: "ProcessTree" = pm4py.discover_process_tree_inductive(log1)
+        heu_net: "HeuristicsNet" = pm4py.discover_heuristics_net(log1)
 
         pm4py.write_dfg(dfg, dfg_sa, dfg_ea, "ru_dfg.dfg")
         dfg, dfg_sa, dfg_ea = pm4py.read_dfg("ru_dfg.dfg")
@@ -87,16 +99,16 @@ def execute_script():
                 os.remove("dotted_chart.png")
                 os.remove("ps.png")
 
-        aligned_traces = pm4py.conformance_diagnostics_alignments(log1, petri_inductive, im_inductive, fm_inductive, return_diagnostics_dataframe=False)
-        replayed_traces = pm4py.conformance_diagnostics_token_based_replay(log1, petri_inductive, im_inductive, fm_inductive, return_diagnostics_dataframe=False)
+        aligned_traces: "list[dict[str, Any]]" = pm4py.conformance_diagnostics_alignments(log1, petri_inductive, im_inductive, fm_inductive, return_diagnostics_dataframe=False)
+        replayed_traces: "list[dict[str, Any]]" = pm4py.conformance_diagnostics_token_based_replay(log1, petri_inductive, im_inductive, fm_inductive, return_diagnostics_dataframe=False)
 
-        fitness_tbr = pm4py.fitness_token_based_replay(log1, petri_inductive, im_inductive, fm_inductive)
+        fitness_tbr: "dict[str, float]" = pm4py.fitness_token_based_replay(log1, petri_inductive, im_inductive, fm_inductive)
         print("fitness_tbr", fitness_tbr)
-        fitness_align = pm4py.fitness_alignments(log1, petri_inductive, im_inductive, fm_inductive)
+        fitness_align: "dict[str, float]" = pm4py.fitness_alignments(log1, petri_inductive, im_inductive, fm_inductive)
         print("fitness_align", fitness_align)
-        precision_tbr = pm4py.precision_token_based_replay(log1, petri_inductive, im_inductive, fm_inductive)
+        precision_tbr: "float" = pm4py.precision_token_based_replay(log1, petri_inductive, im_inductive, fm_inductive)
         print("precision_tbr", precision_tbr)
-        precision_align = pm4py.precision_alignments(log1, petri_inductive, im_inductive, fm_inductive)
+        precision_align: "float" = pm4py.precision_alignments(log1, petri_inductive, im_inductive, fm_inductive)
         print("precision_align", precision_align)
 
         print("log start activities = ", pm4py.get_start_activities(log2))
@@ -162,8 +174,8 @@ def execute_script():
         print("timeframe filter df traces_intersecting len = ",
               len(pm4py.filter_time_range(df2, "2011-01-01 00:00:00", "2011-02-01 00:00:00", mode="traces_intersecting", case_id_key="case:concept:name", timestamp_key="time:timestamp")))
 
-        wt_log = pm4py.discover_working_together_network(log2)
-        wt_df = pm4py.discover_working_together_network(df2, case_id_key="case:concept:name", resource_key="org:resource", timestamp_key="time:timestamp")
+        wt_log: "SNA" = pm4py.discover_working_together_network(log2)
+        wt_df: "SNA" = pm4py.discover_working_together_network(df2, case_id_key="case:concept:name", resource_key="org:resource", timestamp_key="time:timestamp")
         print("log working together", wt_log)
         print("df working together", wt_df)
         print("log subcontracting", pm4py.discover_subcontracting_network(log2))
@@ -181,8 +193,8 @@ def execute_script():
                 pm4py.save_vis_sna(wt_df, "ru_wt_df.png")
                 os.remove("ru_wt_df.png")
 
-        footprints = pm4py.discover_footprints(log1)
-        alignments = pm4py.conformance_diagnostics_alignments(log1, petri_inductive, im_inductive, fm_inductive, return_diagnostics_dataframe=False)
+        footprints: "list[dict[str, Any]] | dict[str, Any]" = pm4py.discover_footprints(log1)
+        alignments: "list[dict[str, Any]]" = pm4py.conformance_diagnostics_alignments(log1, petri_inductive, im_inductive, fm_inductive, return_diagnostics_dataframe=False)
 
         if ENABLE_VISUALIZATION:
             if importlib.util.find_spec("graphviz"):

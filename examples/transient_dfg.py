@@ -5,8 +5,8 @@ import os
 
 
 def execute_script():
-    log = xes_importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
-    performance_dfg = dfg_miner.apply(log, variant=dfg_miner.Variants.PERFORMANCE)
+    log: "EventLog" = xes_importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    performance_dfg: "dict[tuple[str, str], float]" = dfg_miner.apply(log, variant=dfg_miner.Variants.PERFORMANCE)
     reach_graph, tang_reach_graph, stochastic_map, q_matrix = ctmc.get_tangible_reachability_and_q_matrix_from_dfg_performance(
         performance_dfg)
     # pick the source state

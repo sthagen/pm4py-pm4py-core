@@ -6,7 +6,10 @@ import importlib.util
 
 
 def execute_script():
-    log = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    net: "PetriNet"
+    im: "Marking"
+    fm: "Marking"
     net, im, fm = pm4py.discover_petri_net_ilp(log)
 
     if importlib.util.find_spec("graphviz"):

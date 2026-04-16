@@ -2,7 +2,7 @@ import pm4py
 
 
 def execute_script():
-    log = pm4py.read_xes("../tests/input_data/running-example.xes")
+    log: "pandas.DataFrame" = pm4py.read_xes("../tests/input_data/running-example.xes")
     log = pm4py.extract_outcome_enriched_dataframe(log)
     print(log)
 

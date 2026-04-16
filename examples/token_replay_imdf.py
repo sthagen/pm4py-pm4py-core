@@ -9,10 +9,13 @@ import importlib.util
 
 
 def execute_script():
-    log_path = os.path.join("..", "tests", "input_data", "running-example.xes")
-    log = xes_importer.apply(log_path)
+    log_path: "str" = os.path.join("..", "tests", "input_data", "running-example.xes")
+    log: "EventLog" = xes_importer.apply(log_path)
     print("loaded log")
-    process_tree = inductive_miner.apply(log)
+    process_tree: "ProcessTree" = inductive_miner.apply(log)
+    net: "PetriNet"
+    marking: "Marking"
+    final_marking: "Marking"
     net, marking, final_marking = process_tree_converter.apply(process_tree)
     for place in marking:
         print("initial marking " + place.name)
@@ -26,9 +29,9 @@ def execute_script():
         pn_vis.view(gviz)
 
     print("started token replay")
-    aligned_traces = token_replay.apply(log, net, marking, final_marking)
+    aligned_traces: "list[dict[str, Any]]" = token_replay.apply(log, net, marking, final_marking)
     fit_traces = [x for x in aligned_traces if x['trace_is_fit']]
-    perc_fitness = 0.00
+    perc_fitness: "float" = 0.00
     if len(aligned_traces) > 0:
         perc_fitness = len(fit_traces) / len(aligned_traces)
     print("perc_fitness=", perc_fitness)

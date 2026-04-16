@@ -150,7 +150,7 @@ def apply(
 
     choices = {}
     for el in frequency_dfg:
-        if not el[0] in choices:
+        if el[0] not in choices:
             choices[el[0]] = {}
         choices[el[0]][el[1]] = frequency_dfg[el]
 

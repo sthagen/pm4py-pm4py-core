@@ -158,7 +158,7 @@ def performance(
     ret0 = {}
     for el in dfgs0:
         for couple in el:
-            if not couple[0] in ret0:
+            if couple[0] not in ret0:
                 ret0[couple[0]] = []
             ret0[couple[0]].append(couple[1])
     ret = Counter()

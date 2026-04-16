@@ -20,7 +20,7 @@ Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
 
-from typing import Any, Dict
+from typing import Any, Dict, Set, Tuple
 from pm4py.objects.ocpn.obj import OCMarking, OCPetriNet
 from pm4py.objects.petri_net.obj import Marking, PetriNet
 from pm4py.objects.petri_net.utils.petri_utils import add_arc_from_to
@@ -48,10 +48,15 @@ def apply(ocpn: OCPetriNet, parameters=None) -> Dict[str, Any]:
 
     object_types = ocpn.object_types
     activities = {t.label for t in ocpn.transitions if t.label}
+    activities_per_object_type = _get_activities_per_object_type(ocpn)
     petri_nets = {ot: _project_ocpn_on_object_type(ocpn, ot) for ot in object_types}
     double_arcs_on_activity = _get_double_arcs(ocpn)
-    start_activities = _get_start_end_activities(ocpn, ocpn.initial_marking)
-    end_activities = _get_start_end_activities(ocpn, ocpn.final_marking)
+    start_activities = _get_start_end_activities(
+        ocpn, ocpn.initial_marking, use_out_arcs=True
+    )
+    end_activities = _get_start_end_activities(
+        ocpn, ocpn.final_marking, use_out_arcs=False
+    )
 
     alternative_format = {
         "activities": activities,
@@ -60,31 +65,75 @@ def apply(ocpn: OCPetriNet, parameters=None) -> Dict[str, Any]:
         "double_arcs_on_activity": double_arcs_on_activity,
         "start_activities": start_activities,
         "end_activities": end_activities,
-        # information not extracted in this implementation
-        "edges": {
+        # information that is not available on a standalone OCPN object is
+        # exposed using the same shape as the legacy discovery dictionary.
+        "edges": _initialize_edge_metrics(object_types),
+        "edges_performance": {
             "event_couples": {ot: {} for ot in object_types},
-            "event_pairs": {ot: {} for ot in object_types},
             "total_objects": {ot: {} for ot in object_types},
         },
-        "activities_indep": {
-            "events": {ot: {} for ot in object_types},
-            "unique_objects": {ot: {} for ot in object_types},
-            "total_objects": {ot: {} for ot in object_types},
-        },
-        "activities_ot": {
-            "events": {ot: {} for ot in object_types},
-            "unique_objects": {ot: {} for ot in object_types},
-            "total_objects": {ot: {} for ot in object_types},
-        },
+        "activities_indep": _initialize_activity_metrics(activities),
+        "activities_ot": _initialize_ot_activity_metrics(
+            object_types, activities_per_object_type
+        ),
         "tbr_results": {},
     }
 
     return alternative_format
 
 
+def _get_activities_per_object_type(ocpn: OCPetriNet) -> Dict[str, Set[str]]:
+    activities = {ot: set() for ot in ocpn.object_types}
+    for arc in ocpn.arcs:
+        transition = None
+        if isinstance(arc.source, OCPetriNet.Transition):
+            transition = arc.source
+        elif isinstance(arc.target, OCPetriNet.Transition):
+            transition = arc.target
+
+        if transition is not None and transition.label is not None:
+            activities[arc.object_type].add(transition.label)
+
+    return activities
+
+
+def _initialize_edge_metrics(object_types) -> Dict[str, Dict[str, Dict[str, Any]]]:
+    return {
+        "event_couples": {ot: {} for ot in object_types},
+        "unique_objects": {ot: {} for ot in object_types},
+        "total_objects": {ot: {} for ot in object_types},
+    }
+
+
+def _initialize_activity_metrics(activities) -> Dict[str, Dict[str, set]]:
+    return {
+        "events": {act: set() for act in activities},
+        "unique_objects": {act: set() for act in activities},
+        "total_objects": {act: set() for act in activities},
+    }
+
+
+def _initialize_ot_activity_metrics(
+    object_types, activities_per_object_type=None
+) -> Dict[str, Dict[str, Dict[str, set]]]:
+    ret = {"events": {}, "unique_objects": {}, "total_objects": {}}
+
+    for ot in object_types:
+        activities = (
+            activities_per_object_type.get(ot, set())
+            if activities_per_object_type is not None
+            else set()
+        )
+        ret["events"][ot] = {act: set() for act in activities}
+        ret["unique_objects"][ot] = {act: set() for act in activities}
+        ret["total_objects"][ot] = {act: set() for act in activities}
+
+    return ret
+
+
 def _project_ocpn_on_object_type(
     ocpn: OCPetriNet, object_type
-) -> tuple[PetriNet, Marking, Marking]:
+) -> Tuple[PetriNet, Marking, Marking]:
     """
     Projects the OCPetriNet into a tuple containing the Petri net projection and the initial and final marking projections for the object type.
 
@@ -208,7 +257,8 @@ def _get_double_arcs(ocpn: OCPetriNet) -> Dict[str, Any]:
 
 def _get_start_end_activities(
     ocpn: OCPetriNet,
-    marking: OCMarking
+    marking: OCMarking,
+    use_out_arcs: bool = True,
 ) -> Dict[str, Any]:
     """
     Returns a dictionary mapping each object type to a dict mapping the start/end activities to empty sets for events, unique_objects, and total_objects.
@@ -225,19 +275,27 @@ def _get_start_end_activities(
     Dict[str, Any]
         The start or end activities dictionaries.
     """
-    # activities are those occuring in the given marking
-    activities = {ot: {} for ot in ocpn.object_types}
+    activities = _initialize_ot_activity_metrics(ocpn.object_types)
 
     if marking is None:
         return activities
 
     for p in marking.places:
         ot = p.object_type
-        if p not in activities[ot]:
-            activities[ot][p.name] = {
-                "events": set(),
-                "unique_objects": set(),
-                "total_objects": set(),
-            }
+        arcs = p.out_arcs if use_out_arcs else p.in_arcs
+        for arc in arcs:
+            if use_out_arcs and isinstance(arc.target, OCPetriNet.Transition):
+                transition = arc.target
+            elif not use_out_arcs and isinstance(arc.source, OCPetriNet.Transition):
+                transition = arc.source
+            else:
+                transition = None
+
+            if transition is None or transition.label is None:
+                continue
+
+            activities["events"][ot].setdefault(transition.label, set())
+            activities["unique_objects"][ot].setdefault(transition.label, set())
+            activities["total_objects"][ot].setdefault(transition.label, set())
 
     return activities

@@ -20,7 +20,7 @@ Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
 from enum import Enum
-from typing import Optional, Dict, Any, Tuple
+from typing import Optional, Dict, Any, Tuple, Union
 
 import polars as pl
 
@@ -33,9 +33,9 @@ class Variants(Enum):
 
 
 def apply(
-    feature_table: pl.LazyFrame | pl.DataFrame,
-    x_col: str | Tuple[str, ...],
-    y_col: str | Tuple[str, ...],
+    feature_table: Union[pl.LazyFrame, pl.DataFrame],
+    x_col: Union[str, Tuple[str, ...]],
+    y_col: Union[str, Tuple[str, ...]],
     agg_col: str,
     variant=Variants.CLASSIC,
     parameters: Optional[Dict[Any, Any]] = None,

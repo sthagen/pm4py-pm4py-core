@@ -4,7 +4,7 @@ import pm4py
 
 
 def execute_script():
-    log = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
     # Metric RBI 1.1: Number of distinct activities done by a resource in a given time interval [t1, t2)
     print(algorithm.distinct_activities(log, "2010-12-30 00:00:00", "2011-01-25 00:00:00", "Sara"))
     # Metric RBI 1.3: Fraction of completions of a given activity a, by a given resource r,

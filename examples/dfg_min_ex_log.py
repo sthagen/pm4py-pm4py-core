@@ -14,30 +14,30 @@ import importlib.util
 
 
 def execute_script():
-    log_path = os.path.join("..", "tests", "input_data", "interval_event_log.xes")
+    log_path: "str" = os.path.join("..", "tests", "input_data", "interval_event_log.xes")
     #log_path = os.path.join("..", "tests", "input_data", "reviewing.xes")
-    log = xes_importer.apply(log_path)
+    log: "EventLog" = xes_importer.apply(log_path)
     parameters = {}
     parameters[constants.PARAMETER_CONSTANT_START_TIMESTAMP_KEY] = "start_timestamp"
     parameters[constants.PARAMETER_CONSTANT_TIMESTAMP_KEY] = "time:timestamp"
     parameters[constants.PARAMETER_CONSTANT_ACTIVITY_KEY] = "concept:name"
     parameters["strict"] = False
     parameters["format"] = examples_conf.TARGET_IMG_FORMAT
-    start_activities = sa_get.get_start_activities(log, parameters=parameters)
-    end_activities = ea_get.get_end_activities(log, parameters=parameters)
+    start_activities: "dict[str, int]" = sa_get.get_start_activities(log, parameters=parameters)
+    end_activities: "dict[str, int]" = ea_get.get_end_activities(log, parameters=parameters)
     parameters["start_activities"] = start_activities
     parameters["end_activities"] = end_activities
-    soj_time = soj_time_get.apply(log, parameters=parameters)
+    soj_time: "dict[str, float]" = soj_time_get.apply(log, parameters=parameters)
     print("soj_time")
     print(soj_time)
-    conc_act = conc_act_get.apply(log, parameters=parameters)
+    conc_act: "dict[tuple[str, str], int]" = conc_act_get.apply(log, parameters=parameters)
     print("conc_act")
     print(conc_act)
-    efg = efg_get.apply(log, parameters=parameters)
+    efg: "dict[tuple[str, str], int]" = efg_get.apply(log, parameters=parameters)
     print("efg")
     print(efg)
-    dfg_freq = dfg_algorithm.apply(log, parameters=parameters, variant=dfg_algorithm.Variants.FREQUENCY)
-    dfg_perf = dfg_algorithm.apply(log, parameters=parameters, variant=dfg_algorithm.Variants.PERFORMANCE)
+    dfg_freq: "dict[tuple[str, str], float]" = dfg_algorithm.apply(log, parameters=parameters, variant=dfg_algorithm.Variants.FREQUENCY)
+    dfg_perf: "dict[tuple[str, str], float]" = dfg_algorithm.apply(log, parameters=parameters, variant=dfg_algorithm.Variants.PERFORMANCE)
 
     if importlib.util.find_spec("graphviz"):
         from pm4py.visualization.dfg import visualizer as dfg_vis_fact
@@ -48,6 +48,9 @@ def execute_script():
         dfg_gv_perf = dfg_vis_fact.apply(dfg_perf, log=log, variant=dfg_vis_fact.Variants.PERFORMANCE,
                                          parameters=parameters)
         dfg_vis_fact.view(dfg_gv_perf)
+        net: "PetriNet"
+        im: "Marking"
+        fm: "Marking"
         net, im, fm = dfg_conv.apply(dfg_freq)
         gviz = pn_vis.apply(net, im, fm, parameters=parameters)
         pn_vis.view(gviz)

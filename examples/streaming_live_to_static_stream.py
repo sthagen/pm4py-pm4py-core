@@ -5,11 +5,11 @@ from pm4py.streaming.util.live_to_static_stream import LiveToStaticStream
 
 def execute_script():
     # creates a live event stream, forwarding events to its algorithmic listeners
-    live_stream = LiveEventStream()
+    live_stream: "LiveEventStream" = LiveEventStream()
 
     # in this case, the listener that we register to the live stream
     # just saves the list of events that are submitted to the live event stream
-    static_stream_converter = LiveToStaticStream()
+    static_stream_converter: "LiveToStaticStream" = LiveToStaticStream()
     live_stream.register(static_stream_converter)
 
     # starts the live event stream

@@ -5,7 +5,10 @@ import os
 
 
 def execute_script():
-    log = xes_importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    log: "EventLog" = xes_importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    net: "PetriNet"
+    im: "Marking"
+    fm: "Marking"
     net, im, fm = alpha_miner.apply(log)
     is_sound, diagn = woflan.apply(net, im, fm, parameters={"print_diagnostics": True, "return_diagnostics": True})
     print("is_sound", is_sound)

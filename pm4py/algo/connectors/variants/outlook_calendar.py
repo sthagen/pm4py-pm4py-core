@@ -19,8 +19,7 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from pm4py.util import exec_utils, pandas_utils
 from enum import Enum
 from pm4py.algo.connectors.util import mail as mail_utils
@@ -96,7 +95,7 @@ def apply(parameters: Optional[Dict[str, Any]] = None) -> pd.DataFrame:
 
         progress = tqdm(total=len(calendar.Items), desc="extracting calendar items")
 
-    events: list[Dict[str, Any]] = []
+    events: List[Dict[str, Any]] = []
 
     for item in calendar.Items:
         try:

@@ -7,8 +7,8 @@ import importlib.util
 
 
 def execute_script():
-    log = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
-    trie = log_to_trie.algorithm.apply(log)
+    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    trie: "Trie" = log_to_trie.algorithm.apply(log)
 
     if importlib.util.find_spec("graphviz"):
         from pm4py.visualization.trie import visualizer

@@ -5,7 +5,7 @@ from pm4py.visualization.dfg import visualizer as dfg_visualizer
 
 
 def execute_script():
-    dataframe = pm4py.read_xes("../tests/input_data/running-example.xes")
+    dataframe: "pandas.DataFrame" = pm4py.read_xes("../tests/input_data/running-example.xes")
 
     dfg, start_act, end_act = pm4py.discover_dfg_typed(dataframe)
 

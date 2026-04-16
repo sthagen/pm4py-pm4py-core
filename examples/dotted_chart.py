@@ -6,7 +6,7 @@ import os
 
 def execute_script():
     # reads a XES log
-    log = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"))
+    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"))
     log = pm4py.format_dataframe(log)
 
     if importlib.util.find_spec("graphviz"):

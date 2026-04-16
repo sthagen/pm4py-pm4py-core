@@ -346,8 +346,8 @@ def __search(
     decorate_places_preset_trans(sync_net)
 
     closed = set()
-    hub: dict[Marking, list[utils.DijkstraSearchTuple]] = dict()
-    hub_dist: dict[Marking, int] = dict()
+    hub: Dict[Marking, TList[utils.DijkstraSearchTuple]] = dict()
+    hub_dist: Dict[Marking, int] = dict()
     # Given a marking, holds many tuples of (search tuples that reached it,
     # distance) in two arrays
 

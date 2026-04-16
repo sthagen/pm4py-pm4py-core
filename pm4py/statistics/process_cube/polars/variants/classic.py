@@ -23,7 +23,7 @@ Contact: info@processintelligence.solutions
 from bisect import bisect_right
 import math
 from enum import Enum
-from typing import Optional, Dict, Any, Tuple, List
+from typing import Optional, Dict, Any, Tuple, List, Union
 from itertools import product
 
 import numpy as np
@@ -71,7 +71,9 @@ _NUMERIC_DTYPES = {
 }
 
 
-def _ensure_polars_df(feature_table: pl.LazyFrame | pl.DataFrame) -> pl.DataFrame:
+def _ensure_polars_df(
+    feature_table: Union[pl.LazyFrame, pl.DataFrame]
+) -> pl.DataFrame:
     if isinstance(feature_table, pl.LazyFrame):
         return feature_table.collect()
     if isinstance(feature_table, pl.DataFrame):
@@ -187,7 +189,7 @@ def _prefix_columns(df: pl.DataFrame, prefix: str) -> List[str]:
     return [col for col in df.columns if col.startswith(prefix + "_")]
 
 
-def _normalize_dimension(dim: str | Tuple[str, ...]) -> Tuple[str, ...]:
+def _normalize_dimension(dim: Union[str, Tuple[str, ...]]) -> Tuple[str, ...]:
     if isinstance(dim, tuple):
         return dim
     return (dim,)
@@ -229,7 +231,7 @@ def _combine_bins(dim_cols: Tuple[str, ...], bins_per_dim: List[List[str]]) -> L
 
 def _dimension_bins(
     df: pl.DataFrame,
-    dim: str | Tuple[str, ...],
+    dim: Union[str, Tuple[str, ...]],
     bins_param: Any,
     max_divisions: int,
     dim_name: str,
@@ -451,9 +453,9 @@ def _prefix_prefix_case(
 
 
 def apply(
-    feature_table: pl.LazyFrame | pl.DataFrame,
-    x_col: str | Tuple[str, ...],
-    y_col: str | Tuple[str, ...],
+    feature_table: Union[pl.LazyFrame, pl.DataFrame],
+    x_col: Union[str, Tuple[str, ...]],
+    y_col: Union[str, Tuple[str, ...]],
     agg_col: str,
     parameters: Optional[Dict[Any, Any]] = None,
 ) -> Tuple[pl.DataFrame, Dict[Any, Any]]:

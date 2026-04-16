@@ -7,8 +7,11 @@ import os
 
 
 def execute_script():
-    log = xes_importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
-    frequency_dfg = dfg_miner.apply(log, variant=dfg_miner.Variants.FREQUENCY)
+    log: "EventLog" = xes_importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    frequency_dfg: "dict[tuple[str, str], float]" = dfg_miner.apply(log, variant=dfg_miner.Variants.FREQUENCY)
+    net: "PetriNet"
+    im: "Marking"
+    fm: "Marking"
     net, im, fm = dfg_conv.apply(frequency_dfg)
     # perform the Montecarlo simulation with the arrival rate inferred by the log (the simulation lasts 5 secs)
     parameters = {}
@@ -16,6 +19,7 @@ def execute_script():
         montecarlo_simulation.Variants.PETRI_SEMAPH_FIFO.value.Parameters.TOKEN_REPLAY_VARIANT] = Variants.BACKWARDS
     parameters[montecarlo_simulation.Variants.PETRI_SEMAPH_FIFO.value.Parameters.PARAM_ENABLE_DIAGNOSTICS] = False
     parameters[montecarlo_simulation.Variants.PETRI_SEMAPH_FIFO.value.Parameters.PARAM_MAX_THREAD_EXECUTION_TIME] = 5
+    res: "dict[str, Any]"
     log, res = montecarlo_simulation.apply(log, net, im, fm, parameters=parameters)
     print("\n(Montecarlo - Petri net) case arrival ratio inferred from the log")
     print(res["median_cases_ex_time"])

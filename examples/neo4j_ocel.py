@@ -6,27 +6,27 @@ import importlib.util
 
 
 def execute_script():
-    ocel = pm4py.read_ocel2("../tests/input_data/ocel/ocel20_example.jsonocel")
+    ocel: "OCEL" = pm4py.read_ocel2("../tests/input_data/ocel/ocel20_example.jsonocel")
     #ocel = pm4py.read_ocel("../tests/input_data/ocel/ocel_order_simulated.csv")
 
     # prints the actual contents of the OCEL
     print(ocel)
 
-    uri = "neo4j://localhost:7687"
-    username = "neo4j"
-    password = "ciaociao"
+    uri: "str" = "neo4j://localhost:7687"
+    username: "str" = "neo4j"
+    password: "str" = "ciaociao"
 
     driver = GraphDatabase.driver(uri, auth=(username, password))
 
     with driver.session() as session:
         # transforms the OCEL to a NetworkX DiGraph
-        nx_graph = pm4py.convert_ocel_to_networkx(ocel)
+        nx_graph: "networkx.DiGraph" = pm4py.convert_ocel_to_networkx(ocel)
 
         # uploads the NetworkX DiGraph (representing the OCEL) to Neo4J
         nx_utils.neo4j_upload(nx_graph, session)
 
         # gets back the same NetworkX DiGraph starting from Neo4J
-        nx_graph2 = nx_utils.neo4j_download(session)
+        nx_graph2: "networkx.DiGraph" = nx_utils.neo4j_download(session)
 
         # convert the obtained NetworkX DiGraph into an OCEL
         ocel2 = nx_utils.nx_to_ocel(nx_graph2)
@@ -36,7 +36,7 @@ def execute_script():
 
         # shows the object-centric directly-follows graph on the screen
         if importlib.util.find_spec("graphviz"):
-            ocdfg = pm4py.discover_ocdfg(ocel2)
+            ocdfg: "dict[str, Any]" = pm4py.discover_ocdfg(ocel2)
             pm4py.view_ocdfg(ocdfg, annotation="frequency", format=examples_conf.TARGET_IMG_FORMAT)
             pm4py.view_ocdfg(ocdfg, annotation="performance", format=examples_conf.TARGET_IMG_FORMAT)
 

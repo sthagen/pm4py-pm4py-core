@@ -3,7 +3,7 @@ from pm4py.algo.transformation.to_embeddings import algorithm as to_embeddings
 
 
 def execute_script():
-    log = pm4py.read_xes("../tests/input_data/running-example.xes")
+    log: "pandas.DataFrame" = pm4py.read_xes("../tests/input_data/running-example.xes")
     log = pm4py.format_dataframe(log)
 
     filt_log_1 = to_embeddings.keep_top_k_per_similarity(log, "pay compensation", k=3,

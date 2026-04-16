@@ -109,7 +109,7 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> str:
     ot_edges = {}
 
     for edg in edges_values:
-        if not edg[0] in ot_edges:
+        if edg[0] not in ot_edges:
             ot_edges[edg[0]] = []
 
         ot_edges[edg[0]].append(edg)

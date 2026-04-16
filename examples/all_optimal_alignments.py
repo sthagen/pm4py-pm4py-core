@@ -4,8 +4,11 @@ import os
 
 
 def execute_script():
-    log = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"), return_legacy_log_object=True)
+    log: "EventLog" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"), return_legacy_log_object=True)
 
+    net: "PetriNet"
+    im: "Marking"
+    fm: "Marking"
     net, im, fm = pm4py.discover_petri_net_inductive(log)
 
     for trace in log:

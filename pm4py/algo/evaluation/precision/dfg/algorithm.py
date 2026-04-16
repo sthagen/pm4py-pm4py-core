@@ -46,7 +46,7 @@ def __is_allowed_prefix(exiting_activities, sa, prefix):
         ):
             return False
         prev_act = curr_act
-    if not prefix[-1] in exiting_activities:
+    if prefix[-1] not in exiting_activities:
         return False
     return True
 
@@ -95,7 +95,7 @@ def apply(
     sum_at = 0
     exiting_activities = {}
     for act_couple in dfg:
-        if not act_couple[0] in exiting_activities:
+        if act_couple[0] not in exiting_activities:
             exiting_activities[act_couple[0]] = set()
         exiting_activities[act_couple[0]].add(act_couple[1])
     prefixes = {}

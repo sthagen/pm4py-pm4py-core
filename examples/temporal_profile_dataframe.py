@@ -5,10 +5,10 @@ from pm4py.objects.log.util import dataframe_utils
 
 
 def execute_script():
-    dataframe = pandas_utils.read_csv("../tests/input_data/receipt.csv")
+    dataframe: "pandas.DataFrame" = pandas_utils.read_csv("../tests/input_data/receipt.csv")
     dataframe = dataframe_utils.convert_timestamp_columns_in_df(dataframe, timest_format=constants.DEFAULT_TIMESTAMP_PARSE_FORMAT)
-    tf = temporal_profile_discovery.apply(dataframe)
-    conformance = temporal_profile_conformance.apply(dataframe, tf, parameters={"zeta": 6.0})
+    tf: "dict[tuple[str, str], tuple[float, float]]" = temporal_profile_discovery.apply(dataframe)
+    conformance: "list[list[tuple[float, float, float, float]]]" = temporal_profile_conformance.apply(dataframe, tf, parameters={"zeta": 6.0})
     for index, dev in enumerate(conformance):
         if len(dev) > 0:
             print(index, dev)

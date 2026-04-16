@@ -5,10 +5,10 @@ import importlib.util
 
 
 def execute_script():
-    log = pm4py.read_xes("../tests/input_data/helpdesk.xes.gz", return_legacy_log_object=True)
+    log: "EventLog" = pm4py.read_xes("../tests/input_data/helpdesk.xes.gz", return_legacy_log_object=True)
 
     # discovers the POWL model
-    powl_model = pm4py.discover_powl(log, variant=POWLDiscoveryVariant.DYNAMIC_CLUSTERING, order_graph_filtering_threshold=0.6)
+    powl_model: "POWL" = pm4py.discover_powl(log, variant=POWLDiscoveryVariant.DYNAMIC_CLUSTERING, order_graph_filtering_threshold=0.6)
 
     # prints the repr of the POWL model
     print(powl_model)
@@ -19,6 +19,9 @@ def execute_script():
         pm4py.view_powl(powl_model, format=examples_conf.TARGET_IMG_FORMAT, variant_str="net")
 
     # converts the POWL model to a Petri net (which can be used for conformance checking)
+    net: "PetriNet"
+    im: "Marking"
+    fm: "Marking"
     net, im, fm = pm4py.convert_to_petri_net(powl_model)
 
     if importlib.util.find_spec("graphviz"):

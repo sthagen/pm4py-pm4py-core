@@ -6,8 +6,8 @@ import importlib.util
 
 
 def execute_script():
-    log = importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
-    tree = inductive_miner.apply(log)
+    log: "EventLog" = importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    tree: "ProcessTree" = inductive_miner.apply(log)
 
     if importlib.util.find_spec("graphviz"):
         from pm4py.visualization.process_tree import visualizer as pt_vis_factory

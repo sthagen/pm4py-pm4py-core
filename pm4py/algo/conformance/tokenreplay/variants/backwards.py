@@ -147,7 +147,7 @@ def explore_backwards(re_list, all_vis, net, m, bmap):
             return curr[2]
         j = 0
         while j < len(curr[0]):
-            if not curr[0][j] in all_vis:
+            if curr[0][j] not in all_vis:
                 new_m = diff_mark(copy(curr[1]), curr[0][j])
                 re_list.append(
                     (get_bmap(net, new_m, bmap), new_m, curr[2] + [curr[0][j]])

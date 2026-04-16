@@ -545,47 +545,62 @@ def get_visible_transitions_eventually_enabled_by_marking(net, marking):
 
     return visible_transitions
 
-def discountedEditDistance(s1,s2,exponent=2, modeled=True):
+def discountedEditDistance(s1, s2, exponent=2, modeled=True):
     '''
     Fast implementation of the discounted distance
     Inspired from the faster version of the edit distance
     '''
-    #print(s1,s2)
+    # print(s1, s2)
     if len(s1) < len(s2):
-        return discountedEditDistance(s2, s1,exponent=exponent,modeled=False)
+        return discountedEditDistance(
+            s2, s1, exponent=exponent, modeled=False
+        )
 
     previous_row = [0]
     for a in range(len(s2)):
-        if not modeled and (s2[a]=="tau" or s2[a]==None or s2[a][0]=="n"):
+        if not modeled and (
+            s2[a] == "tau" or s2[a] is None or s2[a][0] == "n"
+        ):
             previous_row.append(previous_row[-1])
-        else :
-            previous_row.append(previous_row[-1]+exponent**(-(a)))
+        else:
+            previous_row.append(previous_row[-1] + exponent ** (-a))
     for i, c1 in enumerate(s1):
         if modeled:
-            exp1 = sum(exponent**(-(a))  for a in range(i+1) if s1[a]!="tau" and s1[a]!=None and s1[a][0]!="n")
-        else :
-            exp1 = sum(exponent**(-(a))  for a in range(i+1))
-        current_row =  [exp1]
+            exp1 = sum(
+                exponent ** (-a)
+                for a in range(i + 1)
+                if s1[a] != "tau" and s1[a] is not None and s1[a][0] != "n"
+            )
+        else:
+            exp1 = sum(exponent ** (-a) for a in range(i + 1))
+        current_row = [exp1]
         for j, c2 in enumerate(s2):
-
-            exp2 = exponent**(-(i+1 + j))
-            if modeled and  (c1 in ["tau", None] or c1[0]=="n" or "skip" in c1):
-                insertions = previous_row[j +1 ]  # j+1 instead of j since previous_row and current_row are one character longer
-                deletions = current_row[j] + exp2    # than s2
-            elif not modeled and (c2 in ["tau", None] or c2[0]=="n"):
-                insertions = previous_row[j +1 ] + exp2 # j+1 instead of j since previous_row and current_row are one character longer
+            exp2 = exponent ** (-(i + 1 + j))
+            if modeled and (
+                c1 in ["tau", None] or c1[0] == "n" or "skip" in c1
+            ):
+                insertions = previous_row[
+                    j + 1
+                ]  # j+1 instead of j since previous_row and current_row are one character longer
+                deletions = current_row[j] + exp2  # than s2
+            elif not modeled and (c2 in ["tau", None] or c2[0] == "n"):
+                insertions = previous_row[
+                    j + 1
+                ] + exp2  # j+1 instead of j since previous_row and current_row are one character longer
                 deletions = current_row[j]
-            else :
-                insertions = previous_row[j +1 ] + exp2 # j+1 instead of j since previous_row and current_row are one character longer
+            else:
+                insertions = previous_row[
+                    j + 1
+                ] + exp2  # j+1 instead of j since previous_row and current_row are one character longer
                 deletions = current_row[j] + exp2
-            if (c1 != c2):
+            if c1 != c2:
                 current_row.append(min(insertions, deletions))
-            else :
+            else:
                 substitutions = previous_row[j]
                 current_row.append(min(insertions, deletions, substitutions))
 
         previous_row = current_row
-    return len(s1)+len(s2),previous_row[-1]
+    return len(s1) + len(s2), previous_row[-1]
 
 
 def levenshtein(seq1, seq2):

@@ -12,9 +12,9 @@ import os
 
 def execute_script():
     conn = sqlite3.connect("../tests/input_data/db/northwind.sqlite")
-    employees = pd.read_sql("SELECT EmployeeID, BirthDate, HireDate FROM Employees", conn)
+    employees: "DataFrame | Iterator[DataFrame]" = pd.read_sql("SELECT EmployeeID, BirthDate, HireDate FROM Employees", conn)
     employees = employees.to_dict("records")
-    orders = pd.read_sql("SELECT OrderID, CustomerID, EmployeeID, OrderDate, RequiredDate, ShippedDate FROM Orders", conn)
+    orders: "DataFrame | Iterator[DataFrame]" = pd.read_sql("SELECT OrderID, CustomerID, EmployeeID, OrderDate, RequiredDate, ShippedDate FROM Orders", conn)
     orders = orders.to_dict("records")
 
     events = []
@@ -22,19 +22,19 @@ def execute_script():
     objects = []
     objects_ids = set()
 
-    eid = 0
+    eid: "int" = 0
     for e in employees:
-        oid = str(e["EmployeeID"])
+        oid: "str" = str(e["EmployeeID"])
         if oid not in objects_ids:
-            obj = {"ocel:oid": oid, "ocel:type": "Employee"}
+            obj: "dict[str, str]" = {"ocel:oid": oid, "ocel:type": "Employee"}
             objects.append(obj)
             objects_ids.add(oid)
 
         eid += 1
-        ev = {"ocel:eid": str(eid), "ocel:activity": "Created Employee", "ocel:timestamp": strpfromiso.fix_naivety(parser.parse(e["HireDate"]))}
+        ev: "dict[str, str]" = {"ocel:eid": str(eid), "ocel:activity": "Created Employee", "ocel:timestamp": strpfromiso.fix_naivety(parser.parse(e["HireDate"]))}
         events.append(ev)
 
-        rel = copy(ev)
+        rel: "dict[str, str]" = copy(ev)
         rel["ocel:oid"] = str(e["EmployeeID"])
         rel["ocel:type"] = "Employee"
         relations.append(rel)
@@ -51,17 +51,17 @@ def execute_script():
         ev = {"ocel:eid": str(eid), "ocel:activity": "Created Order", "ocel:timestamp": strpfromiso.fix_naivety(parser.parse(o["OrderDate"]))}
         events.append(ev)
 
-        rel1 = copy(ev)
+        rel1: "dict[str, str]" = copy(ev)
         rel1["ocel:oid"] = str(o["OrderID"])
         rel1["ocel:type"] = "Order"
         relations.append(rel1)
 
-        rel2 = copy(ev)
+        rel2: "dict[str, str]" = copy(ev)
         rel2["ocel:oid"] = str(o["EmployeeID"])
         rel2["ocel:type"] = "Employee"
         relations.append(rel2)
 
-    ocel = OCEL(events=pandas_utils.instantiate_dataframe(events), objects=pandas_utils.instantiate_dataframe(objects), relations=pandas_utils.instantiate_dataframe(relations))
+    ocel: "OCEL" = OCEL(events=pandas_utils.instantiate_dataframe(events), objects=pandas_utils.instantiate_dataframe(objects), relations=pandas_utils.instantiate_dataframe(relations))
     pm4py.write_ocel(ocel, "log1.jsonocel")
 
     events = None
@@ -83,7 +83,7 @@ def execute_script():
             objects_ids.add(oid)
 
         eid += 1
-        ev0 = {"ocel:eid": str(eid), "ocel:activity": "Employee Birth", "ocel:timestamp": strpfromiso.fix_naivety(parser.parse(e["BirthDate"]))}
+        ev0: "dict[str, str]" = {"ocel:eid": str(eid), "ocel:activity": "Employee Birth", "ocel:timestamp": strpfromiso.fix_naivety(parser.parse(e["BirthDate"]))}
         events.append(ev0)
 
         eid += 1
@@ -125,20 +125,20 @@ def execute_script():
 
         if o["ShippedDate"] is not None:
             eid += 1
-            ev3 = {"ocel:eid": str(eid), "ocel:activity": "Order Shipped", "ocel:timestamp": strpfromiso.fix_naivety(parser.parse(o["ShippedDate"]))}
+            ev3: "dict[str, str]" = {"ocel:eid": str(eid), "ocel:activity": "Order Shipped", "ocel:timestamp": strpfromiso.fix_naivety(parser.parse(o["ShippedDate"]))}
             events.append(ev3)
 
-            rel3 = copy(ev3)
+            rel3: "dict[str, str]" = copy(ev3)
             rel3["ocel:oid"] = str(o["OrderID"])
             rel3["ocel:type"] = "Order"
             relations.append(rel3)
 
         if o["RequiredDate"] is not None:
             eid += 1
-            ev4 = {"ocel:eid": str(eid), "ocel:activity": "Order Due Date", "ocel:timestamp": strpfromiso.fix_naivety(parser.parse(o["RequiredDate"]))}
+            ev4: "dict[str, str]" = {"ocel:eid": str(eid), "ocel:activity": "Order Due Date", "ocel:timestamp": strpfromiso.fix_naivety(parser.parse(o["RequiredDate"]))}
             events.append(ev4)
 
-            rel4 = copy(ev4)
+            rel4: "dict[str, str]" = copy(ev4)
             rel4["ocel:oid"] = str(o["OrderID"])
             rel4["ocel:type"] = "Order"
             relations.append(rel4)

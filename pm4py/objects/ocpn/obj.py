@@ -19,7 +19,7 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-
+from collections.abc import Mapping
 from collections import Counter, defaultdict
 from copy import deepcopy
 from typing import Collection, Dict, Any, Set
@@ -129,7 +129,7 @@ class OCMarking(defaultdict):
         return set([p for p in self.keys() if self[p]])
 
 
-class OCPetriNet(PetriNet):
+class OCPetriNet(PetriNet, Mapping):
     class Place(PetriNet.Place):
         def __init__(
             self, name, object_type, in_arcs=None, out_arcs=None, properties=None
@@ -330,6 +330,7 @@ class OCPetriNet(PetriNet):
         )
         self.__initial_marking = initial_marking
         self.__final_marking = final_marking
+        self.__legacy_dict = None
         self.__assert_well_formed()
 
     def __get_initial_marking(self):
@@ -381,6 +382,10 @@ class OCPetriNet(PetriNet):
 
         new_net._OCPetriNet__initial_marking = copy_marking(self.initial_marking)
         new_net._OCPetriNet__final_marking = copy_marking(self.final_marking)
+        if self.__legacy_dict is not None:
+            new_net._OCPetriNet__legacy_dict = deepcopy(
+                self.__legacy_dict, memodict
+            )
         return new_net
 
     def __repr__(self):
@@ -438,6 +443,25 @@ class OCPetriNet(PetriNet):
 
     initial_marking = property(__get_initial_marking)
     final_marking = property(__get_final_marking)
+
+    def set_legacy_dict(self, legacy_dict: Dict[str, Any]) -> None:
+        self.__legacy_dict = legacy_dict
+
+    def to_dict(self) -> Dict[str, Any]:
+        if self.__legacy_dict is None:
+            from pm4py.objects.ocpn.variants import to_alternative_format
+
+            self.__legacy_dict = to_alternative_format.apply(self)
+        return self.__legacy_dict
+
+    def __getitem__(self, key):
+        return self.to_dict()[key]
+
+    def __iter__(self):
+        return iter(self.to_dict())
+
+    def __len__(self):
+        return len(self.to_dict())
 
     @property
     def object_types(self) -> Set[str]:

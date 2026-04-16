@@ -547,7 +547,7 @@ def times_from_first_occurrence_activity_case(
         data.append([])
         activities_occ = {}
         for i in range(len(trace)):
-            if not trace[i][activity_key] in activities_occ:
+            if trace[i][activity_key] not in activities_occ:
                 activities_occ[trace[i][activity_key]] = i
         for act in activities_log:
             if act in activities_occ:

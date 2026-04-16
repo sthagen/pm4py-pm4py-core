@@ -5,7 +5,7 @@ import memory_profiler
 
 from pm4py.objects.log.importer.xes import importer as xes_importer
 
-log_path = os.path.join("..", "tests", "input_data", "receipt.xes")
+log_path: "str" = os.path.join("..", "tests", "input_data", "receipt.xes")
 
 
 def nothing():
@@ -13,15 +13,15 @@ def nothing():
 
 
 def import_memory_efficient():
-    log = xes_importer.apply(log_path, variant=xes_importer.Variants.ITERPARSE_MEM_COMPRESSED)
+    log: "EventLog" = xes_importer.apply(log_path, variant=xes_importer.Variants.ITERPARSE_MEM_COMPRESSED)
 
 
 def import_classic():
-    log = xes_importer.apply(log_path, variant=xes_importer.Variants.ITERPARSE)
+    log: "EventLog" = xes_importer.apply(log_path, variant=xes_importer.Variants.ITERPARSE)
 
 
 def import_line_by_line():
-    log = xes_importer.apply(log_path, variant=xes_importer.Variants.LINE_BY_LINE)
+    log: "EventLog" = xes_importer.apply(log_path, variant=xes_importer.Variants.LINE_BY_LINE)
 
 
 def import_line_by_line_only_conceptname_and_timetimestamp():
@@ -37,9 +37,9 @@ def import_line_by_line_only_conceptname():
 def execute_script():
     memory_usage = memory_profiler.memory_usage(nothing)
     nothing_usage = max(memory_usage)
-    aa = time.time()
+    aa: "float" = time.time()
     memory_usage_iterparse_efficient = memory_profiler.memory_usage(import_memory_efficient)
-    bb = time.time()
+    bb: "float" = time.time()
     print(log_path, "iterparse memory efficient time", bb - aa)
     print(log_path, "iterparse memory efficient memory occupation",
           max(memory_usage_iterparse_efficient) - nothing_usage)

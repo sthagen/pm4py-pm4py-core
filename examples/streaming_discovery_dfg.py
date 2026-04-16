@@ -9,11 +9,11 @@ import importlib.util
 
 def execute_script():
     # imports a XES event log
-    log = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"))
+    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"))
     # converts the log into a list of events (not anymore grouped in cases)
-    event_stream = pm4py.convert_to_event_stream(log)
+    event_stream: "EventStream" = pm4py.convert_to_event_stream(log)
     # creates a live event stream (an object that distributes the messages to the algorithm)
-    live_stream = LiveEventStream()
+    live_stream: "LiveEventStream" = LiveEventStream()
     # creates the streaming DFG discovery object
     stream_dfg_disc = dfg_discovery.apply()
     # register the discovery algorithm to the stream

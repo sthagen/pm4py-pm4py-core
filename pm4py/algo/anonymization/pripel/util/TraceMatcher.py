@@ -265,7 +265,7 @@ class TraceMatcher:
                     previousEvent = currentEvent
                 currentEvent = trace[eventNr]
                 self.__handleAttributesOfDict(currentEvent, distributionOfAttributes, attributeIgnorelist, previousEvent)
-                if not currentEvent["concept:name"] in eventStructure:
+                if currentEvent["concept:name"] not in eventStructure:
                     attributesOfEvent = set(currentEvent.keys())
                     attributesOfEvent.remove("concept:name")
                     eventStructure[currentEvent["concept:name"]] = attributesOfEvent

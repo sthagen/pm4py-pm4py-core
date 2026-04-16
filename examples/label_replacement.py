@@ -3,12 +3,12 @@ import os
 
 
 def execute_script():
-    log = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
 
     # discovers a process moedl from the log
-    process_tree = pm4py.discover_process_tree_inductive(log)
+    process_tree: "ProcessTree" = pm4py.discover_process_tree_inductive(log)
     # gets the label from the process models
-    labels = pm4py.get_activity_labels(process_tree)
+    labels: "list[str]" = pm4py.get_activity_labels(process_tree)
     # modify the labels
     labels = {x: x+"ADD" for x in labels}
 

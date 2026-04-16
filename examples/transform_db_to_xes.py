@@ -12,7 +12,7 @@ def extract_invoices(cursor):
 
     invoices = {}
     for res in cursor.fetchall():
-        if not res[0] in invoices:
+        if res[0] not in invoices:
             invoices[res[0]] = []
         invoices[res[0]].append(
             {"CustomerId": res[0], "InvoiceId": res[1], "InvoiceDate": strpfromiso.fix_naivety(parse(res[2])), "BillingAddress": res[3],
@@ -26,7 +26,7 @@ def extract_invoice_lines(cursor):
 
     invoice_lines = {}
     for res in cursor.fetchall():
-        if not res[1] in invoice_lines:
+        if res[1] not in invoice_lines:
             invoice_lines[res[1]] = []
         invoice_lines[res[1]].append({"InvoiceLineId": res[0], "InvoiceId": res[1], "TrackId": res[2], "UnitPrice": res[3], "Category": res[4]})
 
@@ -53,13 +53,13 @@ def execute_script():
     invoice_lines = extract_invoice_lines(cursor)
     customers = extract_customers(cursor)
 
-    log = EventLog()
+    log: "EventLog" = EventLog()
     for customer in customers:
-        trace = Trace()
+        trace: "Trace" = Trace()
         trace.attributes.update(customers[customer])
         log.append(trace)
         for invoice in invoices[customer]:
-            event = Event()
+            event: "Event" = Event()
             for k, v in invoice.items():
                 event[k] = v
             event["time:timestamp"] = event["InvoiceDate"]

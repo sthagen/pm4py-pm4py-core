@@ -4,9 +4,9 @@ import os
 
 
 def execute_script():
-    log = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"))
+    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"))
     # detect the batches from the event log
-    batches = algorithm.apply(log)
+    batches: "list[tuple[tuple[str, str], int, dict[str, Any]]]" = algorithm.apply(log)
     # print the batches (complete information) in a single row
     print(batches)
     # print a summary information (size) for each activity-resource combination that is performed in batches

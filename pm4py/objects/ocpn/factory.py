@@ -22,12 +22,12 @@ Contact: info@processintelligence.solutions
 from collections import Counter
 import uuid
 from pm4py.objects.ocpn.obj import OCMarking, OCPetriNet
-from typing import Dict, Any
+from typing import Dict, Any, Union
 
 from pm4py.objects.petri_net.obj import PetriNet
 
 
-def create(ocpn: Dict[str, Any]) -> OCPetriNet:
+def create(ocpn: Union[Dict[str, Any], OCPetriNet]) -> OCPetriNet:
     """
     Creates an Object-centric Petri net object from its dictionary representation
     specified in pm4py.algo.discovery.ocel.ocpn.variants.classic.
@@ -44,6 +44,9 @@ def create(ocpn: Dict[str, Any]) -> OCPetriNet:
     OCPetriNet
         Object-centric Petri net object
     """
+    if isinstance(ocpn, OCPetriNet):
+        return ocpn
+
     activities = ocpn["activities"]
     petri_nets = ocpn["petri_nets"]
     double_arcs_on_activity = ocpn["double_arcs_on_activity"]
@@ -113,4 +116,5 @@ def create(ocpn: Dict[str, Any]) -> OCPetriNet:
         initial_marking=initial_marking,
         final_marking=final_marking,
     )
+    ocpn_obj.set_legacy_dict(ocpn)
     return ocpn_obj

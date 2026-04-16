@@ -18,7 +18,7 @@ from prefix_feature_extraction import build_prefix_features_next_activity
 def select_components_by_cumulative_variance(
     explained_variance_ratio, threshold=0.93
 ):
-    cumulative = 0.0
+    cumulative: "float" = 0.0
     for idx, ratio in enumerate(explained_variance_ratio):
         cumulative += ratio
         if cumulative >= threshold:
@@ -31,10 +31,10 @@ def fit_pca_with_variance_threshold(features, threshold=0.93):
         raise ValueError("No features provided for PCA fitting.")
     max_components = min(len(features), len(features[0]))
     if max_components <= 1:
-        pca = PCA(n_components=1)
+        pca: "PCA" = PCA(n_components=1)
         pca.fit(features)
         return 1, pca
-    pca_full = PCA(n_components=max_components, random_state=42)
+    pca_full: "PCA" = PCA(n_components=max_components, random_state=42)
     pca_full.fit(features)
     n_components = select_components_by_cumulative_variance(
         pca_full.explained_variance_ratio_.tolist(), threshold=threshold
@@ -90,7 +90,7 @@ def compute_class_geometry_metrics(
         centroid_sims = sims.copy()
         np.fill_diagonal(centroid_sims, -np.inf)
         max_other = np.max(centroid_sims, axis=1)
-        centroid_margin = float(np.mean(1.0 - max_other))
+        centroid_margin: "float" = float(np.mean(1.0 - max_other))
 
     knn_purities = {k: None for k in k_values}
     if n_samples > 1:
@@ -140,7 +140,7 @@ def train_classifier_random_forest(features, targets):
 def train_pca_knn_classifier(features, targets):
     n_components, pca = fit_pca_with_variance_threshold(features, threshold=0.93)
     reduced = pca.transform(features)
-    knn = KNeighborsClassifier(n_neighbors=1)
+    knn: "KNeighborsClassifier" = KNeighborsClassifier(n_neighbors=1)
     knn.fit(reduced, targets)
     return {"pca": pca, "model": knn, "n_components": n_components}
 
@@ -186,7 +186,7 @@ def main():
     )
     args = parser.parse_args()
 
-    log = pm4py.read_xes(args.log_path, return_legacy_log_object=True)
+    log: "EventLog" = pm4py.read_xes(args.log_path, return_legacy_log_object=True)
     (
         feature,
         target,
@@ -200,10 +200,10 @@ def main():
     if not feature:
         raise SystemExit("No prefixes found in the log.")
 
-    candidate_percentages = [5, 20, 100]
+    candidate_percentages: "list[int]" = [5, 20, 100]
 
-    class_counts = Counter(target)
-    min_class = min(class_counts.values()) if class_counts else 0
+    class_counts: "Counter" = Counter(target)
+    min_class: "int" = min(class_counts.values()) if class_counts else 0
     stratify = target if min_class >= 2 else None
     if stratify is None:
         print(
@@ -224,7 +224,7 @@ def main():
     print(f"Train size: {len(X_train)}")
     print(f"Test size: {len(X_test)}")
 
-    rng = random.Random(42)
+    rng: "Random" = random.Random(42)
     for percentage in candidate_percentages:
         X_sampled, y_sampled = sample_training_data(
             X_train, y_train, percentage, rng

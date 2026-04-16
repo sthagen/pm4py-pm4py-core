@@ -7,20 +7,20 @@ from pm4py.objects.ocel.util import ocel_iterator
 
 
 def execute_script():
-    ocel = pm4py.read_ocel(os.path.join("..", "tests", "input_data", "ocel", "example_log.jsonocel"))
+    ocel: "OCEL" = pm4py.read_ocel(os.path.join("..", "tests", "input_data", "ocel", "example_log.jsonocel"))
     # we wants to use the traditional algorithms for streaming also on object-centric event logs.
     # for this purpose, first we create two different event streams, one for the "order" object type
     # and one for the "element" object type.
-    order_stream = live_event_stream.LiveEventStream()
-    element_stream = live_event_stream.LiveEventStream()
+    order_stream: "LiveEventStream" = live_event_stream.LiveEventStream()
+    element_stream: "LiveEventStream" = live_event_stream.LiveEventStream()
     # Then, we register an algorithm for every one of them, which is a simple printer of the received events.
-    order_stream_printer = event_stream_printer.EventStreamPrinter()
-    element_stream_printer = event_stream_printer.EventStreamPrinter()
+    order_stream_printer: "EventStreamPrinter" = event_stream_printer.EventStreamPrinter()
+    element_stream_printer: "EventStreamPrinter" = event_stream_printer.EventStreamPrinter()
     order_stream.register(order_stream_printer)
     element_stream.register(element_stream_printer)
     # Then, we create the distributor object.
     # This registers different event streams for different object types.
-    flatts_distributor = ocel_flatts_distributor.OcelFlattsDistributor()
+    flatts_distributor: "OcelFlattsDistributor" = ocel_flatts_distributor.OcelFlattsDistributor()
     flatts_distributor.register("order", order_stream)
     flatts_distributor.register("element", element_stream)
     order_stream.start()

@@ -148,7 +148,7 @@ class TbrStreamingConformance(StreamingAlgorithm):
                         if type(x) is PetriNet.Transition
                     ]
                     if spath:
-                        if not el[0] in dictio_spaths:
+                        if el[0] not in dictio_spaths:
                             dictio_spaths[el[0]] = {}
                         dictio_spaths[el[0]][sel] = spath
         return dictio_spaths

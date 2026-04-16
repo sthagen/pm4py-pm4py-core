@@ -7,14 +7,17 @@ from pm4py.objects.petri_net.importer import importer as petri_importer
 
 
 def execute_script():
-    log_path = os.path.join("..", "tests", "input_data", "running-example.xes")
-    pnml_path = os.path.join("..", "tests", "input_data", "running-example.pnml")
-    log = xes_importer.apply(log_path)
+    log_path: "str" = os.path.join("..", "tests", "input_data", "running-example.xes")
+    pnml_path: "str" = os.path.join("..", "tests", "input_data", "running-example.pnml")
+    log: "EventLog" = xes_importer.apply(log_path)
+    net: "PetriNet"
+    marking: "Marking"
+    fmarking: "Marking"
     net, marking, fmarking = petri_importer.apply(pnml_path)
 
-    THETA = 1.5
-    MU =  20
-    EPSILON = 0.01
+    THETA: "float" = 1.5
+    MU: "int" =  20
+    EPSILON: "float" = 0.01
     resAnti = antii(log,net,marking,fmarking, parameters={Parameters.EXPONENT:THETA,
                                                           Parameters.EPSILON:EPSILON,
                                                           Parameters.MARKING_LIMIT:MU})

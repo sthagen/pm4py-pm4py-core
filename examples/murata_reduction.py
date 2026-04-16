@@ -5,15 +5,15 @@ from examples import examples_conf
 
 
 def execute_script():
-    net = pm4py.PetriNet()
-    im = pm4py.Marking()
-    fm = pm4py.Marking()
-    p1 = pm4py.PetriNet.Place("p1")
-    p2 = pm4py.PetriNet.Place("p2")
-    p3 = pm4py.PetriNet.Place("p3")
+    net: "PetriNet" = pm4py.PetriNet()
+    im: "Marking" = pm4py.Marking()
+    fm: "Marking" = pm4py.Marking()
+    p1: "PetriNet.Place" = pm4py.PetriNet.Place("p1")
+    p2: "PetriNet.Place" = pm4py.PetriNet.Place("p2")
+    p3: "PetriNet.Place" = pm4py.PetriNet.Place("p3")
 
-    A = pm4py.PetriNet.Transition("A", "A")
-    B = pm4py.PetriNet.Transition("B", "B")
+    A: "PetriNet.Transition" = pm4py.PetriNet.Transition("A", "A")
+    B: "PetriNet.Transition" = pm4py.PetriNet.Transition("B", "B")
     net.places.add(p1)
     net.places.add(p2)
     net.places.add(p3)

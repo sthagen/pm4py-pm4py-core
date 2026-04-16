@@ -22,6 +22,7 @@ Contact: info@processintelligence.solutions
 from enum import Enum
 from pm4py.algo.discovery.ocel.ocpn.variants import classic
 from pm4py.objects.ocel.obj import OCEL
+from pm4py.objects.ocpn.obj import OCPetriNet
 from pm4py.util import exec_utils
 from typing import Optional, Dict, Any
 
@@ -35,7 +36,7 @@ def apply(
     ocel: OCEL,
     variant=Variants.CLASSIC,
     parameters: Optional[Dict[Any, Any]] = None,
-) -> Dict[str, Any]:
+) -> OCPetriNet:
     """
     Discovers an object-centric Petri net from the provided object-centric event log.
 
@@ -53,6 +54,6 @@ def apply(
     Returns
     ----------------
     ocpn
-        Object-centric Petri net model, as a dictionary of properties.
+        Object-centric Petri net model.
     """
     return exec_utils.get_variant(variant).apply(ocel, parameters=parameters)

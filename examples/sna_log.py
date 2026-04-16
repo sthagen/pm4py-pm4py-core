@@ -7,12 +7,12 @@ import importlib.util
 
 
 def execute_script():
-    log = xes_importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    log: "EventLog" = xes_importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
 
-    hw_values = sna_algorithm.apply(log, variant=sna_algorithm.Variants.HANDOVER_LOG)
-    wt_values = sna_algorithm.apply(log, variant=sna_algorithm.Variants.WORKING_TOGETHER_LOG)
-    sub_values = sna_algorithm.apply(log, variant=sna_algorithm.Variants.SUBCONTRACTING_LOG)
-    ja_values = sna_algorithm.apply(log, variant=sna_algorithm.Variants.JOINTACTIVITIES_LOG)
+    hw_values: "SNA" = sna_algorithm.apply(log, variant=sna_algorithm.Variants.HANDOVER_LOG)
+    wt_values: "SNA" = sna_algorithm.apply(log, variant=sna_algorithm.Variants.WORKING_TOGETHER_LOG)
+    sub_values: "SNA" = sna_algorithm.apply(log, variant=sna_algorithm.Variants.SUBCONTRACTING_LOG)
+    ja_values: "SNA" = sna_algorithm.apply(log, variant=sna_algorithm.Variants.JOINTACTIVITIES_LOG)
 
     if importlib.util.find_spec("graphviz") and importlib.util.find_spec("pyvis") and importlib.util.find_spec("networkx"):
         from pm4py.visualization.sna import visualizer as pn_vis

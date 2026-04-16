@@ -7,9 +7,12 @@ from tensorflow.keras.layers import LSTM, Dense, TimeDistributed
 
 
 def execute_script():
-    log = pm4py.read_xes("../tests/input_data/running-example.xes", return_legacy_log_object=True)
+    log: "EventLog" = pm4py.read_xes("../tests/input_data/running-example.xes", return_legacy_log_object=True)
 
+    feature_names: "list[str]"
     data, feature_names = event_based.apply(log)
+    target: "list[list[list[int]]]"
+    classes: "list[str]"
     target, classes = next_activity.apply(log, parameters={"enable_padding": True})
     target = np.array(target)
 

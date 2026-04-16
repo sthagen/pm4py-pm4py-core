@@ -3,10 +3,13 @@ import pm4py
 
 def execute_script():
     # example on how stochastic Petri nets are defined, discovered and used in pm4py
-    log = pm4py.read_xes("../tests/input_data/running-example.xes", return_legacy_log_object=True)
+    log: "EventLog" = pm4py.read_xes("../tests/input_data/running-example.xes", return_legacy_log_object=True)
 
     # first, we use a traditional process discovery algorithm (the inductive miner) to discover
     # a sound workflow net from the event log
+    net: "PetriNet"
+    im: "Marking"
+    fm: "Marking"
     net, im, fm = pm4py.discover_petri_net_inductive(log)
 
     # then, we can either define manually the distributions on the stochastic Petri net, or discover them from the log

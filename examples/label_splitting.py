@@ -3,11 +3,11 @@ from pm4py.algo.label_splitting import algorithm as label_splitter
 
 
 def execute_script():
-    log = pm4py.read_xes("../tests/input_data/receipt.xes")
+    log: "pandas.DataFrame" = pm4py.read_xes("../tests/input_data/receipt.xes")
     log = log[["case:concept:name", "concept:name", "time:timestamp"]]
 
     # relabeling with the default options
-    rlog1 = label_splitter.apply(log, variant=label_splitter.Variants.CONTEXTUAL)
+    rlog1: "pandas.DataFrame" = label_splitter.apply(log, variant=label_splitter.Variants.CONTEXTUAL)
     print(rlog1)
 
     # relabeling with a single activity allowed in the prefix and suffix,

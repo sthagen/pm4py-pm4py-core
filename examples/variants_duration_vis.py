@@ -3,7 +3,7 @@ from pm4py.visualization.variants_duration import visualizer
 
 
 def execute_script():
-    log = pm4py.read_xes("../tests/input_data/receipt.xes")
+    log: "pandas.DataFrame" = pm4py.read_xes("../tests/input_data/receipt.xes")
 
     # visualize the variants durations aligning on the start
     gviz = visualizer.apply(log, parameters={"format": "svg", "alignment_criteria": "start"})

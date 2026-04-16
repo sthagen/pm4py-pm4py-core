@@ -4,16 +4,16 @@ from pm4py.objects.bpmn.obj import BPMN
 
 def create_manual_bpmn_with_swimlanes():
     # Create a new BPMN diagram with collaboration
-    collaboration_id = "collab_001"
-    bpmn_diagram = BPMN(process_id=collaboration_id, name="Process with Swimlanes")
+    collaboration_id: "str" = "collab_001"
+    bpmn_diagram: "BPMN" = BPMN(process_id=collaboration_id, name="Process with Swimlanes")
 
     # Create collaboration
-    collaboration = BPMN.Collaboration(id=collaboration_id, name="Main Collaboration")
+    collaboration: "BPMN.Collaboration" = BPMN.Collaboration(id=collaboration_id, name="Main Collaboration")
     bpmn_diagram.add_node(collaboration)
 
     # Create two participants (swimlanes)
-    main_process_id = "proc_main_001"
-    sub_process_id = "proc_sub_001"
+    main_process_id: "str" = "proc_main_001"
+    sub_process_id: "str" = "proc_sub_001"
 
     main_participant = BPMN.Participant(
         id="part_main_001",
@@ -30,10 +30,10 @@ def create_manual_bpmn_with_swimlanes():
     bpmn_diagram.add_node(sub_participant)
 
     # Main process nodes
-    main_start = BPMN.NormalStartEvent(name="Start Process", process=main_process_id)
-    main_task1 = BPMN.Task(name="Perform Task 1", process=main_process_id)
-    main_task2 = BPMN.Task(name="Perform Task 2", process=main_process_id)
-    main_end = BPMN.NormalEndEvent(name="End Process", process=main_process_id)
+    main_start: "BPMN.NormalStartEvent" = BPMN.NormalStartEvent(name="Start Process", process=main_process_id)
+    main_task1: "BPMN.Task" = BPMN.Task(name="Perform Task 1", process=main_process_id)
+    main_task2: "BPMN.Task" = BPMN.Task(name="Perform Task 2", process=main_process_id)
+    main_end: "BPMN.NormalEndEvent" = BPMN.NormalEndEvent(name="End Process", process=main_process_id)
 
     # Add main process nodes
     bpmn_diagram.add_node(main_start)
@@ -42,9 +42,9 @@ def create_manual_bpmn_with_swimlanes():
     bpmn_diagram.add_node(main_end)
 
     # Sub process nodes
-    sub_start = BPMN.NormalStartEvent(name="Sub Start", process=sub_process_id)
-    sub_task = BPMN.Task(name="Sub Task", process=sub_process_id)
-    sub_end = BPMN.NormalEndEvent(name="Sub End", process=sub_process_id)
+    sub_start: "BPMN.NormalStartEvent" = BPMN.NormalStartEvent(name="Sub Start", process=sub_process_id)
+    sub_task: "BPMN.Task" = BPMN.Task(name="Sub Task", process=sub_process_id)
+    sub_end: "BPMN.NormalEndEvent" = BPMN.NormalEndEvent(name="Sub End", process=sub_process_id)
 
     # Add sub process nodes
     bpmn_diagram.add_node(sub_start)
@@ -52,12 +52,12 @@ def create_manual_bpmn_with_swimlanes():
     bpmn_diagram.add_node(sub_end)
 
     # Create sequence flows within each swimlane
-    main_flow1 = BPMN.SequenceFlow(main_start, main_task1, name="Flow 1", process=main_process_id)
-    main_flow2 = BPMN.SequenceFlow(main_task1, main_task2, name="Flow 2", process=main_process_id)
-    main_flow3 = BPMN.SequenceFlow(main_task2, main_end, name="Flow 3", process=main_process_id)
+    main_flow1: "BPMN.SequenceFlow" = BPMN.SequenceFlow(main_start, main_task1, name="Flow 1", process=main_process_id)
+    main_flow2: "BPMN.SequenceFlow" = BPMN.SequenceFlow(main_task1, main_task2, name="Flow 2", process=main_process_id)
+    main_flow3: "BPMN.SequenceFlow" = BPMN.SequenceFlow(main_task2, main_end, name="Flow 3", process=main_process_id)
 
-    sub_flow1 = BPMN.SequenceFlow(sub_start, sub_task, name="Sub Flow 1", process=sub_process_id)
-    sub_flow2 = BPMN.SequenceFlow(sub_task, sub_end, name="Sub Flow 2", process=sub_process_id)
+    sub_flow1: "BPMN.SequenceFlow" = BPMN.SequenceFlow(sub_start, sub_task, name="Sub Flow 1", process=sub_process_id)
+    sub_flow2: "BPMN.SequenceFlow" = BPMN.SequenceFlow(sub_task, sub_end, name="Sub Flow 2", process=sub_process_id)
 
     # Add sequence flows
     bpmn_diagram.add_flow(main_flow1)
@@ -133,7 +133,7 @@ def merge_bpmn_with_swimlanes(main_bpmn, bpmn_to_merge):
 
     # Add nodes with offset
     id_mapping = {}
-    y_offset = max_y - list(bpmn_to_merge.get_nodes())[0].get_y() if bpmn_to_merge.get_nodes() else 0
+    y_offset: "int" = max_y - list(bpmn_to_merge.get_nodes())[0].get_y() if bpmn_to_merge.get_nodes() else 0
 
     for node in bpmn_to_merge.get_nodes():
         new_node = type(node)(
@@ -207,10 +207,10 @@ def execute_script():
     main_bpmn = create_manual_bpmn_with_swimlanes()
 
     # Create a simple BPMN to merge
-    simple_bpmn = BPMN(process_id="proc_simple_001", name="Simple Process")
-    s_start = BPMN.NormalStartEvent(name="Simple Start")
-    s_task = BPMN.Task(name="Simple Task")
-    s_end = BPMN.NormalEndEvent(name="Simple End")
+    simple_bpmn: "BPMN" = BPMN(process_id="proc_simple_001", name="Simple Process")
+    s_start: "BPMN.NormalStartEvent" = BPMN.NormalStartEvent(name="Simple Start")
+    s_task: "BPMN.Task" = BPMN.Task(name="Simple Task")
+    s_end: "BPMN.NormalEndEvent" = BPMN.NormalEndEvent(name="Simple End")
     simple_bpmn.add_node(s_start)
     simple_bpmn.add_node(s_task)
     simple_bpmn.add_node(s_end)

@@ -72,7 +72,7 @@ def get_object_type_activities(
     )
 
     for el in prel_dict:
-        if not el[1] in matching_dict:
+        if el[1] not in matching_dict:
             matching_dict[el[1]] = set()
         matching_dict[el[1]].add(el[0])
 

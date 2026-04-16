@@ -4,10 +4,10 @@ import importlib.util
 
 
 def execute_script():
-    ocel = pm4py.read_ocel2("../tests/input_data/ocel/ocel20_example.jsonocel")
+    ocel: "OCEL" = pm4py.read_ocel2("../tests/input_data/ocel/ocel20_example.jsonocel")
 
     # convers the OCEL to a NetworkX graph with events, objects, E2O, O2O, and object changes
-    event_graph = pm4py.convert_ocel_to_networkx(ocel)
+    event_graph: "networkx.DiGraph" = pm4py.convert_ocel_to_networkx(ocel)
 
     if importlib.util.find_spec("graphviz"):
         from pm4py.visualization.networkx import visualizer as nx_to_gv_vis

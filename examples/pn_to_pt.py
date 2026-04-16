@@ -11,12 +11,21 @@ import importlib.util
 
 
 def execute_script():
-    log = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    alpha_petri_net: "PetriNet"
+    alpha_im: "Marking"
+    alpha_fm: "Marking"
     alpha_petri_net, alpha_im, alpha_fm = pm4py.discover_petri_net_alpha(log)
+    heuristics_petri_net: "PetriNet"
+    heuristics_im: "Marking"
+    heuristics_fm: "Marking"
     heuristics_petri_net, heuristics_im, heuristics_fm = pm4py.discover_petri_net_heuristics(log)
-    tree = pm4py.discover_process_tree_inductive(log)
+    tree: "ProcessTree" = pm4py.discover_process_tree_inductive(log)
     print("tree discovered by inductive miner=")
     print(tree)
+    inductive_petri_net: "PetriNet"
+    inductive_im: "Marking"
+    inductive_fm: "Marking"
     inductive_petri_net, inductive_im, inductive_fm = pt_converter.apply(tree)
     print("is_wf_net alpha", is_wf_net.apply(alpha_petri_net))
     print("is_wf_net heuristics", is_wf_net.apply(heuristics_petri_net))

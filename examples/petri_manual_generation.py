@@ -6,18 +6,18 @@ import importlib.util
 
 
 def execute_script():
-    net = PetriNet("test")
-    source = PetriNet.Place("source")
-    sink = PetriNet.Place("sink")
-    p1 = PetriNet.Place("p1")
-    p2 = PetriNet.Place("p2")
-    p3 = PetriNet.Place("p3")
-    p4 = PetriNet.Place("p4")
-    t1 = PetriNet.Transition("Confirmation of receipt", "Confirmation of receipt")
-    t2 = PetriNet.Transition("T02 Check confirmation of receipt", "T02 Check confirmation of receipt")
-    t3 = PetriNet.Transition("T04 Determine confirmation of receipt", "T04 Determine confirmation of receipt")
-    t4 = PetriNet.Transition("T05 Print and send confirmation of receipt", "T05 Print and send confirmation of receipt")
-    t5 = PetriNet.Transition("T06 Determine necessity of stop advice", "T06 Determine necessity of stop advice")
+    net: "PetriNet" = PetriNet("test")
+    source: "PetriNet.Place" = PetriNet.Place("source")
+    sink: "PetriNet.Place" = PetriNet.Place("sink")
+    p1: "PetriNet.Place" = PetriNet.Place("p1")
+    p2: "PetriNet.Place" = PetriNet.Place("p2")
+    p3: "PetriNet.Place" = PetriNet.Place("p3")
+    p4: "PetriNet.Place" = PetriNet.Place("p4")
+    t1: "PetriNet.Transition" = PetriNet.Transition("Confirmation of receipt", "Confirmation of receipt")
+    t2: "PetriNet.Transition" = PetriNet.Transition("T02 Check confirmation of receipt", "T02 Check confirmation of receipt")
+    t3: "PetriNet.Transition" = PetriNet.Transition("T04 Determine confirmation of receipt", "T04 Determine confirmation of receipt")
+    t4: "PetriNet.Transition" = PetriNet.Transition("T05 Print and send confirmation of receipt", "T05 Print and send confirmation of receipt")
+    t5: "PetriNet.Transition" = PetriNet.Transition("T06 Determine necessity of stop advice", "T06 Determine necessity of stop advice")
 
     net.places.add(source)
     net.places.add(sink)
@@ -42,10 +42,10 @@ def execute_script():
     petri_utils.add_arc_from_to(p4, t5, net)
     petri_utils.add_arc_from_to(t5, sink, net)
 
-    im = Marking()
+    im: "Marking" = Marking()
     im[source] = 1
 
-    fm = Marking()
+    fm: "Marking" = Marking()
     fm[sink] = 1
 
     if importlib.util.find_spec("graphviz"):

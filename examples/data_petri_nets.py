@@ -17,18 +17,21 @@ def get_trans_by_name(net, name):
 
 
 def execute_script():
-    log = xes_importer.apply(os.path.join("..", "tests", "input_data", "roadtraffic100traces.xes"))
+    log: "EventLog" = xes_importer.apply(os.path.join("..", "tests", "input_data", "roadtraffic100traces.xes"))
+    net: "PetriNet"
+    im: "Marking"
+    fm: "Marking"
     net, im, fm = pm4py.read_pnml(os.path.join("..", "tests", "input_data", "data_petri_net.pnml"), auto_guess_final_marking=True)
 
     if importlib.util.find_spec("graphviz"):
         pm4py.view_petri_net(net, im, fm, format=examples_conf.TARGET_IMG_FORMAT)
 
-    aligned_traces = alignments.apply(log, net, im, fm, variant=alignments.Variants.VERSION_DIJKSTRA_LESS_MEMORY, parameters={"ret_tuple_as_trans_desc": True})
+    aligned_traces: "dict[str, Any] | list[dict[str, Any]]" = alignments.apply(log, net, im, fm, variant=alignments.Variants.VERSION_DIJKSTRA_LESS_MEMORY, parameters={"ret_tuple_as_trans_desc": True})
     for index, trace in enumerate(log):
-        aligned_trace = aligned_traces[index]
+        aligned_trace: "dict[str, Any] | list[dict[str, Any]]" = aligned_traces[index]
         al = [(x[0][0], get_trans_by_name(net, x[0][1])) for x in aligned_trace["alignment"]]
-        m = DataMarking(im)
-        idx = 0
+        m: "DataMarking" = DataMarking(im)
+        idx: "int" = 0
         for el in al:
             if el[1] is not None:
                 en_t = semantics.enabled_transitions(net, m, trace[min(idx, len(trace) - 1)])

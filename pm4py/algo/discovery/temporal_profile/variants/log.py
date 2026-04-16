@@ -115,7 +115,7 @@ def apply(
                 time_j = trace[j][start_timestamp_key].timestamp()
                 if time_j >= time_i:
                     act_j = trace[j][activity_key]
-                    if not (act_i, act_j) in diff_time_recordings:
+                    if (act_i, act_j) not in diff_time_recordings:
                         diff_time_recordings[(act_i, act_j)] = []
                     if business_hours:
                         bh = BusinessHours(

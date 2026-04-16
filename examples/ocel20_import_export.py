@@ -5,7 +5,7 @@ import traceback
 
 def execute_script():
     try:
-        ocel = pm4py.read_ocel2("../tests/input_data/ocel/ocel20_example.sqlite")
+        ocel: "OCEL" = pm4py.read_ocel2("../tests/input_data/ocel/ocel20_example.sqlite")
         pm4py.write_ocel2(ocel, "ocel20_example_bis.sqlite")
         pm4py.write_ocel2(ocel, "ocel20_example_bis.xmlocel")
         ocel = pm4py.read_ocel2("../tests/input_data/ocel/ocel20_example.xmlocel")

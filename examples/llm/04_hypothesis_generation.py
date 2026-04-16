@@ -7,7 +7,7 @@ def execute_script():
     from the process variants and log attributes abstraction of the event log.
     The hypothesis shall come with a DuckDB SQL query that can be verified against the dataframe
     """
-    log = pm4py.read_xes("../../tests/input_data/roadtraffic100traces.xes")
+    log: "pandas.DataFrame" = pm4py.read_xes("../../tests/input_data/roadtraffic100traces.xes")
     prompt = []
     prompt.append("\n\nIf I have the following process variants:\n")
     prompt.append(pm4py.llm.abstract_variants(log, max_len=3000, response_header=False))

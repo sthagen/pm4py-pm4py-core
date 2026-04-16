@@ -34,11 +34,11 @@ def get_outgoing_edges(dfg):
     outgoing = {}
     for el in dfg:
         if type(el[0]) is str:
-            if not el[0] in outgoing:
+            if el[0] not in outgoing:
                 outgoing[el[0]] = {}
             outgoing[el[0]][el[1]] = dfg[el]
         else:
-            if not el[0][0] in outgoing:
+            if el[0][0] not in outgoing:
                 outgoing[el[0][0]] = {}
             outgoing[el[0][0]][el[0][1]] = el[1]
     return outgoing
@@ -51,11 +51,11 @@ def get_ingoing_edges(dfg):
     ingoing = {}
     for el in dfg:
         if type(el[0]) is str:
-            if not el[1] in ingoing:
+            if el[1] not in ingoing:
                 ingoing[el[1]] = {}
             ingoing[el[1]][el[0]] = dfg[el]
         else:
-            if not el[0][1] in ingoing:
+            if el[0][1] not in ingoing:
                 ingoing[el[0][1]] = {}
             ingoing[el[0][1]][el[0][0]] = el[1]
     return ingoing
@@ -133,7 +133,7 @@ def infer_start_activities_from_prev_connections_and_current_dfg(
     """
     start_activities = set()
     for el in initial_dfg:
-        if el[0][1] in activities and not el[0][0] in activities:
+        if el[0][1] in activities and el[0][0] not in activities:
             start_activities.add(el[0][1])
     if include_self:
         start_activities = start_activities.union(
@@ -160,7 +160,7 @@ def infer_end_activities_from_succ_connections_and_current_dfg(
     """
     end_activities = set()
     for el in initial_dfg:
-        if el[0][0] in activities and not el[0][1] in activities:
+        if el[0][0] in activities and el[0][1] not in activities:
             end_activities.add(el[0][0])
     if include_self:
         end_activities = end_activities.union(set(infer_end_activities(dfg)))
@@ -196,7 +196,7 @@ def get_outputs_of_outside_activities_going_to_start_activities(
     for el in initial_dfg:
         if (
             el[0][0] in outside_activities_going_to_start_activities
-            and not el[0][1] in activities
+            and el[0][1] not in activities
         ):
             outputs.add(el[0][1])
     outputs = outputs - outside_activities_going_to_start_activities
@@ -232,7 +232,7 @@ def get_inputs_of_outside_activities_reached_by_end_activities(
     for el in initial_dfg:
         if (
             el[0][1] in input_activities_reached_by_end_activities
-            and not el[0][0] in activities
+            and el[0][0] not in activities
         ):
             inputs.add(el[0][0])
     inputs = inputs - input_activities_reached_by_end_activities
@@ -495,7 +495,7 @@ def negate(dfg):
     outgoing = get_outgoing_edges(dfg)
 
     for el in dfg:
-        if not (el[0][1] in outgoing and el[0][0] in outgoing[el[0][1]]):
+        if el[0][1] not in outgoing or el[0][0] not in outgoing[el[0][1]]:
             negated_dfg.append(el)
 
     return negated_dfg

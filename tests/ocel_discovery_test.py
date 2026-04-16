@@ -1,6 +1,7 @@
 import pm4py
 import os
 import unittest
+from pm4py.objects.ocpn.obj import OCPetriNet
 
 
 class OcelDiscoveryTest(unittest.TestCase):
@@ -90,10 +91,37 @@ class OcelDiscoveryTest(unittest.TestCase):
     def test_discovery_ocpn_im(self):
         ocel = pm4py.read_ocel(os.path.join("input_data", "ocel", "example_log.jsonocel"))
         ocpn = pm4py.discover_oc_petri_net(ocel, inductive_miner_variant="im")
+        self.assertIsInstance(ocpn, OCPetriNet)
+        self.assertEqual(ocpn["object_types"], ocpn.object_types)
+        self.assertTrue(ocpn["activities"])
+        self.assertIn("petri_nets", ocpn)
+        self.assertEqual(ocpn.get("petri_nets"), ocpn["petri_nets"])
 
     def test_discovery_ocpn_imd(self):
         ocel = pm4py.read_ocel(os.path.join("input_data", "ocel", "example_log.jsonocel"))
         ocpn = pm4py.discover_oc_petri_net(ocel, inductive_miner_variant="imd")
+        self.assertIsInstance(ocpn, OCPetriNet)
+
+    def test_discovery_ocpn_algorithm_variants_return_object(self):
+        from pm4py.algo.discovery.ocel.ocpn import algorithm as ocpn_algorithm
+        from pm4py.algo.discovery.ocel.ocpn.variants import classic as ocpn_classic
+
+        ocel = pm4py.read_ocel(
+            os.path.join("input_data", "ocel", "example_log.jsonocel")
+        )
+
+        self.assertIsInstance(ocpn_algorithm.apply(ocel), OCPetriNet)
+        self.assertIsInstance(ocpn_classic.apply(ocel), OCPetriNet)
+
+    def test_discovery_ocpn_visualization_accepts_object(self):
+        from pm4py.visualization.ocel.ocpn import visualizer as ocpn_visualizer
+
+        ocel = pm4py.read_ocel(
+            os.path.join("input_data", "ocel", "example_log.jsonocel")
+        )
+        ocpn = pm4py.discover_oc_petri_net(ocel)
+        gviz = ocpn_visualizer.apply(ocpn)
+        self.assertTrue(gviz.source)
 
     def test_discovery_saw_nets_ocel(self):
         from pm4py.algo.discovery.ocel.saw_nets import algorithm as saw_nets_disc

@@ -1,5 +1,4 @@
 import pm4py
-import os
 
 
 def execute_script():
@@ -9,11 +8,15 @@ def execute_script():
     The second prompt works on the output of the first prompt, and generates a SQL query isolating the
     paths or the process variants that lead to discrimination.
     """
-    dataframe = pm4py.read_xes("../../tests/input_data/fairness/renting_log_high.xes.gz")
+    dataframe: "pandas.DataFrame" = pm4py.read_xes("../../tests/input_data/fairness/renting_log_high.xes.gz")
     protected_attr = [x for x in dataframe.columns if "protected" in x][0]
-    dataframe_prot = dataframe[dataframe[protected_attr] == True]
-    dataframe_unprot = dataframe[dataframe[protected_attr] == False]
-    prompt = "I want to identify the unfair differences between the treatment of the 'protected' group (first) and the 'unprotected' group (second). I report the process variants. Each process variant is also reported with its execution time."
+    dataframe_prot: "pandas.DataFrame" = dataframe[
+        dataframe[protected_attr].eq(True)
+    ]
+    dataframe_unprot: "pandas.DataFrame" = dataframe[
+        dataframe[protected_attr].eq(False)
+    ]
+    prompt: "str" = "I want to identify the unfair differences between the treatment of the 'protected' group (first) and the 'unprotected' group (second). I report the process variants. Each process variant is also reported with its execution time."
     prompt += "\n\nProcess variants of the protected group:"
     prompt += pm4py.llm.abstract_variants(dataframe_prot, max_len=5000)
     prompt += "\n\nProcess variants of the unprotected group:"

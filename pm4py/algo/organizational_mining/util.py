@@ -81,7 +81,7 @@ def get_groups_from_log(
             .to_dict()[activity_key]
         )
         for el in group_res:
-            if not el[1] in groups:
+            if el[1] not in groups:
                 groups[el[1]] = {}
             groups[el[1]][el[0]] = group_res[el]
     else:
@@ -163,9 +163,9 @@ def get_res_act_from_log(
             .to_dict()[group_key]
         )
         for el in aggr:
-            if not el[1] in res_act:
+            if el[1] not in res_act:
                 res_act[el[1]] = {}
-            if not el[0] in act_res:
+            if el[0] not in act_res:
                 act_res[el[0]] = {}
             res_act[el[1]][el[0]] = aggr[el]
             act_res[el[0]][el[1]] = aggr[el]

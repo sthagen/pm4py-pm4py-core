@@ -67,7 +67,7 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
             for o1 in rel_objs[ev]:
                 for o2 in rel_objs[ev]:
                     if o1 < o2:
-                        if not (o1, o2) in interactions:
+                        if (o1, o2) not in interactions:
                             n = n + 1
         data.append([float(n)])
 

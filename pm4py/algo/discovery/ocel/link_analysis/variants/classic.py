@@ -161,7 +161,7 @@ def apply(
     stream_red = df_red.to_dict("records")
     associations = {}
     for el in stream_red:
-        if not el[index_column + "_out"] in associations:
+        if el[index_column + "_out"] not in associations:
             associations[el[index_column + "_out"]] = set()
         associations[el[index_column + "_out"]].add(el[index_column + "_in"])
 

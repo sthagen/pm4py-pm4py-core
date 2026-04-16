@@ -9,8 +9,11 @@ import importlib.util
 
 def execute_script():
     # in this case, we obtain a decision tree by alignments on a specific decision point
-    log = xes_importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
-    process_tree = inductive_miner.apply(log)
+    log: "EventLog" = xes_importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    process_tree: "ProcessTree" = inductive_miner.apply(log)
+    net: "PetriNet"
+    im: "Marking"
+    fm: "Marking"
     net, im, fm = process_tree_converter.apply(process_tree)
 
     if importlib.util.find_spec("sklearn") and importlib.util.find_spec("graphviz"):

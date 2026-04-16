@@ -6,13 +6,17 @@ import os
 
 
 def execute_script():
-    log = xes_importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
-    process_tree = inductive_miner.apply(log)
+    log: "EventLog" = xes_importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    process_tree: "ProcessTree" = inductive_miner.apply(log)
+    net: "PetriNet"
+    im: "Marking"
+    fm: "Marking"
     net, im, fm = process_tree_converter.apply(process_tree)
     # perform the Montecarlo simulation with the arrival rate inferred by the log (the simulation lasts 5 secs)
     parameters = {}
     parameters[montecarlo_simulation.Variants.PETRI_SEMAPH_FIFO.value.Parameters.PARAM_ENABLE_DIAGNOSTICS] = False
     parameters[montecarlo_simulation.Variants.PETRI_SEMAPH_FIFO.value.Parameters.PARAM_MAX_THREAD_EXECUTION_TIME] = 5
+    res: "dict[str, Any]"
     log, res = montecarlo_simulation.apply(log, net, im, fm, parameters=parameters)
     print("\n(Montecarlo - Petri net) case arrival ratio inferred from the log")
     print(res["median_cases_ex_time"])

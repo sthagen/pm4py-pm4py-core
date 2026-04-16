@@ -22,7 +22,7 @@ Contact: info@processintelligence.solutions
 
 from collections import Counter, defaultdict
 import itertools
-from typing import Any, Generic, Set, TypeVar, Union
+from typing import Any, Dict, Generic, Optional, Set, Tuple, TypeVar, Union
 from copy import deepcopy
 from pm4py.objects.oc_causal_net.obj import OCCausalNet
 
@@ -340,10 +340,10 @@ class OCCausalNetSemantics(Generic[N]):
         cls,
         net: N,
         act: str,
-        cons: dict[str, dict[str, Set]],
-        prod: dict[str, dict[str, Set]],
+        cons: Dict[str, Dict[str, Set]],
+        prod: Dict[str, Dict[str, Set]],
         state: OCCausalNetState,
-    ) -> Union[tuple[MG, MG], None]:
+    ) -> Optional[Tuple[MG, MG]]:
         """
         Checks whether the given binding is enabled in the object-centric causal net.
         A binding is enabled if the activity has input and output marker groupos that
@@ -417,8 +417,8 @@ class OCCausalNetSemantics(Generic[N]):
         cls,
         net: N,
         act: str,
-        cons: dict[str, dict[str, Set]],
-        prod: dict[str, dict[str, Set]],
+        cons: Dict[str, Dict[str, Set]],
+        prod: Dict[str, Dict[str, Set]],
         state: OCCausalNetState,
     ) -> OCCausalNetState:
         """

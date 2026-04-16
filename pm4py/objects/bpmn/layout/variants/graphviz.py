@@ -224,7 +224,7 @@ def apply(bpmn_graph, parameters=None):
         diff_x = abs(x_trg - x_src)
         diff_y = abs(y_src - y_trg)
 
-        if not (x_src, y_src) in outgoing_edges:
+        if (x_src, y_src) not in outgoing_edges:
             outgoing_edges[(x_src, y_src)] = {}
         outgoing_edges[(x_src, y_src)][(x_trg, y_trg)] = {
             EndpointDirection.RIGHT: 0.0,
@@ -232,7 +232,7 @@ def apply(bpmn_graph, parameters=None):
             EndpointDirection.TOP: 0.0,
             EndpointDirection.BOTTOM: 0.0,
         }
-        if not (x_trg, y_trg) in ingoing_edges:
+        if (x_trg, y_trg) not in ingoing_edges:
             ingoing_edges[(x_trg, y_trg)] = {}
         ingoing_edges[(x_trg, y_trg)][(x_src, y_src)] = {
             EndpointDirection.RIGHT: 0.0,

@@ -18,15 +18,20 @@ def execute_script():
       5. Print the resulting conformance-annotated DFG and activity dictionary.
     """
     # Read the event log from the XES file
-    log = pm4py.read_xes("../tests/input_data/receipt.xes")
+    log: "pandas.DataFrame" = pm4py.read_xes("../tests/input_data/receipt.xes")
 
     # Filter the event log to the top 5 variants and discover the DFG, along with start (sa) and end (ea) activities
+    dfg: "dict"
+    sa: "dict"
+    ea: "dict"
     dfg, sa, ea = pm4py.discover_dfg(pm4py.filter_variants_top_k(log, 5))
 
     # Compute the DFG-based alignments and project the results on the DFG.
     # The function returns two items:
     #   - conformance_dfg: a dictionary where each edge is annotated with the count of SYNC and MM moves.
     #   - activities_conformance: a dictionary where each activity is annotated with the count of SYNC, MM, and LM moves.
+    conformance_dfg: "dict[tuple[str, str], dict[str, int]]"
+    activities_conformance: "dict[str, dict[str, int]]"
     conformance_dfg, activities_conformance = dfg_alignments.project_alignments_on_dfg(log, dfg, sa, ea)
 
     # Output the conformance-annotated DFG and activities to the console

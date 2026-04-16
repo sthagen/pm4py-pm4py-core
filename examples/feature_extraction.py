@@ -4,7 +4,8 @@ import os
 
 
 def execute_script():
-    log = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    feature_names: "list[str]"
     data, feature_names = feature_extraction.apply(log, variant=feature_extraction.Variants.TRACE_BASED)
     print(data)
     print(feature_names)

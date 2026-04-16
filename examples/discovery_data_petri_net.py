@@ -6,8 +6,11 @@ import importlib.util
 
 
 def execute_script():
-    log_path = os.path.join("..", "tests", "input_data", "roadtraffic100traces.xes")
-    log = pm4py.read_xes(log_path)
+    log_path: "str" = os.path.join("..", "tests", "input_data", "roadtraffic100traces.xes")
+    log: "pandas.DataFrame" = pm4py.read_xes(log_path)
+    net: "PetriNet"
+    im: "Marking"
+    fm: "Marking"
     net, im, fm = pm4py.discover_petri_net_inductive(log)
     net, im, fm = decision_mining.create_data_petri_nets_with_decisions(log, net, im, fm)
 

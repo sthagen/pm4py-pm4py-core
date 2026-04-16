@@ -6,13 +6,19 @@ import importlib.util
 
 
 def execute_script():
-    log = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"), return_legacy_log_object=False)
-    typed_dfg_1 = pm4py.discover_dfg_typed(log)
+    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"), return_legacy_log_object=False)
+    typed_dfg_1: "DirectlyFollowsGraph" = pm4py.discover_dfg_typed(log)
     # in alternative ...
+    dfg: "dict"
+    sa: "dict"
+    ea: "dict"
     dfg, sa, ea = pm4py.discover_dfg(log)
-    typed_dfg_2 = DFG(dfg, sa, ea)
+    typed_dfg_2: "DirectlyFollowsGraph" = DFG(dfg, sa, ea)
 
-    tree = pm4py.discover_process_tree_inductive(typed_dfg_2, noise_threshold=0.2)
+    tree: "ProcessTree" = pm4py.discover_process_tree_inductive(typed_dfg_2, noise_threshold=0.2)
+    net: "PetriNet"
+    im: "Marking"
+    fm: "Marking"
     net, im, fm = pm4py.convert_to_petri_net(tree)
 
     if importlib.util.find_spec("graphviz"):

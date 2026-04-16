@@ -86,7 +86,7 @@ def apply(
         if curr_len >= max_len:
             break
 
-        if not el[0] in ret:
+        if el[0] not in ret:
             stru = " empty: " + str(num_nans[el[0]]) + " values:"
             ret[el[0]] = stru
             curr_len += len(el[0]) + len(stru) + 9

@@ -7,7 +7,7 @@ import importlib.util
 
 
 def execute_script():
-    log = xes_importer.apply(os.path.join("..", "tests", "compressed_input_data", "09_a32f0n00.xes.gz"))
+    log: "EventLog" = xes_importer.apply(os.path.join("..", "tests", "compressed_input_data", "09_a32f0n00.xes.gz"))
     heu_net = heuristics_miner.apply_heu(log, parameters={
         heuristics_miner.Variants.CLASSIC.value.Parameters.DEPENDENCY_THRESH: 0.99})
 
@@ -16,6 +16,9 @@ def execute_script():
         gviz = hn_vis.apply(heu_net, parameters={hn_vis.Variants.PYDOTPLUS.value.Parameters.FORMAT: examples_conf.TARGET_IMG_FORMAT})
         hn_vis.view(gviz)
 
+    net: "PetriNet"
+    im: "Marking"
+    fm: "Marking"
     net, im, fm = heuristics_miner.apply(log, parameters={
         heuristics_miner.Variants.CLASSIC.value.Parameters.DEPENDENCY_THRESH: 0.99})
 

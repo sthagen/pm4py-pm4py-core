@@ -10,12 +10,12 @@ import importlib.util
 
 
 class Parameters(Enum):
-    API_KEY = "api_key"
-    MODEL = "openai_model"
-    RECORDING_DURATION = "recording_duration"
-    VOICE = "voice"
-    PLAY_SOUND = "play_sound"
-    MAX_LEN = "max_len"
+    API_KEY: "str" = "api_key"
+    MODEL: "str" = "openai_model"
+    RECORDING_DURATION: "str" = "recording_duration"
+    VOICE: "str" = "voice"
+    PLAY_SOUND: "str" = "play_sound"
+    MAX_LEN: "str" = "max_len"
 
 
 def check_ffmpeg_installed():
@@ -53,7 +53,7 @@ def speech_to_text(sound_file_path: Optional[str] = None, parameters: Optional[D
 
     api_key = exec_utils.get_param_value(Parameters.API_KEY, parameters, constants.OPENAI_API_KEY)
     model = exec_utils.get_param_value(Parameters.MODEL, parameters, constants.OPENAI_DEFAULT_STT_MODEL)
-    recording_duration = exec_utils.get_param_value(Parameters.RECORDING_DURATION, parameters, 10)
+    recording_duration: "int" = exec_utils.get_param_value(Parameters.RECORDING_DURATION, parameters, 10)
 
     if sound_file_path is None:
         import pyaudio
@@ -62,10 +62,10 @@ def speech_to_text(sound_file_path: Optional[str] = None, parameters: Optional[D
 
         # Audio recording parameters
         FORMAT = pyaudio.paInt16
-        CHANNELS = 1
-        RATE = 44100
-        CHUNK = 1024
-        RECORD_SECONDS = recording_duration
+        CHANNELS: "int" = 1
+        RATE: "int" = 44100
+        CHUNK: "int" = 1024
+        RECORD_SECONDS: "int" = recording_duration
 
         F = NamedTemporaryFile(suffix=".wav")
         WAVE_OUTPUT_FILENAME = F.name
@@ -146,8 +146,8 @@ def text_to_speech(stri: str, parameters: Optional[Dict[Any, Any]] = None) -> st
     api_key = exec_utils.get_param_value(Parameters.API_KEY, parameters, constants.OPENAI_API_KEY)
     model = exec_utils.get_param_value(Parameters.MODEL, parameters, constants.OPENAI_DEFAULT_TTS_MODEL)
     voice = exec_utils.get_param_value(Parameters.VOICE, parameters, constants.OPENAI_DEFAULT_TTS_VOICE)
-    max_len = exec_utils.get_param_value(Parameters.MAX_LEN, parameters, 4096)
-    play_sound = exec_utils.get_param_value(Parameters.PLAY_SOUND, parameters, True)
+    max_len: "int" = exec_utils.get_param_value(Parameters.MAX_LEN, parameters, 4096)
+    play_sound: "bool" = exec_utils.get_param_value(Parameters.PLAY_SOUND, parameters, True)
 
     F = NamedTemporaryFile(suffix=".mp3")
     speech_file_path = F.name
@@ -199,10 +199,10 @@ if __name__ == "__main__":
     if not importlib.util.find_spec("pydub") or not importlib.util.find_spec("pyaudio"):
         raise Exception("install pydub and pyaudio using pip!")
 
-    api_key = "sk-"
+    api_key: "str" = "sk-"
 
-    log = pm4py.read_xes("../../tests/compressed_input_data/15_bpic2020_permit_log_1t_per_variant.xes.gz")
-    var_abstr = pm4py.llm.abstract_variants(log)
+    log: "pandas.DataFrame" = pm4py.read_xes("../../tests/compressed_input_data/15_bpic2020_permit_log_1t_per_variant.xes.gz")
+    var_abstr: "str" = pm4py.llm.abstract_variants(log)
 
     parameters = {}
 
@@ -216,9 +216,9 @@ if __name__ == "__main__":
     print("Now your inquiry is vocalized before execution:")
     text_to_speech(user_inquiry, parameters=parameters)
 
-    prompt = var_abstr + "\n\n" + user_inquiry
+    prompt: "str" = var_abstr + "\n\n" + user_inquiry
 
-    response = pm4py.llm.openai_query(prompt, api_key=api_key)
+    response: "str" = pm4py.llm.openai_query(prompt, api_key=api_key)
     print("This is the response of the OpenAI model:", response)
 
     print("Now the response is vocalized:")

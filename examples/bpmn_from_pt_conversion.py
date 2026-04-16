@@ -11,9 +11,9 @@ import importlib.util
 
 
 def execute_script():
-    log_path = os.path.join(os.path.join("..", "tests", "input_data", "running-example.xes"))
-    log = xes_import.apply(log_path)
-    ptree = inductive_miner.apply(log)
+    log_path: "str" = os.path.join(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    log: "EventLog" = xes_import.apply(log_path)
+    ptree: "ProcessTree" = inductive_miner.apply(log)
     bpmn = pt_converter.apply(ptree, variant=pt_converter.Variants.TO_BPMN)
 
     if importlib.util.find_spec("graphviz"):

@@ -5,7 +5,10 @@ import os
 
 
 def execute_script():
-    log = xes_importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    log: "EventLog" = xes_importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    net: "PetriNet"
+    im: "Marking"
+    fm: "Marking"
     net, im, fm = alpha_miner.apply(log)
     # the alpha miner in this case returns a sound workflow net!
     # get the tangible reachability graph and the Q-matrix

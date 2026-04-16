@@ -8,10 +8,10 @@ from examples import examples_conf
 
 
 def execute_script():
-    log_path = os.path.join("..", "tests", "input_data", "running-example.xes")
+    log_path: "str" = os.path.join("..", "tests", "input_data", "running-example.xes")
 
-    log = xes_importer.apply(log_path)
-    tree = inductive.apply(log)
+    log: "EventLog" = xes_importer.apply(log_path)
+    tree: "ProcessTree" = inductive.apply(log)
 
     if importlib.util.find_spec("graphviz"):
         from pm4py.visualization.process_tree import visualizer as pt_vis
@@ -19,7 +19,7 @@ def execute_script():
         pt_vis.view(gviz)
 
     print("start calculate approximated alignments")
-    approx_alignments = align_approx.apply(log, tree)
+    approx_alignments: "dict[str, Any] | list[dict[str, Any]]" = align_approx.apply(log, tree)
     pretty_print_alignments(approx_alignments)
 
 

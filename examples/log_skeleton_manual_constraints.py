@@ -4,7 +4,7 @@ import pm4py
 def execute_script():
     # example where the log skeleton is manullay built, and not automatically discovered from the log.
 
-    log = pm4py.read_xes("../tests/input_data/running-example.xes")
+    log: "pandas.DataFrame" = pm4py.read_xes("../tests/input_data/running-example.xes")
 
     log_skeleton = {"always_after": set(), "always_before": set(), "equivalence": set(), "never_together": set(),
                     "directly_follows": set(), "activ_freq": dict()}
@@ -21,11 +21,11 @@ def execute_script():
     log_skeleton["always_after"].add(('decide', 'pay compensation'))
 
     # gets the conformance checking results. The first describes for each case of the log the exact deviations
-    detailed_conf_results = pm4py.conformance_log_skeleton(log, log_skeleton)
+    detailed_conf_results: "list[set[Any]]" = pm4py.conformance_log_skeleton(log, log_skeleton)
     print(detailed_conf_results)
 
     # the second provides a summary (as a dataframe) of the fitness per case
-    summary_df = pm4py.conformance_log_skeleton(log, log_skeleton, return_diagnostics_dataframe=True)
+    summary_df: "list[set[Any]]" = pm4py.conformance_log_skeleton(log, log_skeleton, return_diagnostics_dataframe=True)
     print(summary_df)
 
 

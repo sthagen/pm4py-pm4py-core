@@ -37,7 +37,7 @@ def generate_initial_order(nodes, efg):
     po = BinaryRelation(nodes)
     for a, b in combinations(nodes, 2):
         if (a, b) in efg:
-            if not (b, a) in efg:
+            if (b, a) not in efg:
                 po.add_edge(a, b)
         else:
             if (b, a) in efg:
@@ -90,9 +90,9 @@ def is_valid_order(po, efg, start_activities, end_activities):
 
         for a in group_1:
             for b in group_2:
-                if not (a, b) in efg:
+                if (a, b) not in efg:
                     all_ef_g1_g2 = False
-                if not (b, a) in efg:
+                if (b, a) not in efg:
                     all_ef_g2_g1 = False
         if all_ef_g1_g2 and all_ef_g2_g1 and (edge_g1_g2 or edge_g2_g1):
             return False

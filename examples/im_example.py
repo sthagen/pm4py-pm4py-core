@@ -10,10 +10,13 @@ import importlib.util
 
 
 def execute_script():
-    log_path = os.path.join("..", "tests", "input_data", "running-example.xes")
+    log_path: "str" = os.path.join("..", "tests", "input_data", "running-example.xes")
 
-    log = xes_importer.apply(log_path)
-    process_tree = inductive.apply(log)
+    log: "EventLog" = xes_importer.apply(log_path)
+    process_tree: "ProcessTree" = inductive.apply(log)
+    net: "PetriNet"
+    marking: "Marking"
+    final_marking: "Marking"
     net, marking, final_marking = process_tree_converter.apply(process_tree)
     for place in marking:
         print("initial marking " + place.name)
@@ -39,7 +42,7 @@ def execute_script():
                 if cf_result is None:
                     print("alignment is none!")
                 else:
-                    is_fit = True
+                    is_fit: "bool" = True
                     for couple in cf_result:
                         print(couple)
                         if not (couple[0] == couple[1] or couple[0] == ">>" and couple[1] is None):

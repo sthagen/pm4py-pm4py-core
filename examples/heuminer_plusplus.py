@@ -7,11 +7,11 @@ import importlib.util
 
 
 def execute_script():
-    df = pandas_utils.read_csv("../tests/input_data/interval_event_log.csv")
+    df: "pandas.DataFrame" = pandas_utils.read_csv("../tests/input_data/interval_event_log.csv")
     df = dataframe_utils.convert_timestamp_columns_in_df(df, timest_format=constants.DEFAULT_TIMESTAMP_PARSE_FORMAT, timest_columns=["start_timestamp", "time:timestamp"])
-    log = pm4py.read_xes("../tests/input_data/interval_event_log.xes")
-    heu_net = plusplus.apply_heu(log, parameters={"heu_net_decoration": "performance"})
-    heu_net_2 = plusplus.apply_heu_pandas(df, parameters={"heu_net_decoration": "performance"})
+    log: "pandas.DataFrame" = pm4py.read_xes("../tests/input_data/interval_event_log.xes")
+    heu_net: "HeuristicsNet" = plusplus.apply_heu(log, parameters={"heu_net_decoration": "performance"})
+    heu_net_2: "HeuristicsNet" = plusplus.apply_heu_pandas(df, parameters={"heu_net_decoration": "performance"})
 
     if importlib.util.find_spec("pydotplus") and importlib.util.find_spec("graphviz"):
         from pm4py.visualization.heuristics_net import visualizer
@@ -20,7 +20,13 @@ def execute_script():
         gviz2 = visualizer.apply(heu_net_2, parameters={"format": examples_conf.TARGET_IMG_FORMAT})
         visualizer.view(gviz2)
 
+    net1: "PetriNet"
+    im1: "Marking"
+    fm1: "Marking"
     net1, im1, fm1 = plusplus.apply(log)
+    net2: "PetriNet"
+    im2: "Marking"
+    fm2: "Marking"
     net2, im2, fm2 = plusplus.apply(log)
 
     if importlib.util.find_spec("pydotplus") and importlib.util.find_spec("graphviz"):

@@ -9,15 +9,18 @@ import importlib.util
 
 
 def execute_script():
-    log = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"), return_legacy_log_object=False)
-    variants = pm4py.get_variants(log)
+    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"), return_legacy_log_object=False)
+    variants: "dict[tuple[str], list[Trace]] | dict[tuple[str], int]" = pm4py.get_variants(log)
     uvcl = UVCL()
     for var, occ in variants.items():
         uvcl[var] = occ
-    parameters = {"noise_threshold": 0.2}
-    imfuvcl = IMFUVCL(parameters)
+    parameters: "dict[str, float]" = {"noise_threshold": 0.2}
+    imfuvcl: "IMFUVCL" = IMFUVCL(parameters)
 
     tree = imfuvcl.apply(IMDataStructureUVCL(uvcl), parameters=parameters)
+    net: "PetriNet"
+    im: "Marking"
+    fm: "Marking"
     net, im, fm = pm4py.convert_to_petri_net(tree)
 
     if importlib.util.find_spec("graphviz"):

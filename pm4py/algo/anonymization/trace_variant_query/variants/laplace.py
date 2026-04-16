@@ -130,7 +130,7 @@ def create_event_int_mapping(log):
     for trace in log:
         for event in trace:
             event_name = event["concept:name"]
-            if not str(event_name) in event_name_list:
+            if str(event_name) not in event_name_list:
                 event_name_list.append(event_name)
     event_int_mapping = {}
     event_int_mapping[TRACE_START] = 0
@@ -182,7 +182,7 @@ def prune_trace_frequencies(trace_frequencies, P):
 
 def pref(prefix, events):
     prefixes_length_n = []
-    if not TRACE_END in prefix:
+    if TRACE_END not in prefix:
         for event in events:
             if event == TRACE_END:
                 current_prefix = prefix + event

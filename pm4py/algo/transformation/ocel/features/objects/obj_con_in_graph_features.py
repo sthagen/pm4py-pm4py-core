@@ -72,7 +72,7 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     graph0 = graph_to_retrieve.apply(ocel, parameters=parameters)
     graph = {}
     for el in graph0:
-        if not el[0] in graph:
+        if el[0] not in graph:
             graph[el[0]] = set()
         graph[el[0]].add(el[1])
         if graph_to_retrieve in [
@@ -81,7 +81,7 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
             object_codeath_graph,
         ]:
             # undirected
-            if not el[1] in graph:
+            if el[1] not in graph:
                 graph[el[1]] = set()
             graph[el[1]].add(el[0])
 

@@ -29,6 +29,7 @@ import pandas as pd
 import numpy as np
 
 from pm4py.objects.ocel.obj import OCEL
+from pm4py.objects.ocpn.obj import OCPetriNet
 from pm4py.util import constants, pandas_utils
 import sys
 import random
@@ -341,7 +342,7 @@ def discover_oc_petri_net(
     ocel: OCEL,
     inductive_miner_variant: str = "im",
     diagnostics_with_tbr: bool = False,
-) -> Dict[str, Any]:
+) -> OCPetriNet:
     """
     Discovers an object-centric Petri net from the provided object-centric event log.
 
@@ -355,7 +356,7 @@ def discover_oc_petri_net(
     :param diagnostics_with_tbr: Enable the computation of diagnostics using token-based replay if set to True.
     :type diagnostics_with_tbr: bool
     :return: Discovered object-centric Petri net.
-    :rtype: Dict[str, Any]
+    :rtype: OCPetriNet
 
     .. code-block:: python3
 

@@ -27,12 +27,12 @@ def check_exponential_distribution(name, your_data):
 
 
 def execute_script():
-    epsilon = 0.0001
-    log = pm4py.read_xes('../tests/input_data/receipt.xes', return_legacy_log_object=True)
-    time_intervals = pm4py.convert_log_to_time_intervals(log, ('Confirmation of receipt', 'T02 Check confirmation of receipt'))
+    epsilon: "float" = 0.0001
+    log: "EventLog" = pm4py.read_xes('../tests/input_data/receipt.xes', return_legacy_log_object=True)
+    time_intervals: "list[list[Any]]" = pm4py.convert_log_to_time_intervals(log, ('Confirmation of receipt', 'T02 Check confirmation of receipt'))
     service_times = [min(x[1]-x[0], epsilon) for x in time_intervals]
     arrival_diffs = []
-    i = 0
+    i: "int" = 0
     while i < len(time_intervals)-1:
         arrival_diffs.append(max(time_intervals[i+1][0]-time_intervals[i][0], epsilon))
         i = i + 1

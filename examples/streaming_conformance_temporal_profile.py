@@ -5,11 +5,11 @@ from pm4py.streaming.stream.live_event_stream import LiveEventStream
 
 
 def execute_script():
-    log = pm4py.read_xes("../tests/input_data/receipt.xes")
-    static_stream = pm4py.convert_to_event_stream(log)
-    temporal_profile = temporal_profile_disc.apply(log)
+    log: "pandas.DataFrame" = pm4py.read_xes("../tests/input_data/receipt.xes")
+    static_stream: "EventStream" = pm4py.convert_to_event_stream(log)
+    temporal_profile: "dict[tuple[str, str], tuple[float, float]]" = temporal_profile_disc.apply(log)
     cc = streaming_temporal_conformance.apply(temporal_profile)
-    live_stream = LiveEventStream()
+    live_stream: "LiveEventStream" = LiveEventStream()
     live_stream.register(cc)
     live_stream.start()
     for index, ev in enumerate(static_stream):

@@ -28,6 +28,7 @@ from pm4py.utils import __event_log_deprecation_warning
 from pm4py.objects.ocel.obj import OCEL
 from tempfile import NamedTemporaryFile
 from copy import copy
+import re
 from pm4py.objects.petri_net.obj import PetriNet, Marking
 
 
@@ -668,6 +669,42 @@ def clustering(log: pd.DataFrame, executor=openai_query, case_id_key: str = "cas
     return final_clusters
 
 
+def __validate_safe_select_query(sql_query: str) -> str:
+    """
+    Validates that a SQL query is read-only and free from statements/functions
+    that could access or modify local files/databases.
+    """
+    query = sql_query.strip()
+    if query.endswith(";"):
+        query = query[:-1].strip()
+
+    if not query:
+        raise ValueError("The response does not contain a valid SQL query.")
+
+    if ";" in query:
+        raise ValueError("Only a single SQL statement is allowed.")
+
+    if "--" in query or "/*" in query or "*/" in query:
+        raise ValueError("SQL comments are not allowed in auto-executed queries.")
+
+    normalized = " ".join(query.lower().split())
+    if not (normalized.startswith("select ") or normalized.startswith("with ")):
+        raise ValueError("Only read-only SELECT queries can be auto-executed.")
+
+    forbidden_patterns = [
+        r"\b(insert|update|delete|drop|alter|create|replace|truncate|merge)\b",
+        r"\b(attach|detach|copy|call|pragma|install|load|export|import|vacuum)\b",
+        r"\b(read_csv|read_csv_auto|read_parquet|read_json|read_json_auto)\b",
+        r"\bwrite_(csv|parquet)\b",
+    ]
+
+    for pattern in forbidden_patterns:
+        if re.search(pattern, normalized):
+            raise ValueError("Unsafe SQL detected in LLM-generated query.")
+
+    return query
+
+
 def __execute_prompt_to_db_query(
     log: pd.DataFrame,
     prompt: str,
@@ -678,8 +715,6 @@ def __execute_prompt_to_db_query(
     """
     Internal method to retrieve (and execute) a SQL query corresponding to a prompt
     """
-    import duckdb
-
     if check_is_pandas_dataframe(log):
         kwargs["table_name"] = "dataframe"
         dataframe = log
@@ -697,7 +732,10 @@ def __execute_prompt_to_db_query(
         )
 
     if execute_query:
-        result = duckdb.query(sql_query).to_df()
+        safe_sql_query = __validate_safe_select_query(sql_query)
+        import duckdb
+
+        result = duckdb.query(safe_sql_query).to_df()
 
         if check_is_pandas_dataframe(log):
             return result

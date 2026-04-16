@@ -19,7 +19,7 @@ from prefix_feature_extraction import build_prefix_features_remaining_time
 def select_components_by_cumulative_variance(
     explained_variance_ratio, threshold=0.93
 ):
-    cumulative = 0.0
+    cumulative: "float" = 0.0
     for idx, ratio in enumerate(explained_variance_ratio):
         cumulative += ratio
         if cumulative >= threshold:
@@ -32,10 +32,10 @@ def fit_pca_with_variance_threshold(features, threshold=0.93):
         raise ValueError("No features provided for PCA fitting.")
     max_components = min(len(features), len(features[0]))
     if max_components <= 1:
-        pca = PCA(n_components=1)
+        pca: "PCA" = PCA(n_components=1)
         pca.fit(features)
         return 1, pca
-    pca_full = PCA(n_components=max_components, random_state=42)
+    pca_full: "PCA" = PCA(n_components=max_components, random_state=42)
     pca_full.fit(features)
     n_components = select_components_by_cumulative_variance(
         pca_full.explained_variance_ratio_.tolist(), threshold=threshold
@@ -66,7 +66,7 @@ def train_regressor(features, targets):
 def train_pca_knn_regressor(features, targets):
     n_components, pca = fit_pca_with_variance_threshold(features, threshold=0.93)
     reduced = pca.transform(features)
-    reg = KNeighborsRegressor(n_neighbors=1)
+    reg: "KNeighborsRegressor" = KNeighborsRegressor(n_neighbors=1)
     reg.fit(reduced, targets)
     return {"pca": pca, "model": reg, "n_components": n_components}
 
@@ -75,8 +75,8 @@ def compute_regression_metrics(targets, predictions, case_ids):
     abs_errors = [abs(y_true - y_hat) for y_true, y_hat in zip(targets, predictions)]
     sq_errors = [(y_true - y_hat) ** 2 for y_true, y_hat in zip(targets, predictions)]
 
-    per_case_abs = defaultdict(list)
-    per_case_sq = defaultdict(list)
+    per_case_abs: "defaultdict" = defaultdict(list)
+    per_case_sq: "defaultdict" = defaultdict(list)
     for case_id, ae, se in zip(case_ids, abs_errors, sq_errors):
         per_case_abs[case_id].append(ae)
         per_case_sq[case_id].append(se)
@@ -135,7 +135,7 @@ def main():
     )
     args = parser.parse_args()
 
-    log = pm4py.read_xes(args.log_path, return_legacy_log_object=True)
+    log: "EventLog" = pm4py.read_xes(args.log_path, return_legacy_log_object=True)
     (
         feature,
         target,
@@ -150,7 +150,7 @@ def main():
     if not feature:
         raise SystemExit("No prefixes with timestamps found in the log.")
 
-    candidate_percentages = [5, 20, 100]
+    candidate_percentages: "list[int]" = [5, 20, 100]
 
     X_train, X_test, y_train, y_test, _, case_test = train_test_split(
         feature, target, case_ids, test_size=0.2, random_state=42
@@ -166,7 +166,7 @@ def main():
     print(f"Train size: {len(X_train)}")
     print(f"Test size: {len(X_test)}")
 
-    rng = random.Random(42)
+    rng: "Random" = random.Random(42)
     for percentage in candidate_percentages:
         X_sampled, y_sampled = sample_training_data(
             X_train, y_train, percentage, rng

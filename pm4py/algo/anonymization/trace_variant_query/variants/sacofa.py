@@ -259,7 +259,7 @@ def prune_trace_frequencies(trace_frequencies, P, P_smart, conformSet):
 
 def pref(prefix, events, n):
     prefixes_length_n = []
-    if not TRACE_END in prefix:
+    if TRACE_END not in prefix:
         for event in events:
             if event == TRACE_END:
                 current_prefix = prefix + event

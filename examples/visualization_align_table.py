@@ -8,10 +8,13 @@ import importlib.util
 
 
 def execute_script():
-    log = importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
-    process_tree = inductive_miner.apply(log)
+    log: "EventLog" = importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    process_tree: "ProcessTree" = inductive_miner.apply(log)
+    net: "PetriNet"
+    im: "Marking"
+    fm: "Marking"
     net, im, fm = process_tree_converter.apply(process_tree)
-    aligned_traces = alignments.apply(log, net, im, fm)
+    aligned_traces: "dict[str, Any] | list[dict[str, Any]]" = alignments.apply(log, net, im, fm)
 
     if importlib.util.find_spec("graphviz"):
         from pm4py.visualization.align_table import visualizer

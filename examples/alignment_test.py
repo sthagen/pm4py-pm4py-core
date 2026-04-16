@@ -21,13 +21,16 @@ def align(trace, net, im, fm, model_cost_function, sync_cost_function):
 
 
 def execute_script():
-    log_path = os.path.join("..", "tests", "input_data", "running-example.xes")
-    pnml_path = os.path.join("..", "tests", "input_data", "running-example.pnml")
+    log_path: "str" = os.path.join("..", "tests", "input_data", "running-example.xes")
+    pnml_path: "str" = os.path.join("..", "tests", "input_data", "running-example.pnml")
 
     # log_path = 'C:/Users/bas/Documents/tue/svn/private/logs/a32_logs/a32f0n05.xes'
     # pnml_path = 'C:/Users/bas/Documents/tue/svn/private/logs/a32_logs/a32.pnml'
 
-    log = xes_importer.apply(log_path)
+    log: "EventLog" = xes_importer.apply(log_path)
+    net: "PetriNet"
+    marking: "Marking"
+    fmarking: "Marking"
     net, marking, fmarking = petri_importer.apply(pnml_path)
 
     model_cost_function = dict()

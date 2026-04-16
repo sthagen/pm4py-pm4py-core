@@ -7,9 +7,9 @@ import importlib.util
 
 
 def execute_script():
-    log = xes_importer.apply(os.path.join("..", "tests", "input_data", "receipt.xes"))
+    log: "EventLog" = xes_importer.apply(os.path.join("..", "tests", "input_data", "receipt.xes"))
     # the tree discovered by inductive miner is huge and can replay the behavior of the log
-    tree = pm4py.discover_process_tree_inductive(log)
+    tree: "ProcessTree" = pm4py.discover_process_tree_inductive(log)
     # to make a more effective replay, remove the elements that are not being used during the replay of the trace
     # (that are the skippable ones, with empty intersection with the trace)
     tree_first_trace = reducer.apply(tree, log[0], variant=reducer.Variants.TREE_TR_BASED)

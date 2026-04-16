@@ -5,12 +5,12 @@ import os
 
 
 def execute_script():
-    log = xes_importer.apply(os.path.join("..", "tests", "input_data", "receipt.xes"))
+    log: "EventLog" = xes_importer.apply(os.path.join("..", "tests", "input_data", "receipt.xes"))
     # discovers the log skeleton with a minimal noise
-    log_skeleton = lsk.apply(log, parameters={lsk.Variants.CLASSIC.value.Parameters.NOISE_THRESHOLD: 0.01})
+    log_skeleton: "dict[str, Any]" = lsk.apply(log, parameters={lsk.Variants.CLASSIC.value.Parameters.NOISE_THRESHOLD: 0.01})
     print(log_skeleton)
     # applies conformance checking to it
-    results = lsk_conf.apply(log, log_skeleton)
+    results: "list[set[Any]]" = lsk_conf.apply(log, log_skeleton)
     for i in range(min(len(results), 5)):
         # print the i-the conformance checking
         print(results[i])

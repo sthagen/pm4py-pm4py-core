@@ -4,8 +4,8 @@ from pm4py.util import constants
 
 
 def execute_script():
-    dataframe = pm4py.read_xes("../tests/input_data/running-example.xes", return_legacy_log_object=False)
-    renamed_dataframe = activities_to_alphabet.apply(dataframe, parameters={constants.PARAMETER_CONSTANT_ACTIVITY_KEY: "concept:name"})
+    dataframe: "pandas.DataFrame" = pm4py.read_xes("../tests/input_data/running-example.xes", return_legacy_log_object=False)
+    renamed_dataframe: "pandas.DataFrame | tuple[pandas.DataFrame, dict[str, str]]" = activities_to_alphabet.apply(dataframe, parameters={constants.PARAMETER_CONSTANT_ACTIVITY_KEY: "concept:name"})
     print(renamed_dataframe)
 
 

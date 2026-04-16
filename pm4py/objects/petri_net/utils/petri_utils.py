@@ -677,8 +677,9 @@ def get_s_components_from_petri(
                                 max_rec_depth=max_rec_depth,
                             )
 
-    if not set([place.name for place in curr_s_comp]) in list_s_components:
-        list_s_components.append(set([place.name for place in curr_s_comp]))
+    curr_s_component = {place.name for place in curr_s_comp}
+    if curr_s_component not in list_s_components:
+        list_s_components.append(curr_s_component)
 
     return list_s_components
 

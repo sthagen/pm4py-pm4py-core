@@ -15,10 +15,10 @@ import importlib.util
 
 
 def execute_script():
-    log_path = os.path.join("..", "tests", "input_data", "interval_event_log.csv")
-    dataframe = pandas_utils.read_csv(log_path)
+    log_path: "str" = os.path.join("..", "tests", "input_data", "interval_event_log.csv")
+    dataframe: "pandas.DataFrame" = pandas_utils.read_csv(log_path)
     log_path = os.path.join("..", "tests", "input_data", "reviewing.xes")
-    log = pm4py.read_xes(log_path)
+    log: "pandas.DataFrame" = pm4py.read_xes(log_path)
     dataframe = pm4py.convert_to_dataframe(log)
     parameters = {}
     #parameters[constants.PARAMETER_CONSTANT_START_TIMESTAMP_KEY] = "start_timestamp"
@@ -27,18 +27,18 @@ def execute_script():
     parameters[constants.PARAMETER_CONSTANT_CASEID_KEY] = "case:concept:name"
     parameters["strict"] = True
     parameters["format"] = examples_conf.TARGET_IMG_FORMAT
-    start_activities = sa_get.get_start_activities(dataframe, parameters=parameters)
-    end_activities = ea_get.get_end_activities(dataframe, parameters=parameters)
-    att_count = att_get.get_attribute_values(dataframe, "concept:name", parameters=parameters)
+    start_activities: "dict[str, int]" = sa_get.get_start_activities(dataframe, parameters=parameters)
+    end_activities: "dict[str, int]" = ea_get.get_end_activities(dataframe, parameters=parameters)
+    att_count: "dict[Any, int]" = att_get.get_attribute_values(dataframe, "concept:name", parameters=parameters)
     parameters["start_activities"] = start_activities
     parameters["end_activities"] = end_activities
-    soj_time = soj_time_get.apply(dataframe, parameters=parameters)
+    soj_time: "dict[str, float]" = soj_time_get.apply(dataframe, parameters=parameters)
     print("soj_time")
     print(soj_time)
-    conc_act = conc_act_get.apply(dataframe, parameters=parameters)
+    conc_act: "dict[tuple[str, str], int]" = conc_act_get.apply(dataframe, parameters=parameters)
     print("conc_act")
     print(conc_act)
-    efg = efg_get.apply(dataframe, parameters=parameters)
+    efg: "dict[tuple[str, str], int]" = efg_get.apply(dataframe, parameters=parameters)
     print("efg")
     print(efg)
 
@@ -52,6 +52,9 @@ def execute_script():
         dfg_gv_perf = dfg_vis_fact.apply(dfg_perf, activities_count=att_count, variant=dfg_vis_fact.Variants.PERFORMANCE,
                                          serv_time=soj_time, parameters=parameters)
         dfg_vis_fact.view(dfg_gv_perf)
+        net: "PetriNet"
+        im: "Marking"
+        fm: "Marking"
         net, im, fm = dfg_conv.apply(dfg_freq)
         gviz = pn_vis.apply(net, im, fm, parameters=parameters)
         pn_vis.view(gviz)

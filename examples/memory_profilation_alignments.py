@@ -8,8 +8,11 @@ from pm4py.objects.conversion.process_tree import converter as process_tree_conv
 
 
 class Shared:
-    log = importer.apply(os.path.join("..", "tests", "input_data", "receipt.xes"))
-    process_tree = inductive_miner.apply(log)
+    log: "EventLog" = importer.apply(os.path.join("..", "tests", "input_data", "receipt.xes"))
+    process_tree: "ProcessTree" = inductive_miner.apply(log)
+    net: "PetriNet"
+    im: "Marking"
+    fm: "Marking"
     net, im, fm = process_tree_converter.apply(process_tree)
 
 
@@ -18,18 +21,18 @@ def nothing():
 
 
 def f():
-    aa = time.time()
+    aa: "float" = time.time()
     aligned_traces = alignments.apply(Shared.log, Shared.net, Shared.im, Shared.fm,
                                       variant=alignments.Variants.VERSION_DIJKSTRA_LESS_MEMORY)
-    bb = time.time()
+    bb: "float" = time.time()
     print(bb - aa)
 
 
 def g():
-    aa = time.time()
+    aa: "float" = time.time()
     aligned_traces = alignments.apply(Shared.log, Shared.net, Shared.im, Shared.fm,
                                       variant=alignments.Variants.VERSION_DIJKSTRA_NO_HEURISTICS)
-    bb = time.time()
+    bb: "float" = time.time()
     print(bb - aa)
 
 

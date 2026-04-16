@@ -7,12 +7,12 @@ import argparse
 
 
 
-EXECUTE_EXAMPLES = True
-PRINT_FAILURE_TRACES = True
+EXECUTE_EXAMPLES: "bool" = True
+PRINT_FAILURE_TRACES: "bool" = True
 
 class OutcomeMeasurement:
-    SUCCESS = 0
-    FAILED = 0
+    SUCCESS: "int" = 0
+    FAILED: "int" = 0
     FAILURE_TRACES = []
 
 
@@ -993,7 +993,7 @@ def execute_script(f):
         OutcomeMeasurement.SUCCESS += 1
     except ImportError:
         import time
-        trace = traceback.format_exc()
+        trace: "str" = traceback.format_exc()
         print(trace)
         OutcomeMeasurement.FAILED += 1
         OutcomeMeasurement.FAILURE_TRACES.append(trace)
@@ -1074,7 +1074,7 @@ def main():
 
     print_versions()
 
-    skipped = 0
+    skipped: "int" = 0
 
     if EXECUTE_EXAMPLES:
         if importlib.util.find_spec("polars"):
@@ -1246,7 +1246,7 @@ def main():
     if total_runs > 0:
         pass_ratio = OutcomeMeasurement.SUCCESS / total_runs
     else:
-        pass_ratio = 0.0
+        pass_ratio: "float" = 0.0
 
     if PRINT_FAILURE_TRACES:
         for i, trace in enumerate(OutcomeMeasurement.FAILURE_TRACES):

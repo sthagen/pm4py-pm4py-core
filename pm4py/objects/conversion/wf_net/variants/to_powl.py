@@ -23,7 +23,7 @@ Contact: info@processintelligence.solutions
 from copy import copy
 from itertools import combinations
 from collections import deque
-from typing import Union, Set
+from typing import List, Set, Union
 
 from pm4py import PetriNet
 from pm4py.objects.petri_net.utils import petri_utils as pn_util
@@ -248,8 +248,10 @@ def mine_loop(net: PetriNet, start_place: PetriNet.Place, end_place: PetriNet.Pl
     return do_subnet_transitions, redo_subnet_transitions
 
 
-def __combine_parts(transitions_to_group_together: set[PetriNet.Transition],
-                    partition: list[set[PetriNet.Transition]]):
+def __combine_parts(
+    transitions_to_group_together: Set[PetriNet.Transition],
+    partition: List[Set[PetriNet.Transition]],
+):
     new_partition = []
     new_combined_group = set()
 
@@ -322,8 +324,11 @@ def validate_workflow_net(net: PetriNet):
     return start_place, end_place
 
 
-def remove_initial_and_end_silent_activities(net: PetriNet, start_places: set[PetriNet.Place],
-                                             end_places: set[PetriNet.Place]):
+def remove_initial_and_end_silent_activities(
+    net: PetriNet,
+    start_places: Set[PetriNet.Place],
+    end_places: Set[PetriNet.Place],
+):
     change = True
     while change and len(net.transitions) > 1:
         change = False
@@ -359,7 +364,9 @@ def remove_initial_and_end_silent_activities(net: PetriNet, start_places: set[Pe
     return start_places, end_places
 
 
-def __get_identical_place(place: PetriNet.Place, places_set: set[PetriNet.Place]):
+def __get_identical_place(
+    place: PetriNet.Place, places_set: Set[PetriNet.Place]
+):
     for other in places_set:
         if (pn_util.post_set(place) == pn_util.post_set(other)
                 and pn_util.pre_set(place) == pn_util.pre_set(other)):
@@ -367,7 +374,11 @@ def __get_identical_place(place: PetriNet.Place, places_set: set[PetriNet.Place]
     return None
 
 
-def __remove_and_replace_if_present(old_p: PetriNet.Place, new_p: PetriNet.Place, place_set: set[PetriNet.Place]):
+def __remove_and_replace_if_present(
+    old_p: PetriNet.Place,
+    new_p: PetriNet.Place,
+    place_set: Set[PetriNet.Place],
+):
     if old_p in place_set:
         place_set.remove(old_p)
         if new_p not in place_set:
@@ -375,7 +386,11 @@ def __remove_and_replace_if_present(old_p: PetriNet.Place, new_p: PetriNet.Place
     return place_set
 
 
-def remove_duplicated_places(net: PetriNet, start_places: set[PetriNet.Place], end_places: set[PetriNet.Place]):
+def remove_duplicated_places(
+    net: PetriNet,
+    start_places: Set[PetriNet.Place],
+    end_places: Set[PetriNet.Place],
+):
     all_places = list(net.places)
     places_to_keep = {all_places[0]}
     for place in all_places[1:]:
@@ -390,7 +405,11 @@ def remove_duplicated_places(net: PetriNet, start_places: set[PetriNet.Place], e
     return start_places, end_places
 
 
-def remove_unconnected_places(net: PetriNet, start_places: set[PetriNet.Place], end_places: set[PetriNet.Place]):
+def remove_unconnected_places(
+    net: PetriNet,
+    start_places: Set[PetriNet.Place],
+    end_places: Set[PetriNet.Place],
+):
     places = list(net.places)
     for p in places:
         if len(p.in_arcs) == 0 and len(p.out_arcs) == 0:
@@ -468,7 +487,9 @@ def preprocess(net: PetriNet):
     return net
 
 
-def __redirect_shared_arcs_to_new_place(net, places: list[PetriNet.Place], new_place_id):
+def __redirect_shared_arcs_to_new_place(
+    net, places: List[PetriNet.Place], new_place_id
+):
     shared_pre_set = set(pn_util.pre_set(places[0]))
     for p in places[1:]:
         shared_pre_set &= set(pn_util.pre_set(p))
@@ -497,7 +518,11 @@ def __redirect_shared_arcs_to_new_place(net, places: list[PetriNet.Place], new_p
         return None
 
 
-def add_new_start_and_end_if_needed(net, start_places: set[PetriNet.Place], end_places: set[PetriNet.Place]):
+def add_new_start_and_end_if_needed(
+    net,
+    start_places: Set[PetriNet.Place],
+    end_places: Set[PetriNet.Place],
+):
     if len(start_places) == 0 or len(end_places) == 0:
         raise Exception("This should not happen!")
 
@@ -527,16 +552,19 @@ def add_new_start_and_end_if_needed(net, start_places: set[PetriNet.Place], end_
 
 
 # ========= Translation Functions =========
-def __create_sub_powl_model(net, branch: set[PetriNet.Transition],
-                            start_place: PetriNet.Place,
-                            end_place: PetriNet.Place):
+def __create_sub_powl_model(
+    net,
+    branch: Set[PetriNet.Transition],
+    start_place: PetriNet.Place,
+    end_place: PetriNet.Place,
+):
     subnet, subnet_start_place, subnet_end_place = clone_subnet(net, branch, start_place, end_place)
     powl = __translate_petri_to_powl(subnet, subnet_start_place, subnet_end_place)
     return powl
 
 
 def __translate_xor(net: PetriNet, start_place: PetriNet.Place, end_place: PetriNet.Place,
-                    choice_branches: list[set[PetriNet.Transition]]):
+                    choice_branches: List[Set[PetriNet.Transition]]):
     children = []
     for branch in choice_branches:
         child_powl = __create_sub_powl_model(net, branch, start_place, end_place)
