@@ -12,11 +12,11 @@ libraries are added/removed.
 | fonttools | https://pypi.org/pypi/fonttools/json | Unspecified | 4.62.1 |
 | graphviz | https://pypi.org/pypi/graphviz/json | Unspecified | 0.21 |
 | kiwisolver | https://pypi.org/pypi/kiwisolver/json | BSD License | 1.5.0 |
-| lxml | https://pypi.org/pypi/lxml/json | Unspecified | 6.0.4 |
-| matplotlib | https://pypi.org/pypi/matplotlib/json | Python Software Foundation License | 3.10.8 |
+| lxml | https://pypi.org/pypi/lxml/json | Unspecified | 6.1.0 |
+| matplotlib | https://pypi.org/pypi/matplotlib/json | Python Software Foundation License | 3.10.9 |
 | networkx | https://pypi.org/pypi/networkx/json | Unspecified | 3.6.1 |
 | numpy | https://pypi.org/pypi/numpy/json | Unspecified | 2.4.4 |
-| packaging | https://pypi.org/pypi/packaging/json | Unspecified | 26.1 |
+| packaging | https://pypi.org/pypi/packaging/json | Unspecified | 26.2 |
 | pandas | https://pypi.org/pypi/pandas/json | BSD License | 3.0.2 |
 | pillow | https://pypi.org/pypi/pillow/json | Unspecified | 12.2.0 |
 | pyparsing | https://pypi.org/pypi/pyparsing/json | Unspecified | 3.3.2 |
@@ -26,5 +26,5 @@ libraries are added/removed.
 | setuptools | https://pypi.org/pypi/setuptools/json | Unspecified | 82.0.1 |
 | six | https://pypi.org/pypi/six/json | MIT License | 1.17.0 |
 | tqdm | https://pypi.org/pypi/tqdm/json | Unspecified | 4.67.3 |
-| tzdata | https://pypi.org/pypi/tzdata/json | Unspecified | 2026.1 |
-| wheel | https://pypi.org/pypi/wheel/json | Unspecified | 0.46.3 |
+| tzdata | https://pypi.org/pypi/tzdata/json | Unspecified | 2026.2 |
+| wheel | https://pypi.org/pypi/wheel/json | Unspecified | 0.47.0 |

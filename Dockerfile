@@ -7,11 +7,11 @@ RUN apt-get -y install gcc g++ flex bison pkg-config automake autoconf cmake
 RUN apt-get -y install python3-dev python3-pydot python3-tk
 RUN apt-get -y install libopenblas-dev liblapack-dev libboost-all-dev libncurses5-dev libtool libssl-dev libjemalloc-dev libboost-dev libboost-filesystem-dev libboost-system-dev libboost-regex-dev libxml2-dev libxslt-dev libfreetype6-dev libsuitesparse-dev libclang-16-dev llvm-16-dev libthrift-dev libfftw3-dev
 RUN python3 -m pip install --upgrade pip
-RUN pip3 install graphviz==0.21 networkx==3.6.1 packaging==26.1 python-dateutil==2.9.0.post0 pytz==2026.1.post1 setuptools==82.0.1 six==1.17.0 tzdata==2026.1 wheel==0.46.3 
+RUN pip3 install graphviz==0.21 networkx==3.6.1 packaging==26.2 python-dateutil==2.9.0.post0 pytz==2026.1.post1 setuptools==82.0.1 six==1.17.0 tzdata==2026.2 wheel==0.47.0 
 RUN pip3 install colorama==0.4.6 cycler==0.12.1 pyparsing==3.3.2 tqdm==4.67.3 
-RUN pip3 install lxml==6.0.4 numpy==2.4.4 pandas==3.0.2 scipy==1.17.1 
-RUN pip3 install contourpy==1.3.3 fonttools==4.62.1 kiwisolver==1.5.0 matplotlib==3.10.8 pillow==12.2.0 
-RUN pip3 install annotated-types==0.7.0 anyio==4.13.0 asttokens==3.0.1 attrs==26.1.0 certifi==2026.2.25 charset-normalizer==3.4.7 convertdate==2.4.1 decorator==5.2.1 distro==1.9.0 executing==2.2.1 h11==0.16.0 httpcore==1.0.9 httpx==0.28.1 idna==3.11 ipython==9.12.0 jedi==0.19.2 Jinja2==3.1.6 jiter==0.14.0 jsonpickle==4.1.1 jsonschema-specifications==2025.9.1 lunardate==0.2.2 MarkupSafe==3.0.3 matplotlib-inline==0.2.1 parso==0.8.6 prompt-toolkit==3.0.52 pure-eval==0.2.3 pydantic==2.13.1 pydantic_core==2.46.1 Pygments==2.20.0 pyluach==2.3.0 PyMeeus==0.5.12 referencing==0.37.0 rpds-py==0.30.0 sniffio==1.3.1 stack-data==0.6.3 traitlets==5.14.3 typing-inspection==0.4.2 typing_extensions==4.15.0 urllib3==2.6.3 wcwidth==0.6.0 
+RUN pip3 install lxml==6.1.0 numpy==2.4.4 pandas==3.0.2 scipy==1.17.1 
+RUN pip3 install contourpy==1.3.3 fonttools==4.62.1 kiwisolver==1.5.0 matplotlib==3.10.9 pillow==12.2.0 
+RUN pip3 install annotated-types==0.7.0 anyio==4.13.0 asttokens==3.0.1 attrs==26.1.0 certifi==2026.4.22 charset-normalizer==3.4.7 convertdate==2.4.1 decorator==5.2.1 distro==1.9.0 executing==2.2.1 h11==0.16.0 httpcore==1.0.9 httpx==0.28.1 idna==3.13 ipython==9.13.0 jedi==0.19.2 Jinja2==3.1.6 jiter==0.14.0 jsonpickle==4.1.1 jsonschema-specifications==2025.9.1 lunardate==0.2.2 MarkupSafe==3.0.3 matplotlib-inline==0.2.1 parso==0.8.6 prompt-toolkit==3.0.52 pure-eval==0.2.3 pydantic==2.13.3 pydantic_core==2.46.3 Pygments==2.20.0 pyluach==2.3.0 PyMeeus==0.5.12 referencing==0.37.0 rpds-py==0.30.0 sniffio==1.3.1 stack-data==0.6.3 traitlets==5.14.3 typing-inspection==0.4.2 typing_extensions==4.15.0 urllib3==2.6.3 wcwidth==0.6.0 
 RUN pip3 install jsonschema==4.26.0 openai==2.32.0 pyvis==0.3.2 requests==2.33.1 workalendar==17.0.0 
 RUN pip3 install -U meson-python==0.15.0 Cython==3.0.10 ninja==1.11.1.1 spin==0.8 build==1.2.1 setuptools_scm==8.0.4
 

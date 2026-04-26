@@ -4,11 +4,11 @@ cycler==0.12.1
 fonttools==4.62.1
 graphviz==0.21
 kiwisolver==1.5.0
-lxml==6.0.4
-matplotlib==3.10.8
+lxml==6.1.0
+matplotlib==3.10.9
 networkx==3.6.1
 numpy==2.4.4
-packaging==26.1
+packaging==26.2
 pandas==3.0.2
 pillow==12.2.0
 pyparsing==3.3.2
@@ -18,5 +18,5 @@ scipy==1.17.1
 setuptools==82.0.1
 six==1.17.0
 tqdm==4.67.3
-tzdata==2026.1
-wheel==0.46.3
+tzdata==2026.2
+wheel==0.47.0
