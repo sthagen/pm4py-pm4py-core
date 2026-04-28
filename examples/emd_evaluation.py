@@ -6,15 +6,18 @@ from pm4py.statistics.variants.log import get as variants_get
 from pm4py.algo.simulation.playout.petri_net import algorithm
 from pm4py.objects.conversion.process_tree import converter as process_tree_converter
 import os
+from pm4py.objects.log.obj import EventLog
+from pm4py.objects.petri_net.obj import Marking, PetriNet
+from pm4py.objects.process_tree.obj import ProcessTree
 
 
 def execute_script():
-    M: "dict[tuple[str, str, str, str], float]" = {("a", "b", "d", "e"): 0.49, ("a", "d", "b", "e"): 0.49, ("a", "c", "d", "e"): 0.01, ("a", "d", "c", "e"): 0.01}
+    M: dict[tuple[str, str, str, str], float] = {("a", "b", "d", "e"): 0.49, ("a", "d", "b", "e"): 0.49, ("a", "c", "d", "e"): 0.01, ("a", "d", "c", "e"): 0.01}
 
     L1 = {("a", "b", "d", "e"): 0.49, ("a", "d", "b", "e"): 0.49, ("a", "c", "d", "e"): 0.01,
           ("a", "d", "c", "e"): 0.01}
     # the distance between M and L1, that we expect to be zero, is zero according to the EMD
-    emd: "float" = earth_mover_distance.apply(M, L1)
+    emd: float = earth_mover_distance.apply(M, L1)
     print("M L1 emd distance:", emd)
 
     L2 = {("a", "b", "e"): 0.5, ("a", "b", "d", "e"): 0.245, ("a", "d", "b", "e"): 0.245, ("a", "c", "d", "e"): 0.005,
@@ -29,26 +32,26 @@ def execute_script():
     emd = earth_mover_distance.apply(M, L3)
     print("M L3 emd distance:", emd)
 
-    L4: "dict[tuple[str, str, str, str], float]" = {("a", "b", "d", "e"): 0.5, ("a", "d", "b", "e"): 0.5}
+    L4: dict[tuple[str, str, str, str], float] = {("a", "b", "d", "e"): 0.5, ("a", "d", "b", "e"): 0.5}
     # the distance between M and L4 according to the EMD is 0.005 (paper value 0.005), perfect!
     emd = earth_mover_distance.apply(M, L4)
     print("M L4 emd distance:", emd)
 
-    L5: "dict[tuple[str, str, str, str], float]" = {("a", "c", "d", "e"): 0.5, ("a", "d", "c", "e"): 0.5}
+    L5: dict[tuple[str, str, str, str], float] = {("a", "c", "d", "e"): 0.5, ("a", "d", "c", "e"): 0.5}
     # the distance between M and L5 according to the EMD is 0.245 (paper value 0.245), perfect!
     emd = earth_mover_distance.apply(M, L5)
     print("M L5 emd distance:", emd)
 
-    log: "EventLog" = xes_importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
-    lang_log: "dict[list[str], float] | dict[str, float]" = variants_get.get_language(log)
-    net0: "PetriNet"
-    im0: "Marking"
-    fm0: "Marking"
+    log: EventLog = xes_importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    lang_log: dict[list[str], float] | dict[str, float] = variants_get.get_language(log)
+    net0: PetriNet
+    im0: Marking
+    fm0: Marking
     net0, im0, fm0 = alpha_miner.apply(log)
-    process_tree: "ProcessTree" = inductive_miner.apply(log)
-    net1: "PetriNet"
-    im1: "Marking"
-    fm1: "Marking"
+    process_tree: ProcessTree = inductive_miner.apply(log)
+    net1: PetriNet
+    im1: Marking
+    fm1: Marking
     net1, im1, fm1 = process_tree_converter.apply(process_tree)
     lang_model0 = variants_get.get_language(
         algorithm.apply(net0, im0, fm0, variant=algorithm.Variants.STOCHASTIC_PLAYOUT,

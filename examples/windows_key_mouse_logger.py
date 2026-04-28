@@ -5,9 +5,9 @@ import time
 
 
 def execute_script():
-    stream: "LiveEventStream" = LiveEventStream()
+    stream: LiveEventStream = LiveEventStream()
     wel = WindowsEventLogger(stream, screenshots_folder="output")
-    printer: "EventStreamPrinter" = EventStreamPrinter()
+    printer: EventStreamPrinter = EventStreamPrinter()
     stream.register(printer)
     stream.start()
     wel.start()

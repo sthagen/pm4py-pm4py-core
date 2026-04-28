@@ -1,18 +1,19 @@
 import pm4py
 from pm4py.algo.transformation.ocel.split_ocel import algorithm as split_ocel
+from pm4py.objects.ocel.obj import OCEL
 
 
 def execute_script():
-    ocel: "OCEL" = pm4py.read_ocel("../tests/input_data/ocel/example_log.jsonocel")
+    ocel: OCEL = pm4py.read_ocel("../tests/input_data/ocel/example_log.jsonocel")
     # gets an OCEL describing the executions of the objects of a given object type
     lst_ocels = split_ocel.apply(ocel, variant=split_ocel.Variants.ANCESTORS_DESCENDANTS, parameters={"object_type": "order"})
 
     # CONDITION 1: check if an order is associated with at least a delivery
     for oc in lst_ocels:
-        oc_filtered: "OCEL" = pm4py.filter_ocel_event_attribute(oc, "ocel:activity", ["Create Order", "Create Delivery"])
+        oc_filtered: OCEL = pm4py.filter_ocel_event_attribute(oc, "ocel:activity", ["Create Order", "Create Delivery"])
         oc_filtered = [(x["ocel:activity"], x["ocel:timestamp"].timestamp()) for x in oc_filtered.events.to_dict("records")]
         idxs_create_order = [i for i in range(len(oc_filtered)) if oc_filtered[i][0] == "Create Order"]
-        order_is_ok: "bool" = True
+        order_is_ok: bool = True
         for i in idxs_create_order:
             deliveries = [oc_filtered[j] for j in range(i+1,len(oc_filtered)) if oc_filtered[j][0] == "Create Delivery"]
             #print(deliveries)
@@ -43,7 +44,7 @@ def execute_script():
     for oc0 in lst_ocels:
         oc = [(x["ocel:activity"], x["ocel:timestamp"].timestamp()) for x in oc0.events.to_dict("records")]
         idxs_create_delivery = [i for i in range(len(oc)) if oc[i][0] == "Create Delivery"]
-        delivery_is_ok: "bool" = True
+        delivery_is_ok: bool = True
         for i in idxs_create_delivery:
             if i > 0:
                 time_create_delivery = oc[i][1]

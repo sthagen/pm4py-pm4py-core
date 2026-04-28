@@ -1,11 +1,12 @@
 import pm4py
 import os
 from pm4py.statistics.rework.log import get as rework_get
+import pandas
 
 
 def execute_script():
-    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"))
-    rework: "dict[str, int]" = rework_get.apply(log)
+    log: pandas.DataFrame = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"))
+    rework: dict[str, int] = rework_get.apply(log)
     print(rework)
 
 

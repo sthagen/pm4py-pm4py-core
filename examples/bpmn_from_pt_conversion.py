@@ -7,13 +7,15 @@ from pm4py.objects.log.importer.xes import importer as xes_import
 from pm4py.objects.bpmn.exporter import exporter as bpmn_exporter
 from examples import examples_conf
 import importlib.util
+from pm4py.objects.log.obj import EventLog
+from pm4py.objects.process_tree.obj import ProcessTree
 
 
 
 def execute_script():
-    log_path: "str" = os.path.join(os.path.join("..", "tests", "input_data", "running-example.xes"))
-    log: "EventLog" = xes_import.apply(log_path)
-    ptree: "ProcessTree" = inductive_miner.apply(log)
+    log_path: str = os.path.join(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    log: EventLog = xes_import.apply(log_path)
+    ptree: ProcessTree = inductive_miner.apply(log)
     bpmn = pt_converter.apply(ptree, variant=pt_converter.Variants.TO_BPMN)
 
     if importlib.util.find_spec("graphviz"):

@@ -2,10 +2,11 @@ import pm4py
 from pm4py.algo.discovery.dfg.variants import clean_time
 from pm4py.visualization.dfg.variants import timeline as timeline_gviz_generator
 from pm4py.visualization.dfg import visualizer as dfg_visualizer
+import pandas
 
 
 def execute_script():
-    dataframe: "pandas.DataFrame" = pm4py.read_xes("../tests/input_data/running-example.xes")
+    dataframe: pandas.DataFrame = pm4py.read_xes("../tests/input_data/running-example.xes")
 
     dfg, start_act, end_act = pm4py.discover_dfg_typed(dataframe)
 

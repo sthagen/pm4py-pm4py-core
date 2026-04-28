@@ -1,11 +1,13 @@
 import pm4py
 import importlib.util
+import pandas
+from pm4py.objects.bpmn.obj import BPMN
 
 
 def execute_script():
-    log: "pandas.DataFrame" = pm4py.read_xes("../tests/input_data/running-example.xes")
+    log: pandas.DataFrame = pm4py.read_xes("../tests/input_data/running-example.xes")
 
-    bpmn_model: "BPMN" = pm4py.discover_bpmn_inductive(log)
+    bpmn_model: BPMN = pm4py.discover_bpmn_inductive(log)
 
     if importlib.util.find_spec("graphviz"):
         pm4py.view_bpmn(bpmn_model, variant_str="dagrejs")

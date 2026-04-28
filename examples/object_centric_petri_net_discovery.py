@@ -2,11 +2,13 @@ import pm4py
 from examples import examples_conf
 import os
 import importlib.util
+from pm4py.objects.ocel.obj import OCEL
+from pm4py.objects.ocpn.obj import OCPetriNet
 
 
 def execute_script():
-    ocel: "OCEL" = pm4py.read_ocel(os.path.join("..", "tests", "input_data", "ocel", "example_log.jsonocel"))
-    model: "OCPetriNet" = pm4py.discover_oc_petri_net(ocel)
+    ocel: OCEL = pm4py.read_ocel(os.path.join("..", "tests", "input_data", "ocel", "example_log.jsonocel"))
+    model: OCPetriNet = pm4py.discover_oc_petri_net(ocel)
     print(model.keys())
 
     if importlib.util.find_spec("graphviz"):

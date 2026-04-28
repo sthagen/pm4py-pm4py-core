@@ -7,12 +7,13 @@ from pm4py.util import exec_utils, constants, xes_constants
 from pm4py.statistics.service_time.pandas import get as service_time_get
 from pm4py.statistics.eventually_follows.pandas import get as eventually_follows
 import pandas as pd
+import pandas
 
 
 class Parameters(Enum):
-    MAX_LEN: "str" = "max_len"
-    RESPONSE_HEADER: "str" = "response_header"
-    PERFORMANCE_AGGREGATION: "str" = "performance_aggregation"
+    MAX_LEN: str = "max_len"
+    RESPONSE_HEADER: str = "response_header"
+    PERFORMANCE_AGGREGATION: str = "performance_aggregation"
     ACTIVITY_KEY = constants.PARAMETER_CONSTANT_ACTIVITY_KEY
     TIMESTAMP_KEY = constants.PARAMETER_CONSTANT_TIMESTAMP_KEY
     START_TIMESTAMP_KEY = constants.PARAMETER_CONSTANT_START_TIMESTAMP_KEY
@@ -63,7 +64,7 @@ def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame],
     if parameters is None:
         parameters = {}
 
-    response_header: "bool" = exec_utils.get_param_value(Parameters.RESPONSE_HEADER, parameters, True)
+    response_header: bool = exec_utils.get_param_value(Parameters.RESPONSE_HEADER, parameters, True)
     max_len = exec_utils.get_param_value(Parameters.MAX_LEN, parameters, constants.OPENAI_MAX_LEN)
 
     activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
@@ -72,7 +73,7 @@ def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame],
     start_timestamp_key = exec_utils.get_param_value(Parameters.START_TIMESTAMP_KEY, parameters,
                                                      xes_constants.DEFAULT_TIMESTAMP_KEY)
     case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    performance_aggregation: "str" = exec_utils.get_param_value(Parameters.PERFORMANCE_AGGREGATION, parameters, "mean")
+    performance_aggregation: str = exec_utils.get_param_value(Parameters.PERFORMANCE_AGGREGATION, parameters, "mean")
 
     log_obj = log_converter.apply(log_obj, variant=log_converter.Variants.TO_DATA_FRAME, parameters=parameters)
     log_obj = log_obj[list({activity_key, timestamp_key, start_timestamp_key, case_id_key})]
@@ -82,7 +83,7 @@ def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame],
         activity_key].value_counts().to_dict()
 
     parameters["aggregationMeasure"] = performance_aggregation
-    service_times: "dict[str, float]" = service_time_get.apply(log_obj, parameters=parameters)
+    service_times: dict[str, float] = service_time_get.apply(log_obj, parameters=parameters)
 
     dir_follo_dataframe = eventually_follows.get_partial_order_dataframe(log_obj.copy(), activity_key=activity_key,
                                                                          start_timestamp_key=start_timestamp_key,
@@ -106,7 +107,7 @@ def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame],
 
     activities_list = sorted(activities_list, key=lambda x: (x["num_cases"], x["num_occ"], x["activity"]), reverse=True)
 
-    ret: "str" = "\n\n"
+    ret: str = "\n\n"
 
     if response_header:
         ret += "Below you find the top activities of the event log, specified with their total number of occurrences, the number of cases in which they occur, an aggregation of the service time, an aggregation of the times from the preceding activities and to the succeeding activities.\n\n"
@@ -126,6 +127,6 @@ def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame],
 
 
 if __name__ == "__main__":
-    log: "pandas.DataFrame" = pm4py.read_xes("../../../tests/input_data/receipt.xes")
+    log: pandas.DataFrame = pm4py.read_xes("../../../tests/input_data/receipt.xes")
     textual_abstraction = apply(log)
     print(textual_abstraction)

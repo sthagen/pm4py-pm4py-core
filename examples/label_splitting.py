@@ -1,13 +1,14 @@
 import pm4py
 from pm4py.algo.label_splitting import algorithm as label_splitter
+import pandas
 
 
 def execute_script():
-    log: "pandas.DataFrame" = pm4py.read_xes("../tests/input_data/receipt.xes")
+    log: pandas.DataFrame = pm4py.read_xes("../tests/input_data/receipt.xes")
     log = log[["case:concept:name", "concept:name", "time:timestamp"]]
 
     # relabeling with the default options
-    rlog1: "pandas.DataFrame" = label_splitter.apply(log, variant=label_splitter.Variants.CONTEXTUAL)
+    rlog1: pandas.DataFrame = label_splitter.apply(log, variant=label_splitter.Variants.CONTEXTUAL)
     print(rlog1)
 
     # relabeling with a single activity allowed in the prefix and suffix,

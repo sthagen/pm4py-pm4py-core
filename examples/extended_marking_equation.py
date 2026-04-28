@@ -5,22 +5,25 @@ from pm4py.algo.analysis.extended_marking_equation import algorithm as extended_
 from pm4py.objects.conversion.process_tree import converter as process_tree_converter
 import os
 from pm4py.objects.log.importer.xes import importer as xes_importer
+from pm4py.objects.log.obj import EventLog
+from pm4py.objects.petri_net.obj import Marking, PetriNet
+from pm4py.objects.process_tree.obj import ProcessTree
 
 
 
 def execute_script():
-    log: "EventLog" = xes_importer.apply(os.path.join("..", "tests", "input_data", "receipt.xes"))
-    process_tree: "ProcessTree" = inductive_miner.apply(log)
-    net: "PetriNet"
-    im: "Marking"
-    fm: "Marking"
+    log: EventLog = xes_importer.apply(os.path.join("..", "tests", "input_data", "receipt.xes"))
+    process_tree: ProcessTree = inductive_miner.apply(log)
+    net: PetriNet
+    im: Marking
+    fm: Marking
     net, im, fm = process_tree_converter.apply(process_tree)
-    idx: "int" = 0
+    idx: int = 0
     # try to resolve the marking equation to find an heuristics and possible a vector of transitions
     # leading from im to fm
-    sync_net: "PetriNet"
-    sync_im: "Marking"
-    sync_fm: "Marking"
+    sync_net: PetriNet
+    sync_im: Marking
+    sync_fm: Marking
     sync_net, sync_im, sync_fm = pm4py.construct_synchronous_product_net(log[idx], net, im, fm)
     me_solver = marking_equation.build(sync_net, sync_im, sync_fm)
     h, x = me_solver.solve()

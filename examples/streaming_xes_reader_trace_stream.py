@@ -6,8 +6,8 @@ from pm4py.streaming.util.trace_stream_printer import TraceStreamPrinter
 
 
 def execute_script():
-    live_trace_stream: "LiveTraceStream" = LiveTraceStream()
-    trace_stream_printer: "TraceStreamPrinter" = TraceStreamPrinter()
+    live_trace_stream: LiveTraceStream = LiveTraceStream()
+    trace_stream_printer: TraceStreamPrinter = TraceStreamPrinter()
     live_trace_stream.register(trace_stream_printer)
     live_trace_stream.start()
     importer = streaming_xes_importer.apply(

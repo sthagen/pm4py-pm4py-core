@@ -2,19 +2,22 @@ import pm4py
 import os
 from examples import examples_conf
 import importlib.util
+import pandas
+from pm4py.objects.petri_net.obj import Marking, PetriNet
+from pm4py.objects.process_tree.obj import ProcessTree
 
 
 
 def execute_script():
-    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
-    tree: "ProcessTree" = pm4py.discover_process_tree_inductive(log, noise_threshold=0.2)
+    log: pandas.DataFrame = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    tree: ProcessTree = pm4py.discover_process_tree_inductive(log, noise_threshold=0.2)
 
     if importlib.util.find_spec("graphviz"):
         pm4py.view_process_tree(tree, format=examples_conf.TARGET_IMG_FORMAT)
 
-    net: "PetriNet"
-    im: "Marking"
-    fm: "Marking"
+    net: PetriNet
+    im: Marking
+    fm: Marking
     net, im, fm = pm4py.convert_to_petri_net(tree)
 
     if importlib.util.find_spec("graphviz"):

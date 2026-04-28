@@ -1,9 +1,10 @@
 import pm4py
 import os
+from pm4py.objects.ocel.obj import OCEL
 
 
 def execute_script():
-    ocel: "OCEL" = pm4py.read_ocel("../tests/input_data/ocel/example_log.jsonocel")
+    ocel: OCEL = pm4py.read_ocel("../tests/input_data/ocel/example_log.jsonocel")
     print(ocel)
     print("attribute names: ", pm4py.ocel_get_attribute_names(ocel))
     print("object types: ", pm4py.ocel_get_object_types(ocel))
@@ -19,31 +20,31 @@ def execute_script():
     print(pm4py.ocel_objects_ot_count(ocel))
 
     print("filter_ocel_event_attribute")
-    ocel1: "OCEL" = pm4py.filter_ocel_event_attribute(ocel, "ocel:activity", ["Create Order"])
+    ocel1: OCEL = pm4py.filter_ocel_event_attribute(ocel, "ocel:activity", ["Create Order"])
     print(ocel1.get_extended_table())
 
     print("filter_ocel_object_attribute")
-    ocel2: "OCEL" = pm4py.filter_ocel_object_attribute(ocel, "ocel:type", ["order", "delivery"])
+    ocel2: OCEL = pm4py.filter_ocel_object_attribute(ocel, "ocel:type", ["order", "delivery"])
     print(ocel2.get_extended_table())
 
     print("filter_ocel_object_types_allowed_activities")
-    ocel3: "OCEL" = pm4py.filter_ocel_object_types_allowed_activities(ocel, {"order": {"Create Order"}, "element": {"Create Order"}})
+    ocel3: OCEL = pm4py.filter_ocel_object_types_allowed_activities(ocel, {"order": {"Create Order"}, "element": {"Create Order"}})
     print(ocel3.get_extended_table())
 
     print("filter_ocel_start_events_per_object_type")
-    ocel4: "OCEL" = pm4py.filter_ocel_start_events_per_object_type(ocel, "order")
+    ocel4: OCEL = pm4py.filter_ocel_start_events_per_object_type(ocel, "order")
     print(ocel4.get_extended_table())
 
     print("filter_ocel_end_events_per_object_type")
-    ocel5: "OCEL" = pm4py.filter_ocel_end_events_per_object_type(ocel, "order")
+    ocel5: OCEL = pm4py.filter_ocel_end_events_per_object_type(ocel, "order")
     print(ocel5.get_extended_table())
 
     print("filter_ocel_object_per_type_count")
-    ocel6: "OCEL" = pm4py.filter_ocel_object_per_type_count(ocel, {"order": 1, "element": 2})
+    ocel6: OCEL = pm4py.filter_ocel_object_per_type_count(ocel, {"order": 1, "element": 2})
     print(ocel6.get_extended_table())
 
     print("filter_ocel_events_timestamp")
-    ocel7: "OCEL" = pm4py.filter_ocel_events_timestamp(ocel, "1981-01-01 00:00:00", "1982-01-01 00:00:00")
+    ocel7: OCEL = pm4py.filter_ocel_events_timestamp(ocel, "1981-01-01 00:00:00", "1982-01-01 00:00:00")
     print(ocel7.get_extended_table())
 
 

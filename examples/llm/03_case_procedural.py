@@ -1,5 +1,6 @@
 import pm4py
 import duckdb
+import pandas
 
 
 def execute_script():
@@ -8,7 +9,7 @@ def execute_script():
     to isolate the procedural behavior leading to discrimination,
     and assess the quality of the classification against the ground truth written in the log.
     """
-    dataframe: "pandas.DataFrame" = pm4py.read_xes("../../tests/input_data/fairness/renting_log_high.xes.gz")
+    dataframe: pandas.DataFrame = pm4py.read_xes("../../tests/input_data/fairness/renting_log_high.xes.gz")
     protected_attr = [x for x in dataframe.columns if "protected" in x][0]
 
     sql_query = """
@@ -47,7 +48,7 @@ JOIN
     """
     dataframe_pos = duckdb.sql(sql_query).to_df()
     cases_pos = dataframe_pos["case:concept:name"].unique()
-    dataframe_neg: "pandas.DataFrame" = dataframe[~dataframe["case:concept:name"].isin(cases_pos)]
+    dataframe_neg: pandas.DataFrame = dataframe[~dataframe["case:concept:name"].isin(cases_pos)]
 
     dataframe_pos = dataframe_pos.groupby("case:concept:name").first()
     dataframe_neg = dataframe_neg.groupby("case:concept:name").last()

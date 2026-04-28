@@ -72,15 +72,86 @@ _NUMERIC_DTYPES = {
 
 
 def _ensure_polars_df(
-    feature_table: Union[pl.LazyFrame, pl.DataFrame]
+    feature_table: Union[pl.LazyFrame, pl.DataFrame],
+    required_columns: Optional[List[str]] = None,
 ) -> pl.DataFrame:
+    if required_columns is None:
+        required_columns = []
     if isinstance(feature_table, pl.LazyFrame):
+        if required_columns:
+            return feature_table.select(required_columns).collect()
         return feature_table.collect()
     if isinstance(feature_table, pl.DataFrame):
+        if required_columns:
+            return feature_table.select(required_columns).clone()
         return feature_table.clone()
     raise TypeError(
         "feature_table must be a Polars LazyFrame or DataFrame"
     )
+
+
+def _available_columns(
+    feature_table: Union[pl.LazyFrame, pl.DataFrame]
+) -> List[str]:
+    if isinstance(feature_table, pl.LazyFrame):
+        return feature_table.collect_schema().names()
+    if isinstance(feature_table, pl.DataFrame):
+        return feature_table.columns
+    raise TypeError(
+        "feature_table must be a Polars LazyFrame or DataFrame"
+    )
+
+
+def _dedupe_columns(columns: List[str]) -> List[str]:
+    seen = set()
+    deduped: List[str] = []
+    for column in columns:
+        if column not in seen:
+            seen.add(column)
+            deduped.append(column)
+    return deduped
+
+
+def _dimension_required_columns(
+    available_columns: List[str],
+    dim: Union[str, Tuple[str, ...]],
+) -> List[str]:
+    resolved: List[str] = []
+    available_set = set(available_columns)
+    for column in _normalize_dimension(dim):
+        if column in available_set:
+            resolved.append(column)
+        else:
+            resolved.extend(
+                candidate
+                for candidate in available_columns
+                if candidate.startswith(column + "_")
+            )
+    return _dedupe_columns(resolved)
+
+
+def _required_feature_columns(
+    feature_table: Union[pl.LazyFrame, pl.DataFrame],
+    x_col: Union[str, Tuple[str, ...]],
+    y_col: Union[str, Tuple[str, ...]],
+    agg_col: str,
+) -> List[str]:
+    available_columns = _available_columns(feature_table)
+    available_set = set(available_columns)
+    required_columns: List[str] = []
+
+    for column in (CASE_ID_COL, agg_col):
+        if column in available_set:
+            required_columns.append(column)
+
+    required_columns.extend(
+        _dimension_required_columns(available_columns, x_col)
+    )
+    required_columns.extend(
+        _dimension_required_columns(available_columns, y_col)
+    )
+
+    return _dedupe_columns(required_columns)
 
 
 def _is_numeric_dtype(dtype: pl.DataType) -> bool:
@@ -469,7 +540,8 @@ def apply(
     if parameters is None:
         parameters = {}
 
-    df = _ensure_polars_df(feature_table)
+    required_columns = _required_feature_columns(feature_table, x_col, y_col, agg_col)
+    df = _ensure_polars_df(feature_table, required_columns=required_columns)
     if df.is_empty():
         return pl.DataFrame(), {}
 

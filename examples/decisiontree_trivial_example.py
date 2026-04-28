@@ -6,14 +6,15 @@ from pm4py.objects.log.util import get_class_representation
 from pm4py.algo.transformation.log_to_features import algorithm as log_to_features
 from examples import examples_conf
 import importlib.util
+from pm4py.objects.log.obj import EventLog
 
 
 def execute_script():
-    log_path: "str" = os.path.join("..", "tests", "input_data", "roadtraffic50traces.xes")
+    log_path: str = os.path.join("..", "tests", "input_data", "roadtraffic50traces.xes")
     # log_path = os.path.join("..", "tests", "input_data", "receipt.xes")
-    log: "EventLog" = xes_importer.apply(log_path)
+    log: EventLog = xes_importer.apply(log_path)
     # now, it is possible to get a default representation of an event log
-    feature_names: "list[str]"
+    feature_names: list[str]
     data, feature_names = log_to_features.apply(log, variant=log_to_features.Variants.TRACE_BASED)
     # gets classes representation by final concept:name value (end activity)
     target, classes = get_class_representation.get_class_representation_by_str_ev_attr_value_value(log, "concept:name")

@@ -2,14 +2,16 @@ import pm4py
 from pm4py.algo.discovery.temporal_profile import algorithm as temporal_profile_disc
 from pm4py.streaming.algo.conformance.temporal import algorithm as streaming_temporal_conformance
 from pm4py.streaming.stream.live_event_stream import LiveEventStream
+import pandas
+from pm4py.objects.log.obj import EventStream
 
 
 def execute_script():
-    log: "pandas.DataFrame" = pm4py.read_xes("../tests/input_data/receipt.xes")
-    static_stream: "EventStream" = pm4py.convert_to_event_stream(log)
-    temporal_profile: "dict[tuple[str, str], tuple[float, float]]" = temporal_profile_disc.apply(log)
+    log: pandas.DataFrame = pm4py.read_xes("../tests/input_data/receipt.xes")
+    static_stream: EventStream = pm4py.convert_to_event_stream(log)
+    temporal_profile: dict[tuple[str, str], tuple[float, float]] = temporal_profile_disc.apply(log)
     cc = streaming_temporal_conformance.apply(temporal_profile)
-    live_stream: "LiveEventStream" = LiveEventStream()
+    live_stream: LiveEventStream = LiveEventStream()
     live_stream.register(cc)
     live_stream.start()
     for index, ev in enumerate(static_stream):

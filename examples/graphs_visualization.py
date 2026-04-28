@@ -3,10 +3,11 @@ import os
 import pm4py
 from examples import examples_conf
 import importlib.util
+import pandas
 
 
 def execute_script():
-    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"))
+    log: pandas.DataFrame = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"))
 
     if importlib.util.find_spec("graphviz"):
         # visualize case duration graph

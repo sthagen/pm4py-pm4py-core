@@ -4,11 +4,13 @@ import pm4py
 from pm4py.algo.transformation import log_to_trie
 from examples import examples_conf
 import importlib.util
+import pandas
+from pm4py.objects.trie.obj import Trie
 
 
 def execute_script():
-    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
-    trie: "Trie" = log_to_trie.algorithm.apply(log)
+    log: pandas.DataFrame = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    trie: Trie = log_to_trie.algorithm.apply(log)
 
     if importlib.util.find_spec("graphviz"):
         from pm4py.visualization.trie import visualizer

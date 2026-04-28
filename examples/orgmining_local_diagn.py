@@ -1,11 +1,13 @@
 import pm4py
 import os
 from pm4py.algo.organizational_mining.local_diagnostics import algorithm as local_diagnostics
+import pandas
+from typing import Any
 
 
 def execute_script():
-    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"))
-    ld: "dict[str, Any]" = local_diagnostics.apply_from_group_attribute(log, parameters={local_diagnostics.Parameters.GROUP_KEY: "org:group"})
+    log: pandas.DataFrame = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"))
+    ld: dict[str, Any] = local_diagnostics.apply_from_group_attribute(log, parameters={local_diagnostics.Parameters.GROUP_KEY: "org:group"})
     # GROUP RELATIVE FOCUS (on a given type of work) specifies how much a resource group performed this type of work
     # compared to the overall workload of the group. It can be used to measure how the workload of a resource group
     # is distributed over different types of work, i.e., work diversification of the group.

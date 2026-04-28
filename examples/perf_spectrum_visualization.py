@@ -4,16 +4,17 @@ from pm4py.util import constants, pandas_utils
 from pm4py.objects.log.util import dataframe_utils
 from examples import examples_conf
 import importlib.util
+import pandas
 
 
 def execute_script():
-    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"))
+    log: pandas.DataFrame = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"))
 
     if importlib.util.find_spec("graphviz"):
         pm4py.view_performance_spectrum(log, ["Confirmation of receipt", "T04 Determine confirmation of receipt",
                                              "T10 Determine necessity to stop indication"], format=examples_conf.TARGET_IMG_FORMAT)
 
-    df: "pandas.DataFrame" = pandas_utils.read_csv(os.path.join("..", "tests", "input_data", "receipt.csv"))
+    df: pandas.DataFrame = pandas_utils.read_csv(os.path.join("..", "tests", "input_data", "receipt.csv"))
     df = dataframe_utils.convert_timestamp_columns_in_df(df, timest_format=constants.DEFAULT_TIMESTAMP_PARSE_FORMAT, timest_columns=["time:timestamp"])
 
     if importlib.util.find_spec("graphviz"):

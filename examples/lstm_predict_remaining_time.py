@@ -6,20 +6,21 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 from tensorflow.keras.optimizers import Adam
+from pm4py.objects.log.obj import EventLog
 
 
 
 def execute_script():
-    log: "EventLog" = pm4py.read_xes("../tests/input_data/running-example.xes", return_legacy_log_object=True)
+    log: EventLog = pm4py.read_xes("../tests/input_data/running-example.xes", return_legacy_log_object=True)
     max_len_log = max([len(x) for x in log])
 
-    feature_names: "list[str]"
+    feature_names: list[str]
     data, feature_names = event_based.apply(log)
-    target: "list[list[int]]"
-    classes: "list[str]"
+    target: list[list[int]]
+    classes: list[str]
     target, classes = remaining_time.apply(log, parameters={"enable_padding": True})
     target = np.array(target)
-    scaler: "MinMaxScaler" = MinMaxScaler(feature_range=(-1, 1))
+    scaler: MinMaxScaler = MinMaxScaler(feature_range=(-1, 1))
     # Reshape for scaling
     target_reshaped = target.reshape(-1, 1)
     target_scaled = scaler.fit_transform(target_reshaped)
@@ -40,7 +41,7 @@ def execute_script():
     # test the model on an event log (in this case the same)
 
     # re-extract the features
-    test_log: "EventLog" = log
+    test_log: EventLog = log
     data, feature_names = event_based.apply(test_log, parameters={"feature_names": feature_names})
 
     # Make predictions

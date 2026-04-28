@@ -2,13 +2,16 @@ import pm4py
 from examples import examples_conf
 from pm4py.algo.discovery.powl.inductive.variants.powl_discovery_varaints import POWLDiscoveryVariant
 import importlib.util
+from pm4py.objects.log.obj import EventLog
+from pm4py.objects.petri_net.obj import Marking, PetriNet
+from pm4py.objects.powl.obj import POWL
 
 
 def execute_script():
-    log: "EventLog" = pm4py.read_xes("../tests/input_data/helpdesk.xes.gz", return_legacy_log_object=True)
+    log: EventLog = pm4py.read_xes("../tests/input_data/helpdesk.xes.gz", return_legacy_log_object=True)
 
     # discovers the POWL model
-    powl_model: "POWL" = pm4py.discover_powl(log, variant=POWLDiscoveryVariant.DYNAMIC_CLUSTERING, order_graph_filtering_threshold=0.6)
+    powl_model: POWL = pm4py.discover_powl(log, variant=POWLDiscoveryVariant.DYNAMIC_CLUSTERING, order_graph_filtering_threshold=0.6)
 
     # prints the repr of the POWL model
     print(powl_model)
@@ -19,9 +22,9 @@ def execute_script():
         pm4py.view_powl(powl_model, format=examples_conf.TARGET_IMG_FORMAT, variant_str="net")
 
     # converts the POWL model to a Petri net (which can be used for conformance checking)
-    net: "PetriNet"
-    im: "Marking"
-    fm: "Marking"
+    net: PetriNet
+    im: Marking
+    fm: Marking
     net, im, fm = pm4py.convert_to_petri_net(powl_model)
 
     if importlib.util.find_spec("graphviz"):

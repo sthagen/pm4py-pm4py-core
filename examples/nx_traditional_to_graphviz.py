@@ -1,13 +1,15 @@
 import pm4py
 from examples import examples_conf
 import importlib.util
+import networkx
+import pandas
 
 
 def execute_script():
-    log: "pandas.DataFrame" = pm4py.read_xes("../tests/input_data/running-example.xes")
+    log: pandas.DataFrame = pm4py.read_xes("../tests/input_data/running-example.xes")
     # gets an 'event graph' where events, cases and their relationships
     # are represented in a graph (NetworkX DiGraph)
-    event_graph: "networkx.DiGraph" = pm4py.convert_log_to_networkx(log)
+    event_graph: networkx.DiGraph = pm4py.convert_log_to_networkx(log)
 
     if importlib.util.find_spec("graphviz"):
         from pm4py.visualization.networkx import visualizer as nx_to_gv_vis

@@ -3,18 +3,20 @@ import os
 import pm4py
 from pm4py.objects.bpmn.importer import importer as bpmn_importer
 from pm4py.objects.conversion.bpmn import converter as bpmn_converter
+import pandas
+from pm4py.objects.petri_net.obj import Marking, PetriNet
 
 
 def execute_script():
-    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    log: pandas.DataFrame = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
     bpmn_graph = bpmn_importer.apply(os.path.join("..", "tests", "input_data", "running-example.bpmn"))
-    net: "PetriNet"
-    im: "Marking"
-    fm: "Marking"
+    net: PetriNet
+    im: Marking
+    fm: Marking
     net, im, fm = bpmn_converter.apply(bpmn_graph, variant=bpmn_converter.Variants.TO_PETRI_NET)
-    precision_tbr: "float" = pm4py.precision_token_based_replay(log, net, im, fm)
+    precision_tbr: float = pm4py.precision_token_based_replay(log, net, im, fm)
     print("precision", precision_tbr)
-    fitness_tbr: "float" = pm4py.precision_token_based_replay(log, net, im, fm)
+    fitness_tbr: float = pm4py.precision_token_based_replay(log, net, im, fm)
     print("fitness", fitness_tbr)
     print(pm4py.check_soundness(net, im, fm))
 

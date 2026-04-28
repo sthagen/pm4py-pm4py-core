@@ -3,6 +3,13 @@ import pm4py
 from pm4py.algo.simulation.montecarlo.utils import replay
 from pm4py.algo.simulation.montecarlo import algorithm as monte_carlo_simulator
 from pm4py.objects import random_variables
+import pandas
+from pm4py.objects.log.obj import EventLog
+from pm4py.objects.petri_net.obj import Marking, PetriNet
+from pm4py.objects.random_variables.exponential.random_variable import Exponential
+from pm4py.objects.random_variables.normal.random_variable import Normal
+from pm4py.objects.random_variables.uniform.random_variable import Uniform
+from typing import Any
 
 def execute_script():
     # =====================================================
@@ -10,13 +17,13 @@ def execute_script():
     # =====================================================
 
     # Read the event log from an XES file.
-    log: "pandas.DataFrame" = pm4py.read_xes("../tests/input_data/running-example.xes")
+    log: pandas.DataFrame = pm4py.read_xes("../tests/input_data/running-example.xes")
 
     # Discover a Petri net using the inductive miner. Note that discovering the net on the entire log
     # might lead to underfitting. In some cases, focusing on a subset of variants can yield a more precise model.
-    net: "PetriNet"
-    initial_marking: "Marking"
-    final_marking: "Marking"
+    net: PetriNet
+    initial_marking: Marking
+    final_marking: Marking
     net, initial_marking, final_marking = pm4py.discover_petri_net_inductive(log)
 
     # =====================================================
@@ -37,21 +44,21 @@ def execute_script():
         # Parameters:
         #   mu (mean): expected duration value (here set to 5 time units)
         #   sigma (standard deviation): variability around the mean (set to 3 time units)
-        rv_normal: "Normal" = random_variables.normal.random_variable.Normal(mu=5, sigma=3)
+        rv_normal: Normal = random_variables.normal.random_variable.Normal(mu=5, sigma=3)
         print(f"Normal distribution for transition '{trans}': {rv_normal}")
 
         # --- Exponential Distribution ---
         # Parameters:
         #   loc: a shift parameter (minimum duration, here set to 1)
         #   scale: the mean waiting time between events (set to 1)
-        rv_exponential: "Exponential" = random_variables.exponential.random_variable.Exponential(loc=1, scale=1)
+        rv_exponential: Exponential = random_variables.exponential.random_variable.Exponential(loc=1, scale=1)
         print(f"Exponential distribution for transition '{trans}': {rv_exponential}")
 
         # --- Uniform Distribution ---
         # Parameters:
         #   loc: lower bound of the duration (here set to 0)
         #   scale: range of the duration (so durations are equally likely between 0 and 1)
-        rv_uniform: "Uniform" = random_variables.uniform.random_variable.Uniform(loc=0, scale=1)
+        rv_uniform: Uniform = random_variables.uniform.random_variable.Uniform(loc=0, scale=1)
         print(f"Uniform distribution for transition '{trans}': {rv_uniform}")
 
         # For this example, we choose to override with the normal distribution.
@@ -76,13 +83,13 @@ def execute_script():
     }
 
     # Run the Monte Carlo simulation using the Petri net, the log, and the parameters.
-    simulated_log: "EventLog"
-    simulation_results: "dict[str, Any]"
+    simulated_log: EventLog
+    simulation_results: dict[str, Any]
     simulated_log, simulation_results = monte_carlo_simulator.apply(log, net, initial_marking, final_marking,
                                                                     parameters=sim_parameters)
 
     # Convert the simulated log into a pandas DataFrame for easier manipulation.
-    simulated_log_df: "pandas.DataFrame" = pm4py.convert_to_dataframe(simulated_log)
+    simulated_log_df: pandas.DataFrame = pm4py.convert_to_dataframe(simulated_log)
     print("Simulated timestamps before start time adjustment:")
     print(simulated_log_df["time:timestamp"])
 
@@ -93,8 +100,8 @@ def execute_script():
     # To align the simulation results with a specific real-world start time,
     # we can apply an offset to all timestamps.
     # For example, to set the start time to January 1, 2024:
-    desired_start_time: "pandas.Timestamp" = pd.Timestamp("2024-01-01")
-    unix_epoch: "pandas.Timestamp" = pd.Timestamp("1970-01-01")
+    desired_start_time: pandas.Timestamp = pd.Timestamp("2024-01-01")
+    unix_epoch: pandas.Timestamp = pd.Timestamp("1970-01-01")
     # Calculate the offset between the desired start time and the Unix epoch.
     offset = desired_start_time - unix_epoch
 

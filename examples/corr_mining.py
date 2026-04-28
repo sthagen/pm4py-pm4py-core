@@ -7,23 +7,24 @@ from pm4py.statistics.start_activities.pandas import get as sa_get
 from pm4py.statistics.end_activities.pandas import get as ea_get
 from examples import examples_conf
 import importlib.util
+import pandas
 
 
 def execute_script():
-    df: "pandas.DataFrame" = pandas_utils.read_csv("../tests/input_data/interval_event_log.csv")
+    df: pandas.DataFrame = pandas_utils.read_csv("../tests/input_data/interval_event_log.csv")
     df = dataframe_utils.convert_timestamp_columns_in_df(df, timest_format=constants.DEFAULT_TIMESTAMP_PARSE_FORMAT)
     act_count = dict(df["concept:name"].value_counts())
     parameters = {}
     parameters[constants.PARAMETER_CONSTANT_START_TIMESTAMP_KEY] = "start_timestamp"
     parameters[constants.PARAMETER_CONSTANT_TIMESTAMP_KEY] = "time:timestamp"
     parameters["format"] = examples_conf.TARGET_IMG_FORMAT
-    start_activities: "dict[str, int]" = sa_get.get_start_activities(df, parameters=parameters)
-    end_activities: "dict[str, int]" = ea_get.get_end_activities(df, parameters=parameters)
+    start_activities: dict[str, int] = sa_get.get_start_activities(df, parameters=parameters)
+    end_activities: dict[str, int] = ea_get.get_end_activities(df, parameters=parameters)
     parameters["start_activities"] = start_activities
     parameters["end_activities"] = end_activities
-    soj_time: "dict[str, float]" = soj_time_get.apply(df, parameters=parameters)
-    dfg: "dict[tuple[str, str], int]"
-    performance_dfg: "dict[tuple[str, str], float]"
+    soj_time: dict[str, float] = soj_time_get.apply(df, parameters=parameters)
+    dfg: dict[tuple[str, str], int]
+    performance_dfg: dict[tuple[str, str], float]
     dfg, performance_dfg = correlation_miner.apply(df, variant=correlation_miner.Variants.CLASSIC,
                                                    parameters=parameters)
 

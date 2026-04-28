@@ -6,16 +6,16 @@ from pm4py.util import constants
 
 
 def execute_script():
-    ts1: "int" = 100000000
-    ts2: "int" = 110000000
+    ts1: int = 100000000
+    ts2: int = 110000000
     d1 = strpfromiso.fix_naivety(datetime.datetime.fromtimestamp(ts1))
     d2 = strpfromiso.fix_naivety(datetime.datetime.fromtimestamp(ts2))
     print(ts2-ts1)
     # default business hours: all the days of the week except Saturday and Sunday are working days.
-    bh1: "BusinessHours" = BusinessHours(d1, d2, business_hour_slots=constants.DEFAULT_BUSINESS_HOUR_SLOTS)
+    bh1: BusinessHours = BusinessHours(d1, d2, business_hour_slots=constants.DEFAULT_BUSINESS_HOUR_SLOTS)
     print(bh1.get_seconds())
     # let's calculate the business hours using a proper work calendar.
-    bh2: "BusinessHours" = BusinessHours(d1, d2, business_hour_slots=constants.DEFAULT_BUSINESS_HOUR_SLOTS, workcalendar=Italy())
+    bh2: BusinessHours = BusinessHours(d1, d2, business_hour_slots=constants.DEFAULT_BUSINESS_HOUR_SLOTS, workcalendar=Italy())
     print(bh2.get_seconds())
 
 

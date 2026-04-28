@@ -1,10 +1,11 @@
 from pm4py.objects.log.util import dataframe_utils
 from pm4py.util import pandas_utils, constants
+import pandas
 
 
 def execute_script():
     # loads a dataframe. setup dates
-    df: "pandas.DataFrame" = pandas_utils.read_csv("../tests/input_data/receipt.csv")
+    df: pandas.DataFrame = pandas_utils.read_csv("../tests/input_data/receipt.csv")
     df = dataframe_utils.convert_timestamp_columns_in_df(df, timest_format=constants.DEFAULT_TIMESTAMP_PARSE_FORMAT)
     print(df)
     # insert the case index in the dataframe
@@ -13,7 +14,7 @@ def execute_script():
     df = df[df["@@index_in_trace"] <= 5]
     print(df)
     # performs the automatic feature extraction
-    fea_df: "pandas.DataFrame" = dataframe_utils.automatic_feature_extraction_df(df)
+    fea_df: pandas.DataFrame = dataframe_utils.automatic_feature_extraction_df(df)
     print("\nfea_df =")
     print(fea_df)
     print(fea_df.columns)

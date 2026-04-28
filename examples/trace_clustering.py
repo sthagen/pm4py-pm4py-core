@@ -2,10 +2,12 @@ import pm4py
 import os
 from examples import examples_conf
 import importlib.util
+from pm4py.objects.log.obj import EventLog
+from pm4py.objects.process_tree.obj import ProcessTree
 
 
 def execute_script():
-    dataframe: "EventLog" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"), return_legacy_log_object=True)
+    dataframe: EventLog = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"), return_legacy_log_object=True)
 
     # define a K-Means with 3 clusters
     from pm4py.util import ml_utils
@@ -13,7 +15,7 @@ def execute_script():
 
     for clust_log in pm4py.cluster_log(dataframe, sklearn_clusterer=clusterer):
         print(clust_log)
-        process_tree: "ProcessTree" = pm4py.discover_process_tree_inductive(clust_log)
+        process_tree: ProcessTree = pm4py.discover_process_tree_inductive(clust_log)
 
         if importlib.util.find_spec("graphviz"):
             pm4py.view_process_tree(process_tree, format=examples_conf.TARGET_IMG_FORMAT)

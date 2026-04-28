@@ -3,11 +3,13 @@ from pm4py.algo.discovery.inductive import algorithm as inductive_miner
 from examples import examples_conf
 import os
 import importlib.util
+from pm4py.objects.log.obj import EventLog
+from pm4py.objects.process_tree.obj import ProcessTree
 
 
 def execute_script():
-    log: "EventLog" = importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
-    tree: "ProcessTree" = inductive_miner.apply(log)
+    log: EventLog = importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    tree: ProcessTree = inductive_miner.apply(log)
 
     if importlib.util.find_spec("graphviz"):
         from pm4py.visualization.process_tree import visualizer as pt_vis_factory

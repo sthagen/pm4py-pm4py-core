@@ -5,12 +5,13 @@ from enum import Enum
 from pm4py.util import exec_utils, constants, xes_constants
 import pm4py
 import pandas as pd
+import pandas
 
 
 class Parameters(Enum):
-    MAX_LEN: "str" = "max_len"
-    RESPONSE_HEADER: "str" = "response_header"
-    PERFORMANCE_AGGREGATION: "str" = "performance_aggregation"
+    MAX_LEN: str = "max_len"
+    RESPONSE_HEADER: str = "response_header"
+    PERFORMANCE_AGGREGATION: str = "performance_aggregation"
     ACTIVITY_KEY = constants.PARAMETER_CONSTANT_ACTIVITY_KEY
     TIMESTAMP_KEY = constants.PARAMETER_CONSTANT_TIMESTAMP_KEY
     CASE_ID_KEY = constants.PARAMETER_CONSTANT_CASEID_KEY
@@ -63,9 +64,9 @@ def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame], parameters: Optio
     timestamp_key = exec_utils.get_param_value(Parameters.TIMESTAMP_KEY, parameters,
                                                xes_constants.DEFAULT_TIMESTAMP_KEY)
     case_id_key = exec_utils.get_param_value(Parameters.CASE_ID_KEY, parameters, constants.CASE_CONCEPT_NAME)
-    performance_aggregation: "str" = exec_utils.get_param_value(Parameters.PERFORMANCE_AGGREGATION, parameters, "mean")
+    performance_aggregation: str = exec_utils.get_param_value(Parameters.PERFORMANCE_AGGREGATION, parameters, "mean")
 
-    response_header: "bool" = exec_utils.get_param_value(Parameters.RESPONSE_HEADER, parameters, True)
+    response_header: bool = exec_utils.get_param_value(Parameters.RESPONSE_HEADER, parameters, True)
     max_len = exec_utils.get_param_value(Parameters.MAX_LEN, parameters, constants.OPENAI_MAX_LEN)
 
     log_obj = log_converter.apply(log_obj, variant=log_converter.Variants.TO_DATA_FRAME, parameters=parameters)
@@ -80,7 +81,7 @@ def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame], parameters: Optio
             var_paths.append([])
         var_paths[-1].append(el)
 
-    ret: "str" = "\n\n"
+    ret: str = "\n\n"
 
     if response_header:
         ret += "Below your find a description of the top process variants of the event logs, along with their frequency. The paths of every reported variant are decorated with an aggregation (" + performance_aggregation + ") of the performance of the path in the given variant.\n\n"
@@ -103,6 +104,6 @@ def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame], parameters: Optio
 
 
 if __name__ == "__main__":
-    log: "pandas.DataFrame" = pm4py.read_xes("../../../tests/input_data/receipt.xes")
+    log: pandas.DataFrame = pm4py.read_xes("../../../tests/input_data/receipt.xes")
     textual_abstraction = apply(log)
     print(textual_abstraction)

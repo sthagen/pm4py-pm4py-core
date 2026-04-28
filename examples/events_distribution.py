@@ -5,15 +5,16 @@ from pm4py.objects.log.util import dataframe_utils
 from pm4py.statistics.attributes.pandas import get as attr_get
 from examples import examples_conf
 import importlib.util
+import pandas
 
 
 def execute_script():
-    df: "pandas.DataFrame" = pandas_utils.read_csv(os.path.join("..", "tests", "input_data", "receipt.csv"))
+    df: pandas.DataFrame = pandas_utils.read_csv(os.path.join("..", "tests", "input_data", "receipt.csv"))
     df = dataframe_utils.convert_timestamp_columns_in_df(df, timest_format=constants.DEFAULT_TIMESTAMP_PARSE_FORMAT, timest_columns=["time:timestamp"])
 
     # plots the distribution of the events over the days of a month
-    x0: "list[str]"
-    y0: "list[int]"
+    x0: list[str]
+    y0: list[int]
     x0, y0 = attr_get.get_events_distribution(df, distr_type="days_month")
 
     if importlib.util.find_spec("graphviz") and importlib.util.find_spec("matplotlib"):
@@ -24,8 +25,8 @@ def execute_script():
         visualizer.view(gviz)
 
     # plots the distribution of the events over the months
-    x1: "list[str]"
-    y1: "list[int]"
+    x1: list[str]
+    y1: list[int]
     x1, y1 = attr_get.get_events_distribution(df, distr_type="months")
 
     if importlib.util.find_spec("graphviz") and importlib.util.find_spec("matplotlib"):
@@ -36,8 +37,8 @@ def execute_script():
         visualizer.view(gviz)
 
     # plots the distribution of the events over the years
-    x2: "list[str]"
-    y2: "list[int]"
+    x2: list[str]
+    y2: list[int]
     x2, y2 = attr_get.get_events_distribution(df, distr_type="years")
 
     if importlib.util.find_spec("graphviz") and importlib.util.find_spec("matplotlib"):
@@ -48,8 +49,8 @@ def execute_script():
         visualizer.view(gviz)
 
     # plots the distribution of the events over the hours (of the day)
-    x3: "list[str]"
-    y3: "list[int]"
+    x3: list[str]
+    y3: list[int]
     x3, y3 = attr_get.get_events_distribution(df, distr_type="hours")
 
     if importlib.util.find_spec("graphviz") and importlib.util.find_spec("matplotlib"):
@@ -60,8 +61,8 @@ def execute_script():
         visualizer.view(gviz)
 
     # plots the distribution of the events over the days of the week
-    x4: "list[str]"
-    y4: "list[int]"
+    x4: list[str]
+    y4: list[int]
     x4, y4 = attr_get.get_events_distribution(df, distr_type="days_week")
 
     if importlib.util.find_spec("graphviz") and importlib.util.find_spec("matplotlib"):

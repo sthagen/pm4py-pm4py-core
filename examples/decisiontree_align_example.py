@@ -5,15 +5,18 @@ from pm4py.objects.conversion.process_tree import converter as process_tree_conv
 from examples import examples_conf
 import os
 import importlib.util
+from pm4py.objects.log.obj import EventLog
+from pm4py.objects.petri_net.obj import Marking, PetriNet
+from pm4py.objects.process_tree.obj import ProcessTree
 
 
 def execute_script():
     # in this case, we obtain a decision tree by alignments on a specific decision point
-    log: "EventLog" = xes_importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
-    process_tree: "ProcessTree" = inductive_miner.apply(log)
-    net: "PetriNet"
-    im: "Marking"
-    fm: "Marking"
+    log: EventLog = xes_importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    process_tree: ProcessTree = inductive_miner.apply(log)
+    net: PetriNet
+    im: Marking
+    fm: Marking
     net, im, fm = process_tree_converter.apply(process_tree)
 
     if importlib.util.find_spec("sklearn") and importlib.util.find_spec("graphviz"):

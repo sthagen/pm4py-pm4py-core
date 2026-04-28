@@ -6,21 +6,24 @@ from pm4py.algo.discovery.inductive.variants.imf import IMFUVCL
 from pm4py.algo.discovery.inductive.dtypes.im_ds import IMDataStructureUVCL
 from examples import examples_conf
 import importlib.util
+import pandas
+from pm4py.objects.log.obj import Trace
+from pm4py.objects.petri_net.obj import Marking, PetriNet
 
 
 def execute_script():
-    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"), return_legacy_log_object=False)
-    variants: "dict[tuple[str], list[Trace]] | dict[tuple[str], int]" = pm4py.get_variants(log)
+    log: pandas.DataFrame = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"), return_legacy_log_object=False)
+    variants: dict[tuple[str], list[Trace]] | dict[tuple[str], int] = pm4py.get_variants(log)
     uvcl = UVCL()
     for var, occ in variants.items():
         uvcl[var] = occ
-    parameters: "dict[str, float]" = {"noise_threshold": 0.2}
-    imfuvcl: "IMFUVCL" = IMFUVCL(parameters)
+    parameters: dict[str, float] = {"noise_threshold": 0.2}
+    imfuvcl: IMFUVCL = IMFUVCL(parameters)
 
     tree = imfuvcl.apply(IMDataStructureUVCL(uvcl), parameters=parameters)
-    net: "PetriNet"
-    im: "Marking"
-    fm: "Marking"
+    net: PetriNet
+    im: Marking
+    fm: Marking
     net, im, fm = pm4py.convert_to_petri_net(tree)
 
     if importlib.util.find_spec("graphviz"):

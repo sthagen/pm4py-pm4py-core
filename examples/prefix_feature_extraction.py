@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from pm4py.util import xes_constants
+from typing import Any
 
 
 def _collect_activities_and_paths(log, activity_key):
@@ -37,7 +38,7 @@ def _build_prefix_features(log, activity_key, timestamp_key, target_mode):
             continue
         start_time = events[0].get(timestamp_key) if timestamp_key else None
 
-        seen_activities: "set[list[Any]]" = {events[0][activity_key]}
+        seen_activities: set[list[Any]] = {events[0][activity_key]}
         seen_paths = set()
 
         for idx in range(1, len(events)):
@@ -56,20 +57,20 @@ def _build_prefix_features(log, activity_key, timestamp_key, target_mode):
             for seen_path in seen_paths:
                 row[len(activities) + path_to_index[seen_path]] = 1
 
-            prev_to_penultimate: "float" = 0.0
+            prev_to_penultimate: float = 0.0
             if idx >= 2 and timestamp_key:
                 prev_ts = prev_event.get(timestamp_key)
                 prior_ts = events[idx - 2].get(timestamp_key)
                 if prev_ts is not None and prior_ts is not None:
                     prev_to_penultimate = (prev_ts - prior_ts).total_seconds()
 
-            start_to_penultimate: "float" = 0.0
+            start_to_penultimate: float = 0.0
             if timestamp_key and start_time is not None:
                 penultimate_ts = prev_event.get(timestamp_key)
                 if penultimate_ts is not None:
                     start_to_penultimate = (penultimate_ts - start_time).total_seconds()
 
-            path_time_diff: "float" = 0.0
+            path_time_diff: float = 0.0
             if timestamp_key:
                 prev_ts = prev_event.get(timestamp_key)
                 curr_ts = curr_event.get(timestamp_key)

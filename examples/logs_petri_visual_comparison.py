@@ -7,18 +7,20 @@ from pm4py.objects.log.obj import EventLog
 from pm4py.objects.conversion.process_tree import converter as process_tree_converter
 from examples import examples_conf
 import importlib.util
+from pm4py.objects.petri_net.obj import Marking, PetriNet
+from pm4py.objects.process_tree.obj import ProcessTree
 
 
 def execute_script():
-    log: "EventLog" = xes_importer.apply(os.path.join("..", "tests", "input_data", "receipt.xes"))
+    log: EventLog = xes_importer.apply(os.path.join("..", "tests", "input_data", "receipt.xes"))
     log = sorting.sort_timestamp(log)
-    process_tree: "ProcessTree" = inductive_miner.apply(log)
-    net: "PetriNet"
-    im: "Marking"
-    fm: "Marking"
+    process_tree: ProcessTree = inductive_miner.apply(log)
+    net: PetriNet
+    im: Marking
+    fm: Marking
     net, im, fm = process_tree_converter.apply(process_tree)
-    log1: "EventLog" = EventLog(log[:500])
-    log2: "EventLog" = EventLog(log[len(log) - 500:])
+    log1: EventLog = EventLog(log[:500])
+    log2: EventLog = EventLog(log[len(log) - 500:])
     statistics = element_usage_comparison.compare_element_usage_two_logs(net, im, fm, log1, log2)
 
     if importlib.util.find_spec("graphviz"):

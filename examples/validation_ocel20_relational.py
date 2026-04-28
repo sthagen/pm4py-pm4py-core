@@ -1,12 +1,13 @@
 from pm4py.objects.ocel.validation import ocel20_rel_validation
+from typing import Collection
 
 
 def execute_script():
-    file_path: "str" = "../tests/input_data/ocel/ocel20_example.sqlite"
+    file_path: str = "../tests/input_data/ocel/ocel20_example.sqlite"
 
     try:
-        satisfied: "Collection[str]"
-        unsatisfied: "Collection[str]"
+        satisfied: Collection[str]
+        unsatisfied: Collection[str]
         satisfied, unsatisfied = ocel20_rel_validation.apply(file_path)
         print("satisfied", satisfied)
         print("unsatisfied", unsatisfied)

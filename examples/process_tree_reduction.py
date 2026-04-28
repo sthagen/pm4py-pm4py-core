@@ -4,12 +4,14 @@ from pm4py.algo.reduction.process_tree import reducer
 from pm4py.objects.log.importer.xes import importer as xes_importer
 from examples import examples_conf
 import importlib.util
+from pm4py.objects.log.obj import EventLog
+from pm4py.objects.process_tree.obj import ProcessTree
 
 
 def execute_script():
-    log: "EventLog" = xes_importer.apply(os.path.join("..", "tests", "input_data", "receipt.xes"))
+    log: EventLog = xes_importer.apply(os.path.join("..", "tests", "input_data", "receipt.xes"))
     # the tree discovered by inductive miner is huge and can replay the behavior of the log
-    tree: "ProcessTree" = pm4py.discover_process_tree_inductive(log)
+    tree: ProcessTree = pm4py.discover_process_tree_inductive(log)
     # to make a more effective replay, remove the elements that are not being used during the replay of the trace
     # (that are the skippable ones, with empty intersection with the trace)
     tree_first_trace = reducer.apply(tree, log[0], variant=reducer.Variants.TREE_TR_BASED)

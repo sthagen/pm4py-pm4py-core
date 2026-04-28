@@ -4,14 +4,15 @@ from pm4py.objects.log.util import dataframe_utils
 from examples import examples_conf
 import importlib.util
 import os
+import pandas
 
 
 def execute_script():
-    receipt_even: "pandas.DataFrame" = pandas_utils.read_csv(os.path.join("..", "tests", "input_data", "interleavings", "receipt_even.csv"))
-    receipt_odd: "pandas.DataFrame" = pandas_utils.read_csv(os.path.join("..", "tests", "input_data", "interleavings", "receipt_odd.csv"))
+    receipt_even: pandas.DataFrame = pandas_utils.read_csv(os.path.join("..", "tests", "input_data", "interleavings", "receipt_even.csv"))
+    receipt_odd: pandas.DataFrame = pandas_utils.read_csv(os.path.join("..", "tests", "input_data", "interleavings", "receipt_odd.csv"))
     receipt_even = dataframe_utils.convert_timestamp_columns_in_df(receipt_even, timest_format=constants.DEFAULT_TIMESTAMP_PARSE_FORMAT, timest_columns=["time:timestamp"])
     receipt_odd = dataframe_utils.convert_timestamp_columns_in_df(receipt_odd, timest_format=constants.DEFAULT_TIMESTAMP_PARSE_FORMAT, timest_columns=["time:timestamp"])
-    case_relations: "pandas.DataFrame" = pandas_utils.read_csv(os.path.join("..", "tests", "input_data", "interleavings", "case_relations.csv"))
+    case_relations: pandas.DataFrame = pandas_utils.read_csv(os.path.join("..", "tests", "input_data", "interleavings", "case_relations.csv"))
     interleavings_dataframe = interleavings_miner.apply(receipt_even, receipt_odd, case_relations)
     print(interleavings_dataframe)
     # print the frequency and the direction of the interleavings

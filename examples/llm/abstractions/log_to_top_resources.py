@@ -6,12 +6,13 @@ from pm4py.util import exec_utils, constants, xes_constants
 import pandas as pd
 import pm4py
 from copy import copy
+import pandas
 
 
 class Parameters(Enum):
-    MAX_LEN: "str" = "max_len"
-    RESPONSE_HEADER: "str" = "response_header"
-    DEFAULT_MIN_ACTIVITIES: "str" = "default_min_activities"
+    MAX_LEN: str = "max_len"
+    RESPONSE_HEADER: str = "response_header"
+    DEFAULT_MIN_ACTIVITIES: str = "default_min_activities"
     ACTIVITY_KEY = constants.PARAMETER_CONSTANT_ACTIVITY_KEY
     RESOURCE_KEY = constants.PARAMETER_CONSTANT_RESOURCE_KEY
 
@@ -20,7 +21,7 @@ def get_abstr_from_dict(ret, activities_dict, response_header):
     """
     Internal method to get the textual abstraction starting from the computations already performed.
     """
-    abstr: "list[str]" = ["\n\n"]
+    abstr: list[str] = ["\n\n"]
 
     if response_header:
         abstr.append(
@@ -99,8 +100,8 @@ def apply(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[
         parameters = {}
 
     max_len = exec_utils.get_param_value(Parameters.MAX_LEN, parameters, constants.OPENAI_MAX_LEN)
-    response_header: "bool" = exec_utils.get_param_value(Parameters.RESPONSE_HEADER, parameters, True)
-    default_min_activities: "int" = exec_utils.get_param_value(Parameters.DEFAULT_MIN_ACTIVITIES, parameters, 15)
+    response_header: bool = exec_utils.get_param_value(Parameters.RESPONSE_HEADER, parameters, True)
+    default_min_activities: int = exec_utils.get_param_value(Parameters.DEFAULT_MIN_ACTIVITIES, parameters, 15)
     activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters, xes_constants.DEFAULT_NAME_KEY)
     resource_key = exec_utils.get_param_value(Parameters.RESOURCE_KEY, parameters, xes_constants.DEFAULT_RESOURCE_KEY)
 
@@ -142,6 +143,6 @@ def apply(log: Union[EventLog, EventStream, pd.DataFrame], parameters: Optional[
 
 
 if __name__ == "__main__":
-    log: "pandas.DataFrame" = pm4py.read_xes("../../../tests/input_data/receipt.xes")
+    log: pandas.DataFrame = pm4py.read_xes("../../../tests/input_data/receipt.xes")
     textual_abstraction = apply(log)
     print(textual_abstraction)

@@ -1,5 +1,6 @@
 import pm4py
 from pm4py.algo.clustering.trace_attribute_driven import algorithm as clust_algorithm
+from pm4py.objects.log.obj import EventLog
 
 
 def recursive_print_clusters(cluster_tree, rec_depth=0):
@@ -17,7 +18,7 @@ def recursive_print_clusters(cluster_tree, rec_depth=0):
 
 
 def execute_script():
-    log: "EventLog" = pm4py.read_xes("../tests/input_data/receipt.xes", return_legacy_log_object=True)
+    log: EventLog = pm4py.read_xes("../tests/input_data/receipt.xes", return_legacy_log_object=True)
     log = pm4py.sample_cases(log, num_cases=20)
     # perform hierarchical clustering on the 'responsible' attribute of the log
     cluster_tree = clust_algorithm.apply(log, "responsible")[0]

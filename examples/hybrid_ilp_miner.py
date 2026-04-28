@@ -2,14 +2,16 @@ import pm4py
 import os
 from examples import examples_conf
 import importlib.util
+import pandas
+from pm4py.objects.petri_net.obj import Marking, PetriNet
 
 
 
 def execute_script():
-    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
-    net: "PetriNet"
-    im: "Marking"
-    fm: "Marking"
+    log: pandas.DataFrame = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    net: PetriNet
+    im: Marking
+    fm: Marking
     net, im, fm = pm4py.discover_petri_net_ilp(log)
 
     if importlib.util.find_spec("graphviz"):

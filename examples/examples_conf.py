@@ -1,1 +1,1 @@
-TARGET_IMG_FORMAT: "str" = "svg"
+TARGET_IMG_FORMAT: str = "svg"

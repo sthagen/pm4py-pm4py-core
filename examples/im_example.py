@@ -7,16 +7,19 @@ from pm4py.objects.log.importer.xes import importer as xes_importer
 from pm4py.objects.conversion.process_tree import converter as process_tree_converter
 from examples import examples_conf
 import importlib.util
+from pm4py.objects.log.obj import EventLog
+from pm4py.objects.petri_net.obj import Marking, PetriNet
+from pm4py.objects.process_tree.obj import ProcessTree
 
 
 def execute_script():
-    log_path: "str" = os.path.join("..", "tests", "input_data", "running-example.xes")
+    log_path: str = os.path.join("..", "tests", "input_data", "running-example.xes")
 
-    log: "EventLog" = xes_importer.apply(log_path)
-    process_tree: "ProcessTree" = inductive.apply(log)
-    net: "PetriNet"
-    marking: "Marking"
-    final_marking: "Marking"
+    log: EventLog = xes_importer.apply(log_path)
+    process_tree: ProcessTree = inductive.apply(log)
+    net: PetriNet
+    marking: Marking
+    final_marking: Marking
     net, marking, final_marking = process_tree_converter.apply(process_tree)
     for place in marking:
         print("initial marking " + place.name)
@@ -42,7 +45,7 @@ def execute_script():
                 if cf_result is None:
                     print("alignment is none!")
                 else:
-                    is_fit: "bool" = True
+                    is_fit: bool = True
                     for couple in cf_result:
                         print(couple)
                         if not (couple[0] == couple[1] or couple[0] == ">>" and couple[1] is None):

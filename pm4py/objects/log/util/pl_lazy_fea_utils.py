@@ -106,6 +106,47 @@ def _is_string_dtype(dtype: pl.DataType) -> bool:
     return dtype_str in {"utf8", "string"} or dtype_str.startswith("categorical")
 
 
+def _numeric_feature_dtype(dtype: pl.DataType) -> pl.DataType:
+    if dtype == pl.Boolean:
+        return pl.UInt8
+    if dtype in {
+        pl.Int8,
+        pl.Int16,
+        pl.Int32,
+        pl.UInt8,
+        pl.UInt16,
+        pl.UInt32,
+        pl.Float32,
+    }:
+        return dtype
+
+    dtype_str = str(dtype).lower()
+    if dtype in {pl.Int64, pl.UInt64, pl.Float64}:
+        return pl.Float32
+    if dtype_str.startswith("decimal") or dtype_str.startswith("duration"):
+        return pl.Float32
+
+    return pl.Float32
+
+
+def _unsigned_count_dtype(max_value: int) -> pl.DataType:
+    if max_value <= 0xFF:
+        return pl.UInt8
+    if max_value <= 0xFFFF:
+        return pl.UInt16
+    if max_value <= 0xFFFFFFFF:
+        return pl.UInt32
+    return pl.UInt64
+
+
+def _max_case_length(df: pl.LazyFrame, case_id_key: str) -> int:
+    max_case_length = _scalar_from_lazy(
+        df.group_by(case_id_key).agg(pl.len().alias("__case_size")),
+        pl.col("__case_size").max(),
+    )
+    return int(max_case_length or 0)
+
+
 def automatic_feature_selection_df(
     df: pl.LazyFrame, parameters: Optional[Dict[Any, Any]] = None
 ) -> pl.LazyFrame:
@@ -195,31 +236,63 @@ def select_number_column(
     col: str,
     case_id_key: str = constants.CASE_CONCEPT_NAME,
 ) -> pl.LazyFrame:
-    """Adds a numeric column to the feature lazyframe.
+    """Adds a numeric column to the feature lazyframe."""
+    return select_number_columns(
+        df,
+        fea_df,
+        [col],
+        case_id_key=case_id_key,
+    )
 
-    Notes on column duplication:
-      * If `fea_df` already contained `col` (e.g., repeated calls / duplicate inputs),
-        Polars would create `col_right` during the join. We explicitly drop any prior
-        versions first to keep the output schema stable.
-      * We also ensure the internal row-number column does not collide with user data.
-    """
-    fea_df = _drop_if_present(fea_df, [col, f"{col}_right"])
+
+def select_number_columns(
+    df: pl.LazyFrame,
+    fea_df: pl.LazyFrame,
+    columns: List[str],
+    case_id_key: str = constants.CASE_CONCEPT_NAME,
+) -> pl.LazyFrame:
+    """Adds numeric columns to the feature lazyframe in a single grouped pass."""
+    if not columns:
+        return fea_df
+
+    df_schema = _lazy_schema(df)
+    available = set(df_schema.names())
+
+    clean_columns = [
+        c
+        for c in _dedupe_preserve_order(columns)
+        if c != case_id_key and c in available and _is_numeric_dtype(df_schema[c])
+    ]
+    if not clean_columns:
+        return fea_df
 
     df_cols = set(_lazy_columns(df))
     row_nr_col = _unique_internal_name(df_cols, "__row_nr")
 
+    cols_to_drop: List[str] = []
+    agg_exprs: List[pl.Expr] = []
+
+    for col in clean_columns:
+        cols_to_drop.extend([col, f"{col}_right"])
+        agg_exprs.append(
+            pl.col(col)
+            .sort_by(pl.col(row_nr_col))
+            .drop_nulls()
+            .last()
+            .cast(_numeric_feature_dtype(df_schema[col]))
+            .alias(col)
+        )
+
+    fea_df = _drop_if_present(fea_df, cols_to_drop)
+
     df_numeric = (
         df.with_row_count(row_nr_col)
-        .select(pl.col(case_id_key), pl.col(col), pl.col(row_nr_col))
-        .drop_nulls(subset=[col])
+        .select([pl.col(case_id_key), pl.col(row_nr_col)] + [pl.col(c) for c in clean_columns])
         .group_by(case_id_key)
-        .agg(pl.col(col).sort_by(pl.col(row_nr_col)).last().alias(col))
+        .agg(agg_exprs)
     )
 
-    return (
-        fea_df.join(df_numeric, on=case_id_key, how="left", coalesce=True)
-        .with_columns(pl.col(col).cast(pl.Float32))
-    )
+    return fea_df.join(df_numeric, on=case_id_key, how="left", coalesce=True)
 
 
 def _collect_categorical_values(
@@ -282,8 +355,12 @@ def _select_string_columns(
     used_names: Set[str] = set(existing_cols)
 
     agg_exprs: List[pl.Expr] = []
-    fill_exprs: List[pl.Expr] = []
     cols_to_drop: Set[str] = set()
+    feature_dtype = (
+        _unsigned_count_dtype(_max_case_length(df, case_id_key))
+        if count_occurrences
+        else pl.UInt8
+    )
 
     for column, unique_values in unique_values_map.items():
         for value in unique_values:
@@ -309,11 +386,13 @@ def _select_string_columns(
 
             comparison = pl.col(column).eq(value)
             if count_occurrences:
-                agg_exprs.append(comparison.cast(pl.Int64).sum().alias(column_name))
+                agg_exprs.append(
+                    comparison.cast(pl.UInt8).sum().cast(feature_dtype).alias(column_name)
+                )
             else:
-                agg_exprs.append(comparison.cast(pl.Int8).max().alias(column_name))
-
-            fill_exprs.append(pl.col(column_name).cast(pl.Float32))
+                agg_exprs.append(
+                    comparison.cast(feature_dtype).max().cast(feature_dtype).alias(column_name)
+                )
 
     if cols_to_drop:
         fea_df = _drop_if_present(fea_df, cols_to_drop)
@@ -322,8 +401,6 @@ def _select_string_columns(
         df.select([pl.col(case_id_key)] + [pl.col(c) for c in unique_values_map.keys()])
         .group_by(case_id_key)
         .agg(agg_exprs)
-        # Materialize all encoded columns in one go to minimize separate joins.
-        .with_columns(fill_exprs)
     )
 
     return fea_df.join(feature_chunk, on=case_id_key, how="left", coalesce=True)
@@ -401,8 +478,12 @@ def get_features_df(
         elif _is_string_dtype(dtype):
             string_columns.append(col)
 
-    for col in numeric_columns:
-        fea_df = select_number_column(df, fea_df, col, case_id_key=case_id_key)
+    fea_df = select_number_columns(
+        df,
+        fea_df,
+        numeric_columns,
+        case_id_key=case_id_key,
+    )
 
     fea_df = select_string_columns(
         df,

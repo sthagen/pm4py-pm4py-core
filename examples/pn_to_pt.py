@@ -8,24 +8,27 @@ from pm4py.objects.conversion.process_tree import converter as pt_converter
 from pm4py.objects.conversion.wf_net import converter as wf_net_converter
 from examples import examples_conf
 import importlib.util
+import pandas
+from pm4py.objects.petri_net.obj import Marking, PetriNet
+from pm4py.objects.process_tree.obj import ProcessTree
 
 
 def execute_script():
-    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
-    alpha_petri_net: "PetriNet"
-    alpha_im: "Marking"
-    alpha_fm: "Marking"
+    log: pandas.DataFrame = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    alpha_petri_net: PetriNet
+    alpha_im: Marking
+    alpha_fm: Marking
     alpha_petri_net, alpha_im, alpha_fm = pm4py.discover_petri_net_alpha(log)
-    heuristics_petri_net: "PetriNet"
-    heuristics_im: "Marking"
-    heuristics_fm: "Marking"
+    heuristics_petri_net: PetriNet
+    heuristics_im: Marking
+    heuristics_fm: Marking
     heuristics_petri_net, heuristics_im, heuristics_fm = pm4py.discover_petri_net_heuristics(log)
-    tree: "ProcessTree" = pm4py.discover_process_tree_inductive(log)
+    tree: ProcessTree = pm4py.discover_process_tree_inductive(log)
     print("tree discovered by inductive miner=")
     print(tree)
-    inductive_petri_net: "PetriNet"
-    inductive_im: "Marking"
-    inductive_fm: "Marking"
+    inductive_petri_net: PetriNet
+    inductive_im: Marking
+    inductive_fm: Marking
     inductive_petri_net, inductive_im, inductive_fm = pt_converter.apply(tree)
     print("is_wf_net alpha", is_wf_net.apply(alpha_petri_net))
     print("is_wf_net heuristics", is_wf_net.apply(heuristics_petri_net))

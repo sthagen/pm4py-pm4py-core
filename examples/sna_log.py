@@ -4,15 +4,17 @@ from pm4py.objects.log.importer.xes import importer as xes_importer
 from pm4py.algo.organizational_mining.sna import algorithm as sna_algorithm
 from examples import examples_conf
 import importlib.util
+from pm4py.objects.log.obj import EventLog
+from pm4py.objects.org.sna.obj import SNA
 
 
 def execute_script():
-    log: "EventLog" = xes_importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    log: EventLog = xes_importer.apply(os.path.join("..", "tests", "input_data", "running-example.xes"))
 
-    hw_values: "SNA" = sna_algorithm.apply(log, variant=sna_algorithm.Variants.HANDOVER_LOG)
-    wt_values: "SNA" = sna_algorithm.apply(log, variant=sna_algorithm.Variants.WORKING_TOGETHER_LOG)
-    sub_values: "SNA" = sna_algorithm.apply(log, variant=sna_algorithm.Variants.SUBCONTRACTING_LOG)
-    ja_values: "SNA" = sna_algorithm.apply(log, variant=sna_algorithm.Variants.JOINTACTIVITIES_LOG)
+    hw_values: SNA = sna_algorithm.apply(log, variant=sna_algorithm.Variants.HANDOVER_LOG)
+    wt_values: SNA = sna_algorithm.apply(log, variant=sna_algorithm.Variants.WORKING_TOGETHER_LOG)
+    sub_values: SNA = sna_algorithm.apply(log, variant=sna_algorithm.Variants.SUBCONTRACTING_LOG)
+    ja_values: SNA = sna_algorithm.apply(log, variant=sna_algorithm.Variants.JOINTACTIVITIES_LOG)
 
     if importlib.util.find_spec("graphviz") and importlib.util.find_spec("pyvis") and importlib.util.find_spec("networkx"):
         from pm4py.visualization.sna import visualizer as pn_vis

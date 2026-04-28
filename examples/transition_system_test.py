@@ -3,13 +3,15 @@ from pm4py.algo.discovery.transition_system import algorithm as ts_discovery
 from examples import examples_conf
 import os
 import importlib.util
+from pm4py.objects.log.obj import EventLog
+from pm4py.objects.transition_system.obj import TransitionSystem
 
 
 def execute_script():
     # log_path = "C:/Users/bas/Documents/tue/svn/private/logs/ilp_test_2_abcd_acbd.xes"
-    log_path: "str" = os.path.join("..", "tests", "input_data", "running-example.xes")
-    log: "EventLog" = xes_importer.apply(log_path)
-    ts: "TransitionSystem" = ts_discovery.apply(log, parameters={"include_data": True})
+    log_path: str = os.path.join("..", "tests", "input_data", "running-example.xes")
+    log: EventLog = xes_importer.apply(log_path)
+    ts: TransitionSystem = ts_discovery.apply(log, parameters={"include_data": True})
 
     if importlib.util.find_spec("graphviz"):
         from pm4py.visualization.transition_system import visualizer as ts_vis

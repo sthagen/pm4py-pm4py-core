@@ -3,10 +3,11 @@ import os
 from pm4py.algo.discovery.dfg.adapters.pandas import df_statistics
 from examples import examples_conf
 import importlib.util
+import pandas
 
 
 def execute_script():
-    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "roadtraffic100traces.xes"), return_legacy_log_object=False)
+    log: pandas.DataFrame = pm4py.read_xes(os.path.join("..", "tests", "input_data", "roadtraffic100traces.xes"), return_legacy_log_object=False)
     cost_based_dfg = df_statistics.get_dfg_graph(log, measure="cost", cost_attribute="amount")
 
     if importlib.util.find_spec("graphviz"):

@@ -2,11 +2,12 @@ import pm4py
 from examples import examples_conf
 import importlib.util
 import os
+import pandas
 
 
 def execute_script():
     # reads a XES log
-    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"))
+    log: pandas.DataFrame = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"))
     log = pm4py.format_dataframe(log)
 
     if importlib.util.find_spec("graphviz"):

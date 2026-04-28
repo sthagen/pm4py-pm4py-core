@@ -2,11 +2,13 @@ import pm4py
 from examples import examples_conf
 import os
 import importlib.util
+from pm4py.objects.ocel.obj import OCEL
+from typing import Any
 
 
 def execute_script():
-    ocel: "OCEL" = pm4py.read_ocel(os.path.join("..", "tests", "input_data", "ocel", "example_log.jsonocel"))
-    ocdfg: "dict[str, Any]" = pm4py.discover_ocdfg(ocel)
+    ocel: OCEL = pm4py.read_ocel(os.path.join("..", "tests", "input_data", "ocel", "example_log.jsonocel"))
+    ocdfg: dict[str, Any] = pm4py.discover_ocdfg(ocel)
 
     if importlib.util.find_spec("graphviz"):
         # views the model with the frequency annotation

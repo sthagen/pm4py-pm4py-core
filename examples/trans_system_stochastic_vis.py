@@ -3,11 +3,13 @@ from pm4py.algo.discovery.transition_system import algorithm as transition_syste
 from examples import examples_conf
 import os
 import importlib.util
+import pandas
+from pm4py.objects.transition_system.obj import TransitionSystem
 
 
 def execute_script():
-    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
-    ts: "TransitionSystem" = transition_system_discovery.apply(log, parameters={"include_data": True, "direction": "forward"})
+    log: pandas.DataFrame = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    ts: TransitionSystem = transition_system_discovery.apply(log, parameters={"include_data": True, "direction": "forward"})
 
     if importlib.util.find_spec("graphviz"):
         from pm4py.visualization.transition_system.variants import trans_frequency

@@ -4,22 +4,25 @@ import pm4py
 
 from pm4py.streaming.algo.conformance.tbr import algorithm as streaming_tbr
 from pm4py.streaming.stream.live_event_stream import LiveEventStream
+import pandas
+from pm4py.objects.log.obj import EventStream
+from pm4py.objects.petri_net.obj import Marking, PetriNet
 
 
 def execute_script():
     # imports a XES event log
-    log: "pandas.DataFrame" = pm4py.read_xes(
+    log: pandas.DataFrame = pm4py.read_xes(
         os.path.join("..", "tests", "input_data", "receipt.xes")
     )
     # converts the log into a list of events (not anymore grouped in cases)
-    event_stream: "EventStream" = pm4py.convert_to_event_stream(log)
+    event_stream: EventStream = pm4py.convert_to_event_stream(log)
     # calculates a process tree using the IMf algorithm (30% noise)
-    net: "PetriNet"
-    im: "Marking"
-    fm: "Marking"
+    net: PetriNet
+    im: Marking
+    fm: Marking
     net, im, fm = pm4py.discover_petri_net_inductive(log, noise_threshold=0.3)
     # creates a live event stream (an object that distributes the messages to the algorithm)
-    live_stream: "LiveEventStream" = LiveEventStream()
+    live_stream: LiveEventStream = LiveEventStream()
     # creates the TBR streaming conformance checking object
     conf_obj = streaming_tbr.apply(net, im, fm)
     # register the conformance checking object to the live event stream

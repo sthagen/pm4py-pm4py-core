@@ -1,5 +1,6 @@
 import pm4py
 import duckdb
+import pandas
 
 
 def execute_script():
@@ -8,7 +9,7 @@ def execute_script():
     group against the ground truth (that for the logs included in pm4py is reported in the log)
     and measure the quality of the classification.
     """
-    dataframe: "pandas.DataFrame" = pm4py.read_xes("../../tests/input_data/fairness/renting_log_high.xes.gz")
+    dataframe: pandas.DataFrame = pm4py.read_xes("../../tests/input_data/fairness/renting_log_high.xes.gz")
     protected_attr = [x for x in dataframe.columns if "protected" in x][0]
 
     sql_query = """
@@ -20,7 +21,7 @@ OR "case:married" = 'False';
     """
     dataframe_pos = duckdb.sql(sql_query).to_df()
     cases_pos = dataframe_pos["case:concept:name"].unique()
-    dataframe_neg: "pandas.DataFrame" = dataframe[~dataframe["case:concept:name"].isin(cases_pos)]
+    dataframe_neg: pandas.DataFrame = dataframe[~dataframe["case:concept:name"].isin(cases_pos)]
 
     dataframe_pos = dataframe_pos.groupby("case:concept:name").first()
     dataframe_neg = dataframe_neg.groupby("case:concept:name").last()

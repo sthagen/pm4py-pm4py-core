@@ -2,14 +2,17 @@ import pm4py
 from pm4py.streaming.stream.live_event_stream import LiveEventStream
 from pm4py.streaming.algo.conformance.declare import algorithm as declare_streaming_cc
 import os
+import pandas
+from pm4py.objects.log.obj import EventStream
+from typing import Any
 
 
 def execute_script():
-    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"))
-    declare: "dict[str, dict[Any, dict[str, int]]]" = pm4py.discover_declare(log, min_support_ratio=0.3, min_confidence_ratio=1.0)
-    event_stream: "EventStream" = pm4py.convert_to_event_stream(log)
+    log: pandas.DataFrame = pm4py.read_xes(os.path.join("..", "tests", "input_data", "receipt.xes"))
+    declare: dict[str, dict[Any, dict[str, int]]] = pm4py.discover_declare(log, min_support_ratio=0.3, min_confidence_ratio=1.0)
+    event_stream: EventStream = pm4py.convert_to_event_stream(log)
     conf_obj = declare_streaming_cc.apply(declare)
-    live_stream: "LiveEventStream" = LiveEventStream()
+    live_stream: LiveEventStream = LiveEventStream()
     live_stream.register(conf_obj)
     live_stream.start()
     for index, event in enumerate(event_stream):

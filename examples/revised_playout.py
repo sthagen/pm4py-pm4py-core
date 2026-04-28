@@ -5,28 +5,31 @@ from examples import examples_conf
 import importlib.util
 import uuid
 import os
+import pandas
+from pm4py.objects.log.obj import EventLog
+from pm4py.objects.petri_net.obj import Marking, PetriNet
 
 
 def execute_script():
-    log: "pandas.DataFrame" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
-    net: "PetriNet"
-    im: "Marking"
-    fm: "Marking"
+    log: pandas.DataFrame = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"))
+    net: PetriNet
+    im: Marking
+    fm: Marking
     net, im, fm = pm4py.discover_petri_net_inductive(log)
     net, im, fm = pm4py.convert_petri_net_type(net, im, fm, type="reset_inhibitor")
     # traditional playout
-    new_log: "EventLog" = pm4py.play_out(net, im, fm, parameters={"add_only_if_fm_is_reached": True})
+    new_log: EventLog = pm4py.play_out(net, im, fm, parameters={"add_only_if_fm_is_reached": True})
     print(len(new_log))
     print(pm4py.get_event_attribute_values(new_log, "concept:name"))
     print(pm4py.get_end_activities(new_log))
     # playout after adding a place with 1 token for every transition
     for trans in net.transitions:
-        new_place: "PetriNet.Place" = ResetInhibitorNet.Place(str(uuid.uuid4()))
+        new_place: PetriNet.Place = ResetInhibitorNet.Place(str(uuid.uuid4()))
         net.places.add(new_place)
         petri_utils.add_arc_from_to(new_place, trans, net, type=None)
         im[new_place] = 1
     # ensure that superset of the final marking (given the huge number of remaining tokens) are also considered valid
-    new_log2: "EventLog" = pm4py.play_out(net, im, fm, parameters={"add_only_if_fm_is_reached": True, "fm_leq_accepted": True})
+    new_log2: EventLog = pm4py.play_out(net, im, fm, parameters={"add_only_if_fm_is_reached": True, "fm_leq_accepted": True})
     print(len(new_log2))
     print(pm4py.get_event_attribute_values(new_log2, "concept:name"))
     print(pm4py.get_end_activities(new_log2))

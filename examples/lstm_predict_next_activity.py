@@ -4,15 +4,16 @@ from pm4py.algo.transformation.log_to_features.variants import event_based
 from pm4py.algo.transformation.log_to_target.variants import next_activity
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, TimeDistributed
+from pm4py.objects.log.obj import EventLog
 
 
 def execute_script():
-    log: "EventLog" = pm4py.read_xes("../tests/input_data/running-example.xes", return_legacy_log_object=True)
+    log: EventLog = pm4py.read_xes("../tests/input_data/running-example.xes", return_legacy_log_object=True)
 
-    feature_names: "list[str]"
+    feature_names: list[str]
     data, feature_names = event_based.apply(log)
-    target: "list[list[list[int]]]"
-    classes: "list[str]"
+    target: list[list[list[int]]]
+    classes: list[str]
     target, classes = next_activity.apply(log, parameters={"enable_padding": True})
     target = np.array(target)
 

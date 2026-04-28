@@ -1,9 +1,11 @@
 import pm4py
 from pm4py.algo.conformance.tokenreplay import algorithm as token_based_replay
+import pandas
+from pm4py.objects.petri_net.obj import Marking, PetriNet
 
 
 def get_tbr_statistics(log, net, im, fm):
-    tbr_parameters: "dict[str, bool]" = {"enable_pltr_fitness": True, "show_progress_bar": False}
+    tbr_parameters: dict[str, bool] = {"enable_pltr_fitness": True, "show_progress_bar": False}
 
     replayed_traces, place_fitness_per_trace, transition_fitness_per_trace, notexisting_activities_in_model = token_based_replay.apply(log, net, im, fm, parameters=tbr_parameters)
     place_diagnostics = {place: {"m": 0, "r": 0, "c": 0, "p": 0}  for place in place_fitness_per_trace}
@@ -24,11 +26,11 @@ def get_tbr_statistics(log, net, im, fm):
 
 
 def execute_script():
-    log: "pandas.DataFrame" = pm4py.read_xes("../tests/input_data/running-example.xes")
+    log: pandas.DataFrame = pm4py.read_xes("../tests/input_data/running-example.xes")
 
-    net: "PetriNet"
-    im: "Marking"
-    fm: "Marking"
+    net: PetriNet
+    im: Marking
+    fm: Marking
     net, im, fm = pm4py.discover_petri_net_inductive(log)
 
     ocpn = {}

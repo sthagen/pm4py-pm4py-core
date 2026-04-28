@@ -3,14 +3,15 @@ from pm4py.algo.transformation.log_to_features import algorithm
 import random
 import numpy as np
 from pm4py.util import ml_utils
+from pm4py.objects.log.obj import EventLog
 
 
 def execute_script():
-    log: "EventLog" = pm4py.read_xes("../tests/input_data/receipt.xes", return_legacy_log_object=True)
+    log: EventLog = pm4py.read_xes("../tests/input_data/receipt.xes", return_legacy_log_object=True)
 
     # train a predictor of the throughput timebased on the attributes at the case level (known at the beginning of the case)
 
-    feature_names: "list[str]"
+    feature_names: list[str]
     data, feature_names = algorithm.apply(log,
                                           parameters={"str_tr_attr": ["channel", "group", "responsible", "department"],
                                                       "str_ev_attr": [], "num_tr_attr": [], "num_ev_attr": [],

@@ -3,14 +3,16 @@ from pm4py.algo.decision_mining import algorithm as decision_mining
 from examples import examples_conf
 import os
 import importlib.util
+import pandas
+from pm4py.objects.petri_net.obj import Marking, PetriNet
 
 
 def execute_script():
-    log_path: "str" = os.path.join("..", "tests", "input_data", "roadtraffic100traces.xes")
-    log: "pandas.DataFrame" = pm4py.read_xes(log_path)
-    net: "PetriNet"
-    im: "Marking"
-    fm: "Marking"
+    log_path: str = os.path.join("..", "tests", "input_data", "roadtraffic100traces.xes")
+    log: pandas.DataFrame = pm4py.read_xes(log_path)
+    net: PetriNet
+    im: Marking
+    fm: Marking
     net, im, fm = pm4py.discover_petri_net_inductive(log)
     net, im, fm = decision_mining.create_data_petri_nets_with_decisions(log, net, im, fm)
 

@@ -1,9 +1,10 @@
 import pm4py
+import pandas
 
 
 def execute_script():
-    log: "pandas.DataFrame" = pm4py.read_xes("../tests/input_data/receipt.xes")
-    fea_df: "pandas.DataFrame" = pm4py.extract_features_dataframe(log, include_case_id=True)
+    log: pandas.DataFrame = pm4py.read_xes("../tests/input_data/receipt.xes")
+    fea_df: pandas.DataFrame = pm4py.extract_features_dataframe(log, include_case_id=True)
     # sets the case ID as index for the dataframe, so a row for a specific case
     # can be retrieved
     fea_df = fea_df.set_index("case:concept:name")

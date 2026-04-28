@@ -1,13 +1,14 @@
 import pm4py
 from examples import examples_conf
 import importlib.util
+import pandas
 
 
 def execute_script():
-    log: "pandas.DataFrame" = pm4py.read_xes("../tests/input_data/receipt.xes")
-    dfg: "dict"
-    start_act: "dict"
-    end_act: "dict"
+    log: pandas.DataFrame = pm4py.read_xes("../tests/input_data/receipt.xes")
+    dfg: dict
+    start_act: dict
+    end_act: dict
     dfg, start_act, end_act = pm4py.discover_dfg(log)
     # keep the specified amount of activities
     dfg, start_act, end_act = pm4py.filter_dfg_activities_percentage(dfg, start_act, end_act, percentage=0.3)

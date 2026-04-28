@@ -5,13 +5,16 @@ from pm4py.objects.log.importer.xes import importer as xes_importer
 from pm4py.algo.conformance.alignments.process_tree import algorithm as align_approx
 from pm4py.objects.petri_net.utils.align_utils import pretty_print_alignments
 from examples import examples_conf
+from pm4py.objects.log.obj import EventLog
+from pm4py.objects.process_tree.obj import ProcessTree
+from typing import Any
 
 
 def execute_script():
-    log_path: "str" = os.path.join("..", "tests", "input_data", "running-example.xes")
+    log_path: str = os.path.join("..", "tests", "input_data", "running-example.xes")
 
-    log: "EventLog" = xes_importer.apply(log_path)
-    tree: "ProcessTree" = inductive.apply(log)
+    log: EventLog = xes_importer.apply(log_path)
+    tree: ProcessTree = inductive.apply(log)
 
     if importlib.util.find_spec("graphviz"):
         from pm4py.visualization.process_tree import visualizer as pt_vis
@@ -19,7 +22,7 @@ def execute_script():
         pt_vis.view(gviz)
 
     print("start calculate approximated alignments")
-    approx_alignments: "dict[str, Any] | list[dict[str, Any]]" = align_approx.apply(log, tree)
+    approx_alignments: dict[str, Any] | list[dict[str, Any]] = align_approx.apply(log, tree)
     pretty_print_alignments(approx_alignments)
 
 

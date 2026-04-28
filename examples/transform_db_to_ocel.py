@@ -4,6 +4,7 @@ from pm4py.objects.ocel.obj import OCEL
 from pm4py.util import pandas_utils, constants
 from pm4py.util.dt_parsing.variants import strpfromiso
 import os
+import pandas
 
 
 def extract_invoices(cursor):
@@ -47,7 +48,7 @@ def extract_employee(cursor):
     employee = {}
 
     for res in cursor.fetchall():
-        dct: "dict[str, str]" = {"ocel:oid": "emp"+str(res[0]), "ocel:type": "employee", "EmployeeId": res[0], "LastName": res[1], "FirstName": res[2], "Title": res[3], "ReportsTo": res[4], "BirthDate": strpfromiso.apply(res[5]), "HireDate": strpfromiso.apply(res[6]), "Address": res[7], "City": res[8], "State": res[9], "Country": res[10], "PostalCode": res[11], "Phone": res[12], "Fax": res[13], "Email": res[14]}
+        dct: dict[str, str] = {"ocel:oid": "emp"+str(res[0]), "ocel:type": "employee", "EmployeeId": res[0], "LastName": res[1], "FirstName": res[2], "Title": res[3], "ReportsTo": res[4], "BirthDate": strpfromiso.apply(res[5]), "HireDate": strpfromiso.apply(res[6]), "Address": res[7], "City": res[8], "State": res[9], "Country": res[10], "PostalCode": res[11], "Phone": res[12], "Fax": res[13], "Email": res[14]}
 
         employee[res[0]] = dct
 
@@ -84,24 +85,24 @@ def execute_script():
         inv_line_map[v["InvoiceId"]].append(v["InvoiceLineId"])
 
     for i in invoices:
-        event: "dict[str, str]" = {"ocel:eid": "evinv"+str(i), "ocel:activity": "Create Invoice", "ocel:timestamp": invoices[i]["InvoiceDate"]}
+        event: dict[str, str] = {"ocel:eid": "evinv"+str(i), "ocel:activity": "Create Invoice", "ocel:timestamp": invoices[i]["InvoiceDate"]}
         events.append(event)
 
-        relation_inv: "dict[str, str]" = {"ocel:eid": "evinv"+str(i), "ocel:activity": "Create Invoice", "ocel:timestamp": invoices[i]["InvoiceDate"], "ocel:type": "invoice", "ocel:oid": "inv"+str(i), "ocel:qualifier": ""}
+        relation_inv: dict[str, str] = {"ocel:eid": "evinv"+str(i), "ocel:activity": "Create Invoice", "ocel:timestamp": invoices[i]["InvoiceDate"], "ocel:type": "invoice", "ocel:oid": "inv"+str(i), "ocel:qualifier": ""}
         relations.append(relation_inv)
 
-        relation_cust: "dict[str, str]" = {"ocel:eid": "evinv"+str(i), "ocel:activity": "Create Invoice", "ocel:timestamp": invoices[i]["InvoiceDate"], "ocel:type": "customer", "ocel:oid": "cust"+str(i), "ocel:qualifier": ""}
+        relation_cust: dict[str, str] = {"ocel:eid": "evinv"+str(i), "ocel:activity": "Create Invoice", "ocel:timestamp": invoices[i]["InvoiceDate"], "ocel:type": "customer", "ocel:oid": "cust"+str(i), "ocel:qualifier": ""}
         relations.append(relation_cust)
 
         for v in inv_line_map[i]:
-            relation_line: "dict[str, str]" = {"ocel:eid": "evinv"+str(i), "ocel:activity": "Create Invoice", "ocel:timestamp": invoices[i]["InvoiceDate"], "ocel:type": "invoiceline", "ocel:oid": "invline"+str(v), "ocel:qualifier": ""}
+            relation_line: dict[str, str] = {"ocel:eid": "evinv"+str(i), "ocel:activity": "Create Invoice", "ocel:timestamp": invoices[i]["InvoiceDate"], "ocel:type": "invoiceline", "ocel:oid": "invline"+str(v), "ocel:qualifier": ""}
             relations.append(relation_line)
 
     for e in employee:
         event = {"ocel:eid": "evempbirth"+str(e), "ocel:activity": "Employee Birth", "ocel:timestamp": employee[e]["BirthDate"]}
         events.append(event)
 
-        relation: "dict[str, str]" = {"ocel:eid": "evempbirth"+str(e), "ocel:activity": "Employee Birth", "ocel:timestamp": employee[e]["BirthDate"], "ocel:type": "employee", "ocel:oid": "emp"+str(e), "ocel:qualifier": ""}
+        relation: dict[str, str] = {"ocel:eid": "evempbirth"+str(e), "ocel:activity": "Employee Birth", "ocel:timestamp": employee[e]["BirthDate"], "ocel:type": "employee", "ocel:oid": "emp"+str(e), "ocel:qualifier": ""}
         relations.append(relation)
 
     for e in employee:
@@ -111,14 +112,14 @@ def execute_script():
         relation = {"ocel:eid": "evemphired"+str(e), "ocel:activity": "Employee Hired", "ocel:timestamp": employee[e]["HireDate"], "ocel:type": "employee", "ocel:oid": "emp"+str(e), "ocel:qualifier": ""}
         relations.append(relation)
 
-    events: "pandas.DataFrame" = pandas_utils.instantiate_dataframe(events)
-    objects: "pandas.DataFrame" = pandas_utils.instantiate_dataframe(objects)
-    relations: "pandas.DataFrame" = pandas_utils.instantiate_dataframe(relations)
+    events: pandas.DataFrame = pandas_utils.instantiate_dataframe(events)
+    objects: pandas.DataFrame = pandas_utils.instantiate_dataframe(objects)
+    relations: pandas.DataFrame = pandas_utils.instantiate_dataframe(relations)
 
     events = events.sort_values("ocel:timestamp")
     relations = relations.sort_values("ocel:timestamp")
 
-    ocel: "OCEL" = OCEL()
+    ocel: OCEL = OCEL()
     ocel.events = events
     ocel.objects = objects
     ocel.relations = relations

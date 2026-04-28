@@ -1,19 +1,20 @@
 import pm4py
 from pm4py.objects.petri_net.utils import petri_utils
 from examples import examples_conf
+from pm4py.objects.petri_net.obj import Marking, PetriNet
 
 
 
 def execute_script():
-    net: "PetriNet" = pm4py.PetriNet()
-    im: "Marking" = pm4py.Marking()
-    fm: "Marking" = pm4py.Marking()
-    p1: "PetriNet.Place" = pm4py.PetriNet.Place("p1")
-    p2: "PetriNet.Place" = pm4py.PetriNet.Place("p2")
-    p3: "PetriNet.Place" = pm4py.PetriNet.Place("p3")
+    net: PetriNet = pm4py.PetriNet()
+    im: Marking = pm4py.Marking()
+    fm: Marking = pm4py.Marking()
+    p1: PetriNet.Place = pm4py.PetriNet.Place("p1")
+    p2: PetriNet.Place = pm4py.PetriNet.Place("p2")
+    p3: PetriNet.Place = pm4py.PetriNet.Place("p3")
 
-    A: "PetriNet.Transition" = pm4py.PetriNet.Transition("A", "A")
-    B: "PetriNet.Transition" = pm4py.PetriNet.Transition("B", "B")
+    A: PetriNet.Transition = pm4py.PetriNet.Transition("A", "A")
+    B: PetriNet.Transition = pm4py.PetriNet.Transition("B", "B")
     net.places.add(p1)
     net.places.add(p2)
     net.places.add(p3)

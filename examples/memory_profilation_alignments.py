@@ -5,14 +5,17 @@ import memory_profiler
 import time
 import os
 from pm4py.objects.conversion.process_tree import converter as process_tree_converter
+from pm4py.objects.log.obj import EventLog
+from pm4py.objects.petri_net.obj import Marking, PetriNet
+from pm4py.objects.process_tree.obj import ProcessTree
 
 
 class Shared:
-    log: "EventLog" = importer.apply(os.path.join("..", "tests", "input_data", "receipt.xes"))
-    process_tree: "ProcessTree" = inductive_miner.apply(log)
-    net: "PetriNet"
-    im: "Marking"
-    fm: "Marking"
+    log: EventLog = importer.apply(os.path.join("..", "tests", "input_data", "receipt.xes"))
+    process_tree: ProcessTree = inductive_miner.apply(log)
+    net: PetriNet
+    im: Marking
+    fm: Marking
     net, im, fm = process_tree_converter.apply(process_tree)
 
 
@@ -21,18 +24,18 @@ def nothing():
 
 
 def f():
-    aa: "float" = time.time()
+    aa: float = time.time()
     aligned_traces = alignments.apply(Shared.log, Shared.net, Shared.im, Shared.fm,
                                       variant=alignments.Variants.VERSION_DIJKSTRA_LESS_MEMORY)
-    bb: "float" = time.time()
+    bb: float = time.time()
     print(bb - aa)
 
 
 def g():
-    aa: "float" = time.time()
+    aa: float = time.time()
     aligned_traces = alignments.apply(Shared.log, Shared.net, Shared.im, Shared.fm,
                                       variant=alignments.Variants.VERSION_DIJKSTRA_NO_HEURISTICS)
-    bb: "float" = time.time()
+    bb: float = time.time()
     print(bb - aa)
 
 

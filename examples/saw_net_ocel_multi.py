@@ -4,50 +4,52 @@ from pm4py.objects.petri_net.saw_net.obj import StochasticArcWeightNet
 from uuid import uuid4
 import importlib.util
 import os
+from pm4py.objects.petri_net.obj import PetriNet
+from pm4py.objects.petri_net.stochastic.obj import StochasticPetriNet
 
 
 def execute_script():
-    neto: "StochasticArcWeightNet" = StochasticArcWeightNet()
-    imo: "Marking" = Marking()
-    fmo: "Marking" = Marking()
-    sourceo: "PetriNet.Place" = StochasticArcWeightNet.Place("sourceo")
-    targeto: "PetriNet.Place" = StochasticArcWeightNet.Place("targeto")
+    neto: StochasticArcWeightNet = StochasticArcWeightNet()
+    imo: Marking = Marking()
+    fmo: Marking = Marking()
+    sourceo: PetriNet.Place = StochasticArcWeightNet.Place("sourceo")
+    targeto: PetriNet.Place = StochasticArcWeightNet.Place("targeto")
     # imo[sourceo] = 1
     # fmo[targeto] = 1
     neto.places.add(sourceo)
     neto.places.add(targeto)
-    create_order_o: "StochasticPetriNet.Transition" = StochasticArcWeightNet.Transition(str(uuid4()), "Create Order")
-    send_package_o: "StochasticPetriNet.Transition" = StochasticArcWeightNet.Transition(str(uuid4()), "Send Package")
-    pay_order_o: "StochasticPetriNet.Transition" = StochasticArcWeightNet.Transition(str(uuid4()), "Pay Order")
-    item_issue_o: "StochasticPetriNet.Transition" = StochasticArcWeightNet.Transition(str(uuid4()), "Item Issue")
-    item_fixed_o: "StochasticPetriNet.Transition" = StochasticArcWeightNet.Transition(str(uuid4()), "Item Fixed")
-    skip_o: "StochasticPetriNet.Transition" = StochasticArcWeightNet.Transition(str(uuid4()), None)
+    create_order_o: StochasticPetriNet.Transition = StochasticArcWeightNet.Transition(str(uuid4()), "Create Order")
+    send_package_o: StochasticPetriNet.Transition = StochasticArcWeightNet.Transition(str(uuid4()), "Send Package")
+    pay_order_o: StochasticPetriNet.Transition = StochasticArcWeightNet.Transition(str(uuid4()), "Pay Order")
+    item_issue_o: StochasticPetriNet.Transition = StochasticArcWeightNet.Transition(str(uuid4()), "Item Issue")
+    item_fixed_o: StochasticPetriNet.Transition = StochasticArcWeightNet.Transition(str(uuid4()), "Item Fixed")
+    skip_o: StochasticPetriNet.Transition = StochasticArcWeightNet.Transition(str(uuid4()), None)
     neto.transitions.add(create_order_o)
     neto.transitions.add(send_package_o)
     neto.transitions.add(pay_order_o)
     neto.transitions.add(item_issue_o)
     neto.transitions.add(item_fixed_o)
     neto.transitions.add(skip_o)
-    p1o: "PetriNet.Place" = StochasticArcWeightNet.Place("p1o")
-    p2o: "PetriNet.Place" = StochasticArcWeightNet.Place("p2o")
-    p3o: "PetriNet.Place" = StochasticArcWeightNet.Place("p3o")
-    p4o: "PetriNet.Place" = StochasticArcWeightNet.Place("p4o")
+    p1o: PetriNet.Place = StochasticArcWeightNet.Place("p1o")
+    p2o: PetriNet.Place = StochasticArcWeightNet.Place("p2o")
+    p3o: PetriNet.Place = StochasticArcWeightNet.Place("p3o")
+    p4o: PetriNet.Place = StochasticArcWeightNet.Place("p4o")
     neto.places.add(p1o)
     neto.places.add(p2o)
     neto.places.add(p3o)
     neto.places.add(p4o)
-    arc1o: "PetriNet.Arc" = petri_utils.add_arc_from_to(sourceo, create_order_o, neto, type="stochastic_arc")
-    arc2o: "PetriNet.Arc" = petri_utils.add_arc_from_to(create_order_o, p1o, neto, type="stochastic_arc")
-    arc3o: "PetriNet.Arc" = petri_utils.add_arc_from_to(p1o, item_issue_o, neto, type="stochastic_arc")
-    arc4o: "PetriNet.Arc" = petri_utils.add_arc_from_to(p1o, skip_o, neto, type="stochastic_arc")
-    arc5o: "PetriNet.Arc" = petri_utils.add_arc_from_to(item_issue_o, p2o, neto, type="stochastic_arc")
-    arc6o: "PetriNet.Arc" = petri_utils.add_arc_from_to(p2o, item_fixed_o, neto, type="stochastic_arc")
-    arc7o: "PetriNet.Arc" = petri_utils.add_arc_from_to(item_fixed_o, p3o, neto, type="stochastic_arc")
-    arc8o: "PetriNet.Arc" = petri_utils.add_arc_from_to(p3o, send_package_o, neto, type="stochastic_arc")
-    arc9o: "PetriNet.Arc" = petri_utils.add_arc_from_to(skip_o, p3o, neto, type="stochastic_arc")
-    arc10o: "PetriNet.Arc" = petri_utils.add_arc_from_to(send_package_o, p4o, neto, type="stochastic_arc")
-    arc11o: "PetriNet.Arc" = petri_utils.add_arc_from_to(p4o, pay_order_o, neto, type="stochastic_arc")
-    arc12o: "PetriNet.Arc" = petri_utils.add_arc_from_to(pay_order_o, targeto, neto, type="stochastic_arc")
+    arc1o: PetriNet.Arc = petri_utils.add_arc_from_to(sourceo, create_order_o, neto, type="stochastic_arc")
+    arc2o: PetriNet.Arc = petri_utils.add_arc_from_to(create_order_o, p1o, neto, type="stochastic_arc")
+    arc3o: PetriNet.Arc = petri_utils.add_arc_from_to(p1o, item_issue_o, neto, type="stochastic_arc")
+    arc4o: PetriNet.Arc = petri_utils.add_arc_from_to(p1o, skip_o, neto, type="stochastic_arc")
+    arc5o: PetriNet.Arc = petri_utils.add_arc_from_to(item_issue_o, p2o, neto, type="stochastic_arc")
+    arc6o: PetriNet.Arc = petri_utils.add_arc_from_to(p2o, item_fixed_o, neto, type="stochastic_arc")
+    arc7o: PetriNet.Arc = petri_utils.add_arc_from_to(item_fixed_o, p3o, neto, type="stochastic_arc")
+    arc8o: PetriNet.Arc = petri_utils.add_arc_from_to(p3o, send_package_o, neto, type="stochastic_arc")
+    arc9o: PetriNet.Arc = petri_utils.add_arc_from_to(skip_o, p3o, neto, type="stochastic_arc")
+    arc10o: PetriNet.Arc = petri_utils.add_arc_from_to(send_package_o, p4o, neto, type="stochastic_arc")
+    arc11o: PetriNet.Arc = petri_utils.add_arc_from_to(p4o, pay_order_o, neto, type="stochastic_arc")
+    arc12o: PetriNet.Arc = petri_utils.add_arc_from_to(pay_order_o, targeto, neto, type="stochastic_arc")
     arc1o.weight = {1: 3}
     arc2o.weight = {1: 3}
     arc3o.weight = {1: 1}
@@ -60,33 +62,33 @@ def execute_script():
     arc10o.weight = {1: 3}
     arc11o.weight = {1: 3}
     arc12o.weight = {1: 3}
-    sourcee: "PetriNet.Place" = StochasticArcWeightNet.Place("source")
-    targete: "PetriNet.Place" = StochasticArcWeightNet.Place("targete")
+    sourcee: PetriNet.Place = StochasticArcWeightNet.Place("source")
+    targete: PetriNet.Place = StochasticArcWeightNet.Place("targete")
     neto.places.add(sourcee)
     neto.places.add(targete)
     #imo[sourcee] = 3
-    create_order_e: "StochasticPetriNet.Transition" = create_order_o
-    send_package_e: "StochasticPetriNet.Transition" = send_package_o
-    item_issue_e: "StochasticPetriNet.Transition" = item_issue_o
-    item_fixed_e: "StochasticPetriNet.Transition" = item_fixed_o
-    skip_e: "StochasticPetriNet.Transition" = StochasticArcWeightNet.Transition(str(uuid4()), None)
+    create_order_e: StochasticPetriNet.Transition = create_order_o
+    send_package_e: StochasticPetriNet.Transition = send_package_o
+    item_issue_e: StochasticPetriNet.Transition = item_issue_o
+    item_fixed_e: StochasticPetriNet.Transition = item_fixed_o
+    skip_e: StochasticPetriNet.Transition = StochasticArcWeightNet.Transition(str(uuid4()), None)
     neto.transitions.add(skip_e)
-    p1e: "PetriNet.Place" = StochasticArcWeightNet.Place("p1e")
-    p2e: "PetriNet.Place" = StochasticArcWeightNet.Place("p2e")
-    p3e: "PetriNet.Place" = StochasticArcWeightNet.Place("p3e")
+    p1e: PetriNet.Place = StochasticArcWeightNet.Place("p1e")
+    p2e: PetriNet.Place = StochasticArcWeightNet.Place("p2e")
+    p3e: PetriNet.Place = StochasticArcWeightNet.Place("p3e")
     neto.places.add(p1e)
     neto.places.add(p2e)
     neto.places.add(p3e)
-    arc1: "PetriNet.Arc" = petri_utils.add_arc_from_to(sourcee, create_order_e, neto, type="stochastic_arc")
-    arc2: "PetriNet.Arc" = petri_utils.add_arc_from_to(create_order_e, p1e, neto, type="stochastic_arc")
-    arc3: "PetriNet.Arc" = petri_utils.add_arc_from_to(p1e, skip_e, neto, type="stochastic_arc")
-    arc4: "PetriNet.Arc" = petri_utils.add_arc_from_to(p1e, item_issue_e, neto, type="stochastic_arc")
-    arc5: "PetriNet.Arc" = petri_utils.add_arc_from_to(item_issue_e, p2e, neto, type="stochastic_arc")
-    arc6: "PetriNet.Arc" = petri_utils.add_arc_from_to(p2e, item_fixed_e, neto, type="stochastic_arc")
-    arc7: "PetriNet.Arc" = petri_utils.add_arc_from_to(item_fixed_e, p3e, neto, type="stochastic_arc")
-    arc8: "PetriNet.Arc" = petri_utils.add_arc_from_to(skip_e, p3e, neto, type="stochastic_arc")
-    arc9: "PetriNet.Arc" = petri_utils.add_arc_from_to(p3e, send_package_e, neto, type="stochastic_arc")
-    arc10: "PetriNet.Arc" = petri_utils.add_arc_from_to(send_package_e, targete, neto, type="stochastic_arc")
+    arc1: PetriNet.Arc = petri_utils.add_arc_from_to(sourcee, create_order_e, neto, type="stochastic_arc")
+    arc2: PetriNet.Arc = petri_utils.add_arc_from_to(create_order_e, p1e, neto, type="stochastic_arc")
+    arc3: PetriNet.Arc = petri_utils.add_arc_from_to(p1e, skip_e, neto, type="stochastic_arc")
+    arc4: PetriNet.Arc = petri_utils.add_arc_from_to(p1e, item_issue_e, neto, type="stochastic_arc")
+    arc5: PetriNet.Arc = petri_utils.add_arc_from_to(item_issue_e, p2e, neto, type="stochastic_arc")
+    arc6: PetriNet.Arc = petri_utils.add_arc_from_to(p2e, item_fixed_e, neto, type="stochastic_arc")
+    arc7: PetriNet.Arc = petri_utils.add_arc_from_to(item_fixed_e, p3e, neto, type="stochastic_arc")
+    arc8: PetriNet.Arc = petri_utils.add_arc_from_to(skip_e, p3e, neto, type="stochastic_arc")
+    arc9: PetriNet.Arc = petri_utils.add_arc_from_to(p3e, send_package_e, neto, type="stochastic_arc")
+    arc10: PetriNet.Arc = petri_utils.add_arc_from_to(send_package_e, targete, neto, type="stochastic_arc")
     arc1.weight = {2: 1, 3: 2}
     arc2.weight = {2: 1, 3: 2}
     arc3.weight = {2: 2, 3: 1}

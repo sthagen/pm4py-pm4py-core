@@ -1,14 +1,16 @@
 import pm4py
 from pm4py.algo.conformance.alignments.petri_net.variants import generator_dijkstra_less_memory
 import os
+from pm4py.objects.log.obj import EventLog
+from pm4py.objects.petri_net.obj import Marking, PetriNet
 
 
 def execute_script():
-    log: "EventLog" = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"), return_legacy_log_object=True)
+    log: EventLog = pm4py.read_xes(os.path.join("..", "tests", "input_data", "running-example.xes"), return_legacy_log_object=True)
 
-    net: "PetriNet"
-    im: "Marking"
-    fm: "Marking"
+    net: PetriNet
+    im: Marking
+    fm: Marking
     net, im, fm = pm4py.discover_petri_net_inductive(log)
 
     for trace in log:

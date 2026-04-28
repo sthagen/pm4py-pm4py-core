@@ -3,11 +3,13 @@ from pm4py.algo.discovery.ocel.saw_nets import algorithm as saw_nets_disc
 from pm4py.objects.petri_net.obj import Marking
 from examples import examples_conf
 import importlib.util
+from pm4py.objects.ocel.obj import OCEL
+from typing import Any
 
 
 def execute_script():
-    ocel: "OCEL" = pm4py.read_ocel("../tests/input_data/ocel/ocel_order_simulated.csv")
-    res: "dict[str, Any]" = saw_nets_disc.apply(ocel)
+    ocel: OCEL = pm4py.read_ocel("../tests/input_data/ocel/ocel_order_simulated.csv")
+    res: dict[str, Any] = saw_nets_disc.apply(ocel)
 
     if importlib.util.find_spec("graphviz"):
         for ot in res["ot_saw_nets"]:

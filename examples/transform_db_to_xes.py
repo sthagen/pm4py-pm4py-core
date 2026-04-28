@@ -53,13 +53,13 @@ def execute_script():
     invoice_lines = extract_invoice_lines(cursor)
     customers = extract_customers(cursor)
 
-    log: "EventLog" = EventLog()
+    log: EventLog = EventLog()
     for customer in customers:
-        trace: "Trace" = Trace()
+        trace: Trace = Trace()
         trace.attributes.update(customers[customer])
         log.append(trace)
         for invoice in invoices[customer]:
-            event: "Event" = Event()
+            event: Event = Event()
             for k, v in invoice.items():
                 event[k] = v
             event["time:timestamp"] = event["InvoiceDate"]
