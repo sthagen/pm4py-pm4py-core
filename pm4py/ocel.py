@@ -842,3 +842,187 @@ def cluster_equivalent_ocel(
             ret[descr] = []
         ret[descr].append(oc)
     return ret
+
+
+def ocel_drill_down(
+    ocel: OCEL, object_type: str, object_attribute: str
+) -> OCEL:
+    """
+    Drill-down OLAP operation on an object-centric event log: splits a given
+    object type into finer-grained tuple-style sub-types based on the values
+    of a given object attribute.
+
+    For every object whose ``ocel:type`` equals ``object_type`` and whose
+    ``object_attribute`` value is defined, the type is rewritten to
+    ``"(object_type, value)"``. Objects with an undefined attribute value
+    keep their original type. The operation is information-preserving and
+    reversible via :func:`ocel_roll_up`.
+
+    Reference: Khayatbashi, Miri, Jalali, "Advancing Object-Centric Process
+    Mining with Multi-Dimensional Data Operations", CAiSE Forum 2025
+    (arXiv:2412.00393).
+
+    :param ocel: Object-centric event log.
+    :type ocel: OCEL
+    :param object_type: Object type to split.
+    :type object_type: str
+    :param object_attribute: Object attribute column whose values drive
+        the split.
+    :type object_attribute: str
+    :return: A new OCEL with the drilled-down object type.
+    :rtype: OCEL
+
+    .. code-block:: python3
+
+        import pm4py
+
+        drilled = pm4py.ocel_drill_down(ocel, "Test", "test_type")
+    """
+    from pm4py.algo.transformation.ocel.olap.drill_down import (
+        algorithm as drill_down_algorithm,
+    )
+    from pm4py.algo.transformation.ocel.olap.drill_down.variants import (
+        classic as drill_down_classic,
+    )
+
+    parameters = {
+        drill_down_classic.Parameters.OBJECT_TYPE: object_type,
+        drill_down_classic.Parameters.OBJECT_ATTRIBUTE: object_attribute,
+    }
+    return drill_down_algorithm.apply(ocel, parameters=parameters)
+
+
+def ocel_roll_up(
+    ocel: OCEL, object_type: str, object_attribute: Optional[str] = None
+) -> OCEL:
+    """
+    Roll-up OLAP operation on an object-centric event log: collapses
+    tuple-style sub-types of the given parent ``object_type`` back to the
+    parent type. Inverse of :func:`ocel_drill_down`.
+
+    Reference: Khayatbashi, Miri, Jalali, "Advancing Object-Centric Process
+    Mining with Multi-Dimensional Data Operations", CAiSE Forum 2025
+    (arXiv:2412.00393).
+
+    :param ocel: Object-centric event log.
+    :type ocel: OCEL
+    :param object_type: Parent object type to merge sub-types back to.
+    :type object_type: str
+    :param object_attribute: Optional, accepted for API symmetry with
+        :func:`ocel_drill_down`. When provided it must be a column of
+        ``ocel.objects``, but it is not semantically required because the
+        tuple type value already encodes the split.
+    :type object_attribute: Optional[str]
+    :return: A new OCEL with the rolled-up object type.
+    :rtype: OCEL
+
+    .. code-block:: python3
+
+        import pm4py
+
+        rolled = pm4py.ocel_roll_up(drilled, "Test")
+    """
+    from pm4py.algo.transformation.ocel.olap.roll_up import (
+        algorithm as roll_up_algorithm,
+    )
+    from pm4py.algo.transformation.ocel.olap.roll_up.variants import (
+        classic as roll_up_classic,
+    )
+
+    parameters = {
+        roll_up_classic.Parameters.OBJECT_TYPE: object_type,
+        roll_up_classic.Parameters.OBJECT_ATTRIBUTE: object_attribute,
+    }
+    return roll_up_algorithm.apply(ocel, parameters=parameters)
+
+
+def ocel_unfold(
+    ocel: OCEL,
+    event_type: str,
+    object_type: str,
+    qualifiers: Optional[Collection[Any]] = None,
+) -> OCEL:
+    """
+    Unfold OLAP operation on an object-centric event log: splits an event
+    type into a tuple-style sub-type keyed by a related object type,
+    optionally restricted to a set of E2O qualifiers.
+
+    Every event of type ``event_type`` that has at least one matching
+    E2O relation to an object of type ``object_type`` has its activity
+    rewritten to ``"(event_type, object_type)"`` in both ``ocel.events``
+    and ``ocel.relations``. Reversible via :func:`ocel_fold`.
+
+    Reference: Khayatbashi, Miri, Jalali, "Advancing Object-Centric Process
+    Mining with Multi-Dimensional Data Operations", CAiSE Forum 2025
+    (arXiv:2412.00393).
+
+    :param ocel: Object-centric event log.
+    :type ocel: OCEL
+    :param event_type: Event type/activity to unfold.
+    :type event_type: str
+    :param object_type: Related object type to unfold over.
+    :type object_type: str
+    :param qualifiers: Optional collection of qualifier values to filter
+        the driving E2O relations. ``None`` means all qualifiers.
+    :type qualifiers: Optional[Collection[Any]]
+    :return: A new OCEL with the unfolded event type.
+    :rtype: OCEL
+
+    .. code-block:: python3
+
+        import pm4py
+
+        unfolded = pm4py.ocel_unfold(ocel, "order test", "(Test, ECG)")
+    """
+    from pm4py.algo.transformation.ocel.olap.unfold import (
+        algorithm as unfold_algorithm,
+    )
+    from pm4py.algo.transformation.ocel.olap.unfold.variants import (
+        classic as unfold_classic,
+    )
+
+    parameters = {
+        unfold_classic.Parameters.EVENT_TYPE: event_type,
+        unfold_classic.Parameters.OBJECT_TYPE: object_type,
+        unfold_classic.Parameters.QUALIFIERS: qualifiers,
+    }
+    return unfold_algorithm.apply(ocel, parameters=parameters)
+
+
+def ocel_fold(ocel: OCEL, event_type: str, object_type: str) -> OCEL:
+    """
+    Fold OLAP operation on an object-centric event log: collapses the
+    unfolded activity ``"(event_type, object_type)"`` back to
+    ``event_type``. Inverse of :func:`ocel_unfold`.
+
+    Reference: Khayatbashi, Miri, Jalali, "Advancing Object-Centric Process
+    Mining with Multi-Dimensional Data Operations", CAiSE Forum 2025
+    (arXiv:2412.00393).
+
+    :param ocel: Object-centric event log.
+    :type ocel: OCEL
+    :param event_type: Parent event type to merge back to.
+    :type event_type: str
+    :param object_type: Object type used during the matching unfold.
+    :type object_type: str
+    :return: A new OCEL with the folded event type.
+    :rtype: OCEL
+
+    .. code-block:: python3
+
+        import pm4py
+
+        folded = pm4py.ocel_fold(unfolded, "order test", "(Test, ECG)")
+    """
+    from pm4py.algo.transformation.ocel.olap.fold import (
+        algorithm as fold_algorithm,
+    )
+    from pm4py.algo.transformation.ocel.olap.fold.variants import (
+        classic as fold_classic,
+    )
+
+    parameters = {
+        fold_classic.Parameters.EVENT_TYPE: event_type,
+        fold_classic.Parameters.OBJECT_TYPE: object_type,
+    }
+    return fold_algorithm.apply(ocel, parameters=parameters)

@@ -31,7 +31,8 @@ def create(ocpn: Union[Dict[str, Any], OCPetriNet]) -> OCPetriNet:
     """
     Creates an Object-centric Petri net object from its dictionary representation
     specified in pm4py.algo.discovery.ocel.ocpn.variants.classic.
-    Only considers the properties `activities`, `petri_nets`, and `double_arcs_on_activity`.
+    Considers the properties `activities`, `petri_nets`, `double_arcs_on_activity`,
+    and, when available, `object_ids`.
     All other information is ignored.
 
     Parameters
@@ -50,12 +51,20 @@ def create(ocpn: Union[Dict[str, Any], OCPetriNet]) -> OCPetriNet:
     activities = ocpn["activities"]
     petri_nets = ocpn["petri_nets"]
     double_arcs_on_activity = ocpn["double_arcs_on_activity"]
+    object_ids = ocpn.get("object_ids")
 
     places = dict()
     unlabeled_transitions = dict()
     arcs = []
     initial_marking = OCMarking()
     final_marking = OCMarking()
+
+    def _get_marking_counter(ot, multiplicity):
+        if multiplicity <= 0:
+            return Counter()
+        if object_ids is None or ot not in object_ids:
+            return Counter([f"{ot}_{i}" for i in range(multiplicity)])
+        return Counter({obj: multiplicity for obj in object_ids[ot]})
 
     # Labeled transitions
     labeled_transitions = {label: OCPetriNet.Transition(label=label, name=str(uuid.uuid4())) for label in activities}
@@ -104,9 +113,9 @@ def create(ocpn: Union[Dict[str, Any], OCPetriNet]) -> OCPetriNet:
 
         # markings
         for p in im:
-            initial_marking += OCMarking({places[f"{ot}_{p.name}"]: Counter([f"{ot}_{i}" for i in range(im[p])])})
+            initial_marking += OCMarking({places[f"{ot}_{p.name}"]: _get_marking_counter(ot, im[p])})
         for p in fm:
-            final_marking += OCMarking({places[f"{ot}_{p.name}"]: Counter([f"{ot}_{i}" for i in range(fm[p])])})
+            final_marking += OCMarking({places[f"{ot}_{p.name}"]: _get_marking_counter(ot, fm[p])})
 
     # create the OCPetriNet object
     ocpn_obj = OCPetriNet(

@@ -171,6 +171,12 @@ def ocel_enrichment():
     ocel_enrichment.execute_script()
 
 
+def ocel_olap_operations():
+    from examples import ocel_olap_operations
+    print("\n\nocel_olap_operations")
+    ocel_olap_operations.execute_script()
+
+
 def validation_ocel20_xml():
     from examples import validation_ocel20_xml
     print("\n\nvalidation_ocel20_xml")
@@ -1123,6 +1129,7 @@ def main():
         execute_script(ocel_occm_example)
         execute_script(ocel_clustering)
         execute_script(ocel_enrichment)
+        execute_script(ocel_olap_operations)
         execute_script(validation_ocel20_xml)
         execute_script(consecutive_act_case_grouping_filter)
         execute_script(cost_based_dfg)

@@ -2,7 +2,7 @@ import pm4py
 import os
 from pm4py.algo.transformation.log_to_interval_tree import algorithm as log_to_interval_tree
 import pandas
-from intervaltree import IntervalTree
+from pm4py.util.intervaltree import IntervalTree
 
 
 def execute_script():

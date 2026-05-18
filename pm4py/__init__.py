@@ -201,6 +201,10 @@ from pm4py.ocel import (
     ocel_o2o_enrichment,
     ocel_e2o_lifecycle_enrichment,
     cluster_equivalent_ocel,
+    ocel_drill_down,
+    ocel_roll_up,
+    ocel_unfold,
+    ocel_fold,
 )
 from pm4py.vis import (
     view_petri_net,

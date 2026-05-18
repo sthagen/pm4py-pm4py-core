@@ -1,7 +1,7 @@
 import pm4py
 from pm4py.algo.transformation.log_to_interval_tree.variants import open_paths
-from intervaltree import IntervalTree
 from pm4py.objects.log.obj import EventLog
+from pm4py.util.intervaltree import Interval, IntervalTree
 from typing import Any
 
 
@@ -19,11 +19,11 @@ def execute_script():
     for inte in intervals:
         # check how many intervals in the three are open at the start and end point of this interval
         # this leads to the maximum
-        at_start: IntervalTree = interval_tree[inte[0]-epsilon:inte[0]+epsilon]
-        at_end: IntervalTree = interval_tree[inte[1]-epsilon:inte[1]+epsilon]
+        at_start: list[Interval] = interval_tree[inte[0]-epsilon:inte[0]+epsilon]
+        at_end: list[Interval] = interval_tree[inte[1]-epsilon:inte[1]+epsilon]
         if len(at_start) > max_conc_exec:
             max_conc_exec = len(at_start)
-            argmax_conc_exec: tuple[Any, IntervalTree] = (inte[0], at_start)
+            argmax_conc_exec: tuple[Any, list[Interval]] = (inte[0], at_start)
         if len(at_end) > max_conc_exec:
             max_conc_exec = len(at_end)
             argmax_conc_exec = (inte[1], at_end)

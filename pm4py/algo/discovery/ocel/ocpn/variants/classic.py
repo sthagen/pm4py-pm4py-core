@@ -39,6 +39,7 @@ from copy import copy
 
 class Parameters(Enum):
     EVENT_ACTIVITY = ocel_constants.PARAM_EVENT_ACTIVITY
+    OBJECT_ID = ocel_constants.PARAM_OBJECT_ID
     OBJECT_TYPE = ocel_constants.PARAM_OBJECT_TYPE
     INDUCTIVE_MINER_VARIANT = "inductive_miner_variant"
     DOUBLE_ARC_THRESHOLD = "double_arc_threshold"
@@ -63,6 +64,7 @@ def apply(
         Parameters of the algorithm, including:
 
         - Parameters.EVENT_ACTIVITY => the activity attribute to be used
+        - Parameters.OBJECT_ID => the object identifier attribute to be used
         - Parameters.OBJECT_TYPE => the object type attribute to be used
         - Parameters.DOUBLE_ARC_THRESHOLD => the threshold for the attribution of the "double arc", as described in the paper.
         - Parameters.DIAGNOSTICS_WITH_TBR => performs token-based replay and stores the result in the return dict
@@ -87,10 +89,26 @@ def apply(
     diagnostics_with_tbr = exec_utils.get_param_value(
         Parameters.DIAGNOSTICS_WITH_TBR, parameters, False
     )
+    event_activity = exec_utils.get_param_value(
+        Parameters.EVENT_ACTIVITY, parameters, ocel.event_activity
+    )
+    object_id = exec_utils.get_param_value(
+        Parameters.OBJECT_ID, parameters, ocel.object_id_column
+    )
+    object_type = exec_utils.get_param_value(
+        Parameters.OBJECT_TYPE, parameters, ocel.object_type_column
+    )
 
     ocdfg_parameters = copy(parameters)
     ocdfg_parameters["compute_edges_performance"] = False
     ocpn = ocdfg_discovery.apply(ocel, parameters=ocdfg_parameters)
+    activity_event_counts = Counter(ocel.events[event_activity])
+    object_ids = {
+        ot: set(ot_relations[object_id].unique())
+        for ot, ot_relations in ocel.relations.groupby(object_type)
+    }
+    for ot in ocpn["object_types"]:
+        object_ids.setdefault(ot, set())
 
     petri_nets = {}
     double_arcs_on_activity = {}
@@ -116,13 +134,19 @@ def apply(
         is_activity_double = {}
         for act in activities_eo:
             ev_obj_count = Counter([x[0] for x in activities_eo[act]])
-            this_single_amount = 0
+            single_object_events = 0
             for y in ev_obj_count.values():
                 if y == 1:
-                    this_single_amount += 1
-            this_single_amount = this_single_amount / len(ev_obj_count)
+                    single_object_events += 1
 
-            if this_single_amount <= double_arc_threshold:
+            total_activity_events = activity_event_counts[act]
+            score = (
+                single_object_events / total_activity_events
+                if total_activity_events
+                else 0
+            )
+
+            if score < double_arc_threshold:
                 is_activity_double[act] = True
             else:
                 is_activity_double[act] = False
@@ -203,6 +227,7 @@ def apply(
 
     ocpn["petri_nets"] = petri_nets
     ocpn["double_arcs_on_activity"] = double_arcs_on_activity
+    ocpn["object_ids"] = object_ids
     ocpn["tbr_results"] = tbr_results
 
     return ocpn_factory.create(ocpn)
