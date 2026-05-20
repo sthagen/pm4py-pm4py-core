@@ -26,6 +26,7 @@ from enum import Enum
 import json
 from pm4py.util import exec_utils, constants as pm4_constants
 from pm4py.objects.ocel.exporter.util import clean_dataframes
+from pm4py.objects.ocel.util import compression
 
 
 class Parameters(Enum):
@@ -156,6 +157,5 @@ def apply(
 
         json_object["objects"][obj_idx[oid]] = obj
 
-    F = open(target_path, "w", encoding=encoding)
-    json.dump(json_object, F, indent=2)
-    F.close()
+    with compression.open_text(target_path, "wt", encoding=encoding) as F:
+        json.dump(json_object, F, indent=2)

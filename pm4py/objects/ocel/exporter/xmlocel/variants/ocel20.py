@@ -30,6 +30,7 @@ from pm4py.objects.ocel.obj import OCEL
 from pm4py.util import exec_utils, constants as pm4_constants
 from pm4py.objects.ocel.util import ocel_consistency
 from pm4py.objects.ocel.util import attributes_per_type
+from pm4py.objects.ocel.util import compression
 from pm4py.objects.ocel.util import filtering_utils
 from pm4py.objects.ocel.exporter.util import clean_dataframes
 
@@ -242,6 +243,5 @@ def apply(
 
     tree = etree.ElementTree(root)
 
-    F = open(target_path, "wb")
-    tree.write(F, pretty_print=True, xml_declaration=True, encoding=encoding)
-    F.close()
+    with compression.open_binary(target_path, "wb") as F:
+        tree.write(F, pretty_print=True, xml_declaration=True, encoding=encoding)

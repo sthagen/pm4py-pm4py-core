@@ -27,6 +27,7 @@ import pandas as pd
 
 from pm4py.objects.ocel import constants
 from pm4py.objects.ocel.obj import OCEL
+from pm4py.objects.ocel.util import compression
 from pm4py.objects.ocel.util import filtering_utils
 from pm4py.objects.ocel.util import ocel_consistency
 from pm4py.util import (
@@ -234,9 +235,8 @@ def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
         Parameters.ENCODING, parameters, pm4_constants.DEFAULT_ENCODING
     )
 
-    F = open(file_path, "r", encoding=encoding)
-    json_obj = json.load(F)
-    F.close()
+    with compression.open_text(file_path, "rt", encoding=encoding) as F:
+        json_obj = json.load(F)
 
     log = get_base_ocel(json_obj, parameters=parameters)
 

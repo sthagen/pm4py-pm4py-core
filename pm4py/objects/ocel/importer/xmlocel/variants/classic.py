@@ -27,6 +27,7 @@ from lxml import etree, objectify
 
 from pm4py.objects.ocel import constants
 from pm4py.objects.ocel.obj import OCEL
+from pm4py.objects.ocel.util import compression
 from pm4py.objects.ocel.util import filtering_utils
 from pm4py.util import exec_utils, dt_parsing, pandas_utils
 from pm4py.objects.ocel.util import ocel_consistency
@@ -119,9 +120,8 @@ def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
 
     parser = etree.XMLParser(remove_comments=True, encoding=encoding)
 
-    F = open(file_path, "rb")
-    tree = objectify.parse(F, parser=parser)
-    F.close()
+    with compression.open_binary(file_path, "rb") as F:
+        tree = objectify.parse(F, parser=parser)
 
     root = tree.getroot()
 

@@ -29,6 +29,7 @@ from pm4py.objects.ocel import constants
 from pm4py.objects.ocel.exporter.util import clean_dataframes
 from pm4py.objects.ocel.obj import OCEL
 from pm4py.objects.ocel.util import attributes_names
+from pm4py.objects.ocel.util import compression
 from pm4py.objects.ocel.util import related_objects
 from pm4py.objects.ocel.util import filtering_utils
 from pm4py.util import exec_utils, constants as pm4_constants, pandas_utils
@@ -178,6 +179,5 @@ def apply(
 
     base_object = get_base_json_object(ocel, parameters=parameters)
 
-    F = open(target_path, "w", encoding=encoding)
-    json.dump(base_object, F, indent=2)
-    F.close()
+    with compression.open_text(target_path, "wt", encoding=encoding) as F:
+        json.dump(base_object, F, indent=2)

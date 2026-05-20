@@ -31,6 +31,7 @@ from pm4py.objects.ocel.util import filtering_utils
 from pm4py.objects.ocel.exporter.jsonocel.variants import classic
 from pm4py.objects.ocel.exporter.util import clean_dataframes
 from pm4py.objects.ocel.util import attributes_per_type
+from pm4py.objects.ocel.util import compression
 
 
 class Parameters(Enum):
@@ -176,6 +177,5 @@ def apply(
 
     json_object = get_enriched_object(ocel, parameters=parameters)
 
-    F = open(target_path, "w", encoding=encoding)
-    json.dump(json_object, F, indent=2)
-    F.close()
+    with compression.open_text(target_path, "wt", encoding=encoding) as F:
+        json.dump(json_object, F, indent=2)

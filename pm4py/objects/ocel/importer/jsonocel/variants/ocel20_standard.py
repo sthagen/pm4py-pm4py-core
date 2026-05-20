@@ -25,6 +25,7 @@ from typing import Optional, Dict, Any
 from pm4py.objects.ocel.util import filtering_utils
 from pm4py.objects.ocel.util import ocel_consistency
 from pm4py.objects.ocel.importer.jsonocel.variants import classic
+from pm4py.objects.ocel.util import compression
 from pm4py.util import constants as pm4_constants
 from enum import Enum
 import json
@@ -94,9 +95,8 @@ def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
         Parameters.ENCODING, parameters, pm4_constants.DEFAULT_ENCODING
     )
 
-    F = open(file_path, "r", encoding=encoding)
-    json_obj = json.load(F)
-    F.close()
+    with compression.open_text(file_path, "rt", encoding=encoding) as F:
+        json_obj = json.load(F)
 
     event_attr_types = {}
     for et in json_obj.get("eventTypes", []):
