@@ -19,27 +19,22 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.util import constants as pm4_constants
+"""Abstract base class for the BPMN-export phase."""
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Optional
 
-if pm4_constants.ENABLE_INTERNAL_IMPORTS:
-    from pm4py.algo.discovery import (
-        alpha,
-        batches,
-        causal,
-        correlation_mining,
-        declare,
-        dfg,
-        footprints,
-        heuristics,
-        ilp,
-        inductive,
-        genetic,
-        log_skeleton,
-        minimum_self_distance,
-        ocel,
-        performance_spectrum,
-        powl,
-        split_miner,
-        temporal_profile,
-        transition_system,
-    )
+from pm4py.algo.discovery.split_miner.dtypes.working_graph import WorkingGraph
+from pm4py.objects.bpmn.obj import BPMN
+
+
+class BPMNExporter(ABC):
+    """Convert the internal :class:`WorkingGraph` into a pm4py BPMN object."""
+
+    @classmethod
+    @abstractmethod
+    def apply(
+        cls,
+        wg: WorkingGraph,
+        parameters: Optional[Dict[str, Any]] = None,
+    ) -> BPMN:
+        ...

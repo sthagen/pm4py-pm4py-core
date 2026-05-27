@@ -19,27 +19,13 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.util import constants as pm4_constants
+"""Output of the PDFG filtering phase."""
+from dataclasses import dataclass, field
+from typing import Set, Tuple
 
-if pm4_constants.ENABLE_INTERNAL_IMPORTS:
-    from pm4py.algo.discovery import (
-        alpha,
-        batches,
-        causal,
-        correlation_mining,
-        declare,
-        dfg,
-        footprints,
-        heuristics,
-        ilp,
-        inductive,
-        genetic,
-        log_skeleton,
-        minimum_self_distance,
-        ocel,
-        performance_spectrum,
-        powl,
-        split_miner,
-        temporal_profile,
-        transition_system,
-    )
+
+@dataclass
+class FilterResult:
+    edges: Set[Tuple[str, str]] = field(default_factory=set)
+    source: str = ""
+    sink: str = ""

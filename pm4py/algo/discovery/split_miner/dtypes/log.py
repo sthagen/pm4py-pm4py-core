@@ -19,27 +19,21 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.util import constants as pm4_constants
+"""Trace types used by the Split Miner phases."""
+from typing import Any, List, Tuple
 
-if pm4_constants.ENABLE_INTERNAL_IMPORTS:
-    from pm4py.algo.discovery import (
-        alpha,
-        batches,
-        causal,
-        correlation_mining,
-        declare,
-        dfg,
-        footprints,
-        heuristics,
-        ilp,
-        inductive,
-        genetic,
-        log_skeleton,
-        minimum_self_distance,
-        ocel,
-        performance_spectrum,
-        powl,
-        split_miner,
-        temporal_profile,
-        transition_system,
-    )
+# A flat label trace consumed by the classic Split Miner pipeline.
+LabelTrace = List[str]
+LabelLog = List[LabelTrace]
+
+# A refined event keeps the activity label, the lifecycle phase
+# (``start`` or ``end``) and the timestamp. The lifecycle-aware variant
+# of the pipeline operates on lists of these.
+RefinedEvent = Tuple[str, str, Any]
+RefinedTrace = List[RefinedEvent]
+RefinedLog = List[RefinedTrace]
+
+# Sentinel labels added to every trace so the resulting BPMN has a single
+# start event and a single end event.
+START_LABEL = "__start__"
+END_LABEL = "__end__"

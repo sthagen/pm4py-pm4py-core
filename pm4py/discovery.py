@@ -1044,6 +1044,94 @@ def discover_bpmn_inductive(
     return convert_to_bpmn(pt)
 
 
+def discover_bpmn_split_miner(
+    log: Union[EventLog, pd.DataFrame],
+    epsilon: float = 0.1,
+    eta: float = 0.4,
+    minimize_or_joins: bool = True,
+    variant: str = "classic",
+    activity_key: str = "concept:name",
+    timestamp_key: str = "time:timestamp",
+    case_id_key: str = "case:concept:name",
+) -> BPMN:
+    """Discover a BPMN model using Split Miner.
+
+    Two variants are available:
+
+    * ``"classic"`` — the original Split Miner of Augusto, Conforti,
+      Dumas, La Rosa, Polyvyanyy (KAIS, 2019).
+    * ``"sm2"`` — Split Miner 2.0 (Augusto, Dumas, La Rosa, 2021): uses
+      activity lifecycle information to detect true concurrency and
+      inclusive (OR) choices.
+
+    :param log: Event log or Pandas DataFrame.
+    :param epsilon: Concurrency threshold ε ∈ [0, 1] (default 0.1). With a
+        lower ε more pairs of activities are considered concurrent.
+    :param eta: Filtering percentile η ∈ [0, 1] (default 0.4). Lower η
+        keeps more edges (higher fitness, more complex model).
+    :param minimize_or_joins: Replace trivial OR-joins with their XOR/AND
+        equivalent (Algorithm 9 of the SM 1.x paper). Default ``True``.
+    :param variant: ``"classic"`` (default) or ``"sm2"``.
+    :param activity_key: XES attribute holding the activity label
+        (default ``"concept:name"``).
+    :param timestamp_key: XES attribute holding the event timestamp
+        (default ``"time:timestamp"``). Used only by the ``sm2`` variant.
+    :param case_id_key: Attribute used as case identifier in pandas inputs
+        (default ``"case:concept:name"``).
+    :return: A :class:`BPMN` model.
+    :rtype: ``BPMN``
+
+    .. code-block:: python3
+
+        import pm4py
+
+        bpmn_graph = pm4py.discover_bpmn_split_miner(
+            log,
+            epsilon=0.1,
+            eta=0.4,
+            variant="sm2",
+        )
+    """
+    __event_log_deprecation_warning(log)
+
+    if check_is_pandas_dataframe(log):
+        check_pandas_dataframe_columns(
+            log,
+            activity_key=activity_key,
+            timestamp_key=timestamp_key,
+            case_id_key=case_id_key,
+        )
+
+    from pm4py.algo.discovery.split_miner import algorithm as sm_alg
+
+    if variant == "sm2":
+        sm_variant = sm_alg.SM2
+        from pm4py.algo.discovery.split_miner.variants.sm2 import (
+            Parameters as SmParameters,
+        )
+    elif variant == "classic":
+        sm_variant = sm_alg.CLASSIC
+        from pm4py.algo.discovery.split_miner.variants.classic import (
+            Parameters as SmParameters,
+        )
+    else:
+        raise ValueError(
+            f"Unknown Split Miner variant: {variant!r} "
+            f"(expected 'classic' or 'sm2')"
+        )
+
+    parameters = {
+        SmParameters.EPSILON: epsilon,
+        SmParameters.ETA: eta,
+        SmParameters.OR_MINIMISE: minimize_or_joins,
+        SmParameters.ACTIVITY_KEY: activity_key,
+    }
+    if variant == "sm2":
+        parameters[SmParameters.TIMESTAMP_KEY] = timestamp_key
+
+    return sm_alg.apply(log, parameters=parameters, variant=sm_variant)
+
+
 def discover_transition_system(
     log: Union[EventLog, pd.DataFrame],
     direction: str = "forward",

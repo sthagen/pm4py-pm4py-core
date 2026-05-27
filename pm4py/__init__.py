@@ -146,6 +146,7 @@ from pm4py.discovery import (
     discover_eventually_follows_graph,
     discover_directly_follows_graph,
     discover_bpmn_inductive,
+    discover_bpmn_split_miner,
     discover_performance_dfg,
     discover_transition_system,
     discover_prefix_tree,

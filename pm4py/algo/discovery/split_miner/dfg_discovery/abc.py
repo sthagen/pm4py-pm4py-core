@@ -19,27 +19,25 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.util import constants as pm4_constants
+"""Abstract base class for the DFG-discovery phase."""
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar
 
-if pm4_constants.ENABLE_INTERNAL_IMPORTS:
-    from pm4py.algo.discovery import (
-        alpha,
-        batches,
-        causal,
-        correlation_mining,
-        declare,
-        dfg,
-        footprints,
-        heuristics,
-        ilp,
-        inductive,
-        genetic,
-        log_skeleton,
-        minimum_self_distance,
-        ocel,
-        performance_spectrum,
-        powl,
-        split_miner,
-        temporal_profile,
-        transition_system,
-    )
+from pm4py.algo.discovery.split_miner.dtypes.dfg import DFG
+from pm4py.algo.discovery.split_miner.dtypes.loops import LoopInfo
+
+
+TraceT = TypeVar("TraceT")
+
+
+class DFGDiscoverer(ABC, Generic[TraceT]):
+    """Build a DFG and the corresponding ``LoopInfo`` from a list of traces."""
+
+    @classmethod
+    @abstractmethod
+    def apply(
+        cls,
+        traces: List[TraceT],
+        parameters: Optional[Dict[str, Any]] = None,
+    ) -> Tuple[DFG, LoopInfo]:
+        """Return the directly-follows graph and its self/short-loop summary."""
