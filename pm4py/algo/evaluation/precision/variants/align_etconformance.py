@@ -373,7 +373,7 @@ def __align_log_wo_multiprocessing_stop_marking(
 def __align_log_with_multiprocessing_stop_marking(
     fake_log, net, marking, final_marking, progress, parameters=None
 ):
-    if parameters is not None:
+    if parameters is None:
         parameters = {}
 
     import multiprocessing
