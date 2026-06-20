@@ -19,7 +19,7 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.objects.ocel.exporter import util, csv, jsonocel
+from pm4py.objects.ocel.exporter import bundled, util, csv, jsonocel
 import importlib.util
 
 if importlib.util.find_spec("lxml"):

@@ -22,40 +22,21 @@ Contact: info@processintelligence.solutions
 from enum import Enum
 from typing import Optional, Dict, Any
 
-from pm4py.objects.ocel.exporter.csv.variants import pandas, ocel20
+from pm4py.objects.ocel.importer.bundled.variants import ocel20
 from pm4py.objects.ocel.obj import OCEL
 from pm4py.util import exec_utils
 
 
 class Variants(Enum):
-    PANDAS = pandas
     OCEL20 = ocel20
 
 
 def apply(
-    ocel: OCEL,
-    output_path: str,
-    variant=Variants.PANDAS,
-    objects_path=None,
+    file_path: str,
+    variant=Variants.OCEL20,
     parameters: Optional[Dict[Any, Any]] = None,
-):
+) -> OCEL:
     """
-    Exports an object-centric event log in a CSV file
-
-    Parameters
-    -----------------
-    ocel
-        Object-centric event log
-    output_path
-        Destination file
-    variant
-        Variant of the algorithm that should be used, possible values:
-        - Variants.PANDAS
-    objects_path
-        Optional path, where the objects dataframe is stored
-    parameters
-        Parameters of the algorithm
+    Imports an OCEL 2.0 log from the bundled CSV/Parquet format.
     """
-    return exec_utils.get_variant(variant).apply(
-        ocel, output_path, objects_path=objects_path, parameters=parameters
-    )
+    return exec_utils.get_variant(variant).apply(file_path, parameters=parameters)

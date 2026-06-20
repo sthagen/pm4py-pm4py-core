@@ -28,6 +28,8 @@ Importing object-centric event logs is possible given the following formats:
 
 Importing object-centric event logs (OCEL2.0) is possible given the following formats:
 
+  * bundled ``.ocel.zip`` CSV/Parquet specification :meth:`pm4py.read.read_ocel2_bundle`
+  * compact ``.csv`` specification :meth:`pm4py.read.read_ocel2_csv`
   * ``.xmlocel`` specification :meth:`pm4py.read.read_ocel2_xml`
   * ``.sqlite`` specification :meth:`pm4py.read.read_ocel2_sqlite`
   * ``.jsonocel`` specification :meth:`pm4py.read.read_ocel2_json`
@@ -52,6 +54,8 @@ Exporting object-centric event logs is possible to the following formats:
 
 Exporting object-centric event logs (OCEL2.0) is possible to the following formats:
 
+  * bundled ``.ocel.zip`` CSV/Parquet specification :meth:`pm4py.write.write_ocel2_bundle`
+  * compact ``.csv`` specification :meth:`pm4py.write.write_ocel2_csv`
   * ``.xmlocel`` specification :meth:`pm4py.write.write_ocel2_xml`
   * ``.sqlite`` specification :meth:`pm4py.write.write_ocel2_sqlite`
   * ``.jsonocel`` specification :meth:`pm4py.write.write_ocel2_json`
@@ -429,6 +433,8 @@ List of Methods
    pm4py.read.read_ocel_json
    pm4py.read.read_ocel_xml
    pm4py.read.read_ocel_sqlite
+   pm4py.read.read_ocel2_bundle
+   pm4py.read.read_ocel2_csv
    pm4py.read.read_ocel2_xml
    pm4py.read.read_ocel2_sqlite
    pm4py.read.read_ocel2_json
@@ -442,6 +448,8 @@ List of Methods
    pm4py.write.write_ocel_json
    pm4py.write.write_ocel_xml
    pm4py.write.write_ocel_sqlite
+   pm4py.write.write_ocel2_bundle
+   pm4py.write.write_ocel2_csv
    pm4py.write.write_ocel2_xml
    pm4py.write.write_ocel2_sqlite
    pm4py.write.write_ocel2_json

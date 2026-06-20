@@ -1,0 +1,655 @@
+'''
+PM4Py – A Process Mining Library for Python
+Copyright (C) 2026 Process Intelligence Solutions GmbH
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see this software project's root or
+visit <https://www.gnu.org/licenses/>.
+
+Website: https://processintelligence.solutions
+Contact: info@processintelligence.solutions
+'''
+from enum import Enum
+from typing import Optional, Dict, Any, List, Tuple
+import json
+import re
+
+import pandas as pd
+
+from pm4py.objects.ocel import constants
+from pm4py.objects.ocel.obj import OCEL
+from pm4py.objects.ocel.util import ocel_consistency
+from pm4py.util import exec_utils, constants as pm4_constants, pandas_utils
+
+
+class Parameters(Enum):
+    EVENT_ID = constants.PARAM_EVENT_ID
+    EVENT_ACTIVITY = constants.PARAM_EVENT_ACTIVITY
+    EVENT_TIMESTAMP = constants.PARAM_EVENT_TIMESTAMP
+    OBJECT_ID = constants.PARAM_OBJECT_ID
+    OBJECT_TYPE = constants.PARAM_OBJECT_TYPE
+    INTERNAL_INDEX = constants.PARAM_INTERNAL_INDEX
+    QUALIFIER = constants.PARAM_QUALIFIER
+    CHANGED_FIELD = constants.PARAM_CHNGD_FIELD
+    ENCODING = "encoding"
+    OBJECT_TYPE_PREFIX = "object_type_prefix"
+    O2O_ACTIVITY = "o2o_activity"
+    CSV_EVENT_ID = "csv_event_id"
+    CSV_EVENT_ACTIVITY = "csv_event_activity"
+    CSV_EVENT_TIMESTAMP = "csv_event_timestamp"
+
+
+def _is_empty(value) -> bool:
+    if value is None:
+        return True
+    try:
+        if pd.isna(value):
+            return True
+    except BaseException:
+        pass
+    return str(value) == ""
+
+
+def _strip_value(value) -> str:
+    if _is_empty(value):
+        return ""
+    return str(value).strip()
+
+
+def _split_entries(value: Any) -> List[str]:
+    if _is_empty(value):
+        return []
+
+    value = str(value)
+    if "/" not in value:
+        return [value] if value else []
+    if "{" not in value:
+        return [entry for entry in value.split("/") if entry]
+
+    entries = []
+    current = []
+    in_string = False
+    escape = False
+    json_depth = 0
+
+    for char in value:
+        if escape:
+            current.append(char)
+            escape = False
+            continue
+        if char == "\\":
+            current.append(char)
+            if in_string:
+                escape = True
+            continue
+        if char == '"':
+            current.append(char)
+            if json_depth > 0:
+                in_string = not in_string
+            continue
+        if not in_string:
+            if char == "{":
+                json_depth += 1
+            elif char == "}" and json_depth > 0:
+                json_depth -= 1
+            elif char == "/" and json_depth == 0:
+                entry = "".join(current)
+                if entry:
+                    entries.append(entry)
+                current = []
+                continue
+        current.append(char)
+
+    entry = "".join(current)
+    if entry:
+        entries.append(entry)
+    return entries
+
+
+def _split_reference(value: str) -> Tuple[str, Optional[str], Dict[str, Any]]:
+    attrs = {}
+    value = value.strip()
+
+    if value.endswith("}"):
+        json_start = value.find("{")
+        if json_start >= 0:
+            json_part = value[json_start:]
+            value = value[:json_start]
+            if json_part:
+                attrs = json.loads(json_part)
+                if not isinstance(attrs, dict):
+                    raise ValueError("Object reference JSON attributes must be a JSON object.")
+
+    if "#" in value:
+        object_id, qualifier = value.split("#", 1)
+    else:
+        object_id, qualifier = value, None
+
+    object_id = object_id.strip()
+    qualifier = qualifier.strip() if qualifier is not None else None
+
+    if not object_id:
+        raise ValueError("Object references must contain a non-empty object id.")
+    if any(char in object_id for char in ("/", "#", "{")):
+        raise ValueError("Object ids in OCEL2 CSV references cannot contain '/', '#', or '{'.")
+    if qualifier is not None and any(char in qualifier for char in ("/", "#", "{")):
+        raise ValueError("Qualifiers in OCEL2 CSV references cannot contain '/', '#', or '{'.")
+    _validate_attribute_values(attrs)
+
+    return object_id, qualifier, attrs
+
+
+def _validate_attribute_values(attrs: Dict[str, Any]):
+    for value in attrs.values():
+        if isinstance(value, (list, dict)):
+            raise ValueError("JSON arrays and objects are not valid OCEL2 CSV attribute values.")
+
+
+def _register_object_type(
+    object_id_type: Dict[str, str], object_id: str, object_type: str
+):
+    existing = object_id_type.get(object_id)
+    if existing is not None and existing != object_type:
+        raise ValueError(
+            "Object '%s' appears with multiple object types: '%s' and '%s'."
+            % (object_id, existing, object_type)
+        )
+    object_id_type[object_id] = object_type
+
+
+def _instantiate_dataframe(records: List[Dict[str, Any]], columns: List[str]):
+    if records:
+        return pandas_utils.instantiate_dataframe(records)
+    return pandas_utils.instantiate_dataframe({column: [] for column in columns})
+
+
+_TIMEZONE_RE = re.compile(r"(?:Z|[+-]\d{2}:?\d{2})$")
+_INTEGER_RE = re.compile(r"^[+-]?\d+$")
+
+
+def _parse_timestamp(value):
+    value = _strip_value(value)
+    if not value:
+        return ""
+    if not _TIMEZONE_RE.search(value):
+        raise ValueError("Timestamp '%s' does not contain timezone information." % value)
+    try:
+        return pd.to_datetime(value, utc=True)
+    except BaseException as exc:
+        raise ValueError("Timestamp '%s' cannot be parsed." % value) from exc
+
+
+def _parse_timestamp_column(series):
+    non_empty = series != ""
+    if not non_empty.any():
+        return [""] * len(series)
+
+    missing_timezone = non_empty & ~series.str.contains(_TIMEZONE_RE, regex=True)
+    if missing_timezone.any():
+        value = series[missing_timezone].iloc[0]
+        raise ValueError("Timestamp '%s' does not contain timezone information." % value)
+
+    parsed = pd.Series([""] * len(series), index=series.index, dtype="object")
+    try:
+        parsed_values = pd.to_datetime(series[non_empty], utc=True, format="mixed")
+    except TypeError:
+        parsed_values = pd.to_datetime(series[non_empty], utc=True)
+    except BaseException as exc:
+        raise ValueError("At least one timestamp cannot be parsed.") from exc
+
+    parsed.loc[non_empty] = list(parsed_values)
+    return parsed.tolist()
+
+
+def _collect_object_attribute(
+    object_attributes: Dict[Tuple[str, str], List[Tuple[int, Any, Any]]],
+    object_id: str,
+    attribute: str,
+    timestamp: Any,
+    value: Any,
+    index: int,
+):
+    object_attributes.setdefault((object_id, attribute), []).append((index, timestamp, value))
+
+
+def _attribute_sort_key(item):
+    index, timestamp, _ = item
+    if _is_empty(timestamp):
+        return (0, "", index)
+    return (1, pd.Timestamp(timestamp).isoformat(), index)
+
+
+def _try_parse_integer(values):
+    parsed = []
+    for value in values:
+        if isinstance(value, bool):
+            return None
+        if isinstance(value, int):
+            parsed.append(value)
+        elif isinstance(value, str) and _INTEGER_RE.match(value.strip()):
+            parsed.append(int(value.strip()))
+        else:
+            return None
+    return parsed
+
+
+def _try_parse_float(values):
+    parsed = []
+    for value in values:
+        if isinstance(value, bool):
+            return None
+        try:
+            parsed.append(float(str(value).strip() if isinstance(value, str) else value))
+        except BaseException:
+            return None
+    return parsed
+
+
+def _try_parse_boolean(values):
+    parsed = []
+    for value in values:
+        if isinstance(value, bool):
+            parsed.append(value)
+        elif isinstance(value, str) and value.strip().casefold() in {"true", "false"}:
+            parsed.append(value.strip().casefold() == "true")
+        else:
+            return None
+    return parsed
+
+
+def _try_parse_timestamp_values(values):
+    parsed = []
+    for value in values:
+        if isinstance(value, pd.Timestamp):
+            parsed.append(value)
+        elif isinstance(value, str):
+            try:
+                parsed.append(_parse_timestamp(value))
+            except ValueError:
+                return None
+        else:
+            return None
+    return parsed
+
+
+def _infer_values(values):
+    non_empty = [value for value in values if not _is_empty(value)]
+    if not non_empty:
+        return values
+
+    for parser in (
+        _try_parse_integer,
+        _try_parse_float,
+        _try_parse_boolean,
+        _try_parse_timestamp_values,
+    ):
+        parsed = parser(non_empty)
+        if parsed is not None:
+            iterator = iter(parsed)
+            return [next(iterator) if not _is_empty(value) else value for value in values]
+
+    return [str(value) if not _is_empty(value) else value for value in values]
+
+
+def _infer_column_type(df, column):
+    if len(df) == 0 or column not in df.columns:
+        return df
+    df = df.copy()
+    df[column] = _infer_values(df[column].tolist())
+    return df
+
+
+def _infer_event_attribute_types(df, attribute_columns):
+    for column in attribute_columns:
+        df = _infer_column_type(df, column)
+    return df
+
+
+def _infer_object_attribute_types(objects_df, object_changes_df, object_type_column, excluded_columns):
+    if len(objects_df) == 0:
+        return objects_df, object_changes_df
+
+    attribute_columns = [
+        column for column in objects_df.columns if column not in excluded_columns
+    ]
+    if len(object_changes_df) > 0:
+        for column in object_changes_df.columns:
+            if column not in excluded_columns and column not in attribute_columns:
+                attribute_columns.append(column)
+
+    objects_df = objects_df.copy()
+    object_changes_df = object_changes_df.copy()
+    object_type_indexes = {
+        object_type: objects_df.index[objects_df[object_type_column] == object_type].tolist()
+        for object_type in pandas_utils.format_unique(objects_df[object_type_column].dropna().unique())
+    }
+    change_type_indexes = {}
+    if len(object_changes_df) > 0 and object_type_column in object_changes_df.columns:
+        change_type_indexes = {
+            object_type: object_changes_df.index[
+                object_changes_df[object_type_column] == object_type
+            ].tolist()
+            for object_type in pandas_utils.format_unique(
+                object_changes_df[object_type_column].dropna().unique()
+            )
+        }
+
+    for column in attribute_columns:
+        if column in objects_df.columns:
+            objects_df[column] = objects_df[column].astype("object")
+        if column in object_changes_df.columns:
+            object_changes_df[column] = object_changes_df[column].astype("object")
+
+    for object_type, object_indexes in object_type_indexes.items():
+        change_indexes_for_type = change_type_indexes.get(object_type, [])
+        for column in attribute_columns:
+            values = []
+            change_indexes = []
+
+            if column in objects_df.columns:
+                values.extend(objects_df.loc[object_indexes, column].tolist())
+            if column in object_changes_df.columns:
+                change_indexes = change_indexes_for_type
+                values.extend(object_changes_df.loc[change_indexes, column].tolist())
+
+            inferred = _infer_values(values)
+            pos = 0
+            if object_indexes:
+                objects_df.loc[object_indexes, column] = inferred[pos:pos + len(object_indexes)]
+                pos += len(object_indexes)
+            if change_indexes:
+                object_changes_df.loc[change_indexes, column] = inferred[pos:pos + len(change_indexes)]
+
+    return objects_df, object_changes_df
+
+
+def apply(
+    file_path: str,
+    objects_path: str = None,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> OCEL:
+    """
+    Imports an OCEL 2.0 object-centric event log from the compact CSV format.
+    """
+    if parameters is None:
+        parameters = {}
+
+    encoding = exec_utils.get_param_value(
+        Parameters.ENCODING, parameters, pm4_constants.DEFAULT_ENCODING
+    )
+    event_id_column = exec_utils.get_param_value(
+        Parameters.EVENT_ID, parameters, constants.DEFAULT_EVENT_ID
+    )
+    event_activity_column = exec_utils.get_param_value(
+        Parameters.EVENT_ACTIVITY, parameters, constants.DEFAULT_EVENT_ACTIVITY
+    )
+    event_timestamp_column = exec_utils.get_param_value(
+        Parameters.EVENT_TIMESTAMP, parameters, constants.DEFAULT_EVENT_TIMESTAMP
+    )
+    object_id_column = exec_utils.get_param_value(
+        Parameters.OBJECT_ID, parameters, constants.DEFAULT_OBJECT_ID
+    )
+    object_type_column = exec_utils.get_param_value(
+        Parameters.OBJECT_TYPE, parameters, constants.DEFAULT_OBJECT_TYPE
+    )
+    internal_index_column = exec_utils.get_param_value(
+        Parameters.INTERNAL_INDEX, parameters, constants.DEFAULT_INTERNAL_INDEX
+    )
+    qualifier_column = exec_utils.get_param_value(
+        Parameters.QUALIFIER, parameters, constants.DEFAULT_QUALIFIER
+    )
+    changed_field_column = exec_utils.get_param_value(
+        Parameters.CHANGED_FIELD, parameters, constants.DEFAULT_CHNGD_FIELD
+    )
+    object_type_prefix = exec_utils.get_param_value(
+        Parameters.OBJECT_TYPE_PREFIX, parameters, "ot:"
+    )
+    o2o_activity = exec_utils.get_param_value(
+        Parameters.O2O_ACTIVITY, parameters, "o2o"
+    )
+    csv_event_id = exec_utils.get_param_value(
+        Parameters.CSV_EVENT_ID, parameters, "id"
+    )
+    csv_event_activity = exec_utils.get_param_value(
+        Parameters.CSV_EVENT_ACTIVITY, parameters, "activity"
+    )
+    csv_event_timestamp = exec_utils.get_param_value(
+        Parameters.CSV_EVENT_TIMESTAMP, parameters, "timestamp"
+    )
+
+    table = pandas_utils.read_csv(file_path, index_col=False, encoding=encoding, dtype=str)
+    table = table.fillna("")
+    for column in (csv_event_id, csv_event_activity, csv_event_timestamp):
+        if column not in table.columns:
+            table[column] = ""
+    table[csv_event_id] = table[csv_event_id].astype(str).str.strip()
+    table[csv_event_activity] = table[csv_event_activity].astype(str).str.strip()
+    table[csv_event_timestamp] = table[csv_event_timestamp].astype(str).str.strip()
+    parsed_timestamps = _parse_timestamp_column(table[csv_event_timestamp])
+
+    object_type_columns = [
+        column for column in table.columns if str(column).startswith(object_type_prefix)
+    ]
+    event_attribute_columns = [
+        column
+        for column in table.columns
+        if column not in {csv_event_id, csv_event_activity, csv_event_timestamp}
+        and column not in object_type_columns
+    ]
+
+    events = []
+    relations = []
+    o2o = []
+    object_id_type = {}
+    object_attributes = {}
+    declared_object_types = {}
+
+    records = table.to_dict("records")
+    object_type_column_pairs = [
+        (column, str(column)[len(object_type_prefix):]) for column in object_type_columns
+    ]
+
+    for index, row in enumerate(records):
+        row_id = row.get(csv_event_id, "")
+        row_activity = row.get(csv_event_activity, "")
+        row_timestamp = row.get(csv_event_timestamp, "")
+        parsed_timestamp = parsed_timestamps[index]
+
+        is_o2o_row = row_activity.casefold() == str(o2o_activity).casefold()
+        is_object_attribute_row = not row_id and not row_activity and bool(row_timestamp)
+        is_object_declaration_row = not row_id and not row_activity and not row_timestamp
+        is_event_row = bool(row_id) and bool(row_activity) and bool(row_timestamp) and not is_o2o_row
+
+        if is_event_row:
+            event = {
+                event_id_column: row_id,
+                event_activity_column: row_activity,
+                event_timestamp_column: parsed_timestamp,
+            }
+            for column in event_attribute_columns:
+                if not _is_empty(row.get(column, "")):
+                    event[column] = row[column]
+            events.append(event)
+
+        if is_o2o_row:
+            if not row_id:
+                raise ValueError("Object-to-object rows must contain a source object id.")
+            if row_id not in declared_object_types:
+                raise ValueError(
+                    "Source object '%s' in an object-to-object row has no previously declared object type."
+                    % row_id
+                )
+        elif row_activity and not is_event_row:
+            raise ValueError("Invalid OCEL2 CSV row with activity '%s'." % row_activity)
+
+        for column, object_type in object_type_column_pairs:
+            for entry in _split_entries(row.get(column, "")):
+                object_id, qualifier, attrs = _split_reference(entry)
+
+                _register_object_type(object_id_type, object_id, object_type)
+
+                if is_event_row:
+                    declared_object_types[object_id] = object_type
+                    relations.append(
+                        {
+                            event_id_column: row_id,
+                            event_activity_column: row_activity,
+                            event_timestamp_column: parsed_timestamp,
+                            object_id_column: object_id,
+                            object_type_column: object_type,
+                            qualifier_column: "" if qualifier is None else qualifier,
+                        }
+                    )
+                    for attr, value in attrs.items():
+                        _collect_object_attribute(
+                            object_attributes, object_id, attr, parsed_timestamp, value, index
+                        )
+                elif is_o2o_row:
+                    declared_object_types[object_id] = object_type
+                    o2o.append(
+                        {
+                            object_id_column: row_id,
+                            object_id_column + "_2": object_id,
+                            qualifier_column: "" if qualifier is None else qualifier,
+                        }
+                    )
+                    if attrs and not parsed_timestamp:
+                        raise ValueError(
+                            "Object-to-object rows with JSON attributes must contain a timestamp."
+                        )
+                    for attr, value in attrs.items():
+                        _collect_object_attribute(
+                            object_attributes, object_id, attr, parsed_timestamp, value, index
+                        )
+                elif is_object_attribute_row:
+                    declared_object_types[object_id] = object_type
+                    if not attrs:
+                        raise ValueError(
+                            "Object attribute rows must contain JSON attributes."
+                        )
+                    for attr, value in attrs.items():
+                        _collect_object_attribute(
+                            object_attributes, object_id, attr, parsed_timestamp, value, index
+                        )
+                elif is_object_declaration_row:
+                    if qualifier is not None:
+                        raise ValueError(
+                            "Object declaration rows cannot contain qualifiers."
+                        )
+                    declared_object_types[object_id] = object_type
+                    for attr, value in attrs.items():
+                        _collect_object_attribute(
+                            object_attributes, object_id, attr, None, value, index
+                        )
+
+    events_df = _instantiate_dataframe(
+        events, [event_id_column, event_activity_column, event_timestamp_column]
+    )
+    relations_df = _instantiate_dataframe(
+        relations,
+        [
+            event_id_column,
+            event_activity_column,
+            event_timestamp_column,
+            object_id_column,
+            object_type_column,
+            qualifier_column,
+        ],
+    )
+    o2o_df = _instantiate_dataframe(
+        o2o, [object_id_column, object_id_column + "_2", qualifier_column]
+    )
+
+    events_df = _infer_event_attribute_types(events_df, event_attribute_columns)
+
+    if object_id_type:
+        object_records = []
+        for object_id, object_type in object_id_type.items():
+            object_records.append(
+                {object_id_column: object_id, object_type_column: object_type}
+            )
+    else:
+        object_records = []
+
+    object_changes = []
+    object_records_by_id = {record[object_id_column]: record for record in object_records}
+
+    for (object_id, attr), values in object_attributes.items():
+        values = sorted(values, key=_attribute_sort_key)
+        object_type = object_id_type.get(object_id)
+        if object_id not in object_records_by_id:
+            object_records_by_id[object_id] = {
+                object_id_column: object_id,
+                object_type_column: object_type,
+            }
+
+        _, first_timestamp, first_value = values[0]
+        object_records_by_id[object_id][attr] = first_value
+
+        for _, timestamp, value in values[1:]:
+            change = {
+                object_id_column: object_id,
+                object_type_column: object_type,
+                event_timestamp_column: timestamp,
+                changed_field_column: attr,
+                attr: value,
+            }
+            object_changes.append(change)
+
+    objects_df = _instantiate_dataframe(
+        list(object_records_by_id.values()), [object_id_column, object_type_column]
+    )
+    object_changes_df = _instantiate_dataframe(
+        object_changes,
+        [object_id_column, object_type_column, event_timestamp_column, changed_field_column],
+    )
+    objects_df, object_changes_df = _infer_object_attribute_types(
+        objects_df,
+        object_changes_df,
+        object_type_column,
+        {
+            object_id_column,
+            object_type_column,
+            event_timestamp_column,
+            changed_field_column,
+        },
+    )
+
+    if len(events_df) > 0:
+        events_df[internal_index_column] = events_df.index
+        events_df = events_df.sort_values([event_timestamp_column, internal_index_column])
+        del events_df[internal_index_column]
+
+    if len(relations_df) > 0:
+        relations_df[internal_index_column] = relations_df.index
+        relations_df = relations_df.sort_values([event_timestamp_column, internal_index_column])
+        del relations_df[internal_index_column]
+
+    if len(object_changes_df) > 0:
+        object_changes_df[internal_index_column] = object_changes_df.index
+        object_changes_df = object_changes_df.sort_values(
+            [event_timestamp_column, internal_index_column]
+        )
+        del object_changes_df[internal_index_column]
+
+    ocel = OCEL(
+        events=events_df,
+        objects=objects_df,
+        relations=relations_df,
+        o2o=o2o_df,
+        object_changes=object_changes_df,
+        parameters=parameters,
+    )
+    ocel = ocel_consistency.apply(ocel, parameters=parameters)
+
+    return ocel

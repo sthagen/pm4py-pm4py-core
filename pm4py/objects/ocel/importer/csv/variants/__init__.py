@@ -19,4 +19,4 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.objects.ocel.importer.csv.variants import pandas
+from pm4py.objects.ocel.importer.csv.variants import pandas, ocel20

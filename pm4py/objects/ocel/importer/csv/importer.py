@@ -22,13 +22,14 @@ Contact: info@processintelligence.solutions
 from enum import Enum
 from typing import Optional, Dict, Any
 
-from pm4py.objects.ocel.importer.csv.variants import pandas
+from pm4py.objects.ocel.importer.csv.variants import pandas, ocel20
 from pm4py.objects.ocel.obj import OCEL
 from pm4py.util import exec_utils
 
 
 class Variants(Enum):
     PANDAS = pandas
+    OCEL20 = ocel20
 
 
 def apply(

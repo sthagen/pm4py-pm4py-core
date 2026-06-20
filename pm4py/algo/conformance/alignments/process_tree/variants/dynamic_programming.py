@@ -273,30 +273,34 @@ def align_trace_with_process_tree(trace, tree, use_global_cache=False):
             # Initialize DP tables
             distances = [float('inf')] * (w_len + 1)
             predecessors = [None] * (w_len + 1)
-            distances[0] = 0
 
             # Pre-compute costs for common subtrees to avoid redundant calculations
             t1_costs = {}
             t1_alignments = {}
+            t2_costs = {}
+            t2_alignments = {}
 
-            # Optimize initial computation
-            for pos in range(w_len + 1):
-                if pos > 0 and distances[pos - 1] == float('inf'):
-                    # Skip if previous position is unreachable
-                    continue
-
-                # Pre-compute T1 costs
-                w_slice = w[:pos]
+            def get_t1_alignment(w_slice):
                 if w_slice not in t1_costs:
                     c, a = cost(w_slice, T.children[0])
                     t1_costs[w_slice] = c
                     t1_alignments[w_slice] = a
-                else:
-                    c, a = t1_costs[w_slice], t1_alignments[w_slice]
+                return t1_costs[w_slice], t1_alignments[w_slice]
 
-                if distances[pos] > c:
-                    distances[pos] = c
-                    predecessors[pos] = ('T1', 0, pos, a)
+            def get_t2_alignment(w_slice):
+                if w_slice not in t2_costs:
+                    c, a = cost(w_slice, T.children[1])
+                    t2_costs[w_slice] = c
+                    t2_alignments[w_slice] = a
+                return t2_costs[w_slice], t2_alignments[w_slice]
+
+            # A loop starts with the do branch (T1). Only after T1 has been
+            # executed can redo/do iterations be added.
+            for pos in range(w_len + 1):
+                w_slice = w[:pos]
+                c, a = get_t1_alignment(w_slice)
+                distances[pos] = c
+                predecessors[pos] = ('initial_T1', 0, pos, a)
 
             # More efficient loop expansion with early pruning
             for i in range(w_len + 1):
@@ -304,28 +308,14 @@ def align_trace_with_process_tree(trace, tree, use_global_cache=False):
                     # Skip unreachable positions or paths already worse than current best
                     continue
 
-                # Try to exit the loop
-                w_slice = w[i:]
-                if w_slice not in t1_costs:
-                    c_t1_exit, a_t1_exit = cost(w_slice, T.children[0])
-                    t1_costs[w_slice] = c_t1_exit
-                    t1_alignments[w_slice] = a_t1_exit
-                else:
-                    c_t1_exit, a_t1_exit = t1_costs[w_slice], t1_alignments[w_slice]
-
-                total_cost_exit = distances[i] + c_t1_exit
-                if distances[w_len] > total_cost_exit:
-                    distances[w_len] = total_cost_exit
-                    predecessors[w_len] = ('T1_exit', i, w_len, a_t1_exit)
-
                 # Try to execute the loop body (T2 followed by T1)
-                for j in range(i + 1, w_len + 1):
+                for j in range(i, w_len + 1):
                     # Skip if we're going to exceed the current best
                     if distances[i] >= distances[w_len]:
                         break
 
                     w_slice_t2 = w[i:j]
-                    c_t2, a_t2 = cost(w_slice_t2, T.children[1])
+                    c_t2, a_t2 = get_t2_alignment(w_slice_t2)
 
                     # Early termination if this partial path is already worse
                     total_cost_t2 = distances[i] + c_t2
@@ -335,12 +325,7 @@ def align_trace_with_process_tree(trace, tree, use_global_cache=False):
                     # After T2, we must match T1 again
                     for k in range(j, w_len + 1):
                         w_slice_t1 = w[j:k]
-                        if w_slice_t1 not in t1_costs:
-                            c_t1_again, a_t1_again = cost(w_slice_t1, T.children[0])
-                            t1_costs[w_slice_t1] = c_t1_again
-                            t1_alignments[w_slice_t1] = a_t1_again
-                        else:
-                            c_t1_again, a_t1_again = t1_costs[w_slice_t1], t1_alignments[w_slice_t1]
+                        c_t1_again, a_t1_again = get_t1_alignment(w_slice_t1)
 
                         total_cost_loop = total_cost_t2 + c_t1_again
                         if distances[k] > total_cost_loop:
@@ -353,19 +338,15 @@ def align_trace_with_process_tree(trace, tree, use_global_cache=False):
             position = w_len
 
             # Build alignment from predecessors
-            while position > 0:
+            while True:
                 pred = predecessors[position]
                 if pred is None:
                     break
 
-                if pred[0] == 'T1_exit':
-                    _, i, _, a_t1_exit = pred
-                    alignment = a_t1_exit + alignment
-                    position = i
-                elif pred[0] == 'T1':
+                if pred[0] == 'initial_T1':
                     _, i, _, a_t1 = pred
                     alignment = a_t1 + alignment
-                    position = i
+                    break
                 elif pred[0] == 'loop':
                     _, i, j, k, a_t2, a_t1_again = pred
                     alignment = a_t1_again + alignment
