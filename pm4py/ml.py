@@ -210,8 +210,10 @@ def extract_features_dataframe(
     timestamp_key: str = "time:timestamp",
     case_id_key: Optional[str] = None,
     resource_key: str = "org:resource",
-    include_case_id: bool = False, count_occurrences: bool = False,
-    **kwargs
+    include_case_id: bool = False,
+    count_occurrences: bool = False,
+    enable_numeric_attribute_statistics: bool = False,
+    **kwargs,
 ) -> pd.DataFrame:
     r"""
     Extracts a dataframe containing features for each case in the provided
@@ -232,6 +234,11 @@ def extract_features_dataframe(
     :param case_id_key: (Optional) Attribute to be used as the case identifier. If not provided, the default is used.
     :param resource_key: Attribute to be used as the resource identifier.
     :param include_case_id: Whether to include the case identifier column in the features table.
+    :param count_occurrences: If True, count occurrences of string attributes instead of binary encoding.
+    :param enable_numeric_attribute_statistics: If True, expand numeric attributes to ``ATTRIBUTE_LAST``,
+                                                ``ATTRIBUTE_FIRST``, ``ATTRIBUTE_MIN``, ``ATTRIBUTE_MAX``,
+                                                ``ATTRIBUTE_MEAN``, and ``ATTRIBUTE_STDEV`` columns. If False,
+                                                keep the existing ``ATTRIBUTE`` last-value column.
     :param \**kwargs: Additional keyword arguments to pass to the feature extraction algorithm.
     :return: A Pandas DataFrame containing the extracted features for each case.
     :rtype: ``pd.DataFrame``
@@ -267,9 +274,12 @@ def extract_features_dataframe(
     parameters["str_evsucc_attr"] = str_evsucc_attr or []
     parameters["add_case_identifier_column"] = include_case_id
     parameters["count_occurrences"] = count_occurrences
+    parameters["enable_numeric_attribute_statistics"] = (
+        enable_numeric_attribute_statistics
+    )
 
-    from pm4py.algo.transformation.log_to_features import (
-        algorithm as log_to_features,
+    from pm4py.algo.transformation.trace_encodings import (
+        algorithm as trace_encodings,
     )
 
     if check_is_pandas_dataframe(log):
@@ -280,7 +290,7 @@ def extract_features_dataframe(
             timestamp_key=timestamp_key,
         )
 
-    data, feature_names = log_to_features.apply(log, parameters=parameters)
+    data, feature_names = trace_encodings.apply(log, parameters=parameters)
     if is_polars_lazyframe(data):
         return data
 
@@ -432,9 +442,9 @@ def extract_temporal_features_dataframe(
     parameters["pm4py:param:resource_key"] = resource_key
 
     if is_polars_lazyframe(log):
-        from pm4py.algo.transformation.log_to_features.variants import temporal_lazy as temporal
+        from pm4py.algo.transformation.trace_encodings.variants import temporal_lazy as temporal
     else:
-        from pm4py.algo.transformation.log_to_features.variants import temporal
+        from pm4py.algo.transformation.trace_encodings.variants import temporal
 
     return temporal.apply(log, parameters=parameters)
 

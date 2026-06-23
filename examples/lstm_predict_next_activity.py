@@ -1,6 +1,6 @@
 import numpy as np
 import pm4py
-from pm4py.algo.transformation.log_to_features.variants import event_based
+from pm4py.algo.transformation.trace_encodings.variants import event_based
 from pm4py.algo.transformation.log_to_target.variants import next_activity
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, TimeDistributed

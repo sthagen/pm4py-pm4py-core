@@ -607,7 +607,7 @@ class DocTests(unittest.TestCase):
             from pm4py.objects.log.importer.xes import importer as xes_importer
             log = xes_importer.apply(os.path.join("input_data", "roadtraffic50traces.xes"))
 
-            from pm4py.algo.transformation.log_to_features.variants import trace_based
+            from pm4py.algo.transformation.trace_encodings.variants import trace_based
             str_trace_attributes = []
             str_event_attributes = ["concept:name"]
             num_trace_attributes = []
@@ -632,7 +632,7 @@ class DocTests(unittest.TestCase):
             from pm4py.objects.log.importer.xes import importer as xes_importer
             log = xes_importer.apply(os.path.join("input_data", "roadtraffic50traces.xes"))
 
-            from pm4py.algo.transformation.log_to_features.variants import trace_based
+            from pm4py.algo.transformation.trace_encodings.variants import trace_based
             str_trace_attributes = []
             str_event_attributes = ["concept:name"]
             num_trace_attributes = []

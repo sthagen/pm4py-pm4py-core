@@ -123,8 +123,8 @@ def form_representation_from_dictio_couple(
     feature_names
         Array of feature names
     """
-    from pm4py.algo.transformation.log_to_features import (
-        algorithm as log_to_features,
+    from pm4py.algo.transformation.trace_encodings import (
+        algorithm as trace_encodings,
     )
 
     log = form_log_from_dictio_couple(
@@ -133,9 +133,9 @@ def form_representation_from_dictio_couple(
         enable_multiplier=enable_multiplier,
     )
 
-    data, feature_names = log_to_features.apply(
+    data, feature_names = trace_encodings.apply(
         log,
-        variant=log_to_features.Variants.TRACE_BASED,
+        variant=trace_encodings.Variants.TRACE_BASED,
         parameters={
             "str_tr_attr": [],
             "str_ev_attr": string_attributes,

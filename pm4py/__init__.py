@@ -19,7 +19,60 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
+import sys
 import time
+
+
+def _pm4py_is_direct_import_from_entrypoint():
+    importlib_module_names = {
+        "_frozen_importlib",
+        "_frozen_importlib_external",
+        "importlib",
+        "importlib._bootstrap",
+        "importlib._bootstrap_external",
+    }
+    getframe = getattr(sys, "_getframe", None)
+    if getframe is None:
+        return False
+    frame = getframe(1)
+    while frame is not None:
+        module_name = frame.f_globals.get("__name__")
+        if module_name == __name__ or module_name in importlib_module_names:
+            frame = frame.f_back
+            continue
+        return module_name == "__main__"
+    return False
+
+
+def _print_welcome():
+    yellow = "\033[93m"
+    cyan = "\033[96m"
+    reset = "\033[0m"
+
+    lines = [
+        "",
+        f"{yellow}{'=' * 60}{reset}",
+        "",
+        f"  Welcome to {cyan}PM4Py{reset} — Community Version",
+        "  Open-Source License (AGPL v3)",
+        "",
+        "  📚 Docs & Examples:",
+        "     https://processintelligence.solutions/pm4py",
+        "",
+        f"  ⚖️  {yellow}License: AGPL v3 — Commercial use requires open-sourcing your application.{reset}",
+        "     Business use without open-sourcing? A commercial license is available:",
+        "     https://processintelligence.solutions/pm4py#licensing",
+        "",
+        f"{yellow}{'=' * 60}{reset}",
+        "",
+    ]
+    print("\n".join(lines), file=sys.stderr)
+
+
+if not hasattr(sys, "_pm4py_welcome_shown") and _pm4py_is_direct_import_from_entrypoint():
+    _print_welcome()
+    sys._pm4py_welcome_shown = True
+
 
 from pm4py import (
     util,

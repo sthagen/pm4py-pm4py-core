@@ -58,6 +58,29 @@ def _sanitize_feature_name(
     return candidate
 
 
+_NUMERIC_ATTRIBUTE_STATISTICS_SUFFIXES = (
+    "LAST",
+    "FIRST",
+    "MIN",
+    "MAX",
+    "MEAN",
+    "STDEV",
+)
+
+
+def _get_numeric_feature_columns(
+    numeric_columns: List[str],
+    enable_numeric_attribute_statistics: bool,
+) -> List[str]:
+    if not enable_numeric_attribute_statistics:
+        return numeric_columns
+    return [
+        f"{col}_{suffix}"
+        for col in numeric_columns
+        for suffix in _NUMERIC_ATTRIBUTE_STATISTICS_SUFFIXES
+    ]
+
+
 def _scalar_from_lazy(lf: pl.LazyFrame, expr: pl.Expr) -> Any:
     result = lf.select(expr.alias("__scalar")).collect()
     if result.height == 0 or result.width == 0:
@@ -235,6 +258,7 @@ def select_number_column(
     fea_df: pl.LazyFrame,
     col: str,
     case_id_key: str = constants.CASE_CONCEPT_NAME,
+    enable_numeric_attribute_statistics: bool = False,
 ) -> pl.LazyFrame:
     """Adds a numeric column to the feature lazyframe."""
     return select_number_columns(
@@ -242,6 +266,7 @@ def select_number_column(
         fea_df,
         [col],
         case_id_key=case_id_key,
+        enable_numeric_attribute_statistics=enable_numeric_attribute_statistics,
     )
 
 
@@ -250,6 +275,7 @@ def select_number_columns(
     fea_df: pl.LazyFrame,
     columns: List[str],
     case_id_key: str = constants.CASE_CONCEPT_NAME,
+    enable_numeric_attribute_statistics: bool = False,
 ) -> pl.LazyFrame:
     """Adds numeric columns to the feature lazyframe in a single grouped pass."""
     if not columns:
@@ -269,19 +295,42 @@ def select_number_columns(
     df_cols = set(_lazy_columns(df))
     row_nr_col = _unique_internal_name(df_cols, "__row_nr")
 
-    cols_to_drop: List[str] = []
+    cols_to_drop: Set[str] = set()
     agg_exprs: List[pl.Expr] = []
 
     for col in clean_columns:
-        cols_to_drop.extend([col, f"{col}_right"])
-        agg_exprs.append(
-            pl.col(col)
-            .sort_by(pl.col(row_nr_col))
-            .drop_nulls()
-            .last()
-            .cast(_numeric_feature_dtype(df_schema[col]))
-            .alias(col)
+        feature_columns = _get_numeric_feature_columns(
+            [col], enable_numeric_attribute_statistics
         )
+        cols_to_drop.update([col, f"{col}_right"])
+        for feature_col in feature_columns:
+            cols_to_drop.update([feature_col, f"{feature_col}_right"])
+
+        feature_dtype = _numeric_feature_dtype(df_schema[col])
+        ordered_values = pl.col(col).sort_by(pl.col(row_nr_col)).drop_nulls()
+
+        if enable_numeric_attribute_statistics:
+            float_values = pl.col(col).cast(pl.Float64)
+            agg_exprs.extend(
+                [
+                    ordered_values.last()
+                    .cast(feature_dtype)
+                    .alias(f"{col}_LAST"),
+                    ordered_values.first()
+                    .cast(feature_dtype)
+                    .alias(f"{col}_FIRST"),
+                    pl.col(col).min().cast(feature_dtype).alias(f"{col}_MIN"),
+                    pl.col(col).max().cast(feature_dtype).alias(f"{col}_MAX"),
+                    float_values.mean().cast(pl.Float32).alias(f"{col}_MEAN"),
+                    float_values.std(ddof=0)
+                    .cast(pl.Float32)
+                    .alias(f"{col}_STDEV"),
+                ]
+            )
+        else:
+            agg_exprs.append(
+                ordered_values.last().cast(feature_dtype).alias(col)
+            )
 
     fea_df = _drop_if_present(fea_df, cols_to_drop)
 
@@ -458,6 +507,9 @@ def get_features_df(
     count_occurrences = exec_utils.get_param_value(
         Parameters.COUNT_OCCURRENCES, parameters, False
     )
+    enable_numeric_attribute_statistics = exec_utils.get_param_value(
+        Parameters.ENABLE_NUMERIC_ATTRIBUTE_STATISTICS, parameters, False
+    )
 
     # Avoid duplicate work and join-induced `*_right` columns when the
     # input list contains duplicates.
@@ -483,6 +535,7 @@ def get_features_df(
         fea_df,
         numeric_columns,
         case_id_key=case_id_key,
+        enable_numeric_attribute_statistics=enable_numeric_attribute_statistics,
     )
 
     fea_df = select_string_columns(

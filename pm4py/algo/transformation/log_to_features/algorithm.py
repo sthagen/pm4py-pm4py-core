@@ -19,24 +19,27 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
+import warnings
 from enum import Enum
-from typing import Any, Optional, Dict, Union, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 
-from pm4py.objects.log.obj import EventLog, EventStream
-from pm4py.util import exec_utils
-from pm4py.algo.transformation.log_to_features.variants import (
+from pm4py.algo.transformation.trace_encodings import algorithm as trace_encodings
+from pm4py.algo.transformation.trace_encodings.variants import (
     event_based,
-    trace_based,
     temporal,
+    temporal_lazy,
+    trace_based,
 )
+from pm4py.objects.log.obj import EventLog, EventStream
 
 
 class Variants(Enum):
     EVENT_BASED = event_based
     TRACE_BASED = trace_based
     TEMPORAL = temporal
+    TEMPORAL_LAZY = temporal_lazy
 
 
 def apply(
@@ -44,28 +47,10 @@ def apply(
     variant: Any = Variants.TRACE_BASED,
     parameters: Optional[Dict[Any, Any]] = None,
 ) -> Tuple[Any, List[str]]:
-    """
-    Extracts the features from a log object
-
-    Parameters
-    ---------------
-    log
-        Event log
-    variant
-        Variant of the feature extraction to use:
-
-        - Variants.EVENT_BASED => (default) extracts, for each trace, a list of numerical vectors containing for each event the corresponding features
-        - Variants.TRACE_BASED => extracts for each trace a single numerical vector containing the features of the trace
-        - Variants.TEMPORAL => extracts temporal features from the traditional event log
-
-    Returns
-    ---------------
-    data
-        Data to provide for decision tree learning
-    feature_names
-        Names of the features, in order
-    """
-    if parameters is None:
-        parameters = {}
-
-    return exec_utils.get_variant(variant).apply(log, parameters=parameters)
+    warnings.warn(
+        "pm4py.algo.transformation.log_to_features.apply is deprecated; use "
+        "pm4py.algo.transformation.trace_encodings.apply instead.",
+        FutureWarning,
+        stacklevel=2,
+    )
+    return trace_encodings.apply(log, variant=variant, parameters=parameters)

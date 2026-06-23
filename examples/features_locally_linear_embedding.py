@@ -1,7 +1,7 @@
 import os
 
 import pm4py
-from pm4py.algo.transformation.log_to_features.util import locally_linear_embedding
+from pm4py.algo.transformation.trace_encodings.util import locally_linear_embedding
 from examples import examples_conf
 import importlib.util
 import numpy

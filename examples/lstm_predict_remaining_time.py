@@ -1,6 +1,6 @@
 import numpy as np
 import pm4py
-from pm4py.algo.transformation.log_to_features.variants import event_based
+from pm4py.algo.transformation.trace_encodings.variants import event_based
 from pm4py.algo.transformation.log_to_target.variants import remaining_time
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential

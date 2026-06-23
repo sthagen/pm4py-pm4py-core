@@ -19,11 +19,17 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.algo.transformation.to_embeddings.variants import cases_transformers, events_transformers
+import warnings
 from enum import Enum
-from pm4py.util import exec_utils
+from typing import Any, Dict, List, Optional, Tuple
+
 import pandas as pd
-from typing import Optional, Dict, Any, List, Tuple
+
+from pm4py.algo.transformation.trace_encodings import algorithm as trace_encodings
+from pm4py.algo.transformation.trace_encodings.variants import (
+    cases_transformers,
+    events_transformers,
+)
 
 
 class Variants(Enum):
@@ -31,51 +37,35 @@ class Variants(Enum):
     EVENTS_TRANSFORMERS = events_transformers
 
 
-def apply(log: pd.DataFrame, variant=Variants.CASES_TRANSFORMERS, parameters: Optional[Dict[Any, Any]] = None) -> Tuple[
-    List[str], List[List[float]]]:
-    """
-    Computes the embeddings (case/event level, depending on the variant) of the provided dataframe.
-
-    Parameters
-    -----------------
-    log
-        Pandas dataframe
-    variant
-        Variant of the algorithm, including:
-        - Variants.CASES_TRANSFORMERS => computes the embeddings at the case level
-        - Variants.EVENTS_TRANSFORMERS => computes the embeddings at the event level
-    parameters
-        Variant-specific parameters
-
-    Returns
-    ----------------
-    ids
-        Identifiers of the considered events/cases
-    embeddings_list
-        List of embeddings for the considered events/cases
-    """
-    return exec_utils.get_variant(variant).apply(log, parameters=parameters)
+def apply(
+    log: pd.DataFrame,
+    variant=Variants.CASES_TRANSFORMERS,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> Tuple[List[str], List[List[float]]]:
+    warnings.warn(
+        "pm4py.algo.transformation.to_embeddings.apply is deprecated; use "
+        "pm4py.algo.transformation.trace_encodings.apply instead.",
+        FutureWarning,
+        stacklevel=2,
+    )
+    return trace_encodings.apply(log, variant=variant, parameters=parameters)
 
 
-def keep_top_k_per_similarity(log: pd.DataFrame, target_sentence: str, k: int, variant=Variants.CASES_TRANSFORMERS,
-                              parameters: Optional[Dict[Any, Any]] = None) -> pd.DataFrame:
-    """
-    Keeps the top K events/cases per similarity
-
-    Parameters
-    ----------------
-    log
-        Pandas dataframe
-    variant
-        Variant of the algorithm, including:
-        - Variants.CASES_TRANSFORMERS => computes the embeddings at the case level
-        - Variants.EVENTS_TRANSFORMERS => computes the embeddings at the event level
-    parameters
-        Variant-specific parameters
-
-    Returns
-    -----------------
-    filtered_log
-        Filtered event log
-    """
-    return exec_utils.get_variant(variant).keep_top_k_per_similarity(log, target_sentence, k, parameters=parameters)
+def keep_top_k_per_similarity(
+    log: pd.DataFrame,
+    target_sentence: str,
+    k: int,
+    variant=Variants.CASES_TRANSFORMERS,
+    parameters: Optional[Dict[Any, Any]] = None,
+) -> pd.DataFrame:
+    warnings.warn(
+        "pm4py.algo.transformation.to_embeddings.keep_top_k_per_similarity "
+        "is deprecated; use "
+        "pm4py.algo.transformation.trace_encodings.keep_top_k_per_similarity "
+        "instead.",
+        FutureWarning,
+        stacklevel=2,
+    )
+    return trace_encodings.keep_top_k_per_similarity(
+        log, target_sentence, k, variant=variant, parameters=parameters
+    )

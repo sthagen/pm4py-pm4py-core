@@ -19,7 +19,9 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.algo.transformation.log_to_features.variants import (
+from pm4py.algo.transformation.trace_encodings.variants import (
     event_based,
+    temporal,
+    temporal_lazy,
     trace_based,
 )

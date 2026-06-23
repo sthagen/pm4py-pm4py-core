@@ -20,7 +20,7 @@ Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
 from pm4py.objects.conversion.log import converter as log_converter
-from pm4py.algo.transformation.log_to_features import (
+from pm4py.algo.transformation.trace_encodings import (
     algorithm as features_extractor,
 )
 from enum import Enum

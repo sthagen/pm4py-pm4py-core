@@ -24,7 +24,7 @@ from pm4py.util import exec_utils, constants, pandas_utils
 from pm4py.objects.log.obj import EventLog, EventStream
 import pandas as pd
 from pm4py.objects.conversion.log import converter as log_converter
-from pm4py.algo.transformation.log_to_features import algorithm as log_to_features
+from pm4py.algo.transformation.trace_encodings import algorithm as trace_encodings
 from enum import Enum
 import numpy as np
 
@@ -246,7 +246,7 @@ def apply(
         log, variant=log_converter.Variants.TO_EVENT_LOG, parameters=parameters
     )
 
-    data, feature_names = log_to_features.apply(log, parameters=parameters)
+    data, feature_names = trace_encodings.apply(log, parameters=parameters)
     fea_df = pandas_utils.instantiate_dataframe(data, columns=feature_names)
 
     return textual_abstraction_from_fea_df(fea_df, parameters=parameters)

@@ -1,5 +1,5 @@
 import pm4py
-from pm4py.algo.transformation.log_to_features import algorithm
+from pm4py.algo.transformation.trace_encodings import algorithm
 import random
 import numpy as np
 from pm4py.util import ml_utils

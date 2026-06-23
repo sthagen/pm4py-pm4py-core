@@ -56,6 +56,64 @@ def _sanitize_feature_name(
     return candidate
 
 
+_NUMERIC_ATTRIBUTE_STATISTICS_SUFFIXES = (
+    "LAST",
+    "FIRST",
+    "MIN",
+    "MAX",
+    "MEAN",
+    "STDEV",
+)
+
+
+def _get_numeric_features_df(
+    df: pd.DataFrame,
+    numeric_columns: List[str],
+    case_id_key: str,
+    enable_numeric_attribute_statistics: bool,
+) -> pd.DataFrame:
+    if not enable_numeric_attribute_statistics:
+        return (
+            df[[case_id_key] + numeric_columns]
+            .copy()
+            .groupby(case_id_key)
+            .last()
+            .reset_index()
+        )
+
+    aggregations = {}
+    for col in numeric_columns:
+        aggregations[f"{col}_LAST"] = pd.NamedAgg(column=col, aggfunc="last")
+        aggregations[f"{col}_FIRST"] = pd.NamedAgg(column=col, aggfunc="first")
+        aggregations[f"{col}_MIN"] = pd.NamedAgg(column=col, aggfunc="min")
+        aggregations[f"{col}_MAX"] = pd.NamedAgg(column=col, aggfunc="max")
+        aggregations[f"{col}_MEAN"] = pd.NamedAgg(column=col, aggfunc="mean")
+        aggregations[f"{col}_STDEV"] = pd.NamedAgg(
+            column=col, aggfunc=lambda values: values.std(ddof=0)
+        )
+
+    return (
+        df[[case_id_key] + numeric_columns]
+        .copy()
+        .groupby(case_id_key)
+        .agg(**aggregations)
+        .reset_index()
+    )
+
+
+def _get_numeric_feature_columns(
+    numeric_columns: List[str],
+    enable_numeric_attribute_statistics: bool,
+) -> List[str]:
+    if not enable_numeric_attribute_statistics:
+        return numeric_columns
+    return [
+        f"{col}_{suffix}"
+        for col in numeric_columns
+        for suffix in _NUMERIC_ATTRIBUTE_STATISTICS_SUFFIXES
+    ]
+
+
 def automatic_feature_selection_df(df, parameters=None):
     """
     Performs an automatic feature selection on dataframes,
@@ -147,6 +205,7 @@ def select_number_column(
     fea_df: pd.DataFrame,
     col: str,
     case_id_key=constants.CASE_CONCEPT_NAME,
+    enable_numeric_attribute_statistics=False,
 ) -> pd.DataFrame:
     """
     Extract a column for the features dataframe for the given numeric attribute
@@ -161,20 +220,30 @@ def select_number_column(
         Numeric column
     case_id_key
         Case ID key
+    enable_numeric_attribute_statistics
+        If True, extract last, first, min, max, mean, and stdev columns.
 
     Returns
     --------------
     fea_df
         Feature dataframe (desidered output)
     """
-    # More efficient: drop duplicates keeping last instead of groupby
-    df_subset = df[[case_id_key, col]].dropna(subset=[col])
-    df_last = df_subset.drop_duplicates(subset=[case_id_key], keep="last")
-
-    fea_df = fea_df.merge(
-        df_last, on=[case_id_key], how="left", suffixes=("", "_y")
+    numeric_columns = [col]
+    df_numeric = _get_numeric_features_df(
+        df,
+        numeric_columns,
+        case_id_key,
+        enable_numeric_attribute_statistics,
     )
-    fea_df[col] = fea_df[col].astype(np.float32)
+    numeric_feature_columns = _get_numeric_feature_columns(
+        numeric_columns, enable_numeric_attribute_statistics
+    )
+    fea_df = fea_df.merge(
+        df_numeric, on=[case_id_key], how="left", suffixes=("", "_y")
+    )
+    fea_df[numeric_feature_columns] = fea_df[numeric_feature_columns].astype(
+        np.float32
+    )
     return fea_df
 
 
@@ -296,6 +365,7 @@ def get_features_df(
         Parameters of the algorithm, including:
         - Parameters.CASE_ID_KEY: the case ID
         - Parameters.COUNT_OCCURRENCES: if True, count occurrences of string attributes instead of binary encoding
+        - Parameters.ENABLE_NUMERIC_ATTRIBUTE_STATISTICS: if True, extract last, first, min, max, mean, and stdev for numeric attributes
 
     Returns
     ---------------
@@ -313,6 +383,9 @@ def get_features_df(
     )
     count_occurrences = exec_utils.get_param_value(
         Parameters.COUNT_OCCURRENCES, parameters, False
+    )
+    enable_numeric_attribute_statistics = exec_utils.get_param_value(
+        Parameters.ENABLE_NUMERIC_ATTRIBUTE_STATISTICS, parameters, False
     )
 
     # Start with unique case IDs
@@ -332,14 +405,21 @@ def get_features_df(
 
     # Process numeric columns (can be done more efficiently in batch)
     if numeric_columns:
-        # Process all numeric columns at once
-        df_numeric = df[[case_id_key] + numeric_columns].copy()
-        # Drop duplicates for all numeric columns at once, keeping last
-        df_numeric = df_numeric.groupby(case_id_key).last().reset_index()
+        df_numeric = _get_numeric_features_df(
+            df,
+            numeric_columns,
+            case_id_key,
+            enable_numeric_attribute_statistics,
+        )
+        numeric_feature_columns = _get_numeric_feature_columns(
+            numeric_columns, enable_numeric_attribute_statistics
+        )
         # Merge once for all numeric columns
         fea_df = fea_df.merge(df_numeric, on=case_id_key, how="left")
         # Convert all numeric columns to float32 at once
-        fea_df[numeric_columns] = fea_df[numeric_columns].astype(np.float32)
+        fea_df[numeric_feature_columns] = fea_df[
+            numeric_feature_columns
+        ].astype(np.float32)
 
     # Process string columns one by one (still needed due to hot encoding)
     for col in string_columns:

@@ -1,0 +1,96 @@
+'''
+PM4Py – A Process Mining Library for Python
+Copyright (C) 2026 Process Intelligence Solutions GmbH
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see this software project's root or
+visit <https://www.gnu.org/licenses/>.
+
+Website: https://processintelligence.solutions
+Contact: info@processintelligence.solutions
+'''
+"""
+Trace-level one-hot occurrence encoding.
+
+From an event-log point of view, each case is read as a sequence of tokens.
+By default, the token of an event is its activity name. The output has one
+row per trace and one column per token; the cell is 1.0 when the trace
+contains the token at least once and 0.0 otherwise.
+
+Example with the activity attribute:
+    case 1: A, B, A
+    case 2: A, C
+
+The vocabulary is [A, B, C], and the encoded matrix is:
+    case 1 -> [1, 1, 0]
+    case 2 -> [1, 0, 1]
+
+If event_attributes=["concept:name", "org:resource"], the event token can
+include both the activity and resource, e.g. "concept:name=A|org:resource=R1".
+
+Reference:
+Tavares, G. M., Oyamada, R. S., Barbon Junior, S., and Ceravolo, P.
+"Trace encoding in process mining: A survey and benchmarking."
+Engineering Applications of Artificial Intelligence, 126, 107028, 2023.
+https://doi.org/10.1016/j.engappai.2023.107028
+
+The survey lists one-hot as a baseline encoding and uses sklearn as the
+open-source implementation source. This variant uses scikit-learn's
+CountVectorizer with binary counts over trace tokens.
+"""
+
+from enum import Enum
+from typing import Any, Dict, Optional, Union
+
+import pandas as pd
+
+from pm4py.objects.log.obj import EventLog, EventStream
+from pm4py.algo.transformation.trace_encodings.util import sklearn_vectorization
+
+
+class Parameters(Enum):
+    EVENT_ATTRIBUTES = "event_attributes"
+    TRACE_ATTRIBUTES = "trace_attributes"
+    RETURN_SPARSE = "return_sparse"
+    VECTORIZER = "vectorizer"
+    FIT_VECTORIZER = "fit_vectorizer"
+
+
+def apply(
+    log: Union[EventLog, EventStream, pd.DataFrame],
+    parameters: Optional[Dict[Any, Any]] = None,
+):
+    """
+    Encodes each trace as a binary vector of present trace tokens.
+
+    Parameters
+    ----------
+    log
+        Event log, event stream, or dataframe containing traces.
+    parameters
+        Parameters of the encoding. Common options:
+        - EVENT_ATTRIBUTES: event attributes used to form tokens. Defaults to
+          the activity attribute.
+        - TRACE_ATTRIBUTES: case attributes added as context tokens.
+        - RETURN_SPARSE: if True, returns the sklearn sparse matrix.
+
+    Returns
+    -------
+    data
+        One row per trace, one binary value per discovered token.
+    feature_names
+        Token names corresponding to the columns of data.
+    """
+    return sklearn_vectorization.apply(
+        log, binary=True, ngram_range=(1, 1), parameters=parameters
+    )
