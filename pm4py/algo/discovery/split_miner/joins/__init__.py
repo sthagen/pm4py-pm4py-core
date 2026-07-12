@@ -19,4 +19,4 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from pm4py.algo.discovery.split_miner.joins import abc, classic
+from pm4py.algo.discovery.split_miner.joins import abc, sese

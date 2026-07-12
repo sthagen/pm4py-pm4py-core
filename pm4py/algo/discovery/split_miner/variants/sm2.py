@@ -21,65 +21,78 @@ Contact: info@processintelligence.solutions
 '''
 """Split Miner 2.0.
 
-Differs from the classic pipeline in four phases:
+A faithful re-implementation of the reference ``MineWithSMTC`` pipeline.
+It reuses the classic Split Miner machinery (directly-follows graph,
+filter, Oracle splits, SESE joins) and differs only where Split Miner
+2.0 genuinely differs:
 
-  * trace extraction is lifecycle-aware — each event keeps its
-    ``start`` / ``end`` phase and its timestamp;
-  * the directly-follows graph uses the refined definition that
-    requires a ``start`` of ``b`` after the ``end`` of ``a`` with no
-    intervening end event;
-  * the concurrency oracle compares lifecycle overlaps rather than
-    directly-follows frequencies;
-  * two heuristics run between split and join discovery: an
-    improper-completion fix and an OR-split identification.
+  * **lifecycle-aware log parsing** — the directly-follows graph is built
+    from ``complete`` events only, and a log carrying genuine
+    ``start``/``complete`` lifecycles (``|start - complete| < 0.5*total``)
+    additionally yields an *overlap*-based concurrency oracle;
+  * **fixed frequency threshold** — ``eta`` is pinned to ``1.0``;
+  * **no OR-replacement** — non-trivial inclusive joins are left as OR
+    gateways (``replaceIORs = false``) rather than expanded into
+    AND/XOR plus token generators;
+  * **compact self-loops** — level-1 loops stay as marked activities
+    instead of being expanded into XOR-loop structures;
+  * **light reduction** — only trivial XOR gateways are cleaned up; the
+    aggressive split/join flattening of the classic exporter is skipped.
 """
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, FrozenSet, List, Optional, Set, Union
 
 import pandas as pd
 
-from pm4py.algo.discovery.split_miner.concurrency.refined import (
-    Parameters as ConcParameters,
-    RefinedConcurrencyOracle,
+from pm4py.algo.discovery.split_miner.bpmn_export.lifecycle import (
+    LifecycleBPMNExporter,
 )
-from pm4py.algo.discovery.split_miner.dfg_discovery.refined import (
-    RefinedDFGDiscoverer,
+from pm4py.algo.discovery.split_miner.concurrency.classic import (
+    ClassicConcurrencyOracle,
+    DEFAULT_EPSILON,
+    Parameters as ConcParameters,
+)
+from pm4py.algo.discovery.split_miner.concurrency.lifecycle import (
+    apply_overlap_concurrency,
+)
+from pm4py.algo.discovery.split_miner.dtypes.complex_log import (
+    parse_complex_log,
 )
 from pm4py.algo.discovery.split_miner.dtypes.concurrency import (
     ConcurrencyResult,
 )
 from pm4py.algo.discovery.split_miner.dtypes.dfg import DFG
-from pm4py.algo.discovery.split_miner.dtypes.log import (
-    END_LABEL,
-    RefinedEvent,
-    RefinedTrace,
-    START_LABEL,
+from pm4py.algo.discovery.split_miner.dtypes.gateway_map import (
+    replace_inclusive_joins,
 )
 from pm4py.algo.discovery.split_miner.dtypes.loops import LoopInfo
 from pm4py.algo.discovery.split_miner.dtypes.working_graph import WorkingGraph
 from pm4py.algo.discovery.split_miner.filtering.max_min import (
     Parameters as FilterParameters,
 )
-from pm4py.algo.discovery.split_miner.heuristics.improper_completion import (
-    ImproperCompletionHeuristic,
-)
-from pm4py.algo.discovery.split_miner.heuristics.or_split import (
-    OrSplitHeuristic,
+from pm4py.algo.discovery.split_miner.or_min.or_split import (
+    apply_or_split_heuristic,
 )
 from pm4py.algo.discovery.split_miner.variants.abc import (
     Parameters as FrameworkParameters,
     SplitMinerFramework,
 )
 from pm4py.objects.bpmn.obj import BPMN
+from pm4py.objects.bpmn.util import reduction
 from pm4py.objects.conversion.log import converter as log_conversion
 from pm4py.objects.log.obj import EventLog, EventStream
-from pm4py.objects.log.util import interval_lifecycle
 from pm4py.util import constants, exec_utils
 from pm4py.util import xes_constants as xes_util
+
+# Split Miner 2.0 pins the percentile frequency threshold to 1.0.
+SM2_ETA = 1.0
 
 
 class Parameters(Enum):
     EPSILON = ConcParameters.EPSILON.value
+    # ETA and OR_MINIMISE are accepted for API compatibility with the
+    # classic variant but have no effect here: the reference SM 2.0
+    # pins eta to 1.0 and always runs its OR handling.
     ETA = FilterParameters.ETA.value
     OR_MINIMISE = FrameworkParameters.OR_MINIMISE.value
     ACTIVITY_KEY = constants.PARAMETER_CONSTANT_ACTIVITY_KEY
@@ -87,30 +100,41 @@ class Parameters(Enum):
 
 
 class SM2SplitMiner(SplitMinerFramework):
-    """Split Miner 2.0 — lifecycle-aware variant with post-split heuristics."""
+    """Split Miner 2.0 — lifecycle-aware, OR-preserving variant."""
+
+    def __init__(self) -> None:
+        # Lifecycle metadata captured during trace extraction and
+        # consumed by the later concurrency / OR-handling phases.
+        self._is_complex: bool = False
+        self._overlap: Dict[FrozenSet[str], int] = {}
+        self._observed: Dict[str, int] = {}
+        self._potential_ors: Set[FrozenSet[str]] = set()
 
     # ------------------------------------------------------------------
-    # Phase 0 — lifecycle-aware trace extraction
+    # Phase 0 — lifecycle-aware trace extraction (getComplexLog)
     # ------------------------------------------------------------------
 
     def do_extract_traces(
         self,
         log: Union[EventLog, EventStream, pd.DataFrame],
         parameters: Optional[Dict[str, Any]] = None,
-    ) -> List[RefinedTrace]:
+    ) -> List[List[str]]:
         parameters = parameters or {}
         activity_key = exec_utils.get_param_value(
             constants.PARAMETER_CONSTANT_ACTIVITY_KEY,
             parameters,
             xes_util.DEFAULT_NAME_KEY,
         )
+        lifecycle_key = exec_utils.get_param_value(
+            constants.PARAMETER_CONSTANT_TRANSITION_KEY,
+            parameters,
+            xes_util.DEFAULT_TRANSITION_KEY,
+        )
         timestamp_key = exec_utils.get_param_value(
             constants.PARAMETER_CONSTANT_TIMESTAMP_KEY,
             parameters,
             xes_util.DEFAULT_TIMESTAMP_KEY,
         )
-        start_timestamp_key = xes_util.DEFAULT_START_TIMESTAMP_KEY
-
         event_log = (
             log
             if isinstance(log, EventLog)
@@ -118,123 +142,74 @@ class SM2SplitMiner(SplitMinerFramework):
                 log, variant=log_conversion.Variants.TO_EVENT_LOG
             )
         )
-
-        # Delegate the standard XES lifecycle handling to pm4py: this
-        # pairs ``start``/``complete`` events into interval events that
-        # expose both a ``start_timestamp`` and a ``time:timestamp``,
-        # short-circuits when the log is already in interval form, and
-        # honours the same parameter conventions as the rest of pm4py.
-        interval_log = interval_lifecycle.to_interval(
-            event_log, parameters=parameters
+        result = parse_complex_log(
+            event_log, activity_key, lifecycle_key, timestamp_key
         )
-
-        traces: List[RefinedTrace] = []
-        for raw_trace, conv_trace in zip(event_log, interval_log):
-            events: List[RefinedEvent] = self._refined_from_interval(
-                conv_trace, activity_key, start_timestamp_key, timestamp_key
-            )
-            if not events:
-                # Fall back to the raw trace and treat every event as
-                # instantaneous — SM 2.0 then degenerates to the classic
-                # pipeline rather than crashing on the empty log.
-                events = self._refined_from_raw(
-                    raw_trace, activity_key, timestamp_key
-                )
-
-            # Stable sort keeps the synthesised start before its matching
-            # end when both share a timestamp.
-            events_idx = sorted(
-                enumerate(events),
-                key=lambda p: (p[1][2] if p[1][2] is not None else 0, p[0]),
-            )
-            events = [e for _, e in events_idx]
-            if events:
-                wrapped: RefinedTrace = [
-                    (START_LABEL, "start", None),
-                    (START_LABEL, "end", None),
-                    *events,
-                    (END_LABEL, "start", None),
-                    (END_LABEL, "end", None),
-                ]
-                traces.append(wrapped)
-        return traces
-
-    @staticmethod
-    def _refined_from_interval(
-        trace,
-        activity_key: str,
-        start_timestamp_key: str,
-        timestamp_key: str,
-    ) -> List[RefinedEvent]:
-        """Convert a pm4py interval-format trace into refined events."""
-        events: List[RefinedEvent] = []
-        for ev in trace:
-            if activity_key not in ev:
-                continue
-            label = str(ev[activity_key])
-            end_ts = ev.get(timestamp_key)
-            start_ts = ev.get(start_timestamp_key, end_ts)
-            events.append((label, "start", start_ts))
-            events.append((label, "end", end_ts))
-        return events
-
-    @staticmethod
-    def _refined_from_raw(
-        trace,
-        activity_key: str,
-        timestamp_key: str,
-    ) -> List[RefinedEvent]:
-        """Fallback: every raw event becomes an instantaneous interval."""
-        events: List[RefinedEvent] = []
-        for ev in trace:
-            if activity_key not in ev:
-                continue
-            label = str(ev[activity_key])
-            ts = ev.get(timestamp_key)
-            events.append((label, "start", ts))
-            events.append((label, "end", ts))
-        return events
+        self._is_complex = result.is_complex
+        self._overlap = result.overlap
+        self._observed = result.observed
+        self._potential_ors = result.potential_ors
+        return result.traces
 
     # ------------------------------------------------------------------
-    # Phase 1 — refined DFG
-    # ------------------------------------------------------------------
-
-    def do_dfg_discovery(
-        self,
-        traces: List[RefinedTrace],
-        parameters: Optional[Dict[str, Any]] = None,
-    ):
-        return RefinedDFGDiscoverer.apply(traces, parameters)
-
-    # ------------------------------------------------------------------
-    # Phase 2 — lifecycle-overlap concurrency oracle
+    # Phase 2 — concurrency: overlap (complex log) or classic imbalance
     # ------------------------------------------------------------------
 
     def do_concurrency(
         self,
         dfg: DFG,
-        traces: Optional[List[RefinedTrace]],
+        traces,
         loops: LoopInfo,
         parameters: Optional[Dict[str, Any]] = None,
     ) -> ConcurrencyResult:
-        return RefinedConcurrencyOracle.apply(dfg, traces, loops, parameters)
+        if self._is_complex:
+            eps = exec_utils.get_param_value(
+                ConcParameters.EPSILON, parameters or {}, DEFAULT_EPSILON
+            )
+            return apply_overlap_concurrency(
+                dfg, self._overlap, self._observed, eps
+            )
+        return ClassicConcurrencyOracle.apply(dfg, traces, loops, parameters)
 
     # ------------------------------------------------------------------
-    # Phase 6 — lifecycle-driven heuristics
+    # Phase 3 — filter, with eta pinned to 1.0
     # ------------------------------------------------------------------
 
-    def do_apply_heuristics(
-        self,
-        wg: WorkingGraph,
-        traces: List[RefinedTrace],
-        parameters: Optional[Dict[str, Any]] = None,
-    ) -> None:
-        ImproperCompletionHeuristic.apply(wg, traces, parameters)
-        OrSplitHeuristic.apply(wg, traces, parameters)
+    def do_filter(self, pdfg, parameters=None):
+        params = dict(parameters or {})
+        params[FilterParameters.ETA.value] = SM2_ETA
+        return super().do_filter(pdfg, params)
+
+    # ------------------------------------------------------------------
+    # Phase 7 — OR handling: replaceIORs = false (keep inclusive joins)
+    # ------------------------------------------------------------------
+
+    def or_handling_is_mandatory(self) -> bool:
+        # The reference SM 2.0 pipeline always runs ``replaceIORs(false)``;
+        # there is no Java equivalent of skipping it, so SM 2.0 ignores the
+        # ``minimize_or_joins`` flag (just as it ignores ``eta``).
+        return True
+
+    def do_minimize_or_joins(self, wg: WorkingGraph, parameters=None):
+        replace_inclusive_joins(wg, apply_hagen=False)
+        # replaceIORs == false also runs the OR-split heuristic: AND
+        # splits over potential-OR branches become OR-splits, matched by
+        # OR-joins. Only fires on complex logs (potential_ors non-empty).
+        apply_or_split_heuristic(wg, self._potential_ors)
+
+    # ------------------------------------------------------------------
+    # Phase 8 — export: compact self-loops, light reduction only
+    # ------------------------------------------------------------------
+
+    def do_export_bpmn(self, wg: WorkingGraph, parameters=None) -> BPMN:
+        bpmn = LifecycleBPMNExporter.apply(wg, parameters)
+        # Split Miner 2.0 only removes trivial XOR gateways; it does not
+        # flatten nested same-type split/join gateways.
+        return reduction.apply(bpmn, {})
 
 
 def apply(
-    log: Union[EventLog, EventStream, pd.DataFrame],
+    log: Union[EventLog, EventStream, pd.DataFrame, DFG, str],
     parameters: Optional[Dict[str, Any]] = None,
 ) -> BPMN:
     """Discover a BPMN model using Split Miner 2.0."""

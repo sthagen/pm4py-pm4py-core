@@ -28,9 +28,15 @@ from pm4py.statistics.ocel import act_ot_dependent, act_utils, edge_metrics
 
 
 class Parameters(Enum):
+    EVENT_ID = ocel_constants.PARAM_EVENT_ID
     EVENT_ACTIVITY = ocel_constants.PARAM_EVENT_ACTIVITY
+    EVENT_TIMESTAMP = ocel_constants.PARAM_EVENT_TIMESTAMP
+    OBJECT_ID = ocel_constants.PARAM_OBJECT_ID
     OBJECT_TYPE = ocel_constants.PARAM_OBJECT_TYPE
     COMPUTE_EDGES_PERFORMANCE = "compute_edges_performance"
+    BUSINESS_HOURS = "business_hours"
+    BUSINESS_HOUR_SLOTS = "business_hour_slots"
+    WORKCALENDAR = "workcalendar"
 
 
 def apply(
@@ -47,9 +53,15 @@ def apply(
         Object-centric event log
     parameters
         Parameters of the algorithm, including:
+        - Parameters.EVENT_ID => the attribute to be used as event identifier
         - Parameters.EVENT_ACTIVITY => the attribute to be used as activity
+        - Parameters.EVENT_TIMESTAMP => the attribute to be used as timestamp
+        - Parameters.OBJECT_ID => the attribute to be used as object identifier
         - Parameters.OBJECT_TYPE => the attribute to be used as object type
         - Parameters.COMPUTE_EDGES_PERFORMANCE => (boolean) enables/disables the computation of the performance on the edges
+        - Parameters.BUSINESS_HOURS => enables/disables business-hour edge performance
+        - Parameters.BUSINESS_HOUR_SLOTS => work schedule of the company
+        - Parameters.WORKCALENDAR => work calendar to use when business hours are enabled
 
     Returns
     -----------------

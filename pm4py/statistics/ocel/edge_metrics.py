@@ -256,7 +256,8 @@ def find_associations_per_edge(
     )
     activities = {x: y[0] for x, y in activities.items()}
 
-    omap = ocel.relations.groupby(event_id)[object_id].agg(list).to_dict()
+    relations = ocel.relations[[event_id, object_id]].drop_duplicates()
+    omap = relations.groupby(event_id)[object_id].agg(list).to_dict()
     objtypes = ocel.objects.groupby(object_id)[object_type].agg(list).to_dict()
     objtypes = {x: y[0] for x, y in objtypes.items()}
 

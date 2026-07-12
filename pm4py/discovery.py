@@ -1068,9 +1068,12 @@ def discover_bpmn_split_miner(
     :param epsilon: Concurrency threshold ε ∈ [0, 1] (default 0.1). With a
         lower ε more pairs of activities are considered concurrent.
     :param eta: Filtering percentile η ∈ [0, 1] (default 0.4). Lower η
-        keeps more edges (higher fitness, more complex model).
+        keeps more edges (higher fitness, more complex model). Used by the
+        ``classic`` variant only; ``sm2`` pins η to 1.0 and ignores this.
     :param minimize_or_joins: Replace trivial OR-joins with their XOR/AND
         equivalent (Algorithm 9 of the SM 1.x paper). Default ``True``.
+        Used by the ``classic`` variant only; for ``sm2`` the OR handling
+        is an intrinsic stage that always runs, so this flag is ignored.
     :param variant: ``"classic"`` (default) or ``"sm2"``.
     :param activity_key: XES attribute holding the activity label
         (default ``"concept:name"``).

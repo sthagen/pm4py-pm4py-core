@@ -29,6 +29,7 @@ import pandas as pd
 import numpy as np
 
 from pm4py.objects.ocel.obj import OCEL
+from pm4py.objects.ocel import constants as ocel_constants
 from pm4py.objects.ocpn.obj import OCPetriNet
 from pm4py.util import constants, pandas_utils
 import sys
@@ -285,10 +286,17 @@ def ocel_objects_interactions_summary(ocel: OCEL) -> pd.DataFrame:
 
 def discover_ocdfg(
     ocel: OCEL,
+    event_id: Optional[str] = None,
+    event_activity: Optional[str] = None,
+    event_timestamp: Optional[str] = None,
+    object_id: Optional[str] = None,
+    object_type: Optional[str] = None,
+    compute_edges_performance: bool = True,
     business_hours: bool = False,
     business_hour_slots: Optional[
         List[Tuple[int, int]]
     ] = constants.DEFAULT_BUSINESS_HOUR_SLOTS,
+    workcalendar: str = constants.DEFAULT_BUSINESS_HOURS_WORKCALENDAR,
 ) -> Dict[str, Any]:
     """
     Discovers an Object-Centric Directly-Follows Graph (OC-DFG) from an object-centric event log.
@@ -312,6 +320,18 @@ def discover_ocdfg(
 
     :param ocel: Object-centric event log.
     :type ocel: OCEL
+    :param event_id: Event identifier column to use.
+    :type event_id: Optional[str]
+    :param event_activity: Event activity column to use.
+    :type event_activity: Optional[str]
+    :param event_timestamp: Event timestamp column to use.
+    :type event_timestamp: Optional[str]
+    :param object_id: Object identifier column to use.
+    :type object_id: Optional[str]
+    :param object_type: Object type column to use.
+    :type object_type: Optional[str]
+    :param compute_edges_performance: Enable the computation of edge performance metrics if set to True.
+    :type compute_edges_performance: bool
     :param business_hours: Enable the usage of business hours if set to True.
     :type business_hours: bool
     :param business_hour_slots: Work schedule of the company, provided as a list of tuples where each tuple
@@ -320,6 +340,8 @@ def discover_ocdfg(
                                  [(25200, 61200), (9072, 43200), (46800, 61200)] meaning that business hours
                                  are Mondays 07:00 - 17:00, Tuesdays 02:32 - 12:00, and Wednesdays 13:00 - 17:00.
     :type business_hour_slots: Optional[List[Tuple[int, int]]]
+    :param workcalendar: Work calendar to use when business hours are enabled.
+    :type workcalendar: str
     :return: OC-DFG discovery result.
     :rtype: Dict[str, Any]
 
@@ -330,8 +352,15 @@ def discover_ocdfg(
         ocdfg = pm4py.discover_ocdfg(ocel)
     """
     parameters = {
+        ocel_constants.PARAM_EVENT_ID: event_id if event_id is not None else ocel.event_id_column,
+        ocel_constants.PARAM_EVENT_ACTIVITY: event_activity if event_activity is not None else ocel.event_activity,
+        ocel_constants.PARAM_EVENT_TIMESTAMP: event_timestamp if event_timestamp is not None else ocel.event_timestamp,
+        ocel_constants.PARAM_OBJECT_ID: object_id if object_id is not None else ocel.object_id_column,
+        ocel_constants.PARAM_OBJECT_TYPE: object_type if object_type is not None else ocel.object_type_column,
+        "compute_edges_performance": compute_edges_performance,
         "business_hours": business_hours,
         "business_hour_slots": business_hour_slots,
+        "workcalendar": workcalendar,
     }
     from pm4py.algo.discovery.ocel.ocdfg import algorithm as ocdfg_discovery
 
@@ -341,6 +370,10 @@ def discover_ocdfg(
 def discover_oc_petri_net(
     ocel: OCEL,
     inductive_miner_variant: str = "im",
+    noise_threshold: float = 0.0,
+    multi_processing: bool = constants.ENABLE_MULTIPROCESSING_DEFAULT,
+    disable_fallthroughs: bool = True,
+    disable_strict_sequence_cut: bool = True,
     diagnostics_with_tbr: bool = False,
 ) -> OCPetriNet:
     """
@@ -351,8 +384,16 @@ def discover_oc_petri_net(
 
     :param ocel: Object-centric event log.
     :type ocel: OCEL
-    :param inductive_miner_variant: Variant of the inductive miner to use ("im" for traditional; "imd" for the faster inductive miner directly-follows).
+    :param inductive_miner_variant: Variant of the inductive miner to use ("im" for traditional, "imf" for infrequent, or "imd" for the faster inductive miner directly-follows).
     :type inductive_miner_variant: str
+    :param noise_threshold: Noise threshold for the inductive miner (default: 0.0).
+    :type noise_threshold: float
+    :param multi_processing: Enables or disables multiprocessing in the inductive miner.
+    :type multi_processing: bool
+    :param disable_fallthroughs: Disables the inductive miner fall-throughs.
+    :type disable_fallthroughs: bool
+    :param disable_strict_sequence_cut: Disables the strict sequence cut in the inductive miner.
+    :type disable_strict_sequence_cut: bool
     :param diagnostics_with_tbr: Enable the computation of diagnostics using token-based replay if set to True.
     :type diagnostics_with_tbr: bool
     :return: Discovered object-centric Petri net.
@@ -368,6 +409,10 @@ def discover_oc_petri_net(
 
     parameters = {
         "inductive_miner_variant": inductive_miner_variant,
+        "noise_threshold": noise_threshold,
+        "multiprocessing": multi_processing,
+        "disable_fallthroughs": disable_fallthroughs,
+        "disable_strict_sequence_cut": disable_strict_sequence_cut,
         "diagnostics_with_token_based_replay": diagnostics_with_tbr,
     }
 

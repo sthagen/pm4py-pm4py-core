@@ -1,9 +1,11 @@
-"""Quick smoke test for the new Split Miner integration.
+"""Quick smoke test for the Split Miner integration.
 
 Reproduces the running example of Augusto et al. (2019) — 10 distinct
-traces, 10 occurrences each — and asserts that classic Split Miner
-produces a BPMN matching Fig. 3c (8 tasks, 1 AND-split + 2 XOR-splits,
-2 OR-joins or their AND/XOR equivalent after OR-minimisation).
+traces, 10 occurrences each. The expected gateway counts are not taken
+from the paper's idealised Fig. 3c but from the *reference Java Split
+Miner 1.0* run on the same log at ``epsilon=0.2, eta=0.4`` (verified
+byte-identical to this Python port): 8 tasks, 2 AND-splits, 4 XOR-splits
+and no surviving OR-joins.
 """
 from collections import Counter
 import datetime
@@ -88,9 +90,9 @@ def main() -> int:
     edges = len(bpmn.get_flows())
     print(f"classic SM 1.x : nodes={dict(counts)} edges={edges}")
     assert counts["task"] == 8, counts
-    assert counts["and"] == 1, counts
-    assert counts["xor"] == 3, counts
-    assert counts["or"] == 2, counts
+    assert counts["and"] == 2, counts
+    assert counts["xor"] == 4, counts
+    assert counts["or"] == 0, counts
 
     bpmn2 = pm4py.discover_bpmn_split_miner(
         df,

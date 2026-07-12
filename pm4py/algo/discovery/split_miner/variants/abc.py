@@ -32,10 +32,10 @@ How to extend:
 The :meth:`apply` driver runs the canonical Split Miner pipeline:
 (1) trace extraction, (2) DFG + loop discovery, (3) concurrency,
 (4) PDFG filtering, (5) initial BPMN, (6) split discovery,
-(7) optional heuristics, (8) join discovery, (9) OR-join minimisation,
-(10) BPMN export. The default implementations of every ``do_*`` method
-match the classic Split Miner; subclasses change only the phases that
-genuinely differ from the classic flow.
+(7) join discovery, (8) OR handling, (9) BPMN export. The default
+implementations of every ``do_*`` method match the classic Split Miner;
+subclasses change only the phases that genuinely differ from the
+classic flow.
 """
 from abc import ABC
 from enum import Enum
@@ -70,8 +70,8 @@ from pm4py.algo.discovery.split_miner.dtypes.log import (
 from pm4py.algo.discovery.split_miner.dtypes.loops import LoopInfo
 from pm4py.algo.discovery.split_miner.dtypes.working_graph import WorkingGraph
 from pm4py.algo.discovery.split_miner.filtering.max_min import MaxMinFilterer
-from pm4py.algo.discovery.split_miner.joins.classic import (
-    ClassicJoinsDiscoverer,
+from pm4py.algo.discovery.split_miner.joins.sese import (
+    SeseJoinsDiscoverer,
 )
 from pm4py.algo.discovery.split_miner.or_min.classic import (
     ClassicOrJoinMinimizer,
@@ -197,19 +197,7 @@ class SplitMinerFramework(ABC):
         ClassicSplitsDiscoverer.apply(wg, parameters)
 
     # ------------------------------------------------------------------
-    # Phase 6 — variant-specific heuristics (no-op by default)
-    # ------------------------------------------------------------------
-
-    def do_apply_heuristics(
-        self,
-        wg: WorkingGraph,
-        traces: List[Any],
-        parameters: Optional[Dict[str, Any]] = None,
-    ) -> None:
-        """Run any variant-specific heuristics. Default: nothing to do."""
-
-    # ------------------------------------------------------------------
-    # Phase 7 — join discovery
+    # Phase 6 — join discovery
     # ------------------------------------------------------------------
 
     def do_discover_joins(
@@ -217,10 +205,10 @@ class SplitMinerFramework(ABC):
         wg: WorkingGraph,
         parameters: Optional[Dict[str, Any]] = None,
     ) -> None:
-        ClassicJoinsDiscoverer.apply(wg, parameters)
+        SeseJoinsDiscoverer.apply(wg, parameters)
 
     # ------------------------------------------------------------------
-    # Phase 8 — OR-join minimisation
+    # Phase 7 — OR handling
     # ------------------------------------------------------------------
 
     def do_minimize_or_joins(
@@ -230,8 +218,20 @@ class SplitMinerFramework(ABC):
     ) -> None:
         ClassicOrJoinMinimizer.apply(wg, parameters)
 
+    def or_handling_is_mandatory(self) -> bool:
+        """Whether :meth:`do_minimize_or_joins` runs unconditionally.
+
+        For classic Split Miner the OR-join minimisation is an optional
+        post-step governed by the ``minimize_or_joins`` flag. For Split
+        Miner 2.0 the OR handling (inclusive joins left in place plus the
+        OR-split heuristic) is an intrinsic stage of the reference
+        ``replaceIORs`` step, so that variant forces it on regardless of
+        the flag.
+        """
+        return False
+
     # ------------------------------------------------------------------
-    # Phase 9 — export
+    # Phase 8 — export
     # ------------------------------------------------------------------
 
     def do_export_bpmn(
@@ -240,7 +240,9 @@ class SplitMinerFramework(ABC):
         parameters: Optional[Dict[str, Any]] = None,
     ) -> BPMN:
         bpmn = ClassicBPMNExporter.apply(wg, parameters)
-        return  reduction.apply(bpmn)
+        return reduction.apply(
+            bpmn, {reduction.Parameters.COLLAPSE_GATEWAYS: True}
+        )
 
     # ------------------------------------------------------------------
     # Pipeline driver
@@ -281,13 +283,12 @@ class SplitMinerFramework(ABC):
         wg = self.do_build_initial_bpmn(filt, conc, loops, parameters)
 
         self.do_discover_splits(wg, parameters)
-        self.do_apply_heuristics(wg, traces, parameters)
         self.do_discover_joins(wg, parameters)
 
         or_minimise = exec_utils.get_param_value(
             Parameters.OR_MINIMISE, parameters, DEFAULT_OR_MINIMISE
         )
-        if or_minimise:
+        if or_minimise or self.or_handling_is_mandatory():
             self.do_minimize_or_joins(wg, parameters)
 
         return self.do_export_bpmn(wg, parameters)

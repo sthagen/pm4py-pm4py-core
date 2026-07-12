@@ -21,10 +21,22 @@ Contact: info@processintelligence.solutions
 '''
 """Classic Split Miner concurrency oracle.
 
-Two activities are flagged as concurrent when they appear as ``a -> b``
-and ``b -> a`` in the DFG with roughly balanced frequencies, are not a
-short-loop pair, and neither is a self-loop. Imbalanced bidirectional
-pairs keep only the more frequent direction.
+Two activities ``a`` and ``b`` are concurrent when they appear as both
+``a -> b`` and ``b -> a`` in the DFG, are not a short-loop pair, and the
+bidirectional frequencies are roughly balanced (imbalance under epsilon).
+
+When an imbalanced bidirectional pair is detected the less frequent
+direction is dropped instead and concurrency is *not* recorded.
+
+Both pruning operations are performed greedily in ascending-frequency
+order and respect a connectedness invariant inherited from the
+reference Java implementation: an edge is only dropped when its source
+retains another outgoing edge *and* its target retains another incoming
+edge in the pruned DFG. When the favoured direction cannot be dropped
+the algorithm falls back to dropping the opposite direction (if that is
+itself removable) and demotes the pair from concurrent to sequential,
+mirroring the behaviour of ``DirectlyFollowGraphPlus.removeEdge`` with
+``ensureConnectedness=true``.
 """
 from enum import Enum
 from typing import Any, Dict, FrozenSet, List, Optional, Set, Tuple
@@ -46,11 +58,8 @@ DEFAULT_EPSILON = 0.1
 
 
 class ClassicConcurrencyOracle(ConcurrencyOracle):
-    """Three-condition test on directly-follows frequencies.
-
-    The imbalance condition uses ``<= eps`` rather than ``< eps`` to
-    mirror the Java reference implementation; with strict ``<`` the
-    boundary case at exactly ``eps`` is missed.
+    """Imbalance test on directly-follows frequencies, with a
+    connectedness guard that prevents pruning from isolating any task.
     """
 
     @classmethod
@@ -65,11 +74,34 @@ class ClassicConcurrencyOracle(ConcurrencyOracle):
             Parameters.EPSILON, parameters or {}, DEFAULT_EPSILON
         )
 
-        concurrent: Set[FrozenSet[str]] = set()
-        drop_infrequent: Set[Tuple[str, str]] = set()
+        # Live in/out degree per node in the working DFG. The oracle
+        # mutates these counters as it drops edges so the connectedness
+        # guard reflects intermediate state, exactly like Java's
+        # incomings/outgoings maps.
+        out_count: Dict[str, int] = {}
+        in_count: Dict[str, int] = {}
+        for (a, b) in dfg.keys():
+            out_count[a] = out_count.get(a, 0) + 1
+            in_count[b] = in_count.get(b, 0) + 1
+
+        # Candidate drops, paired with their frequencies. For every
+        # bidirectional pair both directions are queued when the pair is
+        # balanced enough to be concurrent; when imbalanced only the
+        # weaker direction is queued (and concurrency is not asserted).
+        # ``pair_kind`` records whether each queued drop belongs to a
+        # concurrent pair (``"par"``) or an imbalance demotion
+        # (``"imb"``); this drives the bookkeeping that demotes
+        # concurrency back to a sequence arc when a removal is vetoed by
+        # the connectedness guard.
+        candidates: List[Tuple[Tuple[str, str], int]] = []
+        pair_kind: Dict[Tuple[str, str], str] = {}
+        concurrent_pairs: Set[FrozenSet[str]] = set()
         seen: Set[FrozenSet[str]] = set()
 
-        for (a, b), f_ab in list(dfg.items()):
+        # Deterministic iteration: sorting up front keeps the set of
+        # candidate pairs identical across runs regardless of dict
+        # insertion order.
+        for (a, b), f_ab in sorted(dfg.items()):
             if a == b:
                 continue
             pair = frozenset((a, b))
@@ -84,23 +116,62 @@ class ClassicConcurrencyOracle(ConcurrencyOracle):
                 continue
 
             denom = f_ab + f_ba
-            if denom == 0:
-                continue
             imbalance = abs(f_ab - f_ba) / denom
 
-            if imbalance <= eps:
-                concurrent.add(pair)
+            # Reference uses a strict comparison (Math.abs(score) <
+            # parallelismsThreshold); a pair whose imbalance is exactly
+            # epsilon is NOT concurrent.
+            if imbalance < eps:
+                concurrent_pairs.add(pair)
+                candidates.append(((a, b), f_ab))
+                candidates.append(((b, a), f_ba))
+                pair_kind[(a, b)] = "par"
+                pair_kind[(b, a)] = "par"
             else:
-                if f_ab < f_ba:
-                    drop_infrequent.add((a, b))
-                else:
-                    drop_infrequent.add((b, a))
+                drop = (a, b) if f_ab < f_ba else (b, a)
+                drop_f = min(f_ab, f_ba)
+                candidates.append((drop, drop_f))
+                pair_kind[drop] = "imb"
 
-        pdfg: DFG = {}
-        for (a, b), f in dfg.items():
-            if frozenset((a, b)) in concurrent:
+        # Process candidate drops in ascending-frequency order so the
+        # least informative arcs are challenged by the guard first
+        # (matching Collections.sort on Java's DFGEdge).
+        candidates.sort(key=lambda x: (x[1], x[0]))
+
+        to_drop: Set[Tuple[str, str]] = set()
+
+        def _can_drop(edge: Tuple[str, str]) -> bool:
+            a, b = edge
+            return out_count.get(a, 0) > 1 and in_count.get(b, 0) > 1
+
+        def _do_drop(edge: Tuple[str, str]) -> None:
+            a, b = edge
+            to_drop.add(edge)
+            out_count[a] -= 1
+            in_count[b] -= 1
+
+        for edge, _f in candidates:
+            if edge in to_drop:
                 continue
-            if (a, b) in drop_infrequent:
+            if _can_drop(edge):
+                _do_drop(edge)
                 continue
-            pdfg[(a, b)] = f
-        return ConcurrencyResult(pdfg=pdfg, concurrent_pairs=concurrent)
+            # Connectedness guard vetoed the drop. For concurrent pairs
+            # this demotes the pair to a sequence arc: discard the pair
+            # from ``concurrent_pairs`` and instead try to drop the
+            # reverse direction (if it has not been dropped already and
+            # the guard allows it).
+            a, b = edge
+            if pair_kind.get(edge) == "par":
+                concurrent_pairs.discard(frozenset((a, b)))
+                reverse = (b, a)
+                if reverse in dfg and reverse not in to_drop and _can_drop(reverse):
+                    _do_drop(reverse)
+            # Imbalance drops vetoed by the guard simply stay in the
+            # DFG; Java behaves the same way (the edge survives because
+            # removing it would orphan a node).
+
+        pdfg: DFG = {
+            (a, b): f for (a, b), f in dfg.items() if (a, b) not in to_drop
+        }
+        return ConcurrencyResult(pdfg=pdfg, concurrent_pairs=concurrent_pairs)

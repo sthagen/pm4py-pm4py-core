@@ -4,6 +4,7 @@ import unittest
 
 import pm4py
 from pm4py.objects.bpmn.obj import BPMN
+from pm4py.objects.ocel.obj import OCEL
 from pm4py.objects.petri_net.obj import PetriNet
 from pm4py.objects.process_tree.obj import ProcessTree
 from pm4py.util import constants, pandas_utils
@@ -576,6 +577,39 @@ class SimplifiedInterfaceTest(unittest.TestCase):
     def test_ocel_flattening(self):
         ocel = pm4py.read_ocel("input_data/ocel/example_log.csv")
         pm4py.ocel_flattening(ocel, "order")
+
+    def test_ocel_flattening_deduplicates_qualified_relations(self):
+        ocel = OCEL(
+            events=pandas_utils.instantiate_dataframe(
+                {
+                    "ocel:eid": ["e1"],
+                    "ocel:activity": ["Create Order"],
+                    "ocel:timestamp": ["2020-01-01 00:00:00"],
+                }
+            ),
+            objects=pandas_utils.instantiate_dataframe(
+                {"ocel:oid": ["o1"], "ocel:type": ["order"]}
+            ),
+            relations=pandas_utils.instantiate_dataframe(
+                {
+                    "ocel:eid": ["e1", "e1"],
+                    "ocel:activity": ["Create Order", "Create Order"],
+                    "ocel:timestamp": [
+                        "2020-01-01 00:00:00",
+                        "2020-01-01 00:00:00",
+                    ],
+                    "ocel:oid": ["o1", "o1"],
+                    "ocel:type": ["order", "order"],
+                    "ocel:qualifier": ["created", "referenced"],
+                }
+            ),
+        )
+
+        flattened = pm4py.ocel_flattening(ocel, "order")
+
+        self.assertEqual(1, len(flattened))
+        self.assertEqual("o1", flattened.iloc[0][constants.CASE_CONCEPT_NAME])
+
     def test_stats_var_tuples_df(self):
         dataframe = pandas_utils.read_csv("input_data/running-example-transformed.csv")
         dataframe = dataframe_utils.convert_timestamp_columns_in_df(dataframe, timest_format=constants.DEFAULT_TIMESTAMP_PARSE_FORMAT, timest_columns=["Timestamp"])

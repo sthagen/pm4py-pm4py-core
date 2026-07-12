@@ -21,6 +21,7 @@ Additional file formats that are currently supported by PM4Py are:
 
 Importing object-centric event logs is possible given the following formats:
 
+  * automatic format detection from the file extension :meth:`pm4py.read.read_ocel`
   * ``.csv`` specification :meth:`pm4py.read.read_ocel_csv`
   * ``.jsonocel`` specification :meth:`pm4py.read.read_ocel_json`
   * ``.xmlocel`` specification :meth:`pm4py.read.read_ocel_xml`
@@ -28,6 +29,7 @@ Importing object-centric event logs is possible given the following formats:
 
 Importing object-centric event logs (OCEL2.0) is possible given the following formats:
 
+  * automatic format detection from the file extension :meth:`pm4py.read.read_ocel2`
   * bundled ``.ocel.zip`` CSV/Parquet specification :meth:`pm4py.read.read_ocel2_bundle`
   * compact ``.csv`` specification :meth:`pm4py.read.read_ocel2_csv`
   * ``.xmlocel`` specification :meth:`pm4py.read.read_ocel2_xml`
@@ -47,6 +49,7 @@ Similarly to event data importing, ``pm4py`` supports export functionalities to:
 
 Exporting object-centric event logs is possible to the following formats:
 
+  * automatic format detection from the file extension :meth:`pm4py.write.write_ocel`
   * ``.csv`` specification :meth:`pm4py.write.write_ocel_csv`
   * ``.jsonocel`` specification :meth:`pm4py.write.write_ocel_json`
   * ``.xmlocel`` specification :meth:`pm4py.write.write_ocel_xml`
@@ -54,6 +57,7 @@ Exporting object-centric event logs is possible to the following formats:
 
 Exporting object-centric event logs (OCEL2.0) is possible to the following formats:
 
+  * automatic format detection from the file extension :meth:`pm4py.write.write_ocel2`
   * bundled ``.ocel.zip`` CSV/Parquet specification :meth:`pm4py.write.write_ocel2_bundle`
   * compact ``.csv`` specification :meth:`pm4py.write.write_ocel2_csv`
   * ``.xmlocel`` specification :meth:`pm4py.write.write_ocel2_xml`
@@ -73,6 +77,7 @@ The following conversions are currently available:
   * :meth:`pm4py.convert.convert_to_reachability_graph` converts a process model to a reachability graph
   * :meth:`pm4py.convert.convert_log_to_ocel` converts an event log to an object-centric event log
   * :meth:`pm4py.convert.convert_log_to_networkx` converts a traditional event log (dataframe) to a directed graph (NetworkX)
+  * :meth:`pm4py.convert.convert_log_to_time_intervals` converts an event log to time intervals between consecutive events.
   * :meth:`pm4py.convert.convert_ocel_to_networkx` converts an object-centric event log to a directed graph (NetworkX)
   * :meth:`pm4py.convert.convert_petri_net_to_networkx` converts an accepting Petri net to a directed graph (NetworkX)
   * :meth:`pm4py.convert.convert_petri_net_type` changes the Petri net internal type
@@ -86,20 +91,27 @@ These different algorithms return different kinds of models, i.e., models with *
 Among the models with *imprecise execution semantics*, ``pm4py`` currently supports:
 
   * :meth:`pm4py.discovery.discover_dfg`; discovers a *directly follows graph* annotated with frequency information (based on the log).
+  * :meth:`pm4py.discovery.discover_directly_follows_graph`; alias for discovering a frequency *directly follows graph*.
+  * :meth:`pm4py.discovery.discover_dfg_typed`; discovers a typed *directly follows graph* object.
   * :meth:`pm4py.discovery.discover_performance_dfg`; discovers a *directly follows graph* annotated with performance information (based on the log).
+  * :meth:`pm4py.discovery.correlation_miner`; discovers a frequency or performance *directly follows graph* from an event log without a case identifier.
 
 Among *procedural process models*, ``pm4py`` currently supports:
 
   * :meth:`pm4py.discovery.discover_petri_net_alpha`; discovers a *Petri net* using the Alpha Miner algorithm.
+  * :meth:`pm4py.discovery.discover_petri_net_alpha_plus`; discovers a *Petri net* using the deprecated Alpha+ Miner algorithm.
   * :meth:`pm4py.discovery.discover_petri_net_inductive`; discovers a *Petri net* using the Inductive Miner algorithm.
   * :meth:`pm4py.discovery.discover_petri_net_heuristics`; discovers a *Petri net* using the Heuristics Miner algorithm.
   * :meth:`pm4py.discovery.discover_petri_net_ilp`; discovers a *Petri net* using the ILP Miner algorithm.
   * :meth:`pm4py.discovery.discover_petri_net_genetic`; discovers a *Petri net* using the Genetic Miner algorithm.
   * :meth:`pm4py.discovery.discover_process_tree_inductive`; discovers a *process tree* using the Inductive Miner algorithm.
   * :meth:`pm4py.discovery.discover_bpmn_inductive`; discovers a *BPMN model* using the Inductive Miner algorithm.
+  * :meth:`pm4py.discovery.discover_bpmn_split_miner`; discovers a *BPMN model* using the Split Miner algorithm.
   * :meth:`pm4py.discovery.discover_heuristics_net`; discovers a *heuristics net* using the Heuristics Miner algorithm.
   * :meth:`pm4py.discovery.discover_footprints`; discovers the *footprints matrix* of the log or the model.
   * :meth:`pm4py.discovery.discover_powl`; discovers a *partial order workflow language* (POWL) model.
+  * :meth:`pm4py.discovery.discover_otg`; discovers an *object-type graph* from an object-centric event log.
+  * :meth:`pm4py.discovery.discover_etot`; discovers an *event type-object type graph* from an object-centric event log.
 
 Among *declarative process models*, ``pm4py`` currently supports:
 
@@ -122,13 +134,21 @@ Among procedural process models, ``pm4py`` currently supports:
   * :meth:`pm4py.conformance.precision_token_based_replay`; evaluation of the precision between an event log and a *Petri net* using token-based replay.
   * :meth:`pm4py.conformance.precision_alignments`; evaluation of the precision between an event log and a *Petri net* using alignments.
   * :meth:`pm4py.conformance.precision_footprints`; evaluation of the precision based on footprints.
+  * :meth:`pm4py.conformance.generalization_tbr`; evaluation of the generalization between an event log and a *Petri net* using token-based replay.
   * :meth:`pm4py.conformance.replay_prefix_tbr`; replays a prefix (list of activities) on a given *Petri net*, using Token-Based Replay.
+  * :meth:`pm4py.conformance.check_is_fitting`; checks whether a trace fits a process model.
 
 Among declarative process models, ``pm4py`` currently supports:
 
   * :meth:`pm4py.conformance.conformance_log_skeleton`; conformance checking using the *log skeleton*.
   * :meth:`pm4py.conformance.conformance_declare`; conformance checking using a *DECLARE model*.
   * :meth:`pm4py.conformance.conformance_temporal_profile`; conformance checking using the *temporal profile*.
+
+Among object-centric process models, ``pm4py`` currently supports:
+
+  * :meth:`pm4py.conformance.conformance_ocdfg`; conformance checking using an *object-centric directly-follows graph*.
+  * :meth:`pm4py.conformance.conformance_otg`; conformance checking using an *object-type graph*.
+  * :meth:`pm4py.conformance.conformance_etot`; conformance checking using an *event type-object type graph*.
 
 
 Visualization (:mod:`pm4py.vis`)
@@ -194,13 +214,20 @@ Different statistics that can be computed on top of event logs are proposed, inc
   * :meth:`pm4py.stats.get_event_attribute_values`; gets the values of an *attribute at the event level* of the event log.
   * :meth:`pm4py.stats.get_trace_attribute_values`; gets the values of an *attribute at the trace level* of the event log.
   * :meth:`pm4py.stats.get_variants`; gets the *variants* of the event log.
+  * :meth:`pm4py.stats.get_variants_as_tuples`; gets the *variants* of the event log as tuples.
   * :meth:`pm4py.stats.split_by_process_variant`; splits an event log into sub-dataframes for each process variant.
   * :meth:`pm4py.stats.get_variants_paths_duration`; method that associates to a log object a Pandas dataframe aggregated by variants and positions (inside the variant).
+  * :meth:`pm4py.stats.get_minimum_self_distances`; gets the *minimum self-distances* from the event log.
+  * :meth:`pm4py.stats.get_minimum_self_distance_witnesses`; gets the witnesses of *minimum self-distances* from the event log.
   * :meth:`pm4py.stats.get_frequent_trace_segments`; gets the *traces* (segments of activities) of the event log.
   * :meth:`pm4py.stats.get_case_arrival_average`; gets the *average case arrival rate* from the event log.
+  * :meth:`pm4py.stats.get_rework_cases_per_activity`; gets the number of cases with rework per activity.
+  * :meth:`pm4py.stats.get_case_overlap`; gets the number of concurrently open cases for each case.
   * :meth:`pm4py.stats.get_cycle_time`; gets the *cycle time* from the event log.
   * :meth:`pm4py.stats.get_all_case_durations`; gets the list of *case durations* for the cases of the event log.
   * :meth:`pm4py.stats.get_case_duration`; gets the *case duration* of a specific case in the log.
+  * :meth:`pm4py.stats.get_activity_position_summary`; gets the position summary of activities in the traces.
+  * :meth:`pm4py.stats.get_process_cube`; builds a two-dimensional process cube from a feature table.
   * :meth:`pm4py.stats.get_stochastic_language`; gets the *stochastic language* of an event log or a process model.
   * :meth:`pm4py.stats.get_service_time`; gets the average *service time* per activity.
 
@@ -230,6 +257,12 @@ Different methods are offered in PM4Py for traditional event logs (.xes, .csv), 
   * :meth:`pm4py.filtering.filter_trace_segments`; filters based on the given traces (segments of activities).
   * :meth:`pm4py.filtering.filter_four_eyes_principle`; applies the *Four-Eyes principle* on the event log (LTL).
   * :meth:`pm4py.filtering.filter_activity_done_different_resources`; filters the cases where an activity is repeated by different resources (LTL).
+  * :meth:`pm4py.filtering.filter_log_relative_occurrence_event_attribute`; filters event attribute values based on relative occurrence.
+
+Filtering techniques are also available on directly-follows graphs:
+
+  * :meth:`pm4py.filtering.filter_dfg_activities_percentage`; filters a DFG by keeping a percentage of activities.
+  * :meth:`pm4py.filtering.filter_dfg_paths_percentage`; filters a DFG by keeping a percentage of paths.
 
 Also, some filtering techniques are offered on top of object-centric event logs:
 
@@ -243,6 +276,7 @@ Also, some filtering techniques are offered on top of object-centric event logs:
   * :meth:`pm4py.filtering.filter_ocel_object_types`; filters a specified collection of object types from the object-centric event log.
   * :meth:`pm4py.filtering.filter_ocel_events`; filters a specified collection of event identifiers from the object-centric event log.
   * :meth:`pm4py.filtering.filter_ocel_objects`; filters a specified collection of object identifiers from the object-centric event log.
+  * :meth:`pm4py.filtering.filter_ocel_activities_connected_object_type`; filters an object-centric event log on the activities connected to a given object type.
   * :meth:`pm4py.filtering.filter_ocel_cc_object`; filters a connected component from the object-centric event log to which the object with the provided identifier belongs.
   * :meth:`pm4py.filtering.filter_ocel_cc_length`; filters the connected components from an object-centric event log having a number of objects falling within a provided range.
   * :meth:`pm4py.filtering.filter_ocel_cc_otype`; filters the connected components from an object-centric event log having at least one object of the specified object type.
@@ -304,9 +338,15 @@ In PM4Py, we offer object-centric process mining features:
   * :meth:`pm4py.ocel.sample_ocel_connected_components`; returns a sampled object-centric event log containing the provided number of connected components.
   * :meth:`pm4py.ocel.ocel_drop_duplicates`; drops relations between events and objects happening at the same time.
   * :meth:`pm4py.ocel.ocel_merge_duplicates`; merges events in the OCEL that are happening with the same activity at the same timestamp.
+  * :meth:`pm4py.ocel.ocel_sort_by_additional_column`; sorts OCEL events by timestamp and an additional column.
+  * :meth:`pm4py.ocel.ocel_add_index_based_timedelta`; adds small index-based timedeltas to preserve event ordering.
   * :meth:`pm4py.ocel.ocel_o2o_enrichment`; enriches the O2O table of the OCEL with the graph-based relationships.
   * :meth:`pm4py.ocel.ocel_e2o_lifecycle_enrichment`; enriches the relations table of the OCEL with lifecycle-based information.
   * :meth:`pm4py.ocel.cluster_equivalent_ocel`; performs a clustering of the objects of an OCEL based on lifecycle/interactions similarity.
+  * :meth:`pm4py.ocel.ocel_drill_down`; applies an OCEL drill-down operation on an object type using an object attribute.
+  * :meth:`pm4py.ocel.ocel_roll_up`; applies an OCEL roll-up operation on tuple-style object sub-types.
+  * :meth:`pm4py.ocel.ocel_unfold`; unfolds an event type by a related object type.
+  * :meth:`pm4py.ocel.ocel_fold`; folds an unfolded event type back to its original event type.
 
 Some object-centric process discovery algorithms are also offered:
 
@@ -337,6 +377,15 @@ The following methods provide just the abstractions of the given objects:
 The following methods can be executed directly against the LLM APIs:
 
   * :meth:`pm4py.llm.openai_query`; executes a prompt against OpenAI, returning the response as a string
+  * :meth:`pm4py.llm.google_query`; executes a prompt against Google APIs, returning the response as a string
+  * :meth:`pm4py.llm.anthropic_query`; executes a prompt against Anthropic APIs, returning the response as a string
+
+Additional LLM-based helpers are available:
+
+  * :meth:`pm4py.llm.clustering`; clusters variants of an event log using an LLM.
+  * :meth:`pm4py.llm.nlp_to_log_query`; translates natural language into a SQL query on an event log.
+  * :meth:`pm4py.llm.nlp_to_log_filter`; translates natural language into a SQL-based event log filter.
+  * :meth:`pm4py.llm.automated_hypotheses_formulation`; formulates hypotheses on event data using an LLM.
 
 
 Basic Connectors (:mod:`pm4py.connectors`)
@@ -395,14 +444,20 @@ Other algorithms, which do not belong to the aforementioned categories, are coll
   * :meth:`pm4py.utils.sample_events`; samples a traditional event log / OCEL, returning the specified number of events.
   * :meth:`pm4py.utils.serialize`; serializes mainstream PM4Py objects as strings.
   * :meth:`pm4py.utils.deserialize`; deserializes mainstream PM4Py objects given their string representation.
+  * :meth:`pm4py.utils.is_polars_lazyframe`; checks whether the provided dataframe is a Polars LazyFrame.
+  * :meth:`pm4py.utils.get_properties`; collects common PM4Py parameter keys for a log object.
+  * :meth:`pm4py.utils.set_classifier`; sets the specified classifier on an event log.
   * :meth:`pm4py.analysis.cluster_log`; clusters a log into sublogs using the provided clusterer.
   * :meth:`pm4py.analysis.insert_case_service_waiting_time`; inserts, for each case, the service and waiting time.
   * :meth:`pm4py.analysis.insert_case_arrival_finish_rate`; inserts the case arrival/finish rate.
   * :meth:`pm4py.analysis.insert_artificial_start_end`; inserts artificial start/end activities in the event log.
   * :meth:`pm4py.analysis.compute_emd`; computes the Earth-Mover Distance between two languages.
   * :meth:`pm4py.analysis.check_is_workflow_net`; checks if a Petri net is a workflow net.
+  * :meth:`pm4py.analysis.check_is_sound`; checks if a Petri net is a sound workflow net.
   * :meth:`pm4py.analysis.check_soundness`; checks if a Petri net is a sound workflow net (using Woflan).
   * :meth:`pm4py.analysis.solve_marking_equation`; solves the marking equation.
+  * :meth:`pm4py.analysis.solve_extended_marking_equation`; solves the extended marking equation.
+  * :meth:`pm4py.analysis.construct_synchronous_product_net`; constructs the synchronous product net between a trace and a Petri net.
   * :meth:`pm4py.analysis.maximal_decomposition`; performs the maximal decomposition of the given Petri net.
   * :meth:`pm4py.analysis.generate_marking`; generates a Marking object from a textual representation.
   * :meth:`pm4py.analysis.reduce_petri_net_invisibles`; reduces the invisible transitions of a Petri net when possible.
@@ -429,10 +484,12 @@ List of Methods
    pm4py.read.read_pnml
    pm4py.read.read_ptml
    pm4py.read.read_xes
+   pm4py.read.read_ocel
    pm4py.read.read_ocel_csv
    pm4py.read.read_ocel_json
    pm4py.read.read_ocel_xml
    pm4py.read.read_ocel_sqlite
+   pm4py.read.read_ocel2
    pm4py.read.read_ocel2_bundle
    pm4py.read.read_ocel2_csv
    pm4py.read.read_ocel2_xml
@@ -444,10 +501,12 @@ List of Methods
    pm4py.write.write_pnml
    pm4py.write.write_ptml
    pm4py.write.write_xes
+   pm4py.write.write_ocel
    pm4py.write.write_ocel_csv
    pm4py.write.write_ocel_json
    pm4py.write.write_ocel_xml
    pm4py.write.write_ocel_sqlite
+   pm4py.write.write_ocel2
    pm4py.write.write_ocel2_bundle
    pm4py.write.write_ocel2_csv
    pm4py.write.write_ocel2_xml
@@ -464,13 +523,17 @@ List of Methods
    pm4py.convert.convert_log_to_ocel
    pm4py.convert.convert_log_to_networkx
    pm4py.convert.convert_ocel_to_networkx
+   pm4py.convert.convert_log_to_time_intervals
    pm4py.convert.convert_petri_net_to_networkx
    pm4py.convert.convert_petri_net_type
    pm4py.convert.convert_to_powl
    pm4py.discovery
    pm4py.discovery.discover_dfg
+   pm4py.discovery.discover_directly_follows_graph
+   pm4py.discovery.discover_dfg_typed
    pm4py.discovery.discover_performance_dfg
    pm4py.discovery.discover_petri_net_alpha
+   pm4py.discovery.discover_petri_net_alpha_plus
    pm4py.discovery.discover_petri_net_inductive
    pm4py.discovery.discover_petri_net_heuristics
    pm4py.discovery.discover_petri_net_ilp
@@ -481,6 +544,7 @@ List of Methods
    pm4py.discovery.discover_footprints
    pm4py.discovery.discover_eventually_follows_graph
    pm4py.discovery.discover_bpmn_inductive
+   pm4py.discovery.discover_bpmn_split_miner
    pm4py.discovery.discover_transition_system
    pm4py.discovery.discover_prefix_tree
    pm4py.discovery.discover_temporal_profile
@@ -488,6 +552,9 @@ List of Methods
    pm4py.discovery.discover_log_skeleton
    pm4py.discovery.discover_batches
    pm4py.discovery.discover_powl
+   pm4py.discovery.correlation_miner
+   pm4py.discovery.discover_otg
+   pm4py.discovery.discover_etot
    pm4py.conformance
    pm4py.conformance.conformance_diagnostics_token_based_replay
    pm4py.conformance.conformance_diagnostics_alignments
@@ -498,10 +565,15 @@ List of Methods
    pm4py.conformance.precision_token_based_replay
    pm4py.conformance.precision_alignments
    pm4py.conformance.precision_footprints
+   pm4py.conformance.generalization_tbr
    pm4py.conformance.replay_prefix_tbr
+   pm4py.conformance.check_is_fitting
    pm4py.conformance.conformance_temporal_profile
    pm4py.conformance.conformance_declare
    pm4py.conformance.conformance_log_skeleton
+   pm4py.conformance.conformance_ocdfg
+   pm4py.conformance.conformance_otg
+   pm4py.conformance.conformance_etot
    pm4py.vis
    pm4py.vis.view_petri_net
    pm4py.vis.save_vis_petri_net
@@ -560,12 +632,14 @@ List of Methods
    pm4py.stats.get_minimum_self_distance_witnesses
    pm4py.stats.get_case_arrival_average
    pm4py.stats.get_rework_cases_per_activity
+   pm4py.stats.get_case_overlap
    pm4py.stats.get_cycle_time
    pm4py.stats.get_all_case_durations
    pm4py.stats.get_case_duration
    pm4py.stats.get_frequent_trace_segments
    pm4py.stats.get_service_time
    pm4py.stats.get_activity_position_summary
+   pm4py.stats.get_process_cube
    pm4py.stats.get_stochastic_language
    pm4py.filtering
    pm4py.filtering.filter_log_relative_occurrence_event_attribute
@@ -599,10 +673,13 @@ List of Methods
    pm4py.filtering.filter_ocel_object_types
    pm4py.filtering.filter_ocel_events
    pm4py.filtering.filter_ocel_objects
+   pm4py.filtering.filter_ocel_activities_connected_object_type
    pm4py.filtering.filter_ocel_cc_object
    pm4py.filtering.filter_ocel_cc_length
    pm4py.filtering.filter_ocel_cc_otype
    pm4py.filtering.filter_ocel_cc_activity
+   pm4py.filtering.filter_dfg_activities_percentage
+   pm4py.filtering.filter_dfg_paths_percentage
    pm4py.ml
    pm4py.ml.split_train_test
    pm4py.ml.get_prefixes_from_log
@@ -622,6 +699,7 @@ List of Methods
    pm4py.ocel.ocel_objects_ot_count
    pm4py.ocel.discover_ocdfg
    pm4py.ocel.discover_oc_petri_net
+   pm4py.ocel.discover_objects_graph
    pm4py.ocel.ocel_temporal_summary
    pm4py.ocel.ocel_objects_summary
    pm4py.ocel.ocel_objects_interactions_summary
@@ -629,10 +707,19 @@ List of Methods
    pm4py.ocel.sample_ocel_connected_components
    pm4py.ocel.ocel_drop_duplicates
    pm4py.ocel.ocel_merge_duplicates
+   pm4py.ocel.ocel_sort_by_additional_column
+   pm4py.ocel.ocel_add_index_based_timedelta
    pm4py.ocel.ocel_o2o_enrichment
    pm4py.ocel.ocel_e2o_lifecycle_enrichment
    pm4py.ocel.cluster_equivalent_ocel
+   pm4py.ocel.ocel_drill_down
+   pm4py.ocel.ocel_roll_up
+   pm4py.ocel.ocel_unfold
+   pm4py.ocel.ocel_fold
    pm4py.llm
+   pm4py.llm.openai_query
+   pm4py.llm.google_query
+   pm4py.llm.anthropic_query
    pm4py.llm.abstract_dfg
    pm4py.llm.abstract_variants
    pm4py.llm.abstract_ocel
@@ -646,8 +733,12 @@ List of Methods
    pm4py.llm.abstract_case
    pm4py.llm.abstract_declare
    pm4py.llm.abstract_log_skeleton
-   pm4py.llm.openai_query
+   pm4py.llm.clustering
+   pm4py.llm.nlp_to_log_query
+   pm4py.llm.nlp_to_log_filter
+   pm4py.llm.automated_hypotheses_formulation
    pm4py.llm.explain_visualization
+   pm4py.connectors
    pm4py.connectors.extract_log_outlook_mails
    pm4py.connectors.extract_log_outlook_calendar
    pm4py.connectors.extract_log_windows_events
@@ -673,11 +764,16 @@ List of Methods
    pm4py.org.discover_subcontracting_network
    pm4py.org.discover_organizational_roles
    pm4py.org.discover_network_analysis
+   pm4py.privacy
+   pm4py.privacy.anonymize_differential_privacy
    pm4py.analysis
+   pm4py.analysis.construct_synchronous_product_net
    pm4py.analysis.cluster_log
    pm4py.analysis.insert_case_service_waiting_time
    pm4py.analysis.insert_case_arrival_finish_rate
    pm4py.analysis.solve_marking_equation
+   pm4py.analysis.solve_extended_marking_equation
+   pm4py.analysis.check_is_sound
    pm4py.analysis.check_soundness
    pm4py.analysis.insert_artificial_start_end
    pm4py.analysis.check_is_workflow_net
@@ -696,12 +792,15 @@ List of Methods
    pm4py.analysis.label_sets_similarity
    pm4py.analysis.map_labels_from_second_model
    pm4py.utils
+   pm4py.utils.is_polars_lazyframe
    pm4py.utils.rebase
    pm4py.utils.parse_process_tree
    pm4py.utils.parse_powl_model_string
    pm4py.utils.format_dataframe
    pm4py.utils.serialize
    pm4py.utils.deserialize
+   pm4py.utils.get_properties
+   pm4py.utils.set_classifier
    pm4py.utils.parse_event_log_string
    pm4py.utils.project_on_event_attribute
    pm4py.utils.sample_cases
@@ -730,6 +829,7 @@ List of Methods
    api/pm4py.ml
    api/pm4py.ocel
    api/pm4py.org
+   api/pm4py.privacy
    api/pm4py.read
    api/pm4py.sim
    api/pm4py.stats

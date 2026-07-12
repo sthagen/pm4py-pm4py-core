@@ -42,6 +42,10 @@ class Parameters(Enum):
     OBJECT_ID = ocel_constants.PARAM_OBJECT_ID
     OBJECT_TYPE = ocel_constants.PARAM_OBJECT_TYPE
     INDUCTIVE_MINER_VARIANT = "inductive_miner_variant"
+    NOISE_THRESHOLD = "noise_threshold"
+    MULTIPROCESSING = "multiprocessing"
+    DISABLE_FALLTHROUGHS = "disable_fallthroughs"
+    DISABLE_STRICT_SEQUENCE_CUT = "disable_strict_sequence_cut"
     DOUBLE_ARC_THRESHOLD = "double_arc_threshold"
     DIAGNOSTICS_WITH_TBR = "diagnostics_with_token_based_replay"
 
@@ -66,6 +70,11 @@ def apply(
         - Parameters.EVENT_ACTIVITY => the activity attribute to be used
         - Parameters.OBJECT_ID => the object identifier attribute to be used
         - Parameters.OBJECT_TYPE => the object type attribute to be used
+        - Parameters.INDUCTIVE_MINER_VARIANT => variant of the inductive miner to use ("im", "imf", or "imd")
+        - Parameters.NOISE_THRESHOLD => noise threshold for the inductive miner
+        - Parameters.MULTIPROCESSING => enables/disables multiprocessing in the inductive miner
+        - Parameters.DISABLE_FALLTHROUGHS => disables the inductive miner fall-throughs
+        - Parameters.DISABLE_STRICT_SEQUENCE_CUT => disables the strict sequence cut in the inductive miner
         - Parameters.DOUBLE_ARC_THRESHOLD => the threshold for the attribution of the "double arc", as described in the paper.
         - Parameters.DIAGNOSTICS_WITH_TBR => performs token-based replay and stores the result in the return dict
 
@@ -85,6 +94,9 @@ def apply(
     )
     inductive_miner_variant = exec_utils.get_param_value(
         Parameters.INDUCTIVE_MINER_VARIANT, parameters, "im"
+    ).lower()
+    noise_threshold = exec_utils.get_param_value(
+        Parameters.NOISE_THRESHOLD, parameters, 0.0
     )
     diagnostics_with_tbr = exec_utils.get_param_value(
         Parameters.DIAGNOSTICS_WITH_TBR, parameters, False
@@ -154,17 +166,29 @@ def apply(
         double_arcs_on_activity[ot] = is_activity_double
 
         im_parameters = copy(parameters)
-        # disables the fallthroughs, as computing the model on a myriad of different object types
-        # could be really expensive
-        im_parameters["disable_fallthroughs"] = True
-        # for performance reasons, also disable the strict sequence cut (use
-        # the normal sequence cut)
-        im_parameters["disable_strict_sequence_cut"] = True
+        im_parameters["noise_threshold"] = noise_threshold
+        # Historical OCPN discovery defaults disable these expensive inductive
+        # miner paths, but caller-provided values should take precedence.
+        im_parameters["disable_fallthroughs"] = exec_utils.get_param_value(
+            Parameters.DISABLE_FALLTHROUGHS, parameters, True
+        )
+        im_parameters["disable_strict_sequence_cut"] = (
+            exec_utils.get_param_value(
+                Parameters.DISABLE_STRICT_SEQUENCE_CUT, parameters, True
+            )
+        )
+        if (
+            Parameters.MULTIPROCESSING.value in parameters
+            or Parameters.MULTIPROCESSING in parameters
+        ):
+            im_parameters["multiprocessing"] = exec_utils.get_param_value(
+                Parameters.MULTIPROCESSING, parameters, False
+            )
 
         process_tree = None
         flat_log = None
 
-        if inductive_miner_variant == "im" or diagnostics_with_tbr:
+        if inductive_miner_variant in ["im", "imf"] or diagnostics_with_tbr:
             # do the flattening only if it is required
             flat_log = flattening.flatten(ocel, ot, parameters=parameters)
 
@@ -178,9 +202,14 @@ def apply(
                 variant=inductive_miner.Variants.IMd,
                 parameters=im_parameters,
             )
-        elif inductive_miner_variant == "im":
+        elif inductive_miner_variant in ["im", "imf"]:
+            variant = (
+                inductive_miner.Variants.IMf
+                if inductive_miner_variant == "imf" or noise_threshold > 0
+                else inductive_miner.Variants.IM
+            )
             process_tree = inductive_miner.apply(
-                flat_log, parameters=im_parameters
+                flat_log, variant=variant, parameters=im_parameters
             )
 
         petri_net = tree_converter.apply(process_tree, parameters=parameters)

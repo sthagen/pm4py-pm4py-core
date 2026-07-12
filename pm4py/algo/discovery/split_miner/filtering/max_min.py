@@ -19,19 +19,31 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-"""Max-min-frequency BFS filter for the pruned DFG.
+"""Frequency filter with connectedness guarantees for the pruned DFG.
 
-A Dijkstra-style BFS retains every node on at least one source-to-sink
-path while minimising the number of edges kept. The output is the union
-of each node's best-incoming and best-outgoing edges plus every edge
-with frequency above the eta-percentile threshold.
+This reproduces the reference Split Miner ``filterWithGuarantees`` (the
+"FWG" filter used by the command-line miner):
+
+1. A frequency threshold is taken as the ``eta`` order statistic of the
+   per-node most-frequent incoming/outgoing edges.
+2. A max-capacity (widest path) spanning set is computed from source and
+   to sink so the highest-throughput backbone is always retained.
+3. Every edge is kept when it belongs to that backbone or when its
+   frequency reaches the threshold; the remaining edges are dropped, but
+   never the sole incoming edge of a node nor the sole outgoing edge of a
+   node (the connectedness guard).
+
+This is a faithful port of the Java ``filterWithGuarantees``, validated
+to produce the same pruned DFG as ``splitminer.jar`` on the
+SM-Experiment logs (see ``..algorithm`` for the validation summary). The
+max-capacity backbone plus the connectedness guard frequently make the
+result insensitive to ``eta`` — a high threshold still keeps the
+backbone — which mirrors the reference tool and is not a bug.
 """
 import math
 from collections import deque
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple
-
-import numpy as np
 
 from pm4py.algo.discovery.split_miner.dtypes.dfg import DFG
 from pm4py.algo.discovery.split_miner.dtypes.filtering import FilterResult
@@ -45,6 +57,8 @@ class Parameters(Enum):
 
 
 DEFAULT_ETA = 0.4
+
+Edge = Tuple[str, str]
 
 
 def _node_set(dfg: DFG) -> Set[str]:
@@ -70,84 +84,118 @@ def _find_source_sink(dfg: DFG, nodes: Set[str]) -> Tuple[str, str]:
     return sources[0], sinks[0]
 
 
-def _best_incoming(
-    dfg: DFG, source: str, nodes: Set[str]
-) -> Tuple[Dict[str, float], Dict[str, Tuple[str, str]]]:
-    capacity: Dict[str, float] = {n: 0 for n in nodes}
-    capacity[source] = math.inf
-    best: Dict[str, Tuple[str, str]] = {}
+def _edge_rank(edge: Edge, freq: int) -> Tuple[int, str, str]:
+    """Total order matching the reference DFGEdge comparator.
 
+    Edges are ordered by frequency, then by source label, then by target
+    label. ``max`` therefore picks the most frequent edge, breaking ties
+    towards the lexicographically greatest endpoints.
+    """
+    a, b = edge
+    return (freq, a, b)
+
+
+def _max_frequency_best_edges(
+    dfg: DFG, source: str, sink: str, nodes: Set[str]
+) -> Set[Edge]:
+    """Per-node most frequent incoming/outgoing edges (deduplicated).
+
+    Mirrors ``bestEdgesOnMaxFrequencies``: every node except the sink
+    contributes its most frequent outgoing edge and every node except the
+    source contributes its most frequent incoming edge.
+    """
+    out_edges: Dict[str, List[Edge]] = {n: [] for n in nodes}
+    in_edges: Dict[str, List[Edge]] = {n: [] for n in nodes}
+    for (a, b) in dfg.keys():
+        out_edges[a].append((a, b))
+        in_edges[b].append((a, b))
+
+    best: Set[Edge] = set()
+    for n in nodes:
+        if n != sink and out_edges[n]:
+            best.add(max(out_edges[n], key=lambda e: _edge_rank(e, dfg[e])))
+        if n != source and in_edges[n]:
+            best.add(max(in_edges[n], key=lambda e: _edge_rank(e, dfg[e])))
+    return best
+
+
+def _filter_threshold(dfg: DFG, best_freq_edges: Set[Edge], eta: float) -> int:
+    """``computeFilterThreshold``: the ``eta`` order statistic.
+
+    The most-frequent best edges are sorted ascending; the threshold is
+    the frequency at index ``round(N * eta)`` (clamped to the last index).
+    """
+    if not best_freq_edges:
+        return 0
+    ordered = sorted(best_freq_edges, key=lambda e: _edge_rank(e, dfg[e]))
+    i = int(round(len(ordered) * eta))
+    if i >= len(ordered):
+        i = len(ordered) - 1
+    return dfg[ordered[i]]
+
+
+def _max_capacity_best_edges(
+    dfg: DFG, source: str, sink: str, nodes: Set[str]
+) -> Set[Edge]:
+    """Widest-path backbone from source and to sink (``bestEdgesOnMaxCapacities``).
+
+    A Bellman-Ford style relaxation computes, for every node, the maximum
+    bottleneck capacity reachable from the source and the symmetric value
+    towards the sink, recording the edge that realises each optimum.
+    """
     out_adj: Dict[str, List[Tuple[str, int]]] = {n: [] for n in nodes}
-    for (a, b), f in dfg.items():
-        out_adj[a].append((b, f))
-
-    in_queue: Set[str] = {source}
-    unexplored: Set[str] = set(nodes) - {source}
-    queue = deque([source])
-    while queue:
-        p = queue.popleft()
-        in_queue.discard(p)
-        for n, f_e in out_adj[p]:
-            c_max = min(capacity[p], f_e)
-            updated = False
-            if c_max > capacity[n]:
-                capacity[n] = c_max
-                best[n] = (p, n)
-                updated = True
-            if updated:
-                if n in unexplored:
-                    unexplored.discard(n)
-                if n not in in_queue:
-                    queue.append(n)
-                    in_queue.add(n)
-            elif n in unexplored:
-                unexplored.discard(n)
-                if n not in in_queue:
-                    queue.append(n)
-                    in_queue.add(n)
-    return capacity, best
-
-
-def _best_outgoing(
-    dfg: DFG, sink: str, nodes: Set[str]
-) -> Tuple[Dict[str, float], Dict[str, Tuple[str, str]]]:
-    capacity: Dict[str, float] = {n: 0 for n in nodes}
-    capacity[sink] = math.inf
-    best: Dict[str, Tuple[str, str]] = {}
-
     in_adj: Dict[str, List[Tuple[str, int]]] = {n: [] for n in nodes}
     for (a, b), f in dfg.items():
+        out_adj[a].append((b, f))
         in_adj[b].append((a, f))
 
-    in_queue: Set[str] = {sink}
-    unexplored: Set[str] = set(nodes) - {sink}
+    best: Set[Edge] = set()
+
+    # Forward: widest path from the source.
+    cap_from: Dict[str, float] = {n: 0 for n in nodes}
+    cap_from[source] = math.inf
+    best_pred: Dict[str, Edge] = {}
+    queue = deque([source])
+    in_q: Set[str] = {source}
+    while queue:
+        p = queue.popleft()
+        in_q.discard(p)
+        cap_p = cap_from[p]
+        for b, f in out_adj[p]:
+            c = f if cap_p > f else cap_p
+            if c > cap_from[b]:
+                cap_from[b] = c
+                best_pred[b] = (p, b)
+                if b not in in_q:
+                    queue.append(b)
+                    in_q.add(b)
+    best.update(best_pred.values())
+
+    # Backward: widest path to the sink.
+    cap_to: Dict[str, float] = {n: 0 for n in nodes}
+    cap_to[sink] = math.inf
+    best_succ: Dict[str, Edge] = {}
     queue = deque([sink])
+    in_q = {sink}
     while queue:
         n = queue.popleft()
-        in_queue.discard(n)
-        for p, f_e in in_adj[n]:
-            c_max = min(capacity[n], f_e)
-            updated = False
-            if c_max > capacity[p]:
-                capacity[p] = c_max
-                best[p] = (p, n)
-                updated = True
-            if updated:
-                if p in unexplored:
-                    unexplored.discard(p)
-                if p not in in_queue:
-                    queue.append(p)
-                    in_queue.add(p)
-            elif p in unexplored:
-                unexplored.discard(p)
-                if p not in in_queue:
-                    queue.append(p)
-                    in_queue.add(p)
-    return capacity, best
+        in_q.discard(n)
+        cap_n = cap_to[n]
+        for a, f in in_adj[n]:
+            c = f if cap_n > f else cap_n
+            if c > cap_to[a]:
+                cap_to[a] = c
+                best_succ[a] = (a, n)
+                if a not in in_q:
+                    queue.append(a)
+                    in_q.add(a)
+    best.update(best_succ.values())
+
+    return best
 
 
 class MaxMinFilterer(Filterer):
-    """Dijkstra-style BFS that retains each node's best in/out edges."""
+    """Port of the reference ``filterWithGuarantees`` (FWG) filter."""
 
     @classmethod
     def apply(
@@ -161,33 +209,36 @@ class MaxMinFilterer(Filterer):
         nodes = _node_set(pdfg)
         source, sink = _find_source_sink(pdfg, nodes)
 
-        fmax_in: Dict[str, int] = {n: 0 for n in nodes}
-        fmax_out: Dict[str, int] = {n: 0 for n in nodes}
+        # (1) threshold from the most-frequent best edges,
+        # (2) widest-path backbone that must survive the filter.
+        freq_best = _max_frequency_best_edges(pdfg, source, sink, nodes)
+        threshold = _filter_threshold(pdfg, freq_best, eta)
+        cap_best = _max_capacity_best_edges(pdfg, source, sink, nodes)
+
+        # Live degree bookkeeping for the connectedness guard.
+        in_deg: Dict[str, int] = {n: 0 for n in nodes}
+        out_deg: Dict[str, int] = {n: 0 for n in nodes}
+        for (a, b) in pdfg.keys():
+            out_deg[a] += 1
+            in_deg[b] += 1
+
+        kept: Set[Edge] = set()
+        removable: List[Edge] = []
         for (a, b), f in pdfg.items():
-            if f > fmax_out[a]:
-                fmax_out[a] = f
-            if f > fmax_in[b]:
-                fmax_in[b] = f
+            if (a, b) in cap_best or f >= threshold:
+                kept.add((a, b))
+            else:
+                removable.append((a, b))
 
-        frequencies: List[int] = []
-        for n in nodes:
-            if n != source:
-                frequencies.append(fmax_in[n])
-            if n != sink:
-                frequencies.append(fmax_out[n])
+        # Drop the remaining edges deterministically, but never the sole
+        # incoming edge of a node nor the sole outgoing edge of a node.
+        for (a, b) in sorted(
+            removable, key=lambda e: _edge_rank(e, pdfg[e])
+        ):
+            if in_deg[b] == 1 or out_deg[a] == 1:
+                kept.add((a, b))
+                continue
+            in_deg[b] -= 1
+            out_deg[a] -= 1
 
-        f_th = (
-            float(np.percentile(frequencies, eta * 100.0)) if frequencies else 0.0
-        )
-
-        _, best_in = _best_incoming(pdfg, source, nodes)
-        _, best_out = _best_outgoing(pdfg, sink, nodes)
-        kept_best: Set[Tuple[str, str]] = set(best_in.values()) | set(
-            best_out.values()
-        )
-
-        edges_out: Set[Tuple[str, str]] = set()
-        for (a, b), f in pdfg.items():
-            if (a, b) in kept_best or f > f_th:
-                edges_out.add((a, b))
-        return FilterResult(edges=edges_out, source=source, sink=sink)
+        return FilterResult(edges=kept, source=source, sink=sink)

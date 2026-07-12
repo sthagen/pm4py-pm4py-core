@@ -57,8 +57,8 @@ class TraceEncodingsTest(unittest.TestCase):
     def _numeric_feature_dataframe(self):
         return pd.DataFrame(
             {
-                "case:concept:name": ["c1", "c1", "c1", "c2", "c2"],
-                "concept:name": ["A", "B", "C", "A", "B"],
+                "case:concept:name": ["c1", "c1", "c1", "c2", "c2", "c3"],
+                "concept:name": ["A", "B", "C", "A", "B", "A"],
                 "time:timestamp": pd.to_datetime(
                     [
                         "2020-01-01 00:00:00",
@@ -66,10 +66,12 @@ class TraceEncodingsTest(unittest.TestCase):
                         "2020-01-01 00:02:00",
                         "2020-01-02 00:00:00",
                         "2020-01-02 00:01:00",
+                        "2020-01-03 00:00:00",
                     ],
                     utc=True,
                 ),
-                "cost": [1.0, 3.0, 5.0, 10.0, None],
+                "cost": [1.0, 3.0, 5.0, 10.0, None, None],
+                "@@event_index": [1.0, 2.0, 3.0, 10.0, None, None],
             }
         )
 
@@ -121,7 +123,9 @@ class TraceEncodingsTest(unittest.TestCase):
             "cost_MIN",
             "cost_MAX",
             "cost_MEAN",
+            "cost_MEDIAN",
             "cost_STDEV",
+            "cost_SUM",
         ]
         self.assertEqual(expected_columns, list(features.columns))
         self.assertNotIn("cost", features.columns)
@@ -132,11 +136,47 @@ class TraceEncodingsTest(unittest.TestCase):
         self.assertEqual(1.0, by_case.loc["c1", "cost_MIN"])
         self.assertEqual(5.0, by_case.loc["c1", "cost_MAX"])
         self.assertEqual(3.0, by_case.loc["c1", "cost_MEAN"])
+        self.assertEqual(3.0, by_case.loc["c1", "cost_MEDIAN"])
         self.assertAlmostEqual(
             math.sqrt(8.0 / 3.0), by_case.loc["c1", "cost_STDEV"], places=6
         )
+        self.assertEqual(9.0, by_case.loc["c1", "cost_SUM"])
         self.assertEqual(10.0, by_case.loc["c2", "cost_LAST"])
         self.assertEqual(0.0, by_case.loc["c2", "cost_STDEV"])
+        self.assertEqual(10.0, by_case.loc["c2", "cost_SUM"])
+        self.assertTrue(pd.isna(by_case.loc["c3", "cost_SUM"]))
+
+        custom_features = pm4py.extract_features_dataframe(
+            df,
+            str_tr_attr=[],
+            num_tr_attr=[],
+            str_ev_attr=[],
+            num_ev_attr=["cost"],
+            include_case_id=True,
+            numeric_attribute_aggregations=["sum", "median"],
+        )
+        self.assertEqual(
+            ["case:concept:name", "cost_SUM", "cost_MEDIAN"],
+            list(custom_features.columns),
+        )
+
+        internal_features = pm4py.extract_features_dataframe(
+            df,
+            str_tr_attr=[],
+            num_tr_attr=[],
+            str_ev_attr=[],
+            num_ev_attr=["cost", "@@event_index"],
+            include_case_id=True,
+            enable_numeric_attribute_statistics=True,
+        )
+        self.assertIn("cost_SUM", internal_features.columns)
+        self.assertIn("@@event_index", internal_features.columns)
+        self.assertNotIn("@@event_index_LAST", internal_features.columns)
+        self.assertNotIn("@@event_index_SUM", internal_features.columns)
+        internal_by_case = internal_features.set_index("case:concept:name")
+        self.assertEqual(3.0, internal_by_case.loc["c1", "@@event_index"])
+        self.assertEqual(10.0, internal_by_case.loc["c2", "@@event_index"])
+        self.assertTrue(pd.isna(internal_by_case.loc["c3", "@@event_index"]))
 
     @unittest.skipUnless(
         importlib.util.find_spec("polars"), "polars is not installed"
@@ -174,7 +214,9 @@ class TraceEncodingsTest(unittest.TestCase):
             "cost_MIN",
             "cost_MAX",
             "cost_MEAN",
+            "cost_MEDIAN",
             "cost_STDEV",
+            "cost_SUM",
         ]
         self.assertEqual(expected_columns, features.columns)
         self.assertNotIn("cost", features.columns)
@@ -187,11 +229,64 @@ class TraceEncodingsTest(unittest.TestCase):
         self.assertEqual(1.0, by_case["c1"]["cost_MIN"])
         self.assertEqual(5.0, by_case["c1"]["cost_MAX"])
         self.assertEqual(3.0, by_case["c1"]["cost_MEAN"])
+        self.assertEqual(3.0, by_case["c1"]["cost_MEDIAN"])
         self.assertAlmostEqual(
             math.sqrt(8.0 / 3.0), by_case["c1"]["cost_STDEV"], places=6
         )
+        self.assertEqual(9.0, by_case["c1"]["cost_SUM"])
         self.assertEqual(10.0, by_case["c2"]["cost_LAST"])
         self.assertEqual(0.0, by_case["c2"]["cost_STDEV"])
+        self.assertEqual(10.0, by_case["c2"]["cost_SUM"])
+        self.assertIsNone(by_case["c3"]["cost_SUM"])
+
+        custom_features = pm4py.extract_features_dataframe(
+            lf,
+            str_tr_attr=[],
+            num_tr_attr=[],
+            str_ev_attr=[],
+            num_ev_attr=["cost"],
+            include_case_id=True,
+            numeric_attribute_aggregations=["sum", "median"],
+        ).collect()
+        self.assertEqual(
+            ["case:concept:name", "cost_SUM", "cost_MEDIAN"],
+            custom_features.columns,
+        )
+
+        internal_features = pm4py.extract_features_dataframe(
+            lf,
+            str_tr_attr=[],
+            num_tr_attr=[],
+            str_ev_attr=[],
+            num_ev_attr=["cost", "@@event_index"],
+            include_case_id=True,
+            enable_numeric_attribute_statistics=True,
+        ).collect()
+        self.assertIn("cost_SUM", internal_features.columns)
+        self.assertIn("@@event_index", internal_features.columns)
+        self.assertNotIn("@@event_index_LAST", internal_features.columns)
+        self.assertNotIn("@@event_index_SUM", internal_features.columns)
+        internal_by_case = {
+            row["case:concept:name"]: row for row in internal_features.to_dicts()
+        }
+        self.assertEqual(3.0, internal_by_case["c1"]["@@event_index"])
+        self.assertEqual(10.0, internal_by_case["c2"]["@@event_index"])
+        self.assertIsNone(internal_by_case["c3"]["@@event_index"])
+
+        direct_features, direct_feature_names = trace_encodings.apply(
+            lf,
+            variant=trace_encodings.Variants.TRACE_BASED,
+            parameters={
+                "str_tr_attr": [],
+                "num_tr_attr": [],
+                "str_ev_attr": [],
+                "num_ev_attr": ["cost"],
+                "add_case_identifier_column": True,
+            },
+        )
+        self.assertIn("cost", direct_feature_names)
+        self.assertNotIn("cost_LAST", direct_feature_names)
+        self.assertIn("cost", direct_features.collect().columns)
 
     @unittest.skipUnless(
         importlib.util.find_spec("sklearn"), "scikit-learn is not installed"

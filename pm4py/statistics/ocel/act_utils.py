@@ -113,6 +113,8 @@ def find_associations_from_relations_df(
         Parameters.PREFILTERING, parameters, "none"
     )
 
+    relations_df = relations_df.drop_duplicates(subset=[event_id, object_id])
+
     if prefiltering == "start":
         relations_df = relations_df.groupby(object_id).first().reset_index()
     elif prefiltering == "end":

@@ -19,7 +19,7 @@ visit <https://www.gnu.org/licenses/>.
 Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
-from typing import Optional, Dict, Any, List, Set
+from typing import Optional, Dict, Any, List, Set, Collection
 
 import numpy as np
 import pandas as pd
@@ -56,14 +56,74 @@ def _sanitize_feature_name(
     return candidate
 
 
-_NUMERIC_ATTRIBUTE_STATISTICS_SUFFIXES = (
-    "LAST",
-    "FIRST",
-    "MIN",
-    "MAX",
-    "MEAN",
-    "STDEV",
+_DEFAULT_NUMERIC_ATTRIBUTE_AGGREGATIONS = (
+    "last",
+    "first",
+    "min",
+    "max",
+    "mean",
+    "median",
+    "stdev",
+    "sum",
 )
+
+_NUMERIC_ATTRIBUTE_AGGREGATION_SUFFIXES = {
+    "last": "LAST",
+    "first": "FIRST",
+    "min": "MIN",
+    "max": "MAX",
+    "mean": "MEAN",
+    "median": "MEDIAN",
+    "stdev": "STDEV",
+    "sum": "SUM",
+}
+
+_NUMERIC_ATTRIBUTE_AGGREGATION_ALIASES = {
+    "std": "stdev",
+    "standard_deviation": "stdev",
+}
+
+
+def _is_internal_attribute(column: str) -> bool:
+    return str(column).startswith("@@")
+
+
+def _normalize_numeric_attribute_aggregations(
+    aggregations: Optional[Collection[str]],
+) -> List[str]:
+    if aggregations is None:
+        values = list(_DEFAULT_NUMERIC_ATTRIBUTE_AGGREGATIONS)
+    elif isinstance(aggregations, str):
+        values = [aggregations]
+    else:
+        values = list(aggregations)
+
+    normalized = []
+    seen = set()
+    for value in values:
+        aggregation = str(value).lower()
+        aggregation = _NUMERIC_ATTRIBUTE_AGGREGATION_ALIASES.get(
+            aggregation, aggregation
+        )
+        if aggregation not in _NUMERIC_ATTRIBUTE_AGGREGATION_SUFFIXES:
+            supported = ", ".join(_DEFAULT_NUMERIC_ATTRIBUTE_AGGREGATIONS)
+            raise ValueError(
+                f"Unsupported numeric attribute aggregation: {value}. "
+                f"Supported values are: {supported}."
+            )
+        if aggregation not in seen:
+            normalized.append(aggregation)
+            seen.add(aggregation)
+
+    if isinstance(aggregations, (set, frozenset)):
+        normalized_set = set(normalized)
+        normalized = [
+            aggregation
+            for aggregation in _DEFAULT_NUMERIC_ATTRIBUTE_AGGREGATIONS
+            if aggregation in normalized_set
+        ]
+
+    return normalized
 
 
 def _get_numeric_features_df(
@@ -71,8 +131,12 @@ def _get_numeric_features_df(
     numeric_columns: List[str],
     case_id_key: str,
     enable_numeric_attribute_statistics: bool,
+    numeric_attribute_aggregations: Optional[Collection[str]] = None,
 ) -> pd.DataFrame:
-    if not enable_numeric_attribute_statistics:
+    if (
+        not enable_numeric_attribute_statistics
+        and numeric_attribute_aggregations is None
+    ):
         return (
             df[[case_id_key] + numeric_columns]
             .copy()
@@ -81,19 +145,42 @@ def _get_numeric_features_df(
             .reset_index()
         )
 
+    numeric_attribute_aggregations = _normalize_numeric_attribute_aggregations(
+        numeric_attribute_aggregations
+    )
+    non_internal_columns = [
+        col for col in numeric_columns if not _is_internal_attribute(col)
+    ]
+    internal_columns = [
+        col for col in numeric_columns if _is_internal_attribute(col)
+    ]
+    if not numeric_attribute_aggregations and not internal_columns:
+        return df[[case_id_key]].drop_duplicates().reset_index(drop=True)
+
     aggregations = {}
     for col in numeric_columns:
-        aggregations[f"{col}_LAST"] = pd.NamedAgg(column=col, aggfunc="last")
-        aggregations[f"{col}_FIRST"] = pd.NamedAgg(column=col, aggfunc="first")
-        aggregations[f"{col}_MIN"] = pd.NamedAgg(column=col, aggfunc="min")
-        aggregations[f"{col}_MAX"] = pd.NamedAgg(column=col, aggfunc="max")
-        aggregations[f"{col}_MEAN"] = pd.NamedAgg(column=col, aggfunc="mean")
-        aggregations[f"{col}_STDEV"] = pd.NamedAgg(
-            column=col, aggfunc=lambda values: values.std(ddof=0)
-        )
+        if _is_internal_attribute(col):
+            aggregations[col] = pd.NamedAgg(column=col, aggfunc="last")
+            continue
+
+        aggregation_functions = {
+            "last": "last",
+            "first": "first",
+            "min": "min",
+            "max": "max",
+            "mean": "mean",
+            "median": "median",
+            "stdev": lambda values: values.std(ddof=0),
+            "sum": lambda values: values.sum(min_count=1),
+        }
+        for aggregation in numeric_attribute_aggregations:
+            suffix = _NUMERIC_ATTRIBUTE_AGGREGATION_SUFFIXES[aggregation]
+            aggregations[f"{col}_{suffix}"] = pd.NamedAgg(
+                column=col, aggfunc=aggregation_functions[aggregation]
+            )
 
     return (
-        df[[case_id_key] + numeric_columns]
+        df[[case_id_key] + internal_columns + non_internal_columns]
         .copy()
         .groupby(case_id_key)
         .agg(**aggregations)
@@ -104,14 +191,26 @@ def _get_numeric_features_df(
 def _get_numeric_feature_columns(
     numeric_columns: List[str],
     enable_numeric_attribute_statistics: bool,
+    numeric_attribute_aggregations: Optional[Collection[str]] = None,
 ) -> List[str]:
-    if not enable_numeric_attribute_statistics:
+    if (
+        not enable_numeric_attribute_statistics
+        and numeric_attribute_aggregations is None
+    ):
         return numeric_columns
-    return [
-        f"{col}_{suffix}"
-        for col in numeric_columns
-        for suffix in _NUMERIC_ATTRIBUTE_STATISTICS_SUFFIXES
-    ]
+    numeric_attribute_aggregations = _normalize_numeric_attribute_aggregations(
+        numeric_attribute_aggregations
+    )
+    feature_columns = []
+    for col in numeric_columns:
+        if _is_internal_attribute(col):
+            feature_columns.append(col)
+        else:
+            feature_columns.extend(
+                f"{col}_{_NUMERIC_ATTRIBUTE_AGGREGATION_SUFFIXES[aggregation]}"
+                for aggregation in numeric_attribute_aggregations
+            )
+    return feature_columns
 
 
 def automatic_feature_selection_df(df, parameters=None):
@@ -206,6 +305,7 @@ def select_number_column(
     col: str,
     case_id_key=constants.CASE_CONCEPT_NAME,
     enable_numeric_attribute_statistics=False,
+    numeric_attribute_aggregations: Optional[Collection[str]] = None,
 ) -> pd.DataFrame:
     """
     Extract a column for the features dataframe for the given numeric attribute
@@ -221,7 +321,11 @@ def select_number_column(
     case_id_key
         Case ID key
     enable_numeric_attribute_statistics
-        If True, extract last, first, min, max, mean, and stdev columns.
+        If True, extract numeric aggregation columns.
+    numeric_attribute_aggregations
+        Aggregations to compute for numeric attributes. Supported values are
+        last, first, min, max, mean, median, stdev, and sum. Applied only to
+        attributes whose names do not start with @@.
 
     Returns
     --------------
@@ -234,16 +338,20 @@ def select_number_column(
         numeric_columns,
         case_id_key,
         enable_numeric_attribute_statistics,
+        numeric_attribute_aggregations,
     )
     numeric_feature_columns = _get_numeric_feature_columns(
-        numeric_columns, enable_numeric_attribute_statistics
+        numeric_columns,
+        enable_numeric_attribute_statistics,
+        numeric_attribute_aggregations,
     )
     fea_df = fea_df.merge(
         df_numeric, on=[case_id_key], how="left", suffixes=("", "_y")
     )
-    fea_df[numeric_feature_columns] = fea_df[numeric_feature_columns].astype(
-        np.float32
-    )
+    if numeric_feature_columns:
+        fea_df[numeric_feature_columns] = fea_df[
+            numeric_feature_columns
+        ].astype(np.float32)
     return fea_df
 
 
@@ -365,7 +473,9 @@ def get_features_df(
         Parameters of the algorithm, including:
         - Parameters.CASE_ID_KEY: the case ID
         - Parameters.COUNT_OCCURRENCES: if True, count occurrences of string attributes instead of binary encoding
-        - Parameters.ENABLE_NUMERIC_ATTRIBUTE_STATISTICS: if True, extract last, first, min, max, mean, and stdev for numeric attributes
+        - Parameters.ENABLE_NUMERIC_ATTRIBUTE_STATISTICS: if True, extract aggregation statistics for numeric attributes
+        - Parameters.NUMERIC_ATTRIBUTE_AGGREGATIONS: collection of aggregations to compute for numeric attributes
+          whose names do not start with @@
 
     Returns
     ---------------
@@ -386,6 +496,9 @@ def get_features_df(
     )
     enable_numeric_attribute_statistics = exec_utils.get_param_value(
         Parameters.ENABLE_NUMERIC_ATTRIBUTE_STATISTICS, parameters, False
+    )
+    numeric_attribute_aggregations = exec_utils.get_param_value(
+        Parameters.NUMERIC_ATTRIBUTE_AGGREGATIONS, parameters, None
     )
 
     # Start with unique case IDs
@@ -410,16 +523,20 @@ def get_features_df(
             numeric_columns,
             case_id_key,
             enable_numeric_attribute_statistics,
+            numeric_attribute_aggregations,
         )
         numeric_feature_columns = _get_numeric_feature_columns(
-            numeric_columns, enable_numeric_attribute_statistics
+            numeric_columns,
+            enable_numeric_attribute_statistics,
+            numeric_attribute_aggregations,
         )
         # Merge once for all numeric columns
         fea_df = fea_df.merge(df_numeric, on=case_id_key, how="left")
         # Convert all numeric columns to float32 at once
-        fea_df[numeric_feature_columns] = fea_df[
-            numeric_feature_columns
-        ].astype(np.float32)
+        if numeric_feature_columns:
+            fea_df[numeric_feature_columns] = fea_df[
+                numeric_feature_columns
+            ].astype(np.float32)
 
     # Process string columns one by one (still needed due to hot encoding)
     for col in string_columns:

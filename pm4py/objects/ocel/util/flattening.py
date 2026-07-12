@@ -81,7 +81,7 @@ def flatten(
 
     relations = ocel.relations[ocel.relations[ocel.object_type_column] == ot][
         [ocel.object_id_column, ocel.event_id_column]
-    ]
+    ].drop_duplicates()
     relations = relations.rename(
         columns={ocel.object_id_column: constants.CASE_CONCEPT_NAME}
     )

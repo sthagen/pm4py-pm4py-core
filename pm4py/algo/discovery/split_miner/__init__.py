@@ -28,7 +28,6 @@ from pm4py.algo.discovery.split_miner import (
     dfg_discovery,
     dtypes,
     filtering,
-    heuristics,
     joins,
     or_min,
     splits,
