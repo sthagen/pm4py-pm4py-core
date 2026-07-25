@@ -241,6 +241,7 @@ def graphviz_visualization(
     rankdir=constants.DEFAULT_RANKDIR_GVIZ,
     enable_graph_title: bool = constants.DEFAULT_ENABLE_GRAPH_TITLES,
     graph_title: str = "Directly-Follows Graph",
+    business_hour_slots=None,
 ):
     """
     Do GraphViz visualization of a DFG graph
@@ -395,7 +396,13 @@ def graphviz_visualization(
         ):
             viz.node(
                 str(hash(act)),
-                act + " (" + human_readable_stat(serv_time[act]) + ")",
+                act
+                + " ("
+                + human_readable_stat(
+                    serv_time[act],
+                    business_hour_slots=business_hour_slots,
+                )
+                + ")",
                 fontsize=font_size,
                 style="filled",
                 fillcolor=activities_color[act],
@@ -410,7 +417,9 @@ def graphviz_visualization(
         if "frequency" in measure or "cost" in measure:
             label = str(dfg[edge])
         else:
-            label = human_readable_stat(dfg[edge])
+            label = human_readable_stat(
+                dfg[edge], business_hour_slots=business_hour_slots
+            )
 
         color = None
         if "performance" in measure:

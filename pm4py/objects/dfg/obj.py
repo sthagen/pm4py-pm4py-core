@@ -23,6 +23,29 @@ from collections import Counter
 from typing import Tuple, Any, Counter as TCounter
 
 
+class PerformanceDFG(dict):
+    """Dictionary-compatible performance DFG with calculation metadata.
+
+    Performance values are intentionally kept as a regular mapping for
+    backwards compatibility.  The optional business-hour schedule lets
+    downstream consumers render those values using the same definition of a
+    working day that was used during discovery.
+    """
+
+    def __init__(self, *args, business_hour_slots=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.business_hour_slots = (
+            tuple(tuple(slot) for slot in business_hour_slots)
+            if business_hour_slots is not None
+            else None
+        )
+
+    def copy(self):
+        return type(self)(
+            self, business_hour_slots=self.business_hour_slots
+        )
+
+
 class DirectlyFollowsGraph:
 
     def __init__(self, graph=None, start_activities=None, end_activities=None):

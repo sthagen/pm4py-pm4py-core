@@ -225,6 +225,8 @@ def discover_performance_dfg(
     :param log: Event log or Pandas DataFrame.
     :param business_hours: Enables or disables computation based on business hours (default: False).
     :param business_hour_slots: Work schedule of the company, provided as a list of tuples where each tuple represents one time slot of business hours. Each slot consists of a start and end time given in seconds since the week start.
+    :param workcalendar: Calendar exposing ``is_working_day(day)``. Dates
+        rejected by the calendar are excluded when business hours are enabled.
 
     Example::
 
@@ -238,6 +240,10 @@ def discover_performance_dfg(
     :param timestamp_key: Attribute to be used for the timestamp (default: "time:timestamp").
     :param case_id_key: Attribute to be used as case identifier (default: "case:concept:name").
     :param perf_aggregation_key: Selector for the type of aggregation (all, mean, median, max, min, sum, stdev)
+    When business hours are enabled, the returned performance DFG remains
+    dictionary-compatible and also retains the configured schedule so that
+    visualizations can express its durations in working days.
+
     :return: A tuple of three dictionaries: (performance_dfg, start_activities, end_activities).
     :rtype: ``Tuple[dict, dict, dict]``
 
@@ -315,6 +321,7 @@ def discover_performance_dfg(
         properties[dfg_discovery.Parameters.BUSINESS_HOUR_SLOTS] = (
             business_hour_slots
         )
+        properties[dfg_discovery.Parameters.WORKCALENDAR] = workcalendar
         dfg = dfg_discovery.apply(log, parameters=properties)
         from pm4py.statistics.start_activities.log import (
             get as start_activities_module,
@@ -329,6 +336,13 @@ def discover_performance_dfg(
         end_activities = end_activities_module.get_end_activities(
             log, parameters=properties
         )
+    if business_hours:
+        from pm4py.objects.dfg.obj import PerformanceDFG
+
+        dfg = PerformanceDFG(
+            dfg, business_hour_slots=business_hour_slots
+        )
+
     return dfg, start_activities, end_activities
 
 

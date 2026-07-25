@@ -29,7 +29,7 @@ from pm4py.visualization.petri_net.util.vis_trans_shortest_paths import (
 from pm4py.visualization.petri_net.util.vis_trans_shortest_paths import (
     get_shortest_paths,
 )
-from pm4py.util import exec_utils
+from pm4py.util import exec_utils, vis_utils
 from enum import Enum
 from pm4py.util.constants import (
     PARAMETER_CONSTANT_ACTIVITY_KEY,
@@ -114,6 +114,7 @@ def get_decorated_net(
         activities_count,
         variant=variant,
         aggregation_measure=aggregation_measure,
+        business_hour_slots=vis_utils.get_business_hour_slots(parameters),
     )
 
     return visualize.apply(

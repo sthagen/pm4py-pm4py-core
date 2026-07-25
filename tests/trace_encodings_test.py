@@ -16,7 +16,9 @@ from pm4py.objects.petri_net.utils import petri_utils
 class TraceEncodingsTest(unittest.TestCase):
     def _read_log(self):
         return xes_importer.apply(
-            os.path.join("tests", "input_data", "running-example.xes")
+            os.path.join(
+                os.path.dirname(__file__), "input_data", "running-example.xes"
+            )
         )
 
     def _abc_log_and_model(self):

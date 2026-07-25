@@ -17,6 +17,7 @@ import copy
 import datetime
 import os
 import sys
+import unittest
 from collections import Counter
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -233,6 +234,23 @@ def test_gateway_map_token_generators():
     assert Counter(n.kind for n in w_false.nodes.values()).get("or", 0) >= 1
     assert _connected(w_false)
     print("gateway_map: token generators placed + inclusive retained — OK")
+
+
+class SplitMinerInternalsTest(unittest.TestCase):
+    def test_rpst(self):
+        test_rpst()
+
+    def test_gateway_map_micro(self):
+        test_gateway_map_micro()
+
+    def test_gateway_map_rigid(self):
+        test_gateway_map_rigid()
+
+    def test_gateway_map_loop(self):
+        test_gateway_map_loop()
+
+    def test_gateway_map_token_generators(self):
+        test_gateway_map_token_generators()
 
 
 def main() -> int:

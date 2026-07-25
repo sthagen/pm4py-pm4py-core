@@ -23,7 +23,7 @@ from pm4py.algo.conformance.tokenreplay import algorithm as token_replay
 from pm4py.statistics.variants.log import get as variants_get
 from pm4py.visualization.petri_net.common import visualize
 from pm4py.visualization.petri_net.util import performance_map
-from pm4py.util import exec_utils, xes_constants
+from pm4py.util import exec_utils, vis_utils, xes_constants
 from enum import Enum
 from pm4py.util.constants import (
     PARAMETER_CONSTANT_ACTIVITY_KEY,
@@ -132,6 +132,7 @@ def get_decorations(
         element_statistics,
         measure=measure,
         aggregation_measure=aggregation_measure,
+        business_hour_slots=vis_utils.get_business_hour_slots(parameters),
     )
 
     return aggregated_statistics

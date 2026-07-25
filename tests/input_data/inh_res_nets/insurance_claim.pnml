@@ -1,0 +1,213 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pnml>
+  <net id="Insurance claim adjudication" type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel">
+    <name>
+      <text>Insurance claim adjudication</text>
+    </name>
+    <page id="n0">
+      <place id="source">
+        <name>
+          <text>source</text>
+        </name>
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <place id="gate">
+        <name>
+          <text>gate</text>
+        </name>
+      </place>
+      <place id="branch_a_start">
+        <name>
+          <text>branch_a_start</text>
+        </name>
+      </place>
+      <place id="branch_a_done">
+        <name>
+          <text>branch_a_done</text>
+        </name>
+      </place>
+      <place id="branch_b_start">
+        <name>
+          <text>branch_b_start</text>
+        </name>
+      </place>
+      <place id="branch_b_done">
+        <name>
+          <text>branch_b_done</text>
+        </name>
+      </place>
+      <place id="reviewed">
+        <name>
+          <text>reviewed</text>
+        </name>
+      </place>
+      <place id="checked">
+        <name>
+          <text>checked</text>
+        </name>
+      </place>
+      <place id="registered">
+        <name>
+          <text>registered</text>
+        </name>
+      </place>
+      <place id="open_items">
+        <name>
+          <text>open_items</text>
+        </name>
+      </place>
+      <place id="authorized">
+        <name>
+          <text>authorized</text>
+        </name>
+      </place>
+      <place id="branch_a_middle">
+        <name>
+          <text>branch_a_middle</text>
+        </name>
+      </place>
+      <place id="branch_b_middle">
+        <name>
+          <text>branch_b_middle</text>
+        </name>
+      </place>
+      <place id="joined">
+        <name>
+          <text>joined</text>
+        </name>
+      </place>
+      <place id="sink">
+        <name>
+          <text>sink</text>
+        </name>
+      </place>
+      <transition id="start">
+        <name>
+          <text>Register Claim</text>
+        </name>
+      </transition>
+      <transition id="reset">
+        <name>
+          <text>Complete Special Investigation</text>
+        </name>
+      </transition>
+      <transition id="plan">
+        <name>
+          <text>Estimate Claim</text>
+        </name>
+      </transition>
+      <transition id="authorize">
+        <name>
+          <text>Authorize Adjudication</text>
+        </name>
+      </transition>
+      <transition id="a2">
+        <name>
+          <text>Calculate Settlement</text>
+        </name>
+      </transition>
+      <transition id="b2">
+        <name>
+          <text>Contact Claimant</text>
+        </name>
+      </transition>
+      <transition id="review">
+        <name>
+          <text>Review Settlement</text>
+        </name>
+      </transition>
+      <transition id="check">
+        <name>
+          <text>Validate Coverage</text>
+        </name>
+      </transition>
+      <transition id="issue">
+        <name>
+          <text>Raise Claim Flag</text>
+        </name>
+      </transition>
+      <transition id="clean">
+        <name>
+          <text>Confirm Flag-Free Claim</text>
+        </name>
+      </transition>
+      <transition id="a1">
+        <name>
+          <text>Assess Liability</text>
+        </name>
+      </transition>
+      <transition id="b1">
+        <name>
+          <text>Verify Supporting Evidence</text>
+        </name>
+      </transition>
+      <transition id="join">
+        <name>
+          <text>Consolidate Claim Decision</text>
+        </name>
+      </transition>
+      <transition id="revise">
+        <name>
+          <text>Revise Settlement</text>
+        </name>
+      </transition>
+      <transition id="close">
+        <name>
+          <text>Issue Claim Decision</text>
+        </name>
+      </transition>
+      <arc id="139992471143040" source="checked" target="plan"/>
+      <arc id="139992471143936" source="clean" target="authorized"/>
+      <arc id="139992471144832" source="branch_b_start" target="b1"/>
+      <arc id="139992471145728" source="review" target="reviewed"/>
+      <arc id="139992471142928" source="check" target="checked"/>
+      <arc id="139992472575248" source="open_items" target="reset">
+        <arctype>
+          <text>reset</text>
+        </arctype>
+      </arc>
+      <arc id="139992471143824" source="gate" target="clean"/>
+      <arc id="139992471144720" source="a2" target="branch_a_done"/>
+      <arc id="139992471145616" source="joined" target="review"/>
+      <arc id="139992471142816" source="registered" target="check"/>
+      <arc id="139992471143712" source="reset" target="authorized"/>
+      <arc id="139992471144608" source="branch_a_middle" target="a2"/>
+      <arc id="139992471145504" source="join" target="joined"/>
+      <arc id="139992471142704" source="start" target="registered"/>
+      <arc id="139992471143600" source="gate" target="reset"/>
+      <arc id="139992471144496" source="a1" target="branch_a_middle"/>
+      <arc id="139992471145392" source="branch_b_done" target="join"/>
+      <arc id="139992471142592" source="source" target="start"/>
+      <arc id="139992471143488" source="issue" target="open_items"/>
+      <arc id="139992471144384" source="branch_a_start" target="a1"/>
+      <arc id="139992471145280" source="branch_a_done" target="join"/>
+      <arc id="139992471146176" source="close" target="sink"/>
+      <arc id="139992471143376" source="issue" target="gate"/>
+      <arc id="139992472575568" source="open_items" target="clean">
+        <arctype>
+          <text>inhibitor</text>
+        </arctype>
+      </arc>
+      <arc id="139992471144272" source="authorize" target="branch_b_start"/>
+      <arc id="139992471145168" source="b2" target="branch_b_done"/>
+      <arc id="139992471146064" source="reviewed" target="close"/>
+      <arc id="139992471143264" source="gate" target="issue"/>
+      <arc id="139992471144160" source="authorize" target="branch_a_start"/>
+      <arc id="139992471145056" source="branch_b_middle" target="b2"/>
+      <arc id="139992471145952" source="revise" target="reviewed"/>
+      <arc id="139992471143152" source="plan" target="gate"/>
+      <arc id="139992471144048" source="authorized" target="authorize"/>
+      <arc id="139992471144944" source="b1" target="branch_b_middle"/>
+      <arc id="139992471145840" source="reviewed" target="revise"/>
+    </page>
+    <finalmarkings>
+      <marking>
+        <place idref="sink">
+          <text>1</text>
+        </place>
+      </marking>
+    </finalmarkings>
+  </net>
+</pnml>

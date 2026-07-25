@@ -504,7 +504,10 @@ def find_min_max_arc_performance(statistics, aggregation_measure):
 
 
 def aggregate_statistics(
-    statistics, measure="frequency", aggregation_measure=None
+    statistics,
+    measure="frequency",
+    aggregation_measure=None,
+    business_hour_slots=None,
 ):
     """
     Gets aggregated statistics
@@ -517,8 +520,8 @@ def aggregate_statistics(
         Desidered view on data (frequency or performance)
     aggregation_measure
         Aggregation measure (e.g. mean, min) to use
-    stat_locale
-        Dict to locale the stat strings
+    business_hour_slots
+        Optional weekly schedule used to express durations in working days
     
     Returns
     ----------
@@ -551,7 +554,10 @@ def aggregate_statistics(
                     aggr_stat = aggregate_stats(
                         statistics, elem, aggregation_measure
                     )
-                    aggr_stat_hr = human_readable_stat(aggr_stat)
+                    aggr_stat_hr = human_readable_stat(
+                        aggr_stat,
+                        business_hour_slots=business_hour_slots,
+                    )
                     arc_penwidth = get_arc_penwidth(
                         aggr_stat, min_arc_performance, max_arc_performance
                     )

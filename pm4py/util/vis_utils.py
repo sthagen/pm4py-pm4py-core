@@ -30,8 +30,40 @@ MAX_EDGE_PENWIDTH_GRAPHVIZ = 2.6
 MIN_EDGE_PENWIDTH_GRAPHVIZ = 1.0
 
 
+def get_business_hour_slots(parameters, performance_dfg=None):
+    """Return the schedule to use for duration labels, if configured.
+
+    Explicit visualization parameters take precedence over metadata retained
+    by a discovered performance DFG.
+    """
+    from pm4py.util import constants, exec_utils
+
+    missing = object()
+    business_hours = exec_utils.get_param_value(
+        "business_hours", parameters, missing
+    )
+    business_hour_slots = exec_utils.get_param_value(
+        "business_hour_slots", parameters, missing
+    )
+    if business_hours is not missing and not business_hours:
+        return None
+    if business_hour_slots is not missing and business_hour_slots is not None:
+        return business_hour_slots
+    if performance_dfg is not None:
+        discovered_slots = getattr(
+            performance_dfg, "business_hour_slots", None
+        )
+        if discovered_slots is not None:
+            return discovered_slots
+    if business_hours is not missing and business_hours:
+        return constants.DEFAULT_BUSINESS_HOUR_SLOTS
+    return None
+
+
 def human_readable_stat(
-    timedelta, stat_locale: Optional[Dict[str, str]] = None
+    timedelta,
+    stat_locale: Optional[Dict[str, str]] = None,
+    business_hour_slots=None,
 ) -> str:
     """
     Transform a timedelta into a human readable string
@@ -40,6 +72,12 @@ def human_readable_stat(
     ----------
     timedelta
         Timedelta
+    stat_locale
+        Labels used for the displayed time units
+    business_hour_slots
+        Optional weekly business-hour schedule. When provided, days, months,
+        and years are expressed in configured working days instead of
+        24-hour calendar days.
 
     Returns
     ----------
@@ -49,11 +87,17 @@ def human_readable_stat(
     if stat_locale is None:
         stat_locale = {}
 
+    seconds_per_day = 86400.0
+    if business_hour_slots is not None:
+        from pm4py.util.business_hours import get_business_day_seconds
+
+        seconds_per_day = get_business_day_seconds(business_hour_slots)
+
     c = int(float(timedelta))
-    years = c // 31104000
-    months = c // 2592000
-    days = c // 86400
-    hours = c // 3600 % 24
+    years = int(c // (seconds_per_day * 360))
+    months = int(c // (seconds_per_day * 30))
+    days = int(c // seconds_per_day)
+    hours = c // 3600
     minutes = c // 60 % 60
     seconds = c % 60
     if years > 0:

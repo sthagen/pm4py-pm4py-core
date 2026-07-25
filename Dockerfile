@@ -7,12 +7,12 @@ RUN apt-get -y install gcc g++ flex bison pkg-config automake autoconf cmake
 RUN apt-get -y install python3-dev python3-pydot python3-tk
 RUN apt-get -y install libopenblas-dev liblapack-dev libboost-all-dev libncurses5-dev libtool libssl-dev libjemalloc-dev libboost-dev libboost-filesystem-dev libboost-system-dev libboost-regex-dev libxml2-dev libxslt-dev libfreetype6-dev libsuitesparse-dev libclang-16-dev llvm-16-dev libthrift-dev libfftw3-dev
 RUN python3 -m pip install --upgrade pip
-RUN pip3 install graphviz==0.21 networkx==3.6.1 packaging==26.2 python-dateutil==2.9.0.post0 pytz==2026.2 setuptools==82.0.1 six==1.17.0 wheel==0.47.0 
-RUN pip3 install cycler==0.12.1 pyparsing==3.3.2 tqdm==4.68.3 
-RUN pip3 install lxml==6.1.1 numpy==2.5.0 pandas==3.0.4 scipy==1.18.0 
-RUN pip3 install contourpy==1.3.3 fonttools==4.63.0 kiwisolver==1.5.0 matplotlib==3.11.0 pillow==12.2.0 
-RUN pip3 install attrs==26.1.0 certifi==2026.6.17 charset-normalizer==3.4.7 idna==3.18 jsonschema-specifications==2025.9.1 referencing==0.37.0 rpds-py==2026.5.1 urllib3==2.7.0 
-RUN pip3 install jsonschema==4.26.0 requests==2.34.2 
+RUN pip3 install graphviz==0.21 networkx==3.6.1 packaging==26.2 python-dateutil==2.9.0.post0 pytz==2026.2 setuptools==83.0.0 six==1.17.0 wheel==0.47.0 
+RUN pip3 install cycler==0.12.1 pyparsing==3.3.2 tqdm==4.69.0 
+RUN pip3 install lxml==6.1.1 numpy==2.5.1 pandas==3.0.4 scipy==1.18.0 
+RUN pip3 install contourpy==1.3.3 fonttools==4.63.0 kiwisolver==1.5.0 matplotlib==3.11.1 pillow==12.3.0 
+RUN pip3 install attrs==26.1.0 certifi==2026.6.17 charset-normalizer==3.4.9 convertdate==2.4.1 idna==3.18 jsonschema-specifications==2025.9.1 lunardate==0.3.0 pyluach==2.3.0 PyMeeus==0.5.12 referencing==0.37.0 rpds-py==2026.6.3 urllib3==2.7.0 
+RUN pip3 install jsonschema==4.26.0 requests==2.34.2 workalendar==17.0.0 
 RUN pip3 install -U meson-python==0.15.0 Cython==3.0.10 ninja==1.11.1.1 spin==0.8 build==1.2.1 setuptools_scm==8.0.4
 
 #RUN cd / && git clone https://github.com/numpy/numpy.git && cd /numpy && git submodule update --init && pip3 install .

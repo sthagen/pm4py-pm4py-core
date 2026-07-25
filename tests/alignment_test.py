@@ -137,6 +137,16 @@ class AlignmentTest(unittest.TestCase):
         align_alg.apply(log, net, im, fm, variant=align_alg.Variants.VERSION_DIJKSTRA_LESS_MEMORY)
 
 
+    def test_alignments_variant_return_value(self):
+        import pm4py
+        log = pm4py.read_xes("input_data/roadtraffic100traces.xes")
+        net, im, fm = pm4py.discover_petri_net_inductive(log)
+        alignments = align_alg.apply(log, net, im, fm, variant=align_alg.Variants.VERSION_STATE_EQUATION_A_STAR,
+                                     parameters={align_alg.Parameters.UNPACK_VARIANT_ALIGNMENTS: False})
+
+        self.assertEqual(len(alignments), 10)
+        self.assertEqual(sum(map(lambda a: a[1], alignments)), 100)
+
 
 if __name__ == "__main__":
     unittest.main()

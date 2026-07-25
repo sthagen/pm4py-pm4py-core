@@ -40,6 +40,7 @@ class Parameters(Enum):
     EDGE_METRIC = "edge_metric"
     ACT_THRESHOLD = "act_threshold"
     EDGE_THRESHOLD = "edge_threshold"
+    BUSINESS_HOUR_SLOTS = "business_hour_slots"
 
 
 def wrap_text(text: str, max_length: int = 15) -> str:
@@ -145,6 +146,7 @@ def apply(
     edge_threshold = exec_utils.get_param_value(
         Parameters.EDGE_THRESHOLD, parameters, 0
     )
+    business_hour_slots = vis_utils.get_business_hour_slots(parameters)
 
     pref_act = (
         " E="
@@ -207,7 +209,10 @@ def apply(
                             "source": wrap_text(tup[0]),
                             "target": wrap_text(tup[1]),
                             "frequency": pref_edge + str(len(ent)),
-                            "performance": vis_utils.human_readable_stat(perf),
+                            "performance": vis_utils.human_readable_stat(
+                                perf,
+                                business_hour_slots=business_hour_slots,
+                            ),
                         }
                     )
 

@@ -939,6 +939,11 @@ def resource_profile_pandas():
     resource_profiles_pandas.execute_script()
 
 
+def local_process_models():
+    from examples import local_process_models
+    print("\n\nlocal_process_models")
+    local_process_models.execute_script()
+
 def process_tree_reduction():
     from examples import process_tree_reduction
     print("\n\nprocess_tree_reduction")
@@ -1241,6 +1246,7 @@ def main():
         execute_script(streaming_xes_reader_trace_stream)
         execute_script(monte_carlo_dfg)
         execute_script(monte_carlo_petri_net)
+        execute_script(local_process_models)
 
     print_versions()
 

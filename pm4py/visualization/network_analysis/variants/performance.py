@@ -37,6 +37,7 @@ class Parameters(Enum):
     AGGREGATION_MEASURE = "aggregation_measure"
     ENABLE_GRAPH_TITLE = "enable_graph_title"
     GRAPH_TITLE = "graph_title"
+    BUSINESS_HOUR_SLOTS = "business_hour_slots"
 
 
 def apply(
@@ -81,6 +82,7 @@ def apply(
     aggregation_measure = exec_utils.get_param_value(
         Parameters.AGGREGATION_MEASURE, parameters, "mean"
     )
+    business_hour_slots = vis_utils.get_business_hour_slots(parameters)
 
     from statistics import mean, median, stdev
 
@@ -202,7 +204,8 @@ def apply(
                         + vis_utils.human_readable_stat(
                             network_analysis_edges_agg_performance[edge][
                                 edge_value
-                            ]
+                            ],
+                            business_hour_slots=business_hour_slots,
                         )
                         + "",
                         penwidth=str(

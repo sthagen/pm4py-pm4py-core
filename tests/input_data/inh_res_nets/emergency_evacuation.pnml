@@ -1,0 +1,213 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pnml>
+  <net id="Emergency-site evacuation" type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel">
+    <name>
+      <text>Emergency-site evacuation</text>
+    </name>
+    <page id="n0">
+      <place id="gate">
+        <name>
+          <text>gate</text>
+        </name>
+      </place>
+      <place id="registered">
+        <name>
+          <text>registered</text>
+        </name>
+      </place>
+      <place id="branch_a_start">
+        <name>
+          <text>branch_a_start</text>
+        </name>
+      </place>
+      <place id="branch_a_middle">
+        <name>
+          <text>branch_a_middle</text>
+        </name>
+      </place>
+      <place id="branch_a_done">
+        <name>
+          <text>branch_a_done</text>
+        </name>
+      </place>
+      <place id="branch_b_done">
+        <name>
+          <text>branch_b_done</text>
+        </name>
+      </place>
+      <place id="joined">
+        <name>
+          <text>joined</text>
+        </name>
+      </place>
+      <place id="source">
+        <name>
+          <text>source</text>
+        </name>
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <place id="checked">
+        <name>
+          <text>checked</text>
+        </name>
+      </place>
+      <place id="open_items">
+        <name>
+          <text>open_items</text>
+        </name>
+      </place>
+      <place id="authorized">
+        <name>
+          <text>authorized</text>
+        </name>
+      </place>
+      <place id="branch_b_start">
+        <name>
+          <text>branch_b_start</text>
+        </name>
+      </place>
+      <place id="branch_b_middle">
+        <name>
+          <text>branch_b_middle</text>
+        </name>
+      </place>
+      <place id="reviewed">
+        <name>
+          <text>reviewed</text>
+        </name>
+      </place>
+      <place id="sink">
+        <name>
+          <text>sink</text>
+        </name>
+      </place>
+      <transition id="start">
+        <name>
+          <text>Activate Emergency Plan</text>
+        </name>
+      </transition>
+      <transition id="check">
+        <name>
+          <text>Assess Incident Zone</text>
+        </name>
+      </transition>
+      <transition id="clean">
+        <name>
+          <text>Confirm Hazard-Free Routes</text>
+        </name>
+      </transition>
+      <transition id="a1">
+        <name>
+          <text>Evacuate Primary Zone</text>
+        </name>
+      </transition>
+      <transition id="b1">
+        <name>
+          <text>Evacuate Assisted Persons</text>
+        </name>
+      </transition>
+      <transition id="b2">
+        <name>
+          <text>Account for Responders</text>
+        </name>
+      </transition>
+      <transition id="revise">
+        <name>
+          <text>Repeat Clearance Sweep</text>
+        </name>
+      </transition>
+      <transition id="reset">
+        <name>
+          <text>Clear All Reported Hazards</text>
+        </name>
+      </transition>
+      <transition id="plan">
+        <name>
+          <text>Plan Evacuation Routes</text>
+        </name>
+      </transition>
+      <transition id="issue">
+        <name>
+          <text>Report Active Hazard</text>
+        </name>
+      </transition>
+      <transition id="authorize">
+        <name>
+          <text>Authorize Evacuation</text>
+        </name>
+      </transition>
+      <transition id="a2">
+        <name>
+          <text>Sweep Primary Zone</text>
+        </name>
+      </transition>
+      <transition id="join">
+        <name>
+          <text>Consolidate Headcount</text>
+        </name>
+      </transition>
+      <transition id="review">
+        <name>
+          <text>Verify Site Clearance</text>
+        </name>
+      </transition>
+      <transition id="close">
+        <name>
+          <text>Stand Down Emergency</text>
+        </name>
+      </transition>
+      <arc id="139992471586304" source="source" target="start"/>
+      <arc id="139992471585408" source="issue" target="open_items"/>
+      <arc id="139992472591616" source="open_items" target="reset">
+        <arctype>
+          <text>reset</text>
+        </arctype>
+      </arc>
+      <arc id="139992471594368" source="b1" target="branch_b_middle"/>
+      <arc id="139992471595264" source="reviewed" target="revise"/>
+      <arc id="139992471586192" source="start" target="registered"/>
+      <arc id="139992471585296" source="gate" target="reset"/>
+      <arc id="139992471594256" source="branch_b_start" target="b1"/>
+      <arc id="139992471595152" source="review" target="reviewed"/>
+      <arc id="139992471586080" source="registered" target="check"/>
+      <arc id="139992471585184" source="reset" target="authorized"/>
+      <arc id="139992472592160" source="open_items" target="clean">
+        <arctype>
+          <text>inhibitor</text>
+        </arctype>
+      </arc>
+      <arc id="139992471594144" source="a2" target="branch_a_done"/>
+      <arc id="139992471595040" source="joined" target="review"/>
+      <arc id="139992471585968" source="check" target="checked"/>
+      <arc id="139992471585072" source="gate" target="clean"/>
+      <arc id="139992471594032" source="a1" target="branch_a_middle"/>
+      <arc id="139992471594928" source="join" target="joined"/>
+      <arc id="139992471585856" source="checked" target="plan"/>
+      <arc id="139992471584960" source="clean" target="authorized"/>
+      <arc id="139992471593920" source="branch_a_middle" target="a2"/>
+      <arc id="139992471594816" source="branch_b_done" target="join"/>
+      <arc id="139992471585744" source="plan" target="gate"/>
+      <arc id="139992471584848" source="authorized" target="authorize"/>
+      <arc id="139992471593808" source="authorize" target="branch_b_start"/>
+      <arc id="139992471594704" source="branch_a_done" target="join"/>
+      <arc id="139992471595600" source="close" target="sink"/>
+      <arc id="139992471585632" source="gate" target="issue"/>
+      <arc id="139992471593696" source="branch_a_start" target="a1"/>
+      <arc id="139992471594592" source="b2" target="branch_b_done"/>
+      <arc id="139992471595488" source="reviewed" target="close"/>
+      <arc id="139992471585520" source="issue" target="gate"/>
+      <arc id="139992471593584" source="authorize" target="branch_a_start"/>
+      <arc id="139992471594480" source="branch_b_middle" target="b2"/>
+      <arc id="139992471595376" source="revise" target="reviewed"/>
+    </page>
+    <finalmarkings>
+      <marking>
+        <place idref="sink">
+          <text>1</text>
+        </place>
+      </marking>
+    </finalmarkings>
+  </net>
+</pnml>

@@ -1,0 +1,213 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pnml>
+  <net id="Loan underwriting" type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel">
+    <name>
+      <text>Loan underwriting</text>
+    </name>
+    <page id="n0">
+      <place id="source">
+        <name>
+          <text>source</text>
+        </name>
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <place id="open_items">
+        <name>
+          <text>open_items</text>
+        </name>
+      </place>
+      <place id="registered">
+        <name>
+          <text>registered</text>
+        </name>
+      </place>
+      <place id="branch_a_start">
+        <name>
+          <text>branch_a_start</text>
+        </name>
+      </place>
+      <place id="branch_a_done">
+        <name>
+          <text>branch_a_done</text>
+        </name>
+      </place>
+      <place id="branch_b_middle">
+        <name>
+          <text>branch_b_middle</text>
+        </name>
+      </place>
+      <place id="joined">
+        <name>
+          <text>joined</text>
+        </name>
+      </place>
+      <place id="sink">
+        <name>
+          <text>sink</text>
+        </name>
+      </place>
+      <place id="gate">
+        <name>
+          <text>gate</text>
+        </name>
+      </place>
+      <place id="checked">
+        <name>
+          <text>checked</text>
+        </name>
+      </place>
+      <place id="authorized">
+        <name>
+          <text>authorized</text>
+        </name>
+      </place>
+      <place id="branch_a_middle">
+        <name>
+          <text>branch_a_middle</text>
+        </name>
+      </place>
+      <place id="branch_b_start">
+        <name>
+          <text>branch_b_start</text>
+        </name>
+      </place>
+      <place id="branch_b_done">
+        <name>
+          <text>branch_b_done</text>
+        </name>
+      </place>
+      <place id="reviewed">
+        <name>
+          <text>reviewed</text>
+        </name>
+      </place>
+      <transition id="issue">
+        <name>
+          <text>Raise Underwriting Exception</text>
+        </name>
+      </transition>
+      <transition id="check">
+        <name>
+          <text>Validate Applicant Identity</text>
+        </name>
+      </transition>
+      <transition id="clean">
+        <name>
+          <text>Confirm Exception-Free File</text>
+        </name>
+      </transition>
+      <transition id="a1">
+        <name>
+          <text>Analyze Credit History</text>
+        </name>
+      </transition>
+      <transition id="b1">
+        <name>
+          <text>Appraise Collateral</text>
+        </name>
+      </transition>
+      <transition id="join">
+        <name>
+          <text>Consolidate Underwriting File</text>
+        </name>
+      </transition>
+      <transition id="revise">
+        <name>
+          <text>Revise Loan Conditions</text>
+        </name>
+      </transition>
+      <transition id="start">
+        <name>
+          <text>Receive Loan Application</text>
+        </name>
+      </transition>
+      <transition id="reset">
+        <name>
+          <text>Resolve Exceptions in Committee</text>
+        </name>
+      </transition>
+      <transition id="plan">
+        <name>
+          <text>Prepare Credit Assessment</text>
+        </name>
+      </transition>
+      <transition id="authorize">
+        <name>
+          <text>Authorize Underwriting</text>
+        </name>
+      </transition>
+      <transition id="a2">
+        <name>
+          <text>Calculate Affordability</text>
+        </name>
+      </transition>
+      <transition id="b2">
+        <name>
+          <text>Verify Income</text>
+        </name>
+      </transition>
+      <transition id="review">
+        <name>
+          <text>Perform Approval Review</text>
+        </name>
+      </transition>
+      <transition id="close">
+        <name>
+          <text>Issue Lending Decision</text>
+        </name>
+      </transition>
+      <arc id="139992471157376" source="gate" target="issue"/>
+      <arc id="139992471158272" source="authorize" target="branch_a_start"/>
+      <arc id="139992471585408" source="b2" target="branch_b_done"/>
+      <arc id="139992471586304" source="reviewed" target="close"/>
+      <arc id="139992471157264" source="plan" target="gate"/>
+      <arc id="139992471158160" source="authorized" target="authorize"/>
+      <arc id="139992471585296" source="branch_b_middle" target="b2"/>
+      <arc id="139992471586192" source="revise" target="reviewed"/>
+      <arc id="139992471157152" source="checked" target="plan"/>
+      <arc id="139992471158048" source="clean" target="authorized"/>
+      <arc id="139992471585184" source="b1" target="branch_b_middle"/>
+      <arc id="139992471586080" source="reviewed" target="revise"/>
+      <arc id="139992471157040" source="check" target="checked"/>
+      <arc id="139992471157936" source="gate" target="clean"/>
+      <arc id="139992471585072" source="branch_b_start" target="b1"/>
+      <arc id="139992471585968" source="review" target="reviewed"/>
+      <arc id="139992471156928" source="registered" target="check"/>
+      <arc id="139992471455296" source="open_items" target="reset">
+        <arctype>
+          <text>reset</text>
+        </arctype>
+      </arc>
+      <arc id="139992471157824" source="reset" target="authorized"/>
+      <arc id="139992471584960" source="a2" target="branch_a_done"/>
+      <arc id="139992471585856" source="joined" target="review"/>
+      <arc id="139992471156816" source="start" target="registered"/>
+      <arc id="139992471157712" source="gate" target="reset"/>
+      <arc id="139992471158608" source="a1" target="branch_a_middle"/>
+      <arc id="139992471584848" source="branch_a_middle" target="a2"/>
+      <arc id="139992471585744" source="join" target="joined"/>
+      <arc id="139992471156704" source="source" target="start"/>
+      <arc id="139992471157600" source="issue" target="open_items"/>
+      <arc id="139992471158496" source="branch_a_start" target="a1"/>
+      <arc id="139992471585632" source="branch_b_done" target="join"/>
+      <arc id="139992471157488" source="issue" target="gate"/>
+      <arc id="139992471455600" source="open_items" target="clean">
+        <arctype>
+          <text>inhibitor</text>
+        </arctype>
+      </arc>
+      <arc id="139992471158384" source="authorize" target="branch_b_start"/>
+      <arc id="139992471585520" source="branch_a_done" target="join"/>
+      <arc id="139992471586416" source="close" target="sink"/>
+    </page>
+    <finalmarkings>
+      <marking>
+        <place idref="sink">
+          <text>1</text>
+        </place>
+      </marking>
+    </finalmarkings>
+  </net>
+</pnml>

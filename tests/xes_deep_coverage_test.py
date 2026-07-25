@@ -1,0 +1,103 @@
+import gzip
+import os
+import tempfile
+import unittest
+
+from pm4py.objects.log.importer.xes import importer
+from pm4py.objects.log.importer.xes.variants import (
+    iterparse_20,
+    iterparse_mem_compressed,
+)
+
+
+XES = b"""<?xml version='1.0' encoding='UTF-8'?>
+<log xmlns='http://www.xes-standard.org/' xes.version='2.0'>
+  <extension name='Concept' prefix='concept' uri='http://www.xes-standard.org/concept.xesext'/>
+  <global scope='event'><string key='concept:name' value='unknown'/></global>
+  <classifier name='Activity' keys="'concept:name' 'lifecycle:transition'"/>
+  <string key='creator' value='coverage-test'/>
+  <trace>
+    <string key='concept:name' value='case-1'/>
+    <event>
+      <string key='concept:name' value='A'/>
+      <date key='time:timestamp' value='2024-01-02T00:00:00Z'/>
+      <int key='count' value='2'/>
+      <float key='cost' value='1.5'/>
+      <boolean key='approved' value='true'/>
+      <id key='identifier' value='id-1'/>
+      <list key='children'><values><string key='child' value='value'/></values></list>
+      <container key='container'><string key='nested' value='inside'/></container>
+    </event>
+    <event>
+      <string key='concept:name' value='B'/>
+      <date key='time:timestamp' value='2024-01-01T00:00:00Z'/>
+      <boolean key='approved' value='false'/>
+    </event>
+  </trace>
+  <trace>
+    <string key='concept:name' value='case-2'/>
+    <event><string key='concept:name' value='C'/><date key='time:timestamp' value='2024-01-03T00:00:00Z'/></event>
+  </trace>
+</log>"""
+
+
+class XesDeepCoverageTest(unittest.TestCase):
+    def _assert_log(self, log):
+        self.assertEqual(2, len(log))
+        self.assertEqual("coverage-test", log.attributes["creator"])
+        self.assertIn("Concept", log.extensions)
+        self.assertIn("Activity", log.classifiers)
+        event_a = next(
+            event
+            for trace in log
+            for event in trace
+            if event["concept:name"] == "A"
+        )
+        self.assertEqual(2, event_a["count"])
+
+    def test_iterparse_20_string_compressed_and_file_paths(self):
+        log = iterparse_20.import_from_string(
+            XES,
+            parameters={"show_progress_bar": True, "timestamp_sort": True, "reverse_sort": True},
+        )
+        self._assert_log(log)
+        compressed = iterparse_20.import_from_string(
+            gzip.compress(XES),
+            parameters={"decompress_serialization": True, "show_progress_bar": False, "max_traces": 1},
+        )
+        self.assertEqual(1, len(compressed))
+        with tempfile.NamedTemporaryFile(suffix=".xes.gz") as target:
+            target.write(gzip.compress(XES))
+            target.flush()
+            file_log = iterparse_20.apply(target.name, parameters={"show_progress_bar": True})
+        self._assert_log(file_log)
+
+    def test_memory_compressed_string_compressed_and_file_paths(self):
+        log = iterparse_mem_compressed.import_from_string(
+            XES,
+            parameters={"show_progress_bar": True, "timestamp_sort": True},
+        )
+        self._assert_log(log)
+        compressed = iterparse_mem_compressed.import_from_string(
+            gzip.compress(XES),
+            parameters={"decompress_serialization": True, "show_progress_bar": False, "max_traces": 1},
+        )
+        self.assertEqual(1, len(compressed))
+        with tempfile.NamedTemporaryFile(suffix=".xes.gz") as target:
+            target.write(gzip.compress(XES))
+            target.flush()
+            file_log = iterparse_mem_compressed.apply(
+                target.name, parameters={"show_progress_bar": True}
+            )
+        self._assert_log(file_log)
+
+    def test_importer_string_variant_routing(self):
+        for variant in ("iterparse_20", "iterparse_mem_compressed"):
+            log = importer.deserialize(XES, parameters={"show_progress_bar": False}, variant=variant)
+            self.assertEqual(2, len(log))
+        self.assertIs(importer.Variants.ITERPARSE_20, importer.__dict__["__get_variant"]("iterparse_20"))
+        self.assertIs(importer.Variants.ITERPARSE_MEM_COMPRESSED, importer.__dict__["__get_variant"]("iterparse_mem_compressed"))
+
+
+if __name__ == "__main__":
+    unittest.main()

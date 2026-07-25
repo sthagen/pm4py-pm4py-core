@@ -35,10 +35,26 @@ enabled_tests = [
     "DataframePrefilteringTest", "StatisticsLogTest", "StatisticsDfTest", "TransitionSystemTest",
     "ImpExpFromString", "WoflanTest", "OcelFilteringTest", "OcelDiscoveryTest", "LlmTest",
     "OcCausalNetSemanticsTest", "OcCausalNetSimulationTest", "OcCausalNetTest",
-    "OcpnSemanticsTest", "OcpnSimulationTest", "OcpnTest"
+    "OcpnSemanticsTest", "OcpnSimulationTest", "OcpnTest", "LocalProcessModelsTest",
+    "AdditionalCoverageTest", "ApproxAlignmentTest", "TestGeneticMiner",
+    "Ocel2CsvTest", "Ocel2GzipTest", "OcelOlapTest", "SimulationTest",
+    "TraceEncodingsTest", "SplitMinerInternalsTest", "ExtendedCoverageTest",
+    "CoverageRegressionTest", "ModelUtilitiesCoverageTest",
+    "GraphAnalysisCoverageTest", "LogAlgorithmsCoverageTest",
+    "PrivacyCoverageTest", "PetriNetExtraCoverageTest", "OcelDeepCoverageTest",
+    "PowlDiscoveryCoverageTest", "ConnectorsCoverageTest", "LlmCoverageTest",
+    "ClusteringDistanceCoverageTest", "VisualPerformanceCoverageTest",
+    "XesDeepCoverageTest", "BpmnDeepCoverageTest", "FacadeUtilsCoverageTest",
+    "ProcessTreePetriDeepCoverageTest", "ConformanceDecisionDeepCoverageTest",
+    "MiscSubsystemsCoverageTest", "VisualizationFacadeDeepCoverageTest",
+    "SerializationLogUtilsCoverageTest", "PetriStochasticSerializationCoverageTest",
+    "PowlTreeGenerationDeepCoverageTest",
+    "RemainingAlgorithmsCoverageTest", "IoFilteringEdgeCoverageTest",
+    "FinalBufferCoverageTest"
 ]
 
 if importlib.util.find_spec("polars"):
+    enabled_tests.append("PolarsAnalyticsDeepCoverageTest")
     enabled_tests.append("TestPolarsFilteringSimplified")
     enabled_tests.append("TestPolarsFiltering")
     enabled_tests.append("TestPolarsStatistics")
@@ -156,6 +172,14 @@ if "InductiveMinerTreeTest" in enabled_tests:
         suite.addTests(loader.loadTestsFromTestCase(InductiveMinerTreeTest))
     except:
         print("InductiveMinerTreeTest import failed!")
+        failed += 1
+
+if "LocalProcessModelsTest" in enabled_tests:
+    try:
+        from tests.local_process_models_test import LocalProcessModelsTest
+        suite.addTests(loader.loadTestsFromTestCase(LocalProcessModelsTest))
+    except:
+        print("LocalProcessModelsTest import failed!")
         failed += 1
 
 if "AlignmentTest" in enabled_tests:
@@ -436,6 +460,294 @@ if "TestPolarsProcessConformance" in enabled_tests:
         suite.addTests(loader.loadTestsFromTestCase(TestPolarsProcessConformance))
     except:
         print("TestPolarsProcessConformance import failed!")
+        failed += 1
+
+if "AdditionalCoverageTest" in enabled_tests:
+    try:
+        from tests.additional_coverage_test import AdditionalCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(AdditionalCoverageTest))
+    except Exception:
+        print("AdditionalCoverageTest import failed!")
+        failed += 1
+
+if "ApproxAlignmentTest" in enabled_tests:
+    try:
+        from tests.approx_alignment_test import ApproxAlignmentTest
+        suite.addTests(loader.loadTestsFromTestCase(ApproxAlignmentTest))
+    except Exception:
+        print("ApproxAlignmentTest import failed!")
+        failed += 1
+
+if "TestGeneticMiner" in enabled_tests:
+    try:
+        from tests.geneticminer_test import TestGeneticMiner
+        suite.addTests(loader.loadTestsFromTestCase(TestGeneticMiner))
+    except Exception:
+        print("TestGeneticMiner import failed!")
+        failed += 1
+
+if "Ocel2CsvTest" in enabled_tests:
+    try:
+        from tests.ocel2_csv_test import Ocel2CsvTest
+        suite.addTests(loader.loadTestsFromTestCase(Ocel2CsvTest))
+    except Exception:
+        print("Ocel2CsvTest import failed!")
+        failed += 1
+
+if "Ocel2GzipTest" in enabled_tests:
+    try:
+        from tests.ocel2_gzip_test import Ocel2GzipTest
+        suite.addTests(loader.loadTestsFromTestCase(Ocel2GzipTest))
+    except Exception:
+        print("Ocel2GzipTest import failed!")
+        failed += 1
+
+if "OcelOlapTest" in enabled_tests:
+    try:
+        from tests.ocel_olap_test import OcelOlapTest
+        suite.addTests(loader.loadTestsFromTestCase(OcelOlapTest))
+    except Exception:
+        print("OcelOlapTest import failed!")
+        failed += 1
+
+if "SimulationTest" in enabled_tests:
+    try:
+        from tests.simulation_test import SimulationTest
+        suite.addTests(loader.loadTestsFromTestCase(SimulationTest))
+    except Exception:
+        print("SimulationTest import failed!")
+        failed += 1
+
+if "TraceEncodingsTest" in enabled_tests:
+    try:
+        from tests.trace_encodings_test import TraceEncodingsTest
+        suite.addTests(loader.loadTestsFromTestCase(TraceEncodingsTest))
+    except Exception:
+        print("TraceEncodingsTest import failed!")
+        failed += 1
+
+if "SplitMinerInternalsTest" in enabled_tests:
+    try:
+        from tests.split_miner_internals_test import SplitMinerInternalsTest
+        suite.addTests(loader.loadTestsFromTestCase(SplitMinerInternalsTest))
+    except Exception:
+        print("SplitMinerInternalsTest import failed!")
+        failed += 1
+
+if "ExtendedCoverageTest" in enabled_tests:
+    try:
+        from tests.extended_coverage_test import ExtendedCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(ExtendedCoverageTest))
+    except Exception:
+        print("ExtendedCoverageTest import failed!")
+        failed += 1
+
+if "CoverageRegressionTest" in enabled_tests:
+    try:
+        from tests.coverage_regression_test import CoverageRegressionTest
+        suite.addTests(loader.loadTestsFromTestCase(CoverageRegressionTest))
+    except Exception:
+        print("CoverageRegressionTest import failed!")
+        failed += 1
+
+if "ModelUtilitiesCoverageTest" in enabled_tests:
+    try:
+        from tests.model_utilities_coverage_test import ModelUtilitiesCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(ModelUtilitiesCoverageTest))
+    except Exception:
+        print("ModelUtilitiesCoverageTest import failed!")
+        failed += 1
+
+if "GraphAnalysisCoverageTest" in enabled_tests:
+    try:
+        from tests.graph_analysis_coverage_test import GraphAnalysisCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(GraphAnalysisCoverageTest))
+    except Exception:
+        print("GraphAnalysisCoverageTest import failed!")
+        failed += 1
+
+if "LogAlgorithmsCoverageTest" in enabled_tests:
+    try:
+        from tests.log_algorithms_coverage_test import LogAlgorithmsCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(LogAlgorithmsCoverageTest))
+    except Exception:
+        print("LogAlgorithmsCoverageTest import failed!")
+        failed += 1
+
+if "PrivacyCoverageTest" in enabled_tests:
+    try:
+        from tests.privacy_coverage_test import PrivacyCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(PrivacyCoverageTest))
+    except Exception:
+        print("PrivacyCoverageTest import failed!")
+        failed += 1
+
+if "PetriNetExtraCoverageTest" in enabled_tests:
+    try:
+        from tests.petri_net_extra_coverage_test import PetriNetExtraCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(PetriNetExtraCoverageTest))
+    except Exception:
+        print("PetriNetExtraCoverageTest import failed!")
+        failed += 1
+
+if "OcelDeepCoverageTest" in enabled_tests:
+    try:
+        from tests.ocel_deep_coverage_test import OcelDeepCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(OcelDeepCoverageTest))
+    except Exception:
+        print("OcelDeepCoverageTest import failed!")
+        failed += 1
+
+if "PowlDiscoveryCoverageTest" in enabled_tests:
+    try:
+        from tests.powl_discovery_coverage_test import PowlDiscoveryCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(PowlDiscoveryCoverageTest))
+    except Exception:
+        print("PowlDiscoveryCoverageTest import failed!")
+        failed += 1
+
+if "ConnectorsCoverageTest" in enabled_tests:
+    try:
+        from tests.connectors_coverage_test import ConnectorsCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(ConnectorsCoverageTest))
+    except Exception:
+        print("ConnectorsCoverageTest import failed!")
+        failed += 1
+
+if "LlmCoverageTest" in enabled_tests:
+    try:
+        from tests.llm_coverage_test import LlmCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(LlmCoverageTest))
+    except Exception:
+        print("LlmCoverageTest import failed!")
+        failed += 1
+
+if "ClusteringDistanceCoverageTest" in enabled_tests:
+    try:
+        from tests.clustering_distance_coverage_test import ClusteringDistanceCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(ClusteringDistanceCoverageTest))
+    except Exception:
+        print("ClusteringDistanceCoverageTest import failed!")
+        failed += 1
+
+if "VisualPerformanceCoverageTest" in enabled_tests:
+    try:
+        from tests.visual_performance_coverage_test import VisualPerformanceCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(VisualPerformanceCoverageTest))
+    except Exception:
+        print("VisualPerformanceCoverageTest import failed!")
+        failed += 1
+
+if "XesDeepCoverageTest" in enabled_tests:
+    try:
+        from tests.xes_deep_coverage_test import XesDeepCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(XesDeepCoverageTest))
+    except Exception:
+        print("XesDeepCoverageTest import failed!")
+        failed += 1
+
+if "BpmnDeepCoverageTest" in enabled_tests:
+    try:
+        from tests.bpmn_deep_coverage_test import BpmnDeepCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(BpmnDeepCoverageTest))
+    except Exception:
+        print("BpmnDeepCoverageTest import failed!")
+        failed += 1
+
+if "FacadeUtilsCoverageTest" in enabled_tests:
+    try:
+        from tests.facade_utils_coverage_test import FacadeUtilsCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(FacadeUtilsCoverageTest))
+    except Exception:
+        print("FacadeUtilsCoverageTest import failed!")
+        failed += 1
+
+if "ProcessTreePetriDeepCoverageTest" in enabled_tests:
+    try:
+        from tests.process_tree_petri_deep_coverage_test import ProcessTreePetriDeepCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(ProcessTreePetriDeepCoverageTest))
+    except Exception:
+        print("ProcessTreePetriDeepCoverageTest import failed!")
+        failed += 1
+
+if "ConformanceDecisionDeepCoverageTest" in enabled_tests:
+    try:
+        from tests.conformance_decision_deep_coverage_test import ConformanceDecisionDeepCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(ConformanceDecisionDeepCoverageTest))
+    except Exception:
+        print("ConformanceDecisionDeepCoverageTest import failed!")
+        failed += 1
+
+if "MiscSubsystemsCoverageTest" in enabled_tests:
+    try:
+        from tests.misc_subsystems_coverage_test import MiscSubsystemsCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(MiscSubsystemsCoverageTest))
+    except Exception:
+        print("MiscSubsystemsCoverageTest import failed!")
+        failed += 1
+
+if "VisualizationFacadeDeepCoverageTest" in enabled_tests:
+    try:
+        from tests.visualization_facade_deep_coverage_test import VisualizationFacadeDeepCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(VisualizationFacadeDeepCoverageTest))
+    except Exception:
+        print("VisualizationFacadeDeepCoverageTest import failed!")
+        failed += 1
+
+if "SerializationLogUtilsCoverageTest" in enabled_tests:
+    try:
+        from tests.serialization_log_utils_coverage_test import SerializationLogUtilsCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(SerializationLogUtilsCoverageTest))
+    except:
+        print("SerializationLogUtilsCoverageTest import failed!")
+        failed += 1
+
+if "PetriStochasticSerializationCoverageTest" in enabled_tests:
+    try:
+        from tests.petri_stochastic_serialization_coverage_test import PetriStochasticSerializationCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(PetriStochasticSerializationCoverageTest))
+    except:
+        print("PetriStochasticSerializationCoverageTest import failed!")
+        failed += 1
+
+if "PolarsAnalyticsDeepCoverageTest" in enabled_tests:
+    try:
+        from tests.polars_analytics_deep_coverage_test import PolarsAnalyticsDeepCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(PolarsAnalyticsDeepCoverageTest))
+    except:
+        print("PolarsAnalyticsDeepCoverageTest import failed!")
+        failed += 1
+
+if "PowlTreeGenerationDeepCoverageTest" in enabled_tests:
+    try:
+        from tests.powl_tree_generation_deep_coverage_test import PowlTreeGenerationDeepCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(PowlTreeGenerationDeepCoverageTest))
+    except:
+        print("PowlTreeGenerationDeepCoverageTest import failed!")
+        failed += 1
+
+if "RemainingAlgorithmsCoverageTest" in enabled_tests:
+    try:
+        from tests.remaining_algorithms_coverage_test import RemainingAlgorithmsCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(RemainingAlgorithmsCoverageTest))
+    except Exception:
+        print("RemainingAlgorithmsCoverageTest import failed!")
+        failed += 1
+
+if "IoFilteringEdgeCoverageTest" in enabled_tests:
+    try:
+        from tests.io_filtering_edge_coverage_test import IoFilteringEdgeCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(IoFilteringEdgeCoverageTest))
+    except Exception:
+        print("IoFilteringEdgeCoverageTest import failed!")
+        failed += 1
+
+if "FinalBufferCoverageTest" in enabled_tests:
+    try:
+        from tests.final_buffer_coverage_test import FinalBufferCoverageTest
+        suite.addTests(loader.loadTestsFromTestCase(FinalBufferCoverageTest))
+    except Exception:
+        print("FinalBufferCoverageTest import failed!")
         failed += 1
 
 # If some imports failed, let's wait a little bit

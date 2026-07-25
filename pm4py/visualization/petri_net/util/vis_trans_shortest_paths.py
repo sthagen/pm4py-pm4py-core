@@ -207,6 +207,8 @@ def get_decorations_from_dfg_spaths_acticount(
     activities_count,
     variant="frequency",
     aggregation_measure=None,
+    stat_locale=None,
+    business_hour_slots=None,
 ):
     """
     Get decorations from Petrinet without doing any replay
@@ -237,6 +239,9 @@ def get_decorations_from_dfg_spaths_acticount(
         Decorations to use for the Petri net
     """
     from statistics import mean, median, stdev
+
+    if stat_locale is None:
+        stat_locale = {}
 
     decorations_single_contrib = {}
     decorations_single_contrib_trans = {}
@@ -281,7 +286,11 @@ def get_decorations_from_dfg_spaths_acticount(
         arcs_max_value = max(list(decorations_int.values()))
         for arc in decorations_int:
             if "performance" in variant:
-                arc_label = human_readable_stat(decorations_int[arc], stat_locale)
+                arc_label = human_readable_stat(
+                    decorations_int[arc],
+                    stat_locale,
+                    business_hour_slots=business_hour_slots,
+                )
             else:
                 arc_label = str(decorations_int[arc])
             decorations[arc] = {

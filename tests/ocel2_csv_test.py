@@ -1,4 +1,5 @@
 import json
+import importlib.util
 import os
 import shutil
 import unittest
@@ -14,6 +15,10 @@ REPO_DIR = os.path.dirname(TESTS_DIR)
 OUTPUT_DIR = os.path.join(TESTS_DIR, "test_output_data")
 EXAMPLE_CSV = os.path.join(REPO_DIR, "Order Management OCEL.csv")
 EXAMPLE_XML = os.path.join(REPO_DIR, "Order Management OCEL.xml.gz")
+PARQUET_ENGINE_AVAILABLE = any(
+    importlib.util.find_spec(package) is not None
+    for package in ("pyarrow", "fastparquet")
+)
 
 
 class Ocel2CsvTest(unittest.TestCase):
@@ -363,6 +368,10 @@ class Ocel2CsvTest(unittest.TestCase):
             if os.path.exists(output_path):
                 os.remove(output_path)
 
+    @unittest.skipUnless(
+        PARQUET_ENGINE_AVAILABLE,
+        "pyarrow or fastparquet is required for parquet bundle tests",
+    )
     def test_ocel2_bundled_parquet_archive_roundtrip(self):
         source = os.path.join(OUTPUT_DIR, "ocel2_bundle_source.csv")
         output_path = os.path.join(OUTPUT_DIR, "ocel2_bundle_export.ocel.zip")

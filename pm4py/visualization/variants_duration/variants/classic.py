@@ -26,7 +26,8 @@ from enum import Enum
 from math import log10
 from typing import Any, Dict, Optional, Union
 import pandas as pd
-from pm4py.util import exec_utils, constants
+from pm4py.util import exec_utils, constants, vis_utils
+from pm4py.util.business_hours import get_business_day_seconds
 
 
 class Parameters(Enum):
@@ -42,6 +43,17 @@ class Parameters(Enum):
     SHOW_LEGEND = "show_legend"
     ENABLE_GRAPH_TITLE = "enable_graph_title"
     GRAPH_TITLE = "graph_title"
+    BUSINESS_HOUR_SLOTS = "business_hour_slots"
+
+
+def _format_duration(duration, seconds_per_day=86400.0):
+    if duration < 60:
+        return f"{duration:.1f}s"
+    if duration < 3600:
+        return f"{duration / 60:.1f}m"
+    if duration < seconds_per_day:
+        return f"{duration / 3600:.1f}h"
+    return f"{duration / seconds_per_day:.1f}d"
 
 
 def apply(
@@ -64,6 +76,12 @@ def apply(
     enable_graph_title = exec_utils.get_param_value(Parameters.ENABLE_GRAPH_TITLE, parameters,
                                                     constants.DEFAULT_ENABLE_GRAPH_TITLES)
     graph_title = exec_utils.get_param_value(Parameters.GRAPH_TITLE, parameters, "Process Variants Paths and Durations")
+    business_hour_slots = vis_utils.get_business_hour_slots(parameters)
+    seconds_per_day = (
+        get_business_day_seconds(business_hour_slots)
+        if business_hour_slots is not None
+        else 86400.0
+    )
 
     # Required column names
     variant_column = "@@variant_column"
@@ -213,14 +231,7 @@ def apply(
             tgt = row[activity_key_2]
             ftime = row[flow_time_column]
 
-            if ftime < 60:
-                label_time = f"{ftime:.1f}s"
-            elif ftime < 3600:
-                label_time = f"{ftime / 60:.1f}m"
-            elif ftime < 86400:
-                label_time = f"{ftime / 3600:.1f}h"
-            else:
-                label_time = f"{ftime / 86400:.1f}d"
+            label_time = _format_duration(ftime, seconds_per_day)
 
             src_id = activity_node_ids[src]
             tgt_id = activity_node_ids[tgt]

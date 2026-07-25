@@ -26,7 +26,7 @@ from pm4py.util import xes_constants as xes
 from pm4py.util import exec_utils
 from pm4py.statistics.service_time.log import get as serv_time_get
 from enum import Enum
-from pm4py.util import constants
+from pm4py.util import constants, vis_utils
 from enum import Enum
 from collections import Counter
 
@@ -51,6 +51,7 @@ class Parameters(Enum):
     BGCOLOR = "bgcolor"
     ENABLE_GRAPH_TITLE = "enable_graph_title"
     GRAPH_TITLE = "graph_title"
+    BUSINESS_HOUR_SLOTS = "business_hour_slots"
 
 
 def apply(
@@ -124,6 +125,7 @@ def apply(
         parameters,
         "Performance Directly-Follows Graph",
     )
+    business_hour_slots = vis_utils.get_business_hour_slots(parameters, dfg)
 
     # if all the aggregation measures are provided for a given key,
     # then pick one of the values for the representation
@@ -175,4 +177,5 @@ def apply(
         rankdir=rankdir,
         enable_graph_title=enable_graph_title,
         graph_title=graph_title,
+        business_hour_slots=business_hour_slots,
     )

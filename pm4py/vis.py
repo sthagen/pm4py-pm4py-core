@@ -130,6 +130,8 @@ def view_petri_net(
     graph_title: Optional[str] = None,
     variant_str: str = "wo_decoration",
     log: Optional[Union[EventLog, pd.DataFrame]] = None,
+    business_hours: bool = False,
+    business_hour_slots=constants.DEFAULT_BUSINESS_HOUR_SLOTS,
 ):
     """
     Views a (composite) Petri net.
@@ -147,6 +149,9 @@ def view_petri_net(
         'wo_decoration', 'token_decoration_frequency', 'token_decoration_performance',
         'greedy_decoration_frequency', 'greedy_decoration_performance', 'alignments')
     :param log: The event log or Pandas dataframe that should be used, if decoration is required
+    :param business_hours: Use business hours for performance decorations.
+    :param business_hour_slots: Weekly schedule used for calculation and for
+        expressing durations in working days.
 
     .. code-block:: python3
 
@@ -162,6 +167,9 @@ def view_petri_net(
     parameters = _setup_parameters(fmt, bgcolor, rankdir, graph_title)
     parameters["decorations"] = decorations
     parameters["debug"] = debug
+    parameters["business_hours"] = business_hours
+    if business_hours:
+        parameters["business_hour_slots"] = business_hour_slots
     gviz = pn_visualizer.apply(
         petri_net,
         initial_marking,
@@ -185,6 +193,8 @@ def save_vis_petri_net(
     graph_title: Optional[str] = None,
     variant_str: str = "wo_decoration",
     log: Optional[Union[EventLog, pd.DataFrame]] = None,
+    business_hours: bool = False,
+    business_hour_slots=constants.DEFAULT_BUSINESS_HOUR_SLOTS,
     **kwargs
 ):
     """
@@ -203,6 +213,9 @@ def save_vis_petri_net(
         'wo_decoration', 'token_decoration_frequency', 'token_decoration_performance',
         'greedy_decoration_frequency', 'greedy_decoration_performance', 'alignments')
     :param log: The event log or Pandas dataframe that should be used, if decoration is required
+    :param business_hours: Use business hours for performance decorations.
+    :param business_hour_slots: Weekly schedule used for calculation and for
+        expressing durations in working days.
 
     .. code-block:: python3
 
@@ -218,6 +231,9 @@ def save_vis_petri_net(
     parameters = _setup_parameters(fmt, bgcolor, rankdir, graph_title)
     parameters["decorations"] = decorations
     parameters["debug"] = debug
+    parameters["business_hours"] = business_hours
+    if business_hours:
+        parameters["business_hour_slots"] = business_hour_slots
     gviz = pn_visualizer.apply(
         petri_net,
         initial_marking,
@@ -239,6 +255,7 @@ def view_performance_dfg(
     rankdir: str = constants.DEFAULT_RANKDIR_GVIZ,
     serv_time: Optional[Dict[str, float]] = None,
     graph_title: Optional[str] = None,
+    business_hour_slots=None,
 ):
     """
     Views a performance DFG.
@@ -252,6 +269,8 @@ def view_performance_dfg(
     :param rankdir: Sets the direction of the graph ("LR" for left-to-right; "TB" for top-to-bottom)
     :param serv_time: (optional) Provides the activities' service times, used to decorate the graph
     :param graph_title: Sets the title of the visualization (if provided)
+    :param business_hour_slots: Optional weekly schedule used to express
+        business-hour durations in working days.
 
     .. code-block:: python3
 
@@ -271,6 +290,7 @@ def view_performance_dfg(
     parameters[dfg_parameters.START_ACTIVITIES] = start_activities
     parameters[dfg_parameters.END_ACTIVITIES] = end_activities
     parameters[dfg_parameters.AGGREGATION_MEASURE] = aggregation_measure
+    parameters[dfg_parameters.BUSINESS_HOUR_SLOTS] = business_hour_slots
     gviz = dfg_perf_visualizer.apply(
         dfg, serv_time=serv_time, parameters=parameters
     )
@@ -287,6 +307,7 @@ def save_vis_performance_dfg(
     rankdir: str = constants.DEFAULT_RANKDIR_GVIZ,
     serv_time: Optional[Dict[str, float]] = None,
     graph_title: Optional[str] = None,
+    business_hour_slots=None,
     **kwargs
 ):
     """
@@ -301,6 +322,8 @@ def save_vis_performance_dfg(
     :param rankdir: Sets the direction of the graph ("LR" for left-to-right; "TB" for top-to-bottom)
     :param serv_time: (optional) Provides the activities' service times, used to decorate the graph
     :param graph_title: Sets the title of the visualization (if provided)
+    :param business_hour_slots: Optional weekly schedule used to express
+        business-hour durations in working days.
 
     .. code-block:: python3
 
@@ -320,6 +343,7 @@ def save_vis_performance_dfg(
     parameters[dfg_parameters.START_ACTIVITIES] = start_activities
     parameters[dfg_parameters.END_ACTIVITIES] = end_activities
     parameters[dfg_parameters.AGGREGATION_MEASURE] = aggregation_measure
+    parameters[dfg_parameters.BUSINESS_HOUR_SLOTS] = business_hour_slots
     gviz = dfg_perf_visualizer.apply(
         dfg, serv_time=serv_time, parameters=parameters
     )
@@ -570,6 +594,7 @@ def view_heuristics_net(
     format: str = "png",
     bgcolor: str = "white",
     graph_title: Optional[str] = None,
+    business_hour_slots=None,
 ):
     """
     Views a heuristics net.
@@ -578,6 +603,8 @@ def view_heuristics_net(
     :param format: Format of the visualization
     :param bgcolor: Background color of the visualization (default: white)
     :param graph_title: Sets the title of the visualization (if provided)
+    :param business_hour_slots: Optional weekly schedule used to express
+        business-hour durations in working days.
 
     .. code-block:: python3
 
@@ -591,6 +618,7 @@ def view_heuristics_net(
 
     parameters = hn_visualizer.Variants.PYDOTPLUS.value.Parameters
     props = _setup_parameters(fmt, bgcolor, graph_title=graph_title)
+    props[parameters.BUSINESS_HOUR_SLOTS] = business_hour_slots
     gviz = hn_visualizer.apply(
         heu_net, parameters={**props, **{parameters.FORMAT: fmt}}
     )
@@ -602,6 +630,7 @@ def save_vis_heuristics_net(
     file_path: str,
     bgcolor: str = "white",
     graph_title: Optional[str] = None,
+    business_hour_slots=None,
     **kwargs
 ):
     """
@@ -611,6 +640,8 @@ def save_vis_heuristics_net(
     :param file_path: Destination path
     :param bgcolor: Background color of the visualization (default: white)
     :param graph_title: Sets the title of the visualization (if provided)
+    :param business_hour_slots: Optional weekly schedule used to express
+        business-hour durations in working days.
 
     .. code-block:: python3
 
@@ -624,6 +655,7 @@ def save_vis_heuristics_net(
 
     parameters = hn_visualizer.Variants.PYDOTPLUS.value.Parameters
     props = _setup_parameters(fmt, bgcolor, graph_title=graph_title)
+    props[parameters.BUSINESS_HOUR_SLOTS] = business_hour_slots
     gviz = hn_visualizer.apply(
         heu_net, parameters={**props, **{parameters.FORMAT: fmt}}
     )
@@ -1421,6 +1453,7 @@ def view_ocdfg(
     rankdir: str = constants.DEFAULT_RANKDIR_GVIZ,
     graph_title: Optional[str] = None,
     variant_str: str = "classic",
+    business_hour_slots=None,
 ):
     """
     Views an OC-DFG (object-centric directly-follows graph).
@@ -1437,6 +1470,8 @@ def view_ocdfg(
     :param rankdir: Graph direction ("LR" or "TB")
     :param graph_title: Title of the visualization (if provided)
     :param variant_str: Variant of the visualization ("classic" or "elkjs")
+    :param business_hour_slots: Optional weekly schedule used to express
+        business-hour durations in working days.
 
     .. code-block:: python3
 
@@ -1455,6 +1490,7 @@ def view_ocdfg(
     parameters["act_threshold"] = act_threshold
     parameters["edge_threshold"] = edge_threshold
     parameters["aggregation_measure"] = performance_aggregation
+    parameters["business_hour_slots"] = business_hour_slots
 
     variant = (
         visualizer.Variants.CLASSIC
@@ -1479,6 +1515,7 @@ def save_vis_ocdfg(
     rankdir: str = constants.DEFAULT_RANKDIR_GVIZ,
     graph_title: Optional[str] = None,
     variant_str: str = "classic",
+    business_hour_slots=None,
     **kwargs
 ):
     """
@@ -1496,6 +1533,8 @@ def save_vis_ocdfg(
     :param rankdir: Graph direction ("LR" or "TB")
     :param graph_title: Title of the visualization (if provided)
     :param variant_str: Variant ("classic" or "elkjs")
+    :param business_hour_slots: Optional weekly schedule used to express
+        business-hour durations in working days.
 
     .. code-block:: python3
 
@@ -1514,6 +1553,7 @@ def save_vis_ocdfg(
     parameters["act_threshold"] = act_threshold
     parameters["edge_threshold"] = edge_threshold
     parameters["aggregation_measure"] = performance_aggregation
+    parameters["business_hour_slots"] = business_hour_slots
 
     variant = (
         visualizer.Variants.CLASSIC
@@ -1613,6 +1653,7 @@ def view_network_analysis(
     edge_threshold: int = 1,
     bgcolor: str = "white",
     graph_title: Optional[str] = None,
+    business_hour_slots=None,
 ):
     """
     Visualizes the network analysis.
@@ -1624,6 +1665,8 @@ def view_network_analysis(
     :param edge_threshold: Minimum occurrences of an edge to be included
     :param bgcolor: Background color (default: white)
     :param graph_title: Title of the visualization (if provided)
+    :param business_hour_slots: Optional weekly schedule used to express
+        business-hour durations in working days.
 
     .. code-block:: python3
 
@@ -1645,6 +1688,7 @@ def view_network_analysis(
     params = _setup_parameters(fmt, bgcolor, graph_title=graph_title)
     params["activity_threshold"] = activity_threshold
     params["edge_threshold"] = edge_threshold
+    params["business_hour_slots"] = business_hour_slots
 
     gviz = network_analysis_visualizer.apply(
         network_analysis, variant=chosen_variant, parameters=params
@@ -1660,6 +1704,7 @@ def save_vis_network_analysis(
     edge_threshold: int = 1,
     bgcolor: str = "white",
     graph_title: Optional[str] = None,
+    business_hour_slots=None,
     **kwargs
 ):
     """
@@ -1672,6 +1717,8 @@ def save_vis_network_analysis(
     :param edge_threshold: Minimum occurrences of an edge
     :param bgcolor: Background color (default: white)
     :param graph_title: Title of the visualization (if provided)
+    :param business_hour_slots: Optional weekly schedule used to express
+        business-hour durations in working days.
 
     .. code-block:: python3
 
@@ -1693,6 +1740,7 @@ def save_vis_network_analysis(
     params = _setup_parameters(fmt, bgcolor, graph_title=graph_title)
     params["activity_threshold"] = activity_threshold
     params["edge_threshold"] = edge_threshold
+    params["business_hour_slots"] = business_hour_slots
 
     gviz = network_analysis_visualizer.apply(
         network_analysis, variant=chosen_variant, parameters=params
