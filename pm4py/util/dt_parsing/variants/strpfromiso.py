@@ -39,7 +39,16 @@ def fix_dataframe_column(serie):
 
 def fix_naivety(dt):
     if constants.ENABLE_DATETIME_COLUMNS_AWARE:
-        dt = dt.replace(tzinfo=timezone.utc)
+        if dt.tzinfo is not None:
+            # dt already carries a real UTC offset (e.g. "+05:00"): convert the
+            # instant to UTC. Using replace(tzinfo=...) here would only relabel
+            # the wall-clock value without adjusting it, silently shifting the
+            # timestamp by the source offset.
+            dt = dt.astimezone(timezone.utc)
+        else:
+            # dt has no offset at all: there is nothing to convert from, so
+            # treat it as already being UTC, same as before.
+            dt = dt.replace(tzinfo=timezone.utc)
     else:
         dt = dt.replace(tzinfo=None)
 

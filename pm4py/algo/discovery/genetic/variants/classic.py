@@ -155,8 +155,8 @@ def apply(
     population, fitness = tournament(tqdm(population, f"└─Tournament {len(history)}"), log, T, sort=True)
     if log_csv:
         log_csv.writerow([datetime.now(), len(history)] + fitness)
-    # generations
-    for _ in tqdm(range(generations), "Genetic generations"):
+    # generations (generation-1 because initial population already generated)
+    for _ in tqdm(range(generations-1), "Genetic generations"):
         if fitness[0] == 1 or (history and all(f == fitness[0] for f in history[-int(generations/2):])):
             break
         history.append(fitness[0])
