@@ -21,7 +21,10 @@ Contact: info@processintelligence.solutions
 '''
 from enum import Enum
 from typing import Optional, Dict, Any, List
+import codecs
+from decimal import Decimal
 import json
+import math
 
 import pandas as pd
 
@@ -99,6 +102,10 @@ def _validate_json_attribute_value(value: Any):
         raise ValueError(
             "JSON arrays and objects are not valid OCEL2 CSV attribute values."
         )
+    if isinstance(value, float) and not math.isfinite(value):
+        raise ValueError(
+            "Non-finite JSON numbers are not valid OCEL2 CSV attribute values."
+        )
 
 
 def _json_dumps(attrs: Dict[str, Any]) -> str:
@@ -111,7 +118,9 @@ def _json_dumps(attrs: Dict[str, Any]) -> str:
         normalized[str(key)] = value
     if not normalized:
         return ""
-    return json.dumps(normalized, ensure_ascii=False, separators=(",", ":"))
+    return json.dumps(
+        normalized, ensure_ascii=False, separators=(",", ":"), allow_nan=False
+    )
 
 
 def _format_reference(object_id: Any, qualifier: Any = None, attrs: Optional[Dict[str, Any]] = None) -> str:
@@ -139,6 +148,50 @@ def _new_row(header_len: int) -> List[str]:
     return [""] * header_len
 
 
+def _require_utf8(encoding: str) -> str:
+    try:
+        normalized = codecs.lookup(encoding).name
+    except LookupError as exc:
+        raise ValueError("Unknown OCEL2 CSV encoding '%s'." % encoding) from exc
+    if normalized != "utf-8":
+        raise ValueError("OCEL2 CSV files must use UTF-8 encoding.")
+    return "utf-8"
+
+
+def _require_unique(df: pd.DataFrame, column: str, kind: str):
+    if column not in df.columns or df[column].isna().any():
+        raise ValueError("OCEL2 CSV %s must have non-empty '%s' values." % (kind, column))
+    if df[column].duplicated().any():
+        duplicate = df.loc[df[column].duplicated(), column].iloc[0]
+        raise ValueError("Duplicate %s id '%s' cannot be exported." % (kind, duplicate))
+
+
+def _require_trimmed(value: Any, kind: str) -> str:
+    value = clean_dataframes.normalize_value(value)
+    if _is_null(value):
+        raise ValueError("OCEL2 CSV %s values cannot be empty." % kind)
+    value = str(value)
+    if not value or value != value.strip():
+        raise ValueError(
+            "OCEL2 CSV %s values must be non-empty and contain no leading or trailing whitespace."
+            % kind
+        )
+    return value
+
+
+def _values_equal(left: Any, right: Any) -> bool:
+    left = clean_dataframes.normalize_value(left)
+    right = clean_dataframes.normalize_value(right)
+    if (
+        isinstance(left, (int, float))
+        and not isinstance(left, bool)
+        and isinstance(right, (int, float))
+        and not isinstance(right, bool)
+    ):
+        return Decimal(str(left)) == Decimal(str(right))
+    return type(left) is type(right) and left == right
+
+
 def apply(
     ocel: OCEL,
     output_path: str,
@@ -150,10 +203,14 @@ def apply(
     """
     if parameters is None:
         parameters = {}
+    output_path = str(output_path)
+    if not output_path.lower().endswith(".ocel.csv"):
+        raise ValueError("OCEL2 compact CSV exports use the '.ocel.csv' extension.")
 
     encoding = exec_utils.get_param_value(
         Parameters.ENCODING, parameters, pm4_constants.DEFAULT_ENCODING
     )
+    encoding = _require_utf8(encoding)
     event_id_column = exec_utils.get_param_value(
         Parameters.EVENT_ID, parameters, ocel.event_id_column
     )
@@ -193,6 +250,9 @@ def apply(
 
     ocel = ocel_consistency.apply(ocel, parameters=parameters)
 
+    _require_unique(ocel.events, event_id_column, "event")
+    _require_unique(ocel.objects, object_id_column, "object")
+
     object_types = sorted(
         str(x)
         for x in pandas_utils.format_unique(ocel.objects[object_type_column].dropna().unique())
@@ -205,6 +265,18 @@ def apply(
     object_attribute_columns = _non_ocel_attribute_columns(
         ocel.objects, [object_id_column, object_type_column]
     )
+    reserved_output_columns = {
+        csv_event_id,
+        csv_event_activity,
+        csv_event_timestamp,
+        *object_type_columns,
+    }
+    duplicate_attributes = reserved_output_columns.intersection(event_attribute_columns)
+    if duplicate_attributes:
+        raise ValueError(
+            "Event attribute columns collide with reserved OCEL2 CSV columns: %s."
+            % ", ".join(sorted(str(value) for value in duplicate_attributes))
+        )
 
     object_type = (
         ocel.objects[[object_id_column, object_type_column]]
@@ -216,6 +288,7 @@ def apply(
     for record in object_records:
         if _is_null(record.get(object_id_column)) or _is_null(record.get(object_type_column)):
             raise ValueError("OCEL2 CSV objects must have non-empty ids and types.")
+        _validate_reference_part(record[object_id_column], "object id")
 
     object_attrs = {}
     for record in object_records:
@@ -227,7 +300,6 @@ def apply(
         if attrs:
             object_attrs[record[object_id_column]] = attrs
 
-    attrs_emitted = set()
     type_established_ids = set()
     event_relations = {}
     relation_columns = [
@@ -236,17 +308,81 @@ def apply(
         object_type_column,
         qualifier_column,
     ]
+    event_ids = set(ocel.events[event_id_column].tolist())
+    relation_keys = set()
     for event_id, object_id, relation_object_type, qualifier in ocel.relations[
         relation_columns
     ].itertuples(index=False, name=None):
+        if event_id not in event_ids:
+            raise ValueError("Relation references unknown event '%s'." % event_id)
+        known_object_type = object_type.get(object_id)
+        if _is_null(known_object_type):
+            raise ValueError("Relation references unknown object '%s'." % object_id)
+        if not _is_null(relation_object_type) and str(relation_object_type) != str(known_object_type):
+            raise ValueError(
+                "Relation object type for '%s' does not match the object table." % object_id
+            )
+        relation_key = (event_id, object_id, "" if _is_null(qualifier) else str(qualifier))
+        if relation_key in relation_keys:
+            raise ValueError("Duplicate event-to-object relation cannot be exported.")
+        relation_keys.add(relation_key)
         event_relations.setdefault(event_id, []).append(
-            (object_id, relation_object_type, qualifier)
+            (object_id, known_object_type, qualifier)
         )
+
+    timed_change_groups = {}
+    epoch = pd.Timestamp("1970-01-01T00:00:00Z")
+    for change_index, record in enumerate(ocel.object_changes.to_dict("records")):
+        oid = record.get(object_id_column)
+        known_type = object_type.get(oid)
+        record_type = record.get(object_type_column, known_type)
+        timestamp = record.get(event_timestamp_column)
+        changed_attr = record.get(changed_field_column)
+        if _is_null(oid) or _is_null(known_type):
+            raise ValueError("Object change references an unknown object.")
+        if not _is_null(record_type) and str(record_type) != str(known_type):
+            raise ValueError("Object change type does not match object '%s'." % oid)
+        if _is_null(timestamp) or _is_null(changed_attr):
+            raise ValueError("Object changes require a timestamp and changed field.")
+        if changed_attr not in record or _is_null(record.get(changed_attr)):
+            raise ValueError(
+                "Object change for '%s' does not contain a value in column '%s'."
+                % (oid, changed_attr)
+            )
+        value = record.get(changed_attr)
+        normalized_timestamp = _timestamp_value(timestamp)
+        if normalized_timestamp == epoch:
+            existing = object_attrs.setdefault(oid, {}).get(changed_attr)
+            if existing is not None and not _values_equal(existing, value):
+                raise ValueError(
+                    "Object '%s' has conflicting time-0 values for attribute '%s'."
+                    % (oid, changed_attr)
+                )
+            object_attrs[oid][changed_attr] = value
+            continue
+        key = (normalized_timestamp.value, str(known_type), oid)
+        group = timed_change_groups.setdefault(
+            key,
+            {
+                "timestamp": normalized_timestamp,
+                "object_type": str(known_type),
+                "object_id": oid,
+                "first_index": change_index,
+                "attributes": {},
+            },
+        )
+        existing = group["attributes"].get(changed_attr)
+        if existing is not None and not _values_equal(existing, value):
+            raise ValueError(
+                "Object '%s' has conflicting values for attribute '%s' at %s."
+                % (oid, changed_attr, normalized_timestamp.isoformat())
+            )
+        group["attributes"][changed_attr] = value
 
     header = (
         [csv_event_id, csv_event_activity, csv_event_timestamp]
-        + event_attribute_columns
         + object_type_columns
+        + event_attribute_columns
     )
     header_index = {column: index for index, column in enumerate(header)}
     object_type_column_index = {
@@ -264,9 +400,14 @@ def apply(
 
     for _, event in event_records:
         row = _new_row(header_len)
-        event_id = event[event_id_column]
+        event_id = _require_trimmed(event[event_id_column], "event id")
+        event_activity = _require_trimmed(
+            event[event_activity_column], "event activity"
+        )
+        if event_activity.casefold() == str(o2o_activity).casefold():
+            raise ValueError("An event type named 'o2o' is not representable in OCEL2 CSV.")
         row[header_index[csv_event_id]] = event_id
-        row[header_index[csv_event_activity]] = event[event_activity_column]
+        row[header_index[csv_event_activity]] = event_activity
         row[header_index[csv_event_timestamp]] = _format_timestamp(event[event_timestamp_column])
 
         for column in event_attribute_columns:
@@ -284,11 +425,8 @@ def apply(
                     % oid
                 )
             type_established_ids.add(oid)
-            attrs = object_attrs.get(oid, {}) if oid not in attrs_emitted else {}
-            if attrs:
-                attrs_emitted.add(oid)
             entries.setdefault(str(ot), []).append(
-                _format_reference(oid, qualifier, attrs)
+                _format_reference(oid, qualifier)
             )
 
         for ot, values in entries.items():
@@ -305,18 +443,17 @@ def apply(
     )
     for record in declaration_records:
         oid = record[object_id_column]
-        if oid in type_established_ids:
+        attrs = object_attrs.get(oid, {})
+        if oid in type_established_ids and not attrs:
             continue
         ot = str(record[object_type_column])
         row = _new_row(header_len)
-        attrs = object_attrs.get(oid, {}) if oid not in attrs_emitted else {}
         row[object_type_column_index[ot]] = _format_reference(oid, attrs=attrs)
-        if attrs:
-            attrs_emitted.add(oid)
         rows.append(row)
 
     o2o_entries = {}
     o2o_columns = [object_id_column, object_id_column + "_2", qualifier_column]
+    o2o_keys = set()
     for source_id, target_id, qualifier in ocel.o2o[o2o_columns].itertuples(
         index=False, name=None
     ):
@@ -332,6 +469,10 @@ def apply(
                 "Cannot export OCEL2 CSV object-to-object target '%s' without an object type."
                 % target_id
             )
+        o2o_key = (source_id, target_id, "" if _is_null(qualifier) else str(qualifier))
+        if o2o_key in o2o_keys:
+            raise ValueError("Duplicate object-to-object relation cannot be exported.")
+        o2o_keys.add(o2o_key)
         o2o_entries.setdefault(source_id, {}).setdefault(str(target_type), []).append(
             _format_reference(target_id, qualifier)
         )
@@ -345,25 +486,26 @@ def apply(
             row[object_type_column_index[ot]] = "/".join(sorted(entries[ot]))
         rows.append(row)
 
-    change_groups = {}
-    for record in ocel.object_changes.to_dict("records"):
-        oid = record.get(object_id_column)
-        ot = record.get(object_type_column, object_type.get(oid))
-        timestamp = record.get(event_timestamp_column)
-        changed_field = record.get(changed_field_column)
-        if _is_null(oid) or _is_null(ot) or _is_null(timestamp) or _is_null(changed_field):
-            continue
-        key = (_format_timestamp(timestamp), str(ot), oid)
-        change_groups.setdefault(key, {})[changed_field] = record.get(changed_field)
-
-    for (timestamp, ot, oid), attrs in sorted(change_groups.items(), key=lambda item: item[0]):
+    change_groups = sorted(
+        timed_change_groups.values(),
+        key=lambda group: (group["timestamp"].value, group["first_index"]),
+    )
+    for group in change_groups:
         row = _new_row(header_len)
-        row[header_index[csv_event_timestamp]] = timestamp
-        row[object_type_column_index[ot]] = _format_reference(oid, attrs=attrs)
+        row[header_index[csv_event_timestamp]] = _format_timestamp(group["timestamp"])
+        row[object_type_column_index[group["object_type"]]] = _format_reference(
+            group["object_id"], attrs=group["attributes"]
+        )
         rows.append(row)
 
     dataframe = pandas_utils.instantiate_dataframe(rows, columns=header)
-    dataframe.to_csv(output_path, index=False, na_rep="", encoding=encoding)
+    dataframe.to_csv(
+        output_path,
+        index=False,
+        na_rep="",
+        encoding=encoding,
+        lineterminator="\r\n",
+    )
 
     if objects_path is not None:
         ocel.objects.to_csv(objects_path, index=False, na_rep="", encoding=encoding)

@@ -441,7 +441,7 @@ def read_ocel2(
     Supported file formats based on extension:
         - `.ocel.zip` – bundled CSV/Parquet archive,
         - `.sqlite` – SQLite database,
-        - `.csv` – compact OCEL 2.0 CSV file,
+        - `.ocel.csv` – compact OCEL 2.0 CSV file,
         - `.xml`, `.xmlocel`, `.xml.gz`, or `.xmlocel.gz` – XML file,
         - `.json`, `.jsonocel`, `.json.gz`, or `.jsonocel.gz` – JSON file.
 
@@ -469,7 +469,7 @@ def read_ocel2(
         return read_ocel2_sqlite(
             local_path, variant_str=variant_str, encoding=encoding
         )
-    elif extension_path.lower().endswith("csv") or local_path.lower().endswith("csv"):
+    elif extension_path.lower().endswith(".ocel.csv") or local_path.lower().endswith(".ocel.csv"):
         return read_ocel2_csv(local_path, encoding=encoding)
     elif _matches_extension(extension_path, ("xml", "xmlocel")) or _matches_extension(
         local_path, ("xml", "xmlocel")
@@ -497,7 +497,7 @@ def read_ocel2_bundle(
     containing ``ocel-meta.json``.
 
     :param file_path: Path/URI to the bundled OCEL 2.0 archive or directory.
-    :param encoding: Encoding to be used for metadata and CSV files (default: `utf-8`).
+    :param encoding: Encoding for metadata and CSV files; the format requires `utf-8`.
     :rtype: `OCEL`
 
     .. code-block:: python3
@@ -518,15 +518,15 @@ def read_ocel2_csv(
     """
     Reads an OCEL 2.0 event log from a compact CSV file.
 
-    :param file_path: Path/URI to the OCEL 2.0 CSV file (`.csv`).
-    :param encoding: Encoding to be used (default: `utf-8`).
+    :param file_path: Path/URI to the OCEL 2.0 CSV file (`.ocel.csv`).
+    :param encoding: Encoding to be used; the format requires `utf-8`.
     :rtype: `OCEL`
 
     .. code-block:: python3
 
         import pm4py
 
-        ocel = pm4py.read_ocel2_csv("<path_or_uri_to_ocel_file.csv>")
+        ocel = pm4py.read_ocel2_csv("<path_or_uri_to_ocel_file.ocel.csv>")
     """
     from pm4py.objects.ocel.importer.csv import importer as csv_importer
 

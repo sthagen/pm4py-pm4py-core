@@ -21,7 +21,11 @@ Contact: info@processintelligence.solutions
 '''
 from enum import Enum
 from typing import Optional, Dict, Any, List, Tuple
+import codecs
+import csv
+from decimal import Decimal
 import json
+import math
 import re
 
 import pandas as pd
@@ -74,7 +78,10 @@ def _split_entries(value: Any) -> List[str]:
     if "/" not in value:
         return [value] if value else []
     if "{" not in value:
-        return [entry for entry in value.split("/") if entry]
+        entries = value.split("/")
+        if any(entry == "" for entry in entries):
+            raise ValueError("Object reference cells cannot contain empty references.")
+        return entries
 
     entries = []
     current = []
@@ -104,15 +111,17 @@ def _split_entries(value: Any) -> List[str]:
                 json_depth -= 1
             elif char == "/" and json_depth == 0:
                 entry = "".join(current)
-                if entry:
-                    entries.append(entry)
+                if not entry:
+                    raise ValueError("Object reference cells cannot contain empty references.")
+                entries.append(entry)
                 current = []
                 continue
         current.append(char)
 
     entry = "".join(current)
-    if entry:
-        entries.append(entry)
+    if not entry:
+        raise ValueError("Object reference cells cannot contain empty references.")
+    entries.append(entry)
     return entries
 
 
@@ -126,7 +135,15 @@ def _split_reference(value: str) -> Tuple[str, Optional[str], Dict[str, Any]]:
             json_part = value[json_start:]
             value = value[:json_start]
             if json_part:
-                attrs = json.loads(json_part)
+                attrs = json.loads(
+                    json_part,
+                    parse_constant=lambda constant: (_ for _ in ()).throw(
+                        ValueError(
+                            "Non-finite JSON number '%s' is not valid JSON."
+                            % constant
+                        )
+                    ),
+                )
                 if not isinstance(attrs, dict):
                     raise ValueError("Object reference JSON attributes must be a JSON object.")
 
@@ -153,6 +170,8 @@ def _validate_attribute_values(attrs: Dict[str, Any]):
     for value in attrs.values():
         if isinstance(value, (list, dict)):
             raise ValueError("JSON arrays and objects are not valid OCEL2 CSV attribute values.")
+        if isinstance(value, float) and not math.isfinite(value):
+            raise ValueError("Non-finite JSON numbers are not valid OCEL2 CSV attribute values.")
 
 
 def _register_object_type(
@@ -175,10 +194,14 @@ def _instantiate_dataframe(records: List[Dict[str, Any]], columns: List[str]):
 
 _TIMEZONE_RE = re.compile(r"(?:Z|[+-]\d{2}:?\d{2})$")
 _INTEGER_RE = re.compile(r"^[+-]?\d+$")
+_FLOAT_RE = re.compile(
+    r"^[+-]?(?:(?:\d+(?:\.\d*)?)|(?:\.\d+))(?:[eE][+-]?\d+)?$"
+)
+_EPOCH = pd.Timestamp("1970-01-01T00:00:00Z")
 
 
-def _parse_timestamp(value):
-    value = _strip_value(value)
+def _parse_timestamp(value, strip_whitespace=True):
+    value = _strip_value(value) if strip_whitespace else str(value)
     if not value:
         return ""
     if not _TIMEZONE_RE.search(value):
@@ -236,8 +259,8 @@ def _try_parse_integer(values):
             return None
         if isinstance(value, int):
             parsed.append(value)
-        elif isinstance(value, str) and _INTEGER_RE.match(value.strip()):
-            parsed.append(int(value.strip()))
+        elif isinstance(value, str) and _INTEGER_RE.match(value):
+            parsed.append(int(value))
         else:
             return None
     return parsed
@@ -248,10 +271,15 @@ def _try_parse_float(values):
     for value in values:
         if isinstance(value, bool):
             return None
-        try:
-            parsed.append(float(str(value).strip() if isinstance(value, str) else value))
-        except BaseException:
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            parsed_value = float(value)
+        elif isinstance(value, str) and _FLOAT_RE.match(value):
+            parsed_value = float(value)
+        else:
             return None
+        if not math.isfinite(parsed_value):
+            return None
+        parsed.append(parsed_value)
     return parsed
 
 
@@ -260,8 +288,8 @@ def _try_parse_boolean(values):
     for value in values:
         if isinstance(value, bool):
             parsed.append(value)
-        elif isinstance(value, str) and value.strip().casefold() in {"true", "false"}:
-            parsed.append(value.strip().casefold() == "true")
+        elif isinstance(value, str) and value.casefold() in {"true", "false"}:
+            parsed.append(value.casefold() == "true")
         else:
             return None
     return parsed
@@ -274,7 +302,7 @@ def _try_parse_timestamp_values(values):
             parsed.append(value)
         elif isinstance(value, str):
             try:
-                parsed.append(_parse_timestamp(value))
+                parsed.append(_parse_timestamp(value, strip_whitespace=False))
             except ValueError:
                 return None
         else:
@@ -345,10 +373,12 @@ def _infer_object_attribute_types(objects_df, object_changes_df, object_type_col
         }
 
     for column in attribute_columns:
-        if column in objects_df.columns:
-            objects_df[column] = objects_df[column].astype("object")
-        if column in object_changes_df.columns:
-            object_changes_df[column] = object_changes_df[column].astype("object")
+        if column not in objects_df.columns:
+            objects_df[column] = None
+        if column not in object_changes_df.columns:
+            object_changes_df[column] = None
+        objects_df[column] = objects_df[column].astype("object")
+        object_changes_df[column] = object_changes_df[column].astype("object")
 
     for object_type, object_indexes in object_type_indexes.items():
         change_indexes_for_type = change_type_indexes.get(object_type, [])
@@ -356,11 +386,9 @@ def _infer_object_attribute_types(objects_df, object_changes_df, object_type_col
             values = []
             change_indexes = []
 
-            if column in objects_df.columns:
-                values.extend(objects_df.loc[object_indexes, column].tolist())
-            if column in object_changes_df.columns:
-                change_indexes = change_indexes_for_type
-                values.extend(object_changes_df.loc[change_indexes, column].tolist())
+            values.extend(objects_df.loc[object_indexes, column].tolist())
+            change_indexes = change_indexes_for_type
+            values.extend(object_changes_df.loc[change_indexes, column].tolist())
 
             inferred = _infer_values(values)
             pos = 0
@@ -371,6 +399,66 @@ def _infer_object_attribute_types(objects_df, object_changes_df, object_type_col
                 object_changes_df.loc[change_indexes, column] = inferred[pos:pos + len(change_indexes)]
 
     return objects_df, object_changes_df
+
+
+def _read_rfc4180(file_path: str, encoding: str) -> pd.DataFrame:
+    try:
+        with open(file_path, "r", encoding=encoding, newline="") as file:
+            rows = list(csv.reader(file, dialect="excel", strict=True))
+    except csv.Error as exc:
+        raise ValueError("Invalid RFC 4180 CSV syntax.") from exc
+
+    if not rows:
+        raise ValueError("An OCEL2 CSV file must contain a header row.")
+
+    header = rows[0]
+    if len(header) != len(set(header)):
+        raise ValueError("OCEL2 CSV column names must be unique.")
+    for line_number, row in enumerate(rows[1:], start=2):
+        if len(row) != len(header):
+            raise ValueError(
+                "CSV row %d has %d fields; expected %d."
+                % (line_number, len(row), len(header))
+            )
+    return pandas_utils.instantiate_dataframe(rows[1:], columns=header, dtype="object")
+
+
+def _require_utf8(encoding: str) -> str:
+    try:
+        normalized = codecs.lookup(encoding).name
+    except LookupError as exc:
+        raise ValueError("Unknown OCEL2 CSV encoding '%s'." % encoding) from exc
+    if normalized != "utf-8":
+        raise ValueError("OCEL2 CSV files must use UTF-8 encoding.")
+    return "utf-8"
+
+
+def _attribute_value_key(value: Any):
+    if value is None:
+        return ("null", None)
+    if isinstance(value, bool):
+        return ("boolean", value)
+    if isinstance(value, (int, float)):
+        return ("number", Decimal(str(value)))
+    return ("string", value)
+
+
+def _deduplicate_assignments(object_id: str, attribute: str, values):
+    unique = []
+    by_timestamp = {}
+    for index, timestamp, value in sorted(values, key=_attribute_sort_key):
+        normalized_timestamp = _EPOCH if _is_empty(timestamp) else pd.Timestamp(timestamp)
+        value_key = _attribute_value_key(value)
+        if normalized_timestamp in by_timestamp:
+            if by_timestamp[normalized_timestamp] != value_key:
+                raise ValueError(
+                    "Object attribute '%s' of object '%s' has different values at timestamp %s."
+                    % (attribute, object_id, normalized_timestamp.isoformat())
+                )
+            continue
+        by_timestamp[normalized_timestamp] = value_key
+        unique.append((index, normalized_timestamp, value))
+    return unique
 
 
 def apply(
@@ -387,6 +475,7 @@ def apply(
     encoding = exec_utils.get_param_value(
         Parameters.ENCODING, parameters, pm4_constants.DEFAULT_ENCODING
     )
+    encoding = _require_utf8(encoding)
     event_id_column = exec_utils.get_param_value(
         Parameters.EVENT_ID, parameters, constants.DEFAULT_EVENT_ID
     )
@@ -427,11 +516,10 @@ def apply(
         Parameters.CSV_EVENT_TIMESTAMP, parameters, "timestamp"
     )
 
-    table = pandas_utils.read_csv(file_path, index_col=False, encoding=encoding, dtype=str)
-    table = table.fillna("")
+    table = _read_rfc4180(file_path, encoding)
     for column in (csv_event_id, csv_event_activity, csv_event_timestamp):
         if column not in table.columns:
-            table[column] = ""
+            raise ValueError("Missing required OCEL2 CSV column '%s'." % column)
     table[csv_event_id] = table[csv_event_id].astype(str).str.strip()
     table[csv_event_activity] = table[csv_event_activity].astype(str).str.strip()
     table[csv_event_timestamp] = table[csv_event_timestamp].astype(str).str.strip()
@@ -440,6 +528,8 @@ def apply(
     object_type_columns = [
         column for column in table.columns if str(column).startswith(object_type_prefix)
     ]
+    if any(str(column) == object_type_prefix for column in object_type_columns):
+        raise ValueError("OCEL2 CSV object type columns must name an object type.")
     event_attribute_columns = [
         column
         for column in table.columns
@@ -453,6 +543,9 @@ def apply(
     object_id_type = {}
     object_attributes = {}
     declared_object_types = {}
+    event_ids = set()
+    relation_keys = set()
+    o2o_keys = set()
 
     records = table.to_dict("records")
     object_type_column_pairs = [
@@ -465,12 +558,35 @@ def apply(
         row_timestamp = row.get(csv_event_timestamp, "")
         parsed_timestamp = parsed_timestamps[index]
 
-        is_o2o_row = row_activity.casefold() == str(o2o_activity).casefold()
+        is_o2o_row = (
+            bool(row_activity)
+            and row_activity.casefold() == str(o2o_activity).casefold()
+        )
         is_object_attribute_row = not row_id and not row_activity and bool(row_timestamp)
         is_object_declaration_row = not row_id and not row_activity and not row_timestamp
         is_event_row = bool(row_id) and bool(row_activity) and bool(row_timestamp) and not is_o2o_row
 
+        if is_o2o_row:
+            if not row_id:
+                raise ValueError("Object-to-object rows must contain a source object id.")
+        elif not (is_event_row or is_object_attribute_row or is_object_declaration_row):
+            raise ValueError(
+                "Invalid OCEL2 CSV row %d: unsupported id/activity/timestamp combination."
+                % (index + 2)
+            )
+
+        if not is_event_row and any(
+            not _is_empty(row.get(column, "")) for column in event_attribute_columns
+        ):
+            raise ValueError(
+                "Event attribute values are only valid in event rows (CSV row %d)."
+                % (index + 2)
+            )
+
         if is_event_row:
+            if row_id in event_ids:
+                raise ValueError("Duplicate event id '%s' in OCEL2 CSV file." % row_id)
+            event_ids.add(row_id)
             event = {
                 event_id_column: row_id,
                 event_activity_column: row_activity,
@@ -482,24 +598,29 @@ def apply(
             events.append(event)
 
         if is_o2o_row:
-            if not row_id:
-                raise ValueError("Object-to-object rows must contain a source object id.")
             if row_id not in declared_object_types:
                 raise ValueError(
                     "Source object '%s' in an object-to-object row has no previously declared object type."
                     % row_id
                 )
-        elif row_activity and not is_event_row:
-            raise ValueError("Invalid OCEL2 CSV row with activity '%s'." % row_activity)
-
+        reference_count = 0
         for column, object_type in object_type_column_pairs:
             for entry in _split_entries(row.get(column, "")):
+                reference_count += 1
                 object_id, qualifier, attrs = _split_reference(entry)
 
                 _register_object_type(object_id_type, object_id, object_type)
 
                 if is_event_row:
                     declared_object_types[object_id] = object_type
+                    relation_key = (
+                        row_id,
+                        object_id,
+                        "" if qualifier is None else qualifier,
+                    )
+                    if relation_key in relation_keys:
+                        raise ValueError("Duplicate event-to-object relation in OCEL2 CSV file.")
+                    relation_keys.add(relation_key)
                     relations.append(
                         {
                             event_id_column: row_id,
@@ -516,6 +637,14 @@ def apply(
                         )
                 elif is_o2o_row:
                     declared_object_types[object_id] = object_type
+                    o2o_key = (
+                        row_id,
+                        object_id,
+                        "" if qualifier is None else qualifier,
+                    )
+                    if o2o_key in o2o_keys:
+                        raise ValueError("Duplicate object-to-object relation in OCEL2 CSV file.")
+                    o2o_keys.add(o2o_key)
                     o2o.append(
                         {
                             object_id_column: row_id,
@@ -552,6 +681,11 @@ def apply(
                             object_attributes, object_id, attr, None, value, index
                         )
 
+        if is_object_attribute_row and reference_count == 0:
+            raise ValueError("Object attribute rows must contain an object reference.")
+        if is_o2o_row and reference_count == 0:
+            raise ValueError("Object-to-object rows must contain a target object reference.")
+
     events_df = _instantiate_dataframe(
         events, [event_id_column, event_activity_column, event_timestamp_column]
     )
@@ -585,7 +719,7 @@ def apply(
     object_records_by_id = {record[object_id_column]: record for record in object_records}
 
     for (object_id, attr), values in object_attributes.items():
-        values = sorted(values, key=_attribute_sort_key)
+        values = _deduplicate_assignments(object_id, attr, values)
         object_type = object_id_type.get(object_id)
         if object_id not in object_records_by_id:
             object_records_by_id[object_id] = {
@@ -593,18 +727,18 @@ def apply(
                 object_type_column: object_type,
             }
 
-        _, first_timestamp, first_value = values[0]
-        object_records_by_id[object_id][attr] = first_value
-
-        for _, timestamp, value in values[1:]:
-            change = {
-                object_id_column: object_id,
-                object_type_column: object_type,
-                event_timestamp_column: timestamp,
-                changed_field_column: attr,
-                attr: value,
-            }
-            object_changes.append(change)
+        for _, timestamp, value in values:
+            if timestamp == _EPOCH:
+                object_records_by_id[object_id][attr] = value
+            else:
+                change = {
+                    object_id_column: object_id,
+                    object_type_column: object_type,
+                    event_timestamp_column: timestamp,
+                    changed_field_column: attr,
+                    attr: value,
+                }
+                object_changes.append(change)
 
     objects_df = _instantiate_dataframe(
         list(object_records_by_id.values()), [object_id_column, object_type_column]

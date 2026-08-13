@@ -452,7 +452,7 @@ def write_ocel2(
         )
     elif file_path.lower().endswith("sqlite"):
         write_ocel2_sqlite(ocel, file_path, encoding=encoding)
-    elif file_path.lower().endswith("csv"):
+    elif file_path.lower().endswith(".ocel.csv"):
         write_ocel2_csv(ocel, file_path, encoding=encoding)
     elif _matches_extension(file_path, ("xml", "xmlocel")):
         write_ocel2_xml(ocel, file_path, encoding=encoding)
@@ -476,7 +476,7 @@ def write_ocel2_bundle(
 
     :param ocel: OCEL object.
     :param file_path: Target archive path or directory path.
-    :param encoding: Encoding used for metadata and CSV files (default: utf-8).
+    :param encoding: Encoding for metadata and CSV files; the format requires utf-8.
     :param storage_format: ``parquet`` (default) or ``csv``.
 
     .. code-block:: python3
@@ -502,7 +502,7 @@ def write_ocel2_csv(
 
     :param ocel: OCEL object.
     :param file_path: Target file path to the OCEL 2.0 CSV file.
-    :param encoding: The encoding to be used (default: utf-8).
+    :param encoding: The encoding to be used; the format requires utf-8.
 
     .. code-block:: python3
 
@@ -511,7 +511,9 @@ def write_ocel2_csv(
         pm4py.write_ocel2_csv(ocel, '<path_to_export_to>')
     """
     file_path = str(file_path)
-    if not file_path.lower().endswith("csv"):
+    if file_path.lower().endswith(".csv") and not file_path.lower().endswith(".ocel.csv"):
+        file_path = file_path[:-4] + ".ocel.csv"
+    elif not file_path.lower().endswith(".ocel.csv"):
         file_path = file_path + ".ocel.csv"
 
     from pm4py.objects.ocel.exporter.csv import exporter as csv_exporter

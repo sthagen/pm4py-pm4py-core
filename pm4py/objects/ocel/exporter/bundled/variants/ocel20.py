@@ -20,10 +20,14 @@ Website: https://processintelligence.solutions
 Contact: info@processintelligence.solutions
 '''
 from enum import Enum
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Tuple
+import codecs
+import csv
 import datetime as dt
+from decimal import Decimal
 import io
 import json
+import math
 import os
 import zipfile
 
@@ -33,7 +37,6 @@ import pandas as pd
 from pm4py.objects.ocel import constants
 from pm4py.objects.ocel.exporter.util import clean_dataframes
 from pm4py.objects.ocel.obj import OCEL
-from pm4py.objects.ocel.util import ocel_consistency
 from pm4py.util import constants as pm4_constants, exec_utils, pandas_utils
 
 
@@ -49,16 +52,25 @@ class Parameters(Enum):
     STORAGE_FORMAT = "storage_format"
 
 
-_SAFE_FILENAME_BYTES = set(b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-")
+_SAFE_FILENAME_BYTES = set(
+    b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-"
+)
+
+
+def _require_utf8(encoding: str) -> str:
+    try:
+        normalized = codecs.lookup(encoding).name
+    except LookupError as exc:
+        raise ValueError("Unknown OCEL bundle encoding '%s'." % encoding) from exc
+    if normalized != "utf-8":
+        raise ValueError("OCEL bundle metadata and CSV tables must use UTF-8 encoding.")
+    return "utf-8"
 
 
 def _percent_encode(value: str) -> str:
     encoded = []
-    for byte in str(value).encode("utf-8"):
-        if byte in _SAFE_FILENAME_BYTES:
-            encoded.append(chr(byte))
-        else:
-            encoded.append("%%%02X" % byte)
+    for byte in value.encode("utf-8"):
+        encoded.append(chr(byte) if byte in _SAFE_FILENAME_BYTES else "%%%02X" % byte)
     return "".join(encoded)
 
 
@@ -66,103 +78,234 @@ def _is_null(value) -> bool:
     return clean_dataframes.is_null(value)
 
 
-def _attribute_columns(df: pd.DataFrame, reserved: List[str]) -> List[str]:
-    return [
-        column
-        for column in df.columns
-        if column not in reserved and not str(column).startswith("ocel:")
-    ]
+def _values_equal(left: Any, right: Any) -> bool:
+    if (
+        isinstance(left, (int, float, np.integer, np.floating))
+        and not isinstance(left, (bool, np.bool_))
+        and isinstance(right, (int, float, np.integer, np.floating))
+        and not isinstance(right, (bool, np.bool_))
+    ):
+        return Decimal(str(left)) == Decimal(str(right))
+    return type(left) is type(right) and left == right
+
+
+def _attribute_columns(dataframe: pd.DataFrame, reserved: List[str]) -> List[str]:
+    columns = []
+    for column in dataframe.columns:
+        if column in reserved or str(column).startswith("ocel:"):
+            continue
+        if not isinstance(column, str) or not column:
+            raise ValueError("OCEL bundle attribute names must be non-empty strings.")
+        columns.append(column)
+    return columns
 
 
 def _primitive_type_from_values(values: List[Any]) -> str:
-    non_null = [clean_dataframes.normalize_value(value) for value in values if not _is_null(value)]
+    non_null = [value for value in values if not _is_null(value)]
     if not non_null:
         return "string"
-
     if all(isinstance(value, (bool, np.bool_)) for value in non_null):
         return "boolean"
-    if all(isinstance(value, (int, np.integer)) and not isinstance(value, (bool, np.bool_)) for value in non_null):
+    if all(
+        isinstance(value, (int, np.integer))
+        and not isinstance(value, (bool, np.bool_))
+        for value in non_null
+    ):
         return "integer"
-    if all(isinstance(value, (int, float, np.integer, np.floating)) and not isinstance(value, (bool, np.bool_)) for value in non_null):
+    if all(
+        isinstance(value, (int, float, np.integer, np.floating))
+        and not isinstance(value, (bool, np.bool_))
+        and math.isfinite(float(value))
+        for value in non_null
+    ):
         return "float"
-    if all(isinstance(value, (pd.Timestamp, dt.datetime, dt.date, np.datetime64)) for value in non_null):
-        return "datetime"
+    if all(
+        isinstance(value, (pd.Timestamp, dt.datetime, dt.date, np.datetime64))
+        for value in non_null
+    ):
+        return "time"
     return "string"
 
 
-def _primitive_type(df: pd.DataFrame, column: str) -> str:
-    if column not in df.columns:
-        return "string"
-    dtype = df[column].dtype
-    if pd.api.types.is_bool_dtype(dtype):
-        return "boolean"
-    if pd.api.types.is_integer_dtype(dtype):
-        return "integer"
-    if pd.api.types.is_float_dtype(dtype):
-        return "float"
-    if pd.api.types.is_datetime64_any_dtype(dtype):
-        return "datetime"
-    return _primitive_type_from_values(df[column].tolist())
+def _timestamp(value: Any, label: str) -> pd.Timestamp:
+    if _is_null(value):
+        raise ValueError("%s cannot be missing." % label)
+    try:
+        timestamp = value if isinstance(value, pd.Timestamp) else pd.Timestamp(value)
+    except BaseException as exc:
+        raise ValueError("%s is not a timestamp." % label) from exc
+    if timestamp.tzinfo is None or timestamp.utcoffset() is None:
+        timestamp = timestamp.tz_localize("UTC")
+    return timestamp.tz_convert("UTC")
 
 
-def _normalize_table(df: pd.DataFrame, storage_format: str) -> pd.DataFrame:
-    df = df.copy()
-    for col in df.columns:
-        if str(df[col].dtype) == "object":
-            df[col] = df[col].map(clean_dataframes.normalize_value)
-        elif storage_format == "csv" and (
-            "date" in str(df[col].dtype) or "time" in str(df[col].dtype)
+def _coerce_value(value: Any, primitive_type: str, label: str, optional: bool):
+    if _is_null(value):
+        if optional:
+            return None
+        raise ValueError("%s cannot be missing." % label)
+    value = clean_dataframes.normalize_value(value)
+    if primitive_type == "string":
+        if isinstance(value, (list, dict, tuple, set)):
+            raise ValueError("%s must be a scalar string value." % label)
+        return str(value)
+    if primitive_type == "integer":
+        if isinstance(value, (bool, np.bool_)) or not isinstance(value, (int, np.integer)):
+            raise ValueError("%s must be an integer." % label)
+        return int(value)
+    if primitive_type == "float":
+        if isinstance(value, (bool, np.bool_)) or not isinstance(
+            value, (int, float, np.integer, np.floating)
         ):
-            df[col] = df[col].map(
-                lambda value: "" if _is_null(value) else pd.Timestamp(value).isoformat()
-            )
-    return df
+            raise ValueError("%s must be a floating-point number." % label)
+        value = float(value)
+        if not math.isfinite(value):
+            raise ValueError("%s must be finite." % label)
+        return value
+    if primitive_type == "boolean":
+        if not isinstance(value, (bool, np.bool_)):
+            raise ValueError("%s must be boolean." % label)
+        return bool(value)
+    return _timestamp(value, label)
 
 
-def _write_table_to_archive(
-    archive: zipfile.ZipFile,
-    table_path: str,
-    df: pd.DataFrame,
-    storage_format: str,
+def _prepare_table(
+    dataframe: pd.DataFrame,
+    fixed: List[Tuple[str, str, bool]],
+    attributes: List[Tuple[str, str]],
+) -> pd.DataFrame:
+    expected = [name for name, _, _ in fixed] + [name for name, _ in attributes]
+    dataframe = dataframe.copy()
+    for column in expected:
+        if column not in dataframe.columns:
+            dataframe[column] = None
+    dataframe = dataframe[expected]
+    fixed_names = {name for name, _, _ in fixed}
+    type_by_name = {name: primitive_type for name, primitive_type, _ in fixed}
+    type_by_name.update(attributes)
+    allow_empty = {name for name, _, empty_allowed in fixed if empty_allowed}
+    for column in expected:
+        optional = column not in fixed_names
+        values = [
+            _coerce_value(value, type_by_name[column], column, optional)
+            for value in dataframe[column].tolist()
+        ]
+        if column in fixed_names and column not in allow_empty and any(value == "" for value in values):
+            raise ValueError("Fixed column '%s' cannot contain empty strings." % column)
+        dataframe[column] = pd.Series(
+            values, index=dataframe.index, dtype="object"
+        )
+    return dataframe
+
+
+def _csv_value(value: Any, primitive_type: str) -> str:
+    if value is None or _is_null(value):
+        return ""
+    if primitive_type == "boolean":
+        return "true" if value else "false"
+    if primitive_type == "time":
+        return _timestamp(value, "timestamp").isoformat()
+    if primitive_type == "integer":
+        return str(int(value))
+    if primitive_type == "float":
+        return repr(float(value))
+    return str(value)
+
+
+def _table_csv_bytes(
+    dataframe: pd.DataFrame,
+    fixed: List[Tuple[str, str, bool]],
+    attributes: List[Tuple[str, str]],
     encoding: str,
-):
-    if storage_format == "csv":
-        buffer = io.StringIO()
-        df.to_csv(buffer, index=False, na_rep="")
-        archive.writestr(table_path, buffer.getvalue().encode(encoding))
-    else:
-        buffer = io.BytesIO()
-        df.to_parquet(buffer, index=False)
-        archive.writestr(table_path, buffer.getvalue())
+) -> bytes:
+    type_by_name = {name: primitive_type for name, primitive_type, _ in fixed}
+    type_by_name.update(attributes)
+    buffer = io.StringIO(newline="")
+    writer = csv.writer(buffer, dialect="excel", lineterminator="\r\n")
+    writer.writerow(dataframe.columns)
+    for row in dataframe.itertuples(index=False, name=None):
+        writer.writerow(
+            [_csv_value(value, type_by_name[column]) for column, value in zip(dataframe.columns, row)]
+        )
+    return buffer.getvalue().encode(encoding)
 
 
-def _write_table_to_directory(
-    root_path: str,
-    table_path: str,
-    df: pd.DataFrame,
-    storage_format: str,
-    encoding: str,
-):
-    full_path = os.path.join(root_path, *table_path.split("/"))
-    os.makedirs(os.path.dirname(full_path), exist_ok=True)
-    if storage_format == "csv":
-        df.to_csv(full_path, index=False, na_rep="", encoding=encoding)
-    else:
-        df.to_parquet(full_path, index=False)
+def _arrow_type(primitive_type: str):
+    try:
+        import pyarrow as pa
+    except ImportError as exc:
+        raise ImportError(
+            "pyarrow is required for specification-compliant OCEL Parquet bundles."
+        ) from exc
+    return {
+        "string": pa.string(),
+        "integer": pa.int64(),
+        "float": pa.float64(),
+        "boolean": pa.bool_(),
+        "time": pa.timestamp("us", tz="UTC"),
+    }[primitive_type]
 
 
-def _write_json_to_archive(archive: zipfile.ZipFile, path: str, content: Dict[str, Any], encoding: str):
-    archive.writestr(
-        path,
-        json.dumps(content, ensure_ascii=False, indent=2).encode(encoding),
+def _table_parquet_bytes(
+    dataframe: pd.DataFrame,
+    fixed: List[Tuple[str, str, bool]],
+    attributes: List[Tuple[str, str]],
+) -> bytes:
+    try:
+        import pyarrow as pa
+        import pyarrow.parquet as pq
+    except ImportError as exc:
+        raise ImportError(
+            "pyarrow is required for specification-compliant OCEL Parquet bundles."
+        ) from exc
+    fields = [
+        pa.field(name, _arrow_type(primitive_type), nullable=False)
+        for name, primitive_type, _ in fixed
+    ] + [
+        pa.field(name, _arrow_type(primitive_type), nullable=True)
+        for name, primitive_type in attributes
+    ]
+    schema = pa.schema(fields)
+    arrays = []
+    for field in fields:
+        values = dataframe[field.name].tolist()
+        if pa.types.is_timestamp(field.type):
+            values = [
+                None
+                if value is None or _is_null(value)
+                else _timestamp(value, field.name).floor("us")
+                for value in values
+            ]
+        arrays.append(pa.array(values, type=field.type))
+    table = pa.Table.from_arrays(arrays, schema=schema)
+    buffer = io.BytesIO()
+    pq.write_table(
+        table,
+        buffer,
+        version="2.6",
+        coerce_timestamps="us",
+        allow_truncated_timestamps=False,
     )
+    return buffer.getvalue()
 
 
-def _write_json_to_directory(root_path: str, path: str, content: Dict[str, Any], encoding: str):
-    full_path = os.path.join(root_path, *path.split("/"))
-    os.makedirs(os.path.dirname(full_path), exist_ok=True)
-    with open(full_path, "w", encoding=encoding) as f:
-        json.dump(content, f, ensure_ascii=False, indent=2)
+def _table_bytes(
+    dataframe: pd.DataFrame,
+    storage_format: str,
+    fixed: List[Tuple[str, str, bool]],
+    attributes: List[Tuple[str, str]],
+    encoding: str,
+) -> bytes:
+    dataframe = _prepare_table(dataframe, fixed, attributes)
+    if storage_format == "csv":
+        return _table_csv_bytes(dataframe, fixed, attributes, encoding)
+    return _table_parquet_bytes(dataframe, fixed, attributes)
+
+
+def _write_archive(target_path: str, files: Dict[str, bytes]):
+    with zipfile.ZipFile(target_path, "w", zipfile.ZIP_DEFLATED) as archive:
+        for path, content in files.items():
+            archive.writestr(path, content)
 
 
 def _cleanup_known_bundle_files(root_path: str):
@@ -175,127 +318,141 @@ def _cleanup_known_bundle_files(root_path: str):
                 os.remove(os.path.join(full_dir, filename))
 
 
-def _relation_table(df: pd.DataFrame, columns: Dict[str, str]) -> pd.DataFrame:
-    source_columns = list(columns.keys())
-    df = df.copy()
-    for column in source_columns:
-        if column not in df.columns:
-            df[column] = None
-    return df[source_columns].rename(columns=columns)
+def _write_directory(target_path: str, files: Dict[str, bytes]):
+    os.makedirs(target_path, exist_ok=True)
+    _cleanup_known_bundle_files(target_path)
+    for path, content in files.items():
+        full_path = os.path.join(target_path, *path.split("/"))
+        os.makedirs(os.path.dirname(full_path), exist_ok=True)
+        with open(full_path, "wb") as file:
+            file.write(content)
 
 
-def _object_type_by_id(ocel: OCEL, object_id: str, object_type: str) -> Dict[Any, Any]:
-    return (
-        ocel.objects[[object_id, object_type]]
-        .drop_duplicates(subset=[object_id])
-        .set_index(object_id)[object_type]
-        .to_dict()
-    )
+def _normalized_string(value: Any, label: str, allow_empty: bool = False) -> str:
+    if _is_null(value):
+        if allow_empty:
+            return ""
+        raise ValueError("%s cannot be missing." % label)
+    value = str(clean_dataframes.normalize_value(value))
+    if not value and not allow_empty:
+        raise ValueError("%s cannot be empty." % label)
+    return value
 
 
-def _changes_for_type(
-    ocel: OCEL,
-    object_type_name: str,
-    object_type_by_id: Dict[Any, Any],
-    object_id: str,
-    object_type: str,
-) -> pd.DataFrame:
-    changes = ocel.object_changes.copy()
-    if len(changes) == 0:
-        return changes
-    if object_type not in changes.columns:
-        changes[object_type] = changes[object_id].map(object_type_by_id)
-    else:
-        missing_type = changes[object_type].isna()
-        if missing_type.any():
-            changes.loc[missing_type, object_type] = changes.loc[missing_type, object_id].map(object_type_by_id)
-    return changes[changes[object_type] == object_type_name]
+def _require_unique(values: List[str], label: str):
+    if len(values) != len(set(values)):
+        raise ValueError("OCEL bundle %s identifiers must be unique." % label)
 
 
-def _object_change_table(
-    changes: pd.DataFrame,
-    attr_columns: List[str],
-    object_id: str,
-    event_timestamp: str,
-    changed_field: str,
-) -> pd.DataFrame:
-    records = []
-    for record in changes.to_dict("records"):
-        changed_attr = record.get(changed_field)
-        if (
-            _is_null(record.get(object_id))
-            or _is_null(record.get(event_timestamp))
-            or _is_null(changed_attr)
-        ):
-            continue
-        row = {
-            "ocel_id": record.get(object_id),
-            "ocel_time": record.get(event_timestamp),
-            "ocel_changed_field": changed_attr,
-        }
-        for column in attr_columns:
-            row[column] = None
-        if changed_attr in attr_columns:
-            row[changed_attr] = record.get(changed_attr)
-        records.append(row)
-
-    columns = ["ocel_id", "ocel_time", "ocel_changed_field"] + attr_columns
-    if records:
-        return pandas_utils.instantiate_dataframe(records, columns=columns)
-    return pandas_utils.instantiate_dataframe({column: [] for column in columns})
+def _relation_dataframe(records: List[Dict[str, Any]], columns: List[str]) -> pd.DataFrame:
+    return pandas_utils.instantiate_dataframe(records, columns=columns)
 
 
 def apply(ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = None):
-    """
-    Exports an OCEL 2.0 object-centric event log to the bundled CSV/Parquet format.
-    """
+    """Exports an OCEL 2.0 log to the bundled CSV/Parquet format."""
     if parameters is None:
         parameters = {}
-
     encoding = exec_utils.get_param_value(
         Parameters.ENCODING, parameters, pm4_constants.DEFAULT_ENCODING
     )
-    storage_format = exec_utils.get_param_value(
-        Parameters.STORAGE_FORMAT, parameters, "parquet"
-    )
+    encoding = _require_utf8(encoding)
+    storage_format = exec_utils.get_param_value(Parameters.STORAGE_FORMAT, parameters, "parquet")
     if storage_format not in {"csv", "parquet"}:
         raise ValueError("OCEL bundle storage format must be 'csv' or 'parquet'.")
 
-    event_id = exec_utils.get_param_value(
-        Parameters.EVENT_ID, parameters, ocel.event_id_column
-    )
-    event_activity = exec_utils.get_param_value(
-        Parameters.EVENT_ACTIVITY, parameters, ocel.event_activity
-    )
-    event_timestamp = exec_utils.get_param_value(
-        Parameters.EVENT_TIMESTAMP, parameters, ocel.event_timestamp
-    )
-    object_id = exec_utils.get_param_value(
-        Parameters.OBJECT_ID, parameters, ocel.object_id_column
-    )
-    object_type = exec_utils.get_param_value(
-        Parameters.OBJECT_TYPE, parameters, ocel.object_type_column
-    )
-    qualifier = exec_utils.get_param_value(
-        Parameters.QUALIFIER, parameters, ocel.qualifier
-    )
-    changed_field = exec_utils.get_param_value(
-        Parameters.CHANGED_FIELD, parameters, ocel.changed_field
-    )
+    event_id = exec_utils.get_param_value(Parameters.EVENT_ID, parameters, ocel.event_id_column)
+    event_activity = exec_utils.get_param_value(Parameters.EVENT_ACTIVITY, parameters, ocel.event_activity)
+    event_timestamp = exec_utils.get_param_value(Parameters.EVENT_TIMESTAMP, parameters, ocel.event_timestamp)
+    object_id = exec_utils.get_param_value(Parameters.OBJECT_ID, parameters, ocel.object_id_column)
+    object_type = exec_utils.get_param_value(Parameters.OBJECT_TYPE, parameters, ocel.object_type_column)
+    qualifier = exec_utils.get_param_value(Parameters.QUALIFIER, parameters, ocel.qualifier)
+    changed_field = exec_utils.get_param_value(Parameters.CHANGED_FIELD, parameters, ocel.changed_field)
 
-    ocel = ocel_consistency.apply(ocel, parameters=parameters)
-    object_type_by_id = _object_type_by_id(ocel, object_id, object_type)
+    events = ocel.events.copy()
+    objects = ocel.objects.copy()
+    relations = ocel.relations.copy()
+    o2o = ocel.o2o.copy()
+    changes = ocel.object_changes.copy()
+    for dataframe, required, label in (
+        (events, [event_id, event_activity, event_timestamp], "events"),
+        (objects, [object_id, object_type], "objects"),
+        (relations, [event_id, object_id, qualifier], "E2O relations"),
+        (o2o, [object_id, object_id + "_2", qualifier], "O2O relations"),
+        (changes, [object_id, event_timestamp, changed_field], "object changes"),
+    ):
+        missing = [column for column in required if column not in dataframe.columns]
+        if missing:
+            raise ValueError("OCEL %s are missing columns: %s." % (label, ", ".join(missing)))
+
+    event_ids = [_normalized_string(value, "event id") for value in events[event_id].tolist()]
+    object_ids = [_normalized_string(value, "object id") for value in objects[object_id].tolist()]
+    _require_unique(event_ids, "event")
+    _require_unique(object_ids, "object")
+    events[event_id] = event_ids
+    objects[object_id] = object_ids
+    events[event_activity] = [
+        _normalized_string(value, "event type") for value in events[event_activity].tolist()
+    ]
+    objects[object_type] = [
+        _normalized_string(value, "object type") for value in objects[object_type].tolist()
+    ]
+    event_id_set = set(event_ids)
+    object_type_by_id = dict(zip(object_ids, objects[object_type].tolist()))
+
+    event_attribute_columns = _attribute_columns(
+        events, [event_id, event_activity, event_timestamp]
+    )
+    object_attribute_columns = _attribute_columns(objects, [object_id, object_type])
+    change_attribute_columns = _attribute_columns(
+        changes, [object_id, object_type, event_timestamp, changed_field]
+    )
+    if set(event_attribute_columns).intersection({"ocel_id", "ocel_time"}):
+        raise ValueError("Event attribute name collides with a fixed bundle column.")
+    if set(object_attribute_columns + change_attribute_columns).intersection(
+        {"ocel_id", "ocel_time", "ocel_changed_field"}
+    ):
+        raise ValueError("Object attribute name collides with a fixed bundle column.")
+
+    normalized_changes = []
+    change_keys = {}
+    for record in changes.to_dict("records"):
+        oid = _normalized_string(record.get(object_id), "object-change id")
+        if oid not in object_type_by_id:
+            raise ValueError("Object change references unknown object '%s'." % oid)
+        record_type = record.get(object_type, object_type_by_id[oid])
+        if not _is_null(record_type) and str(record_type) != object_type_by_id[oid]:
+            raise ValueError("Object change type does not match object '%s'." % oid)
+        field = _normalized_string(record.get(changed_field), "changed field")
+        if field not in record or _is_null(record.get(field)):
+            raise ValueError("Object change for '%s' has no value for '%s'." % (oid, field))
+        populated_fields = [
+            column
+            for column in change_attribute_columns
+            if column in record and not _is_null(record.get(column))
+        ]
+        if populated_fields != [field]:
+            raise ValueError("An object-change row must assign exactly its changed field.")
+        normalized_timestamp = _timestamp(
+            record.get(event_timestamp), "object-change timestamp"
+        )
+        key = (oid, normalized_timestamp.value, field)
+        value = clean_dataframes.normalize_value(record.get(field))
+        if key in change_keys:
+            if not _values_equal(change_keys[key], value):
+                raise ValueError("Object attribute has conflicting values at one timestamp.")
+            raise ValueError("Duplicate object attribute assignment cannot be exported.")
+        change_keys[key] = value
+        normalized = dict(record)
+        normalized[object_id] = oid
+        normalized[object_type] = object_type_by_id[oid]
+        normalized[event_timestamp] = normalized_timestamp
+        normalized[changed_field] = field
+        normalized_changes.append(normalized)
+        if field not in change_attribute_columns:
+            change_attribute_columns.append(field)
+    changes = pandas_utils.instantiate_dataframe(normalized_changes) if normalized_changes else changes.iloc[0:0].copy()
 
     extension = storage_format
-    event_types = sorted(
-        str(value)
-        for value in pandas_utils.format_unique(ocel.events[event_activity].dropna().unique())
-    )
-    object_types = sorted(
-        str(value)
-        for value in pandas_utils.format_unique(ocel.objects[object_type].dropna().unique())
-    )
-
     meta = {
         "ocelVersion": "2.0",
         "bundleFormatVersion": "1.0",
@@ -307,126 +464,166 @@ def apply(ocel: OCEL, target_path: str, parameters: Optional[Dict[Any, Any]] = N
             "o2o": "relations/o2o.%s" % extension,
         },
     }
-    tables = {}
+    table_specs = {}
 
-    for event_type_name in event_types:
-        encoded_type = _percent_encode(event_type_name)
-        table_path = "events/event_%s.%s" % (encoded_type, extension)
-        df = ocel.events[ocel.events[event_activity] == event_type_name].copy()
-        attr_columns = _attribute_columns(
-            df, [event_id, event_activity, event_timestamp]
-        )
-        df = df[[event_id, event_timestamp] + attr_columns].rename(
+    for event_type_name in sorted(set(events[event_activity].tolist())):
+        selected = events[events[event_activity] == event_type_name].copy()
+        attributes = [
+            column
+            for column in event_attribute_columns
+            if selected[column].notna().any()
+        ]
+        attribute_types = [
+            (column, _primitive_type_from_values(selected[column].tolist()))
+            for column in attributes
+        ]
+        table_path = "events/event_%s.%s" % (_percent_encode(event_type_name), extension)
+        table = selected[[event_id, event_timestamp] + attributes].rename(
             columns={event_id: "ocel_id", event_timestamp: "ocel_time"}
         )
-        df = _normalize_table(df, storage_format)
-        tables[table_path] = df
+        fixed = [("ocel_id", "string", False), ("ocel_time", "time", False)]
+        table_specs[table_path] = (table, fixed, attribute_types)
         meta["eventTypes"][event_type_name] = {
             "file": table_path,
-            "attributes": {column: _primitive_type(df, column) for column in attr_columns},
+            "attributes": [
+                {"name": name, "type": primitive_type}
+                for name, primitive_type in attribute_types
+            ],
         }
 
-    for object_type_name in object_types:
+    for object_type_name in sorted(set(objects[object_type].tolist())):
+        selected = objects[objects[object_type] == object_type_name].copy()
+        type_changes = (
+            changes[changes[object_type] == object_type_name].copy()
+            if len(changes) > 0 and object_type in changes.columns
+            else changes.iloc[0:0].copy()
+        )
+        attributes = []
+        for column in object_attribute_columns:
+            if selected[column].notna().any() and column not in attributes:
+                attributes.append(column)
+        if len(type_changes) > 0:
+            for field in type_changes[changed_field].tolist():
+                if field not in attributes:
+                    attributes.append(field)
+        reserved = {"ocel_id", "ocel_time", "ocel_changed_field"}
+        if any(attribute in reserved for attribute in attributes):
+            raise ValueError("Object attribute name collides with a fixed bundle column.")
+
+        attribute_types = []
+        for column in attributes:
+            values = selected[column].tolist() if column in selected.columns else []
+            if column in type_changes.columns:
+                values += type_changes[column].tolist()
+            attribute_types.append((column, _primitive_type_from_values(values)))
+
         encoded_type = _percent_encode(object_type_name)
         table_path = "objects/object_%s.%s" % (encoded_type, extension)
-        changes_path = "object_changes/object_changes_%s.%s" % (
-            encoded_type,
-            extension,
-        )
-
-        df = ocel.objects[ocel.objects[object_type] == object_type_name].copy()
-        object_attr_columns = _attribute_columns(df, [object_id, object_type])
-
-        changes = _changes_for_type(
-            ocel, object_type_name, object_type_by_id, object_id, object_type
-        )
-        change_attr_columns = _attribute_columns(
-            changes, [object_id, object_type, event_timestamp, changed_field]
-        )
-        for changed_attr in (
-            changes[changed_field].dropna().tolist()
-            if changed_field in changes.columns
-            else []
-        ):
-            if changed_attr not in change_attr_columns:
-                change_attr_columns.append(changed_attr)
-
-        attr_columns = []
-        for column in object_attr_columns + change_attr_columns:
-            if column not in attr_columns:
-                attr_columns.append(column)
-
-        object_table = df[[object_id] + object_attr_columns].copy()
-        for column in attr_columns:
+        changes_path = "object_changes/object_changes_%s.%s" % (encoded_type, extension)
+        object_table = selected[[object_id] + [column for column in attributes if column in selected.columns]].copy()
+        for column in attributes:
             if column not in object_table.columns:
                 object_table[column] = None
-        object_table = object_table[[object_id] + attr_columns].rename(
-            columns={object_id: "ocel_id"}
-        )
-        object_table = _normalize_table(object_table, storage_format)
-        tables[table_path] = object_table
+        object_table = object_table[[object_id] + attributes].rename(columns={object_id: "ocel_id"})
+        table_specs[table_path] = (object_table, [("ocel_id", "string", False)], attribute_types)
 
-        change_table = _object_change_table(
-            changes, attr_columns, object_id, event_timestamp, changed_field
+        change_records = []
+        for record in type_changes.to_dict("records"):
+            field = record[changed_field]
+            row = {
+                "ocel_id": record[object_id],
+                "ocel_time": record[event_timestamp],
+                "ocel_changed_field": field,
+            }
+            for attribute in attributes:
+                row[attribute] = record.get(attribute) if attribute == field else None
+            change_records.append(row)
+        change_columns = ["ocel_id", "ocel_time", "ocel_changed_field"] + attributes
+        change_table = pandas_utils.instantiate_dataframe(change_records, columns=change_columns)
+        table_specs[changes_path] = (
+            change_table,
+            [
+                ("ocel_id", "string", False),
+                ("ocel_time", "time", False),
+                ("ocel_changed_field", "string", False),
+            ],
+            attribute_types,
         )
-        change_table = _normalize_table(change_table, storage_format)
-        tables[changes_path] = change_table
-
         meta["objectTypes"][object_type_name] = {
             "file": table_path,
             "changesFile": changes_path,
-            "attributes": {
-                column: _primitive_type(
-                    pandas_utils.concat(
-                        [
-                            object_table.rename(columns={"ocel_id": object_id}),
-                            change_table.rename(
-                                columns={
-                                    "ocel_id": object_id,
-                                    "ocel_time": event_timestamp,
-                                    "ocel_changed_field": changed_field,
-                                }
-                            ),
-                        ],
-                        ignore_index=True,
-                    ),
-                    column,
-                )
-                for column in attr_columns
-            },
+            "attributes": [
+                {"name": name, "type": primitive_type}
+                for name, primitive_type in attribute_types
+            ],
         }
 
-    e2o = _relation_table(
-        ocel.relations,
-        {
-            event_id: "ocel_event_id",
-            object_id: "ocel_object_id",
-            qualifier: "ocel_qualifier",
-        },
+    e2o_records = []
+    e2o_keys = set()
+    for record in relations.to_dict("records"):
+        eid = _normalized_string(record.get(event_id), "E2O event id")
+        oid = _normalized_string(record.get(object_id), "E2O object id")
+        relation_qualifier = _normalized_string(record.get(qualifier), "E2O qualifier", allow_empty=True)
+        if eid not in event_id_set or oid not in object_type_by_id:
+            raise ValueError("E2O relation references an unknown event or object.")
+        key = (eid, oid, relation_qualifier)
+        if key in e2o_keys:
+            raise ValueError("Duplicate E2O relation cannot be exported.")
+        e2o_keys.add(key)
+        e2o_records.append(
+            {"ocel_event_id": eid, "ocel_object_id": oid, "ocel_qualifier": relation_qualifier}
+        )
+    e2o_fixed = [
+        ("ocel_event_id", "string", False),
+        ("ocel_object_id", "string", False),
+        ("ocel_qualifier", "string", True),
+    ]
+    table_specs[meta["relations"]["e2o"]] = (
+        _relation_dataframe(e2o_records, [name for name, _, _ in e2o_fixed]),
+        e2o_fixed,
+        [],
     )
-    tables[meta["relations"]["e2o"]] = _normalize_table(e2o, storage_format)
 
-    o2o = _relation_table(
-        ocel.o2o,
-        {
-            object_id: "ocel_source_id",
-            object_id + "_2": "ocel_target_id",
-            qualifier: "ocel_qualifier",
-        },
+    o2o_records = []
+    o2o_keys = set()
+    for record in o2o.to_dict("records"):
+        source = _normalized_string(record.get(object_id), "O2O source id")
+        target = _normalized_string(record.get(object_id + "_2"), "O2O target id")
+        relation_qualifier = _normalized_string(record.get(qualifier), "O2O qualifier", allow_empty=True)
+        if source not in object_type_by_id or target not in object_type_by_id:
+            raise ValueError("O2O relation references an unknown object.")
+        key = (source, target, relation_qualifier)
+        if key in o2o_keys:
+            raise ValueError("Duplicate O2O relation cannot be exported.")
+        o2o_keys.add(key)
+        o2o_records.append(
+            {"ocel_source_id": source, "ocel_target_id": target, "ocel_qualifier": relation_qualifier}
+        )
+    o2o_fixed = [
+        ("ocel_source_id", "string", False),
+        ("ocel_target_id", "string", False),
+        ("ocel_qualifier", "string", True),
+    ]
+    table_specs[meta["relations"]["o2o"]] = (
+        _relation_dataframe(o2o_records, [name for name, _, _ in o2o_fixed]),
+        o2o_fixed,
+        [],
     )
-    tables[meta["relations"]["o2o"]] = _normalize_table(o2o, storage_format)
+
+    files = {
+        "ocel-meta.json": json.dumps(
+            meta, ensure_ascii=False, indent=2, allow_nan=False
+        ).encode(encoding)
+    }
+    for table_path, (dataframe, fixed, attributes) in table_specs.items():
+        files[table_path] = _table_bytes(
+            dataframe, storage_format, fixed, attributes, encoding
+        )
 
     target_path = str(target_path)
-    if target_path.lower().endswith(".zip"):
-        if os.path.exists(target_path):
-            os.remove(target_path)
-        with zipfile.ZipFile(target_path, "w", zipfile.ZIP_DEFLATED) as archive:
-            _write_json_to_archive(archive, "ocel-meta.json", meta, encoding)
-            for table_path, df in tables.items():
-                _write_table_to_archive(archive, table_path, df, storage_format, encoding)
+    if target_path.lower().endswith(".ocel.zip"):
+        _write_archive(target_path, files)
+    elif target_path.lower().endswith(".zip"):
+        raise ValueError("Bundled OCEL archives use the '.ocel.zip' extension.")
     else:
-        os.makedirs(target_path, exist_ok=True)
-        _cleanup_known_bundle_files(target_path)
-        _write_json_to_directory(target_path, "ocel-meta.json", meta, encoding)
-        for table_path, df in tables.items():
-            _write_table_to_directory(target_path, table_path, df, storage_format, encoding)
+        _write_directory(target_path, files)

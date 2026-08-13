@@ -35,6 +35,29 @@ class Parameters(Enum):
     ENABLE_NAMES_STRIPPING = "enable_names_stripping"
 
 
+def _build_type_mapping(types, enable_names_stripping):
+    """Builds deterministic, SQLite-safe, injective type table names."""
+    mapping = {}
+    used = set()
+    for type_name in types:
+        type_name = str(type_name)
+        base = (
+            names_stripping.apply(type_name)
+            if enable_names_stripping
+            else type_name
+        )
+        if not base:
+            base = "Type"
+        candidate = base
+        suffix = 2
+        while candidate.casefold() in used:
+            candidate = "%s_%d" % (base, suffix)
+            suffix += 1
+        used.add(candidate.casefold())
+        mapping[type_name] = candidate
+    return mapping
+
+
 def apply(ocel: OCEL, file_path: str, parameters: Optional[Dict[Any, Any]] = None):
     """
     Exports the given OCEL (OCEL 2.0) into a SQLite database.
@@ -83,22 +106,25 @@ def apply(ocel: OCEL, file_path: str, parameters: Optional[Dict[Any, Any]] = Non
     # Prepare event and object type mappings
     event_types = sorted(pandas_utils.format_unique(EVENTS["ocel_type"].unique()))
     object_types = sorted(pandas_utils.format_unique(OBJECTS["ocel_type"].unique()))
+    event_type_mapping = _build_type_mapping(
+        event_types, enable_names_stripping
+    )
+    object_type_mapping = _build_type_mapping(
+        object_types, enable_names_stripping
+    )
 
     EVENT_CORR_TYPE = pandas_utils.instantiate_dataframe(
-        {"ocel_type": event_types, "ocel_type_map": event_types}
+        {
+            "ocel_type": event_types,
+            "ocel_type_map": [event_type_mapping[str(x)] for x in event_types],
+        }
     )
     OBJECT_CORR_TYPE = pandas_utils.instantiate_dataframe(
-        {"ocel_type": object_types, "ocel_type_map": object_types}
+        {
+            "ocel_type": object_types,
+            "ocel_type_map": [object_type_mapping[str(x)] for x in object_types],
+        }
     )
-
-    # Optionally strip names
-    if enable_names_stripping:
-        EVENT_CORR_TYPE["ocel_type_map"] = EVENT_CORR_TYPE["ocel_type_map"].apply(
-            lambda x: names_stripping.apply(x)
-        )
-        OBJECT_CORR_TYPE["ocel_type_map"] = OBJECT_CORR_TYPE["ocel_type_map"].apply(
-            lambda x: names_stripping.apply(x)
-        )
 
     EVENT_CORR_TYPE.to_sql("event_map_type", conn, index=False)
     OBJECT_CORR_TYPE.to_sql("object_map_type", conn, index=False)
@@ -135,7 +161,7 @@ def apply(ocel: OCEL, file_path: str, parameters: Optional[Dict[Any, Any]] = Non
             if str(df[col].dtype) == "object":
                 df[col] = df[col].map(clean_dataframes.normalize_value)
 
-        act_red = names_stripping.apply(act) if enable_names_stripping else act
+        act_red = event_type_mapping[str(act)]
 
         df = df.drop_duplicates()
         df.to_sql("event_" + act_red, conn, index=False)
@@ -169,7 +195,7 @@ def apply(ocel: OCEL, file_path: str, parameters: Optional[Dict[Any, Any]] = Non
             if str(df[col].dtype) == "object":
                 df[col] = df[col].map(clean_dataframes.normalize_value)
 
-        ot_red = names_stripping.apply(ot) if enable_names_stripping else ot
+        ot_red = object_type_mapping[str(ot)]
 
         df.to_sql("object_" + ot_red, conn, index=False)
 

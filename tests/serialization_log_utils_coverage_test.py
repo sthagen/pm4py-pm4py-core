@@ -554,7 +554,9 @@ class SerializationLogUtilsCoverageTest(unittest.TestCase):
         ]
         with tempfile.TemporaryDirectory() as directory:
             empty_path = os.path.join(directory, "empty.csv")
-            pd.DataFrame({"other": []}).to_csv(empty_path, index=False)
+            pd.DataFrame(columns=["id", "activity", "timestamp"]).to_csv(
+                empty_path, index=False
+            )
             empty = ocel20.apply(empty_path)
             self.assertEqual(len(empty.events), 0)
 
