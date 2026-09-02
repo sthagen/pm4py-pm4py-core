@@ -126,15 +126,15 @@ def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None):
     etypes = sorted(pandas_utils.format_unique(EVENTS["ocel_type"].unique()))
     otypes = sorted(pandas_utils.format_unique(OBJECTS["ocel_type"].unique()))
 
-    EVENTS = EVENTS.to_dict("records")
-    OBJECTS = OBJECTS.to_dict("records")
+    EVENTS = EVENTS.to_dict(orient="records")
+    OBJECTS = OBJECTS.to_dict(orient="records")
     events_id_type = {x["ocel_id"]: x["ocel_type"] for x in EVENTS}
     objects_id_type = {x["ocel_id"]: x["ocel_type"] for x in OBJECTS}
 
     EVENT_CORR_TYPE = pd.read_sql("SELECT * FROM event_map_type", conn)
     OBJECT_CORR_TYPE = pd.read_sql("SELECT * FROM object_map_type", conn)
-    EVENT_CORR_TYPE = EVENT_CORR_TYPE.to_dict("records")
-    OBJECT_CORR_TYPE = OBJECT_CORR_TYPE.to_dict("records")
+    EVENT_CORR_TYPE = EVENT_CORR_TYPE.to_dict(orient="records")
+    OBJECT_CORR_TYPE = OBJECT_CORR_TYPE.to_dict(orient="records")
 
     events_type_map = {
         x["ocel_type"]: x["ocel_type_map"] for x in EVENT_CORR_TYPE
@@ -184,7 +184,7 @@ def apply(file_path: str, parameters: Optional[Dict[Any, Any]] = None):
     )
 
     events_timestamp = event_types_coll[[event_id, event_timestamp]].to_dict(
-        "records"
+        orient="records"
     )
     events_timestamp = {
         x[event_id]: x[event_timestamp] for x in events_timestamp

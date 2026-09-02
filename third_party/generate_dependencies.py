@@ -1,16 +1,26 @@
-import os
-import networkx as nx
-import time
-import requests
-import json
-import importlib.util
-from copy import deepcopy
-from packaging.version import Version, InvalidVersion
+"""Refresh the stable dependency extra and the transitive license inventory.
 
-REMOVE_DEPS_AT_END = True
-UPDATE_DOCKERFILE = True
-UPDATE_OTHER_FILES = True
+Run this script from any directory after installing PM4Py and pipdeptree.
+"""
+
+import re
+import subprocess
+import tempfile
+import time
+from pathlib import Path
+
+import networkx as nx
+import requests
+from packaging.version import InvalidVersion, Version
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+LICENSE_FILE = Path(__file__).resolve().parent / "LICENSES_TRANSITIVE.md"
+PYPROJECT_FILE = PROJECT_ROOT / "pyproject.toml"
+
+UPDATE_LICENSE_FILE = True
+UPDATE_PYPROJECT_STABLE = True
 INCLUDE_BETAS = False
+STABLE_TOOL_PACKAGES = ("setuptools", "wheel")
 
 
 def get_version(package):
@@ -31,7 +41,7 @@ def get_version(package):
     releases = data.get("releases", {})
 
     versions = []
-    for s in releases.keys():
+    for s in releases:
         try:
             versions.append(Version(s))
         except InvalidVersion:
@@ -71,7 +81,7 @@ def get_version(package):
     else:
         # prefer beta/rc only if it is *newer* than latest stable
         if latest_beta_rc is not None and latest_stable is not None:
-            chosen = latest_beta_rc if latest_beta_rc > latest_stable else latest_stable
+            chosen = max(latest_stable, latest_beta_rc)
         elif latest_beta_rc is not None:
             # no stable, but we do have beta/rc
             chosen = latest_beta_rc
@@ -88,14 +98,13 @@ def get_version(package):
 
 
 def elaborate_single_python_package(package_name, deps, include_self=False):
-    os.system("pipdeptree -p "+package_name+" >deps.txt")
-
-    F = open("deps.txt", "r")
-    content = F.readlines()
-    F.close()
-
-    if REMOVE_DEPS_AT_END:
-        os.remove("deps.txt")
+    result = subprocess.run(
+        ["pipdeptree", "-p", package_name],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    content = result.stdout.splitlines()
 
     G = nx.DiGraph()
     i = 1
@@ -134,15 +143,15 @@ def elaborate_single_python_package(package_name, deps, include_self=False):
         i = i + 1
     edges = list(G.edges)
     while len(edges) > 0:
-        left = set(x[0] for x in edges)
-        right = set(x[1] for x in edges)
-        diff = sorted([x for x in right if x not in left])
+        left = {x[0] for x in edges}
+        right = {x[1] for x in edges}
+        diff = sorted(right - left)
         for x in diff:
             if not x in deps:
                 deps.append(x)
             G.remove_node(x)
         edges = list(G.edges)
-    nodes = sorted(list(G.nodes))
+    nodes = sorted(G.nodes)
     for x in nodes:
         if not x in deps:
             deps.append(x)
@@ -150,9 +159,8 @@ def elaborate_single_python_package(package_name, deps, include_self=False):
     if "cvxopt" in deps:
         del deps[deps.index("cvxopt")]
 
-    if include_self:
-        if package_name not in deps:
-            deps.append(package_name)
+    if include_self and package_name not in deps:
+        deps.append(package_name)
 
     deps = sorted(deps, key=lambda x: x.lower())
 
@@ -169,96 +177,160 @@ def get_all_third_party_dependencies(package_name, deps, packages_dictio, includ
     return deps, packages
 
 
-deps = []
-packages_dictio = {}
-deps, packages = get_all_third_party_dependencies("pm4py", deps, packages_dictio, include_self=False)
+def add_stable_tool_packages(packages, packages_dictio):
+    """Keep the build tools that were part of requirements_stable.txt."""
+    package_names = {package[0].lower() for package in packages}
+    for package_name in STABLE_TOOL_PACKAGES:
+        if package_name.lower() not in package_names:
+            if package_name not in packages_dictio:
+                packages_dictio[package_name] = get_version(package_name)
+            packages.append(packages_dictio[package_name])
+    return sorted(packages, key=lambda package: package[0].lower())
 
-if UPDATE_OTHER_FILES:
-    F = open("../requirements_complete.txt", "w")
-    for x in packages:
-        """if x[0] == "numpy":
-            F.write("%s<2\n" % (x[0]))
-        elif x[0] == "pandas":
-            F.write("%s<3\n" % (x[0]))
-        else:
-            F.write("%s\n" % (x[0]))"""
-        F.write("%s\n" % (x[0]))
-    F.close()
-    F = open("../requirements_stable.txt", "w")
-    for x in packages:
-        F.write("%s==%s\n" % (x[0], x[2]))
-    F.close()
-    F = open("LICENSES_TRANSITIVE.md", "w")
-    F.write("""# PM4Py Third Party Dependencies
-    
-    PM4Py depends on third party libraries to implement some functionality. This document describes which libraries
-    PM4Py depends upon. This is a best effort attempt to describe the library's dependencies, it is subject to change as
-    libraries are added/removed.
-    
-    | Name | URL | License | Version |
-    | --------------------------- | ------------------------------------------------------------ | --------------------------- | ------------------- |
-    """)
-    for x in packages:
-        F.write("| %s | %s | %s | %s |\n" % (x[0].strip(), x[1].strip(), x[3].strip(), x[2].strip()))
-    F.close()
 
-prev_deps = deepcopy(packages)
+def _toml_array_end(lines, start):
+    """Return the final line of a TOML array assignment."""
+    depth = 0
+    saw_opening_bracket = False
+    quote = None
+    escaped = False
 
-extra_packages = ["requests", "pyvis", "jsonschema", "workalendar", "scikit-learn", "openai"]
-for ep in extra_packages:
-    if importlib.util.find_spec(ep):
-        deps, packages = get_all_third_party_dependencies(ep, deps, packages_dictio, include_self=True)
+    for line_number in range(start, len(lines)):
+        for character in lines[line_number]:
+            if quote is not None:
+                if escaped:
+                    escaped = False
+                elif quote == '"' and character == "\\":
+                    escaped = True
+                elif character == quote:
+                    quote = None
+                continue
 
-first_line_packages = ["packaging", "networkx", "graphviz", "six", "python-dateutil", "pytz", "tzdata", "sortedcontainers", "wheel", "setuptools"]
-second_line_packages = ["pyparsing", "tqdm", "colorama", "cycler", "joblib", "threadpoolctl"]
-third_line_packages = ["lxml", "numpy", "pandas", "scipy"]
+            if character in ("'", '"'):
+                quote = character
+            elif character == "#":
+                break
+            elif character == "[":
+                depth += 1
+                saw_opening_bracket = True
+            elif character == "]":
+                depth -= 1
+                if depth < 0:
+                    raise ValueError("Invalid TOML array while locating the stable extra")
 
-first_packages_line = ""
-second_packages_line = ""
-third_packages_line = ""
-fourth_package_line = ""
-fifth_package_line = ""
-sixth_package_line = ""
+        if saw_opening_bracket and depth == 0:
+            return line_number
 
-for x in packages:
-    cont = x[0] + "==" + x[2] + " "
-    if x[0] in first_line_packages:
-        first_packages_line += cont
-    elif x[0] in second_line_packages:
-        second_packages_line += cont
-    elif x[0] in third_line_packages:
-        third_packages_line += cont
-    elif x in prev_deps:
-        fourth_package_line += cont
-    elif x[0] in extra_packages:
-        sixth_package_line += cont
+    raise ValueError("The stable optional-dependency array is not closed")
+
+
+def _stable_extra_lines(packages, newline):
+    requirements = sorted(
+        (f"{package[0]}=={package[2]}" for package in packages),
+        key=str.lower,
+    )
+    return [
+        f"stable = [{newline}",
+        *(f'    "{requirement}",{newline}' for requirement in requirements),
+        f"]{newline}",
+    ]
+
+
+def update_pyproject_stable(pyproject_file, packages):
+    """Replace or add the stable extra without rewriting unrelated TOML."""
+    pyproject_file = Path(pyproject_file)
+    contents = pyproject_file.read_text(encoding="utf-8")
+    newline = "\r\n" if "\r\n" in contents else "\n"
+    lines = contents.splitlines(keepends=True)
+
+    section_start = None
+    section_end = len(lines)
+    for line_number, line in enumerate(lines):
+        if line.strip() == "[project.optional-dependencies]":
+            section_start = line_number
+            break
+    if section_start is None:
+        raise ValueError("pyproject.toml has no [project.optional-dependencies] section")
+
+    for line_number in range(section_start + 1, len(lines)):
+        stripped = lines[line_number].strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            section_end = line_number
+            break
+
+    stable_start = None
+    for line_number in range(section_start + 1, section_end):
+        if re.match(r"^stable\s*=", lines[line_number].strip()):
+            stable_start = line_number
+            break
+
+    replacement = _stable_extra_lines(packages, newline)
+    if stable_start is not None:
+        stable_end = _toml_array_end(lines, stable_start)
+        updated_lines = lines[:stable_start] + replacement + lines[stable_end + 1:]
     else:
-        fifth_package_line += cont
+        insert_at = section_end
+        while insert_at > section_start + 1 and not lines[insert_at - 1].strip():
+            insert_at -= 1
+        updated_lines = (
+            lines[:insert_at]
+            + replacement
+            + [newline]
+            + lines[section_end:]
+        )
 
-F = open("../Dockerfile", "r")
-dockerfile_contents = F.readlines()
-F.close()
+    temporary_file = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=pyproject_file.parent,
+            prefix=f".{pyproject_file.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as temporary:
+            temporary.writelines(updated_lines)
+            temporary_file = Path(temporary.name)
+        temporary_file.chmod(pyproject_file.stat().st_mode)
+        temporary_file.replace(pyproject_file)
+    finally:
+        if temporary_file is not None and temporary_file.exists():
+            temporary_file.unlink()
 
-before_lines = []
-after_lines = []
-found_line = False
 
-i = 0
-while i < len(dockerfile_contents):
-    if dockerfile_contents[i].startswith("RUN pip3 install") and not "-U" in dockerfile_contents[i]:
-        found_line = True
-    elif found_line:
-        after_lines.append(dockerfile_contents[i])
-    else:
-        before_lines.append(dockerfile_contents[i])
-    i = i + 1
+def update_license_file(license_file, packages):
+    with Path(license_file).open("w", encoding="utf-8") as file:
+        file.write("""# PM4Py Third Party Dependencies
 
-stru = "".join(before_lines + ["RUN pip3 install " + x + "\n" for x in [first_packages_line, second_packages_line, third_packages_line, fourth_package_line, fifth_package_line, sixth_package_line]] + after_lines)
-stru = stru.strip() + "\n"
+PM4Py depends on third party libraries to implement some functionality. This document describes which libraries
+PM4Py depends upon. This is a best effort attempt to describe the library's dependencies, it is subject to change as
+libraries are added/removed.
 
-if UPDATE_DOCKERFILE:
-    F = open("../Dockerfile", "w")
-    F.write(stru)
-    F.close()
-else:
-    print(stru)
+| Name | URL | License | Version |
+| --------------------------- | ------------------------------------------------------------ | --------------------------- | ------------------- |
+""")
+        file.writelines(
+            (
+                f"| {package[0].strip()} | {package[1].strip()} | "
+                f"{package[3].strip()} | {package[2].strip()} |\n"
+            )
+            for package in packages
+        )
+
+
+def main():
+    deps = []
+    packages_dictio = {}
+    deps, packages = get_all_third_party_dependencies(
+        "pm4py", deps, packages_dictio, include_self=False
+    )
+    packages = add_stable_tool_packages(packages, packages_dictio)
+
+    if UPDATE_PYPROJECT_STABLE:
+        update_pyproject_stable(PYPROJECT_FILE, packages)
+    if UPDATE_LICENSE_FILE:
+        update_license_file(LICENSE_FILE, packages)
+
+
+if __name__ == "__main__":
+    main()

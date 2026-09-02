@@ -2,11 +2,13 @@ import os
 import random
 import importlib.util
 import unittest
+from unittest import mock
 
 import pandas as pd
 
 import pm4py
 from pm4py.algo.conformance.alignments.process_tree import algorithm as pt_alignments
+from pm4py.algo.conformance.tokenreplay.variants import token_replay
 from pm4py.algo.simulation.playout.declare import algorithm as declare_playout
 from pm4py.algo.simulation.playout.declare.variants import classic as declare_classic
 from pm4py.objects.bpmn.layout import layouter as bpmn_layouter
@@ -202,22 +204,23 @@ class AdditionalCoverageTest(unittest.TestCase):
             ))
         log = pd.DataFrame(rows)
 
-        table, points = decision_mining.get_decisions_table(
-            log,
-            net,
-            initial_marking,
-            final_marking,
-            attributes=["amount", "group"],
-            pre_decision_points=["choice"],
-        )
-        features, target, classes = decision_mining.apply(
-            log,
-            net,
-            initial_marking,
-            final_marking,
-            decision_point="choice",
-            attributes=["amount", "group"],
-        )
+        with mock.patch.object(decision_mining, "token_replay", token_replay):
+            table, points = decision_mining.get_decisions_table(
+                log,
+                net,
+                initial_marking,
+                final_marking,
+                attributes=["amount", "group"],
+                pre_decision_points=["choice"],
+            )
+            features, target, classes = decision_mining.apply(
+                log,
+                net,
+                initial_marking,
+                final_marking,
+                decision_point="choice",
+                attributes=["amount", "group"],
+            )
         self.assertEqual({"choice"}, set(points))
         self.assertEqual(4, len(table["choice"]))
         self.assertEqual(4, len(features))

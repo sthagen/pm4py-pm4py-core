@@ -85,10 +85,10 @@ def apply(
         ocel, parameters=parameters
     )
 
-    objects0 = ocel.objects.to_dict("records")
-    events0 = ocel.events.to_dict("records")
-    object_changes0 = ocel.object_changes.to_dict("records")
-    o2o_dict = ocel.o2o.groupby(object_id_column).agg(list).to_dict("tight")
+    objects0 = ocel.objects.to_dict(orient="records")
+    events0 = ocel.events.to_dict(orient="records")
+    object_changes0 = ocel.object_changes.to_dict(orient="records")
+    o2o_dict = ocel.o2o.groupby(object_id_column).agg(list).to_dict(orient="tight")
     o2o_dict = {
         o2o_dict["index"][i]: o2o_dict["data"][i]
         for i in range(len(o2o_dict["index"]))

@@ -74,7 +74,7 @@ def apply(log_obj: Union[EventLog, EventStream, pd.DataFrame], parameters: Optio
     import pm4py.stats
     var_paths0 = pm4py.stats.get_variants_paths_duration(log_obj, activity_key=activity_key,
                                                          timestamp_key=timestamp_key, case_id_key=case_id_key,
-                                                         times_agg=performance_aggregation).to_dict("records")
+                                                         times_agg=performance_aggregation).to_dict(orient="records")
     var_paths = []
     for el in var_paths0:
         if el["@@index_in_trace"] == 0:

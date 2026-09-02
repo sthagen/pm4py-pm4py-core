@@ -61,7 +61,7 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
 
     events_timestamps = ocel.events[
         [ocel.event_id_column, ocel.event_timestamp]
-    ].to_dict("records")
+    ].to_dict(orient="records")
     events_timestamps = {
         x[ocel.event_id_column]: x[ocel.event_timestamp]
         for x in events_timestamps

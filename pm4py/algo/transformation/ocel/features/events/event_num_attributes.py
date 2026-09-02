@@ -75,7 +75,7 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
             values = (
                 ocel.events[[ocel.event_id_column, attr]]
                 .dropna(subset=[attr])
-                .to_dict("records")
+                .to_dict(orient="records")
             )
             values = {x[ocel.event_id_column]: x[attr] for x in values}
             attr_values[attr] = values

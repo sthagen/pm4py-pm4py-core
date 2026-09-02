@@ -54,6 +54,7 @@ class Parameters(Enum):
     BUSINESS_HOURS = "business_hours"
     BUSINESS_HOUR_SLOTS = "business_hour_slots"
     WORKCALENDAR = "workcalendar"
+    BW_METHOD = "bw_method"
 
 
 def get_variant_statistics(
@@ -376,7 +377,8 @@ def get_kde_caseduration(
     lf
         LazyFrame
     parameters
-        Parameters of the algorithm
+        Parameters of the algorithm, including:
+            Parameters.BW_METHOD -> bandwidth method passed to scipy.stats.gaussian_kde
 
     Returns
     -----------
@@ -399,7 +401,8 @@ def get_kde_caseduration_json(
     lf
         LazyFrame
     parameters
-        Parameters of the algorithm
+        Parameters of the algorithm, including:
+            Parameters.BW_METHOD -> bandwidth method passed to scipy.stats.gaussian_kde
 
     Returns
     -----------

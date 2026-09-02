@@ -145,7 +145,7 @@ def apply(
         matches = df_merged[
             np.isin(df_merged[column_list].sum(axis=1), patterns)
         ]
-        points.extend([to_points(m, l) for m in matches.to_dict("records")])
+        points.extend([to_points(m, l) for m in matches.to_dict(orient="records")])
         # drop rows of this match to not discover subsets of this match again
         dataframe = dataframe.drop(
             [int(i) for indices in matches.index for i in indices[:-1]]

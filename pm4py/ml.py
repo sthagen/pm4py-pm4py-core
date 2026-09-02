@@ -379,7 +379,7 @@ def extract_ocel_features(
     if include_obj_id:
         objects_with_type = ocel.objects[
             [ocel.object_id_column, ocel.object_type_column]
-        ].to_dict("records")
+        ].to_dict(orient="records")
         objects_with_type = [
             x[ocel.object_id_column]
             for x in objects_with_type

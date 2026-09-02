@@ -395,7 +395,7 @@ def __insert_start_from_previous_event(
     ][[constants.DEFAULT_INDEX_KEY, timestamp_key + "_2"]]
 
     del shifted_df
-    concat_df = concat_df.to_dict("records")
+    concat_df = concat_df.to_dict(orient="records")
     concat_df = {
         x[constants.DEFAULT_INDEX_KEY]: x[timestamp_key + "_2"]
         for x in concat_df
@@ -459,7 +459,7 @@ def __compute_workload(
         df = df[df[resource_key] == resource]
     if activity is not None:
         df = df[df[activity_key] == activity]
-    events = df.to_dict("records")
+    events = df.to_dict(orient="records")
     events = [
         (
             x[start_timestamp_key].timestamp(),

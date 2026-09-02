@@ -49,7 +49,7 @@ def apply(ocel: OCEL,
     edges = defaultdict(int)
 
     object_types = set(ocel.objects["ocel:type"].unique())
-    objects = ocel.objects.to_dict("records")
+    objects = ocel.objects.to_dict(orient="records")
     objects = {x["ocel:oid"]: x["ocel:type"] for x in objects}
 
     # Iterate over each relationship type

@@ -5,6 +5,7 @@ import unittest
 
 from pm4py.objects.log.importer.xes import importer
 from pm4py.objects.log.importer.xes.variants import (
+    iterparse,
     iterparse_20,
     iterparse_mem_compressed,
 )
@@ -38,6 +39,28 @@ XES = b"""<?xml version='1.0' encoding='UTF-8'?>
     <string key='concept:name' value='case-2'/>
     <event><string key='concept:name' value='C'/><date key='time:timestamp' value='2024-01-03T00:00:00Z'/></event>
   </trace>
+</log>"""
+
+NESTED_LIST_XES = b"""<log>
+  <list key='entities'>
+    <values>
+      <list key='SalesOrg'>
+        <values>
+          <string key='level' value='trace'/>
+          <string key='key-attribute' value='SalesOrg'/>
+        </values>
+      </list>
+    </values>
+  </list>
+</log>"""
+
+NESTED_LIST_XES_20 = b"""<log xes.version='2.0'>
+  <list key='entities'>
+    <list key='SalesOrg'>
+      <string key='level' value='trace'/>
+      <string key='key-attribute' value='SalesOrg'/>
+    </list>
+  </list>
 </log>"""
 
 
@@ -97,6 +120,29 @@ class XesDeepCoverageTest(unittest.TestCase):
             self.assertEqual(2, len(log))
         self.assertIs(importer.Variants.ITERPARSE_20, importer.__dict__["__get_variant"]("iterparse_20"))
         self.assertIs(importer.Variants.ITERPARSE_MEM_COMPRESSED, importer.__dict__["__get_variant"]("iterparse_mem_compressed"))
+
+    def test_nested_list_attributes(self):
+        for variant in (iterparse, iterparse_mem_compressed):
+            log = variant.import_from_string(
+                NESTED_LIST_XES, parameters={"show_progress_bar": False}
+            )
+            self._assert_nested_list(log)
+
+        log = iterparse_20.import_from_string(
+            NESTED_LIST_XES_20, parameters={"show_progress_bar": False}
+        )
+        self._assert_nested_list(log)
+
+    def _assert_nested_list(self, log):
+        entities = log.attributes["entities"]
+        self.assertIsNone(entities["value"])
+        self.assertEqual("SalesOrg", entities["children"][0][0])
+        sales_org = entities["children"][0][1]
+        self.assertIsNone(sales_org["value"])
+        self.assertEqual(
+            [("level", "trace"), ("key-attribute", "SalesOrg")],
+            sales_org["children"],
+        )
 
 
 if __name__ == "__main__":

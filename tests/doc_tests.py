@@ -700,9 +700,9 @@ class DocTests(unittest.TestCase):
         process_tree = inductive_miner.apply(log)
         net, initial_marking, final_marking = process_tree_converter.apply(process_tree)
 
-        from pm4py.algo.conformance.tokenreplay import algorithm as token_based_replay
-        parameters_tbr = {token_based_replay.Variants.TOKEN_REPLAY.value.Parameters.DISABLE_VARIANTS: True,
-                          token_based_replay.Variants.TOKEN_REPLAY.value.Parameters.ENABLE_PLTR_FITNESS: True}
+        from pm4py.algo.conformance.tokenreplay.variants import token_replay as token_based_replay
+        parameters_tbr = {token_based_replay.Parameters.DISABLE_VARIANTS: True,
+                          token_based_replay.Parameters.ENABLE_PLTR_FITNESS: True}
         replayed_traces, place_fitness, trans_fitness, unwanted_activities = token_based_replay.apply(log, net,
                                                                                                       initial_marking,
                                                                                                       final_marking,
@@ -738,9 +738,9 @@ class DocTests(unittest.TestCase):
             numeric_attributes = []
             parameters = {"string_attributes": string_attributes, "numeric_attributes": numeric_attributes}
 
-            from pm4py.algo.conformance.tokenreplay import algorithm as token_based_replay
-            parameters_tbr = {token_based_replay.Variants.TOKEN_REPLAY.value.Parameters.DISABLE_VARIANTS: True,
-                              token_based_replay.Variants.TOKEN_REPLAY.value.Parameters.ENABLE_PLTR_FITNESS: True}
+            from pm4py.algo.conformance.tokenreplay.variants import token_replay as token_based_replay
+            parameters_tbr = {token_based_replay.Parameters.DISABLE_VARIANTS: True,
+                              token_based_replay.Parameters.ENABLE_PLTR_FITNESS: True}
             replayed_traces, place_fitness, trans_fitness, unwanted_activities = token_based_replay.apply(log, net,
                                                                                                           initial_marking,
                                                                                                           final_marking,

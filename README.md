@@ -37,19 +37,38 @@ PM4Py can be installed on Python 3.9.x / 3.10.x / 3.11.x / 3.12.x / 3.13.x / 3.1
 
 `pip install -U pm4py`
 
+Optional features can be installed through extras. For example:
+
+`pip install -U "pm4py[polars,ml]"`
+
+Use `pip install -U "pm4py[all]"` to install every optional feature supported on the current platform.
+
+For a reproducible installation using the exact dependency versions validated by the project, use:
+
+`pip install -U "pm4py[stable]"`
+
 PM4Py is also running on older Python environments with different requirements sets, including:
 
 - Python 3.8 (3.8.10): `third_party/old_python_deps/requirements_py38.txt`
 
 ## Requirements
 
-PM4Py depends on some other Python packages, with different levels of importance:
+The default installation contains the dependencies needed for mainstream usage. Additional integrations are grouped by
+feature in `pyproject.toml`:
 
-* *Essential requirements*: numpy, pandas, deprecation, networkx
-* *Normal requirements* (installed by default with the PM4Py package, important for mainstream usage): graphviz,
-  intervaltree, lxml, matplotlib, pydotplus, pytz, scipy, tqdm
-* *Optional requirements* (not installed by default): requests, pyvis, jsonschema, workalendar, pyarrow, scikit-learn,
-  polars, openai, pyemd, pyaudio, pydub, pygame, pywin32, pygetwindow, pynput
+* `calendars`: workalendar
+* `connectors`: requests
+* `llm`: openai and requests
+* `ml`: pyemd and scikit-learn
+* `ocel`: jsonschema and pyarrow
+* `polars`: Polars dataframe support
+* `solvers`: cvxopt
+* `stable`: the exact dependency versions validated by the project and used by CI
+* `visualization`: pyvis
+* `windows`: pygetwindow, pynput, and pywin32 (Windows only)
+
+For a source checkout, install the project with `python -m pip install -e .`. Build, CI, and lint dependencies are
+standard dependency groups and can be installed with, for example, `python -m pip install --group lint`.
 
 ## Release Notes
 

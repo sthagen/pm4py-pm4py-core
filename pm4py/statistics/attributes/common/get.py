@@ -31,6 +31,7 @@ from enum import Enum
 class Parameters(Enum):
     GRAPH_POINTS = "graph_points"
     POINT_TO_SAMPLE = "points_to_sample"
+    BW_METHOD = "bw_method"
 
 
 def get_sorted_attributes_list(attributes):
@@ -99,6 +100,7 @@ def get_kde_numeric_attribute(values, parameters=None):
     parameters
         Possible parameters of the algorithm, including:
             graph_points -> number of points to include in the graph
+            bw_method -> bandwidth method passed to scipy.stats.gaussian_kde
 
     Returns
     --------------
@@ -116,6 +118,9 @@ def get_kde_numeric_attribute(values, parameters=None):
 
         graph_points = exec_utils.get_param_value(
             Parameters.GRAPH_POINTS, parameters, 200
+        )
+        bw_method = exec_utils.get_param_value(
+            Parameters.BW_METHOD, parameters, None
         )
         values = np.sort(values)
 
@@ -138,7 +143,7 @@ def get_kde_numeric_attribute(values, parameters=None):
                 ys[mid_idx] = 1.0
                 return xs.tolist(), ys.tolist()
 
-        density = gaussian_kde(values)
+        density = gaussian_kde(values, bw_method=bw_method)
 
         # ensure we have at least two points for each spacing
         half = max(int(graph_points // 2), 2)
@@ -183,6 +188,7 @@ def get_kde_numeric_attribute_json(values, parameters=None):
     parameters
         Possible parameters of the algorithm, including:
             graph_points: number of points to include in the graph
+            bw_method: bandwidth method passed to scipy.stats.gaussian_kde
 
     Returns
     --------------
@@ -209,6 +215,7 @@ def get_kde_date_attribute(values, parameters=None):
     parameters
         Possible parameters of the algorithm, including:
             graph_points -> number of points to include in the graph
+            bw_method -> bandwidth method passed to scipy.stats.gaussian_kde
 
 
     Returns
@@ -231,6 +238,9 @@ def get_kde_date_attribute(values, parameters=None):
         )
         points_to_sample = exec_utils.get_param_value(
             Parameters.POINT_TO_SAMPLE, parameters, 400
+        )
+        bw_method = exec_utils.get_param_value(
+            Parameters.BW_METHOD, parameters, None
         )
 
         red_values = pick_chosen_points_list(points_to_sample, values, include_extremes=True)
@@ -258,7 +268,7 @@ def get_kde_date_attribute(values, parameters=None):
                 ys[mid_idx] = 1.0
                 return [xs_transf, ys.tolist()]
 
-        density = gaussian_kde(int_values)
+        density = gaussian_kde(int_values, bw_method=bw_method)
         xs = np.linspace(min(int_values), max(int_values), graph_points)
         xs_transf = pd.to_datetime(xs * 10**9, unit="ns")
 
@@ -281,6 +291,7 @@ def get_kde_date_attribute_json(values, parameters=None):
     parameters
         Possible parameters of the algorithm, including:
             graph_points: number of points to include in the graph
+            bw_method: bandwidth method passed to scipy.stats.gaussian_kde
 
     Returns
     --------------

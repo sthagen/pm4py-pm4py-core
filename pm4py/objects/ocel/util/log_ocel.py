@@ -534,7 +534,7 @@ def log_to_ocel_multiple_obj_types(
 
     obj_ids = set()
 
-    stream = log_obj.to_dict("records")
+    stream = log_obj.to_dict(orient="records")
     stream = __postprocess_stream(stream)
 
     for index, eve in enumerate(stream):

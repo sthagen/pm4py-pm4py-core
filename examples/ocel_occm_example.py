@@ -11,7 +11,7 @@ def execute_script():
     # CONDITION 1: check if an order is associated with at least a delivery
     for oc in lst_ocels:
         oc_filtered: OCEL = pm4py.filter_ocel_event_attribute(oc, "ocel:activity", ["Create Order", "Create Delivery"])
-        oc_filtered = [(x["ocel:activity"], x["ocel:timestamp"].timestamp()) for x in oc_filtered.events.to_dict("records")]
+        oc_filtered = [(x["ocel:activity"], x["ocel:timestamp"].timestamp()) for x in oc_filtered.events.to_dict(orient="records")]
         idxs_create_order = [i for i in range(len(oc_filtered)) if oc_filtered[i][0] == "Create Order"]
         order_is_ok: bool = True
         for i in idxs_create_order:
@@ -25,7 +25,7 @@ def execute_script():
     # CONDITION 2: check if the temporal distance between an order and the delivery is less than a specified amount of time
     for oc in lst_ocels:
         oc_filtered = pm4py.filter_ocel_event_attribute(oc, "ocel:activity", ["Create Order", "Create Delivery"])
-        oc_filtered = [(x["ocel:activity"], x["ocel:timestamp"].timestamp()) for x in oc_filtered.events.to_dict("records")]
+        oc_filtered = [(x["ocel:activity"], x["ocel:timestamp"].timestamp()) for x in oc_filtered.events.to_dict(orient="records")]
         idxs_create_order = [i for i in range(len(oc_filtered)) if oc_filtered[i][0] == "Create Order"]
         order_is_ok = True
         for i in idxs_create_order:
@@ -42,7 +42,7 @@ def execute_script():
 
     # CONDITION 3: check conditions on the time from the previous activity (any) given 'Create Delivery'
     for oc0 in lst_ocels:
-        oc = [(x["ocel:activity"], x["ocel:timestamp"].timestamp()) for x in oc0.events.to_dict("records")]
+        oc = [(x["ocel:activity"], x["ocel:timestamp"].timestamp()) for x in oc0.events.to_dict(orient="records")]
         idxs_create_delivery = [i for i in range(len(oc)) if oc[i][0] == "Create Delivery"]
         delivery_is_ok: bool = True
         for i in idxs_create_delivery:

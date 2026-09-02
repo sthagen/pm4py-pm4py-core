@@ -97,7 +97,7 @@ def get_enriched_object(
 
     base_object[constants.OCEL_OBJCHANGES_KEY] = []
     if len(ocel.object_changes) > 0:
-        object_changes = ocel.object_changes.to_dict("records")
+        object_changes = ocel.object_changes.to_dict(orient="records")
         for i in range(len(object_changes)):
             change = object_changes[i]
             for k in list(change.keys()):
@@ -111,7 +111,7 @@ def get_enriched_object(
 
     e2o_list = ocel.relations[
         [event_id, object_id, constants.DEFAULT_QUALIFIER]
-    ].to_dict("records")
+    ].to_dict(orient="records")
     eids = set()
 
     for elem in e2o_list:
@@ -129,7 +129,7 @@ def get_enriched_object(
             constants.OCEL_TYPED_OMAP_KEY
         ].append({object_id: oid, constants.DEFAULT_QUALIFIER: qualifier})
 
-    o2o_list = ocel.o2o.to_dict("records")
+    o2o_list = ocel.o2o.to_dict(orient="records")
     oids = set()
 
     for elem in o2o_list:

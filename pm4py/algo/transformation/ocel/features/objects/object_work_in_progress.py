@@ -57,7 +57,7 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     obj_dur = pandas_utils.instantiate_dataframe(data, columns=feature_names)
 
     obj_dur["@@index"] = obj_dur.index
-    obj_dur = obj_dur.to_dict("records")
+    obj_dur = obj_dur.to_dict(orient="records")
 
     data = []
     obj_dur.sort(

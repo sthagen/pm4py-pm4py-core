@@ -90,11 +90,16 @@ def _validate_reference_part(value: Any, name: str) -> str:
         )
     if not value:
         raise ValueError("OCEL2 CSV %s values cannot be empty." % name)
-    if any(char in value for char in ("/", "#", "{")):
-        raise ValueError(
-            "OCEL2 CSV %s values cannot contain '/', '#', or '{'." % name
-        )
     return value
+
+
+def _escape_reference_part(value: str) -> str:
+    return (
+        value.replace("\\", "\\\\")
+        .replace("/", "\\/")
+        .replace("#", "\\#")
+        .replace("{", "\\{")
+    )
 
 
 def _validate_json_attribute_value(value: Any):
@@ -124,9 +129,11 @@ def _json_dumps(attrs: Dict[str, Any]) -> str:
 
 
 def _format_reference(object_id: Any, qualifier: Any = None, attrs: Optional[Dict[str, Any]] = None) -> str:
-    value = _validate_reference_part(object_id, "object id")
+    value = _escape_reference_part(_validate_reference_part(object_id, "object id"))
     if not _is_null(qualifier) and str(qualifier) != "":
-        value += "#" + _validate_reference_part(qualifier, "qualifier")
+        value += "#" + _escape_reference_part(
+            _validate_reference_part(qualifier, "qualifier")
+        )
     if attrs:
         value += _json_dumps(attrs)
     return value
@@ -284,7 +291,7 @@ def apply(
         .set_index(object_id_column)[object_type_column]
         .to_dict()
     )
-    object_records = ocel.objects.to_dict("records")
+    object_records = ocel.objects.to_dict(orient="records")
     for record in object_records:
         if _is_null(record.get(object_id_column)) or _is_null(record.get(object_type_column)):
             raise ValueError("OCEL2 CSV objects must have non-empty ids and types.")
@@ -332,7 +339,7 @@ def apply(
 
     timed_change_groups = {}
     epoch = pd.Timestamp("1970-01-01T00:00:00Z")
-    for change_index, record in enumerate(ocel.object_changes.to_dict("records")):
+    for change_index, record in enumerate(ocel.object_changes.to_dict(orient="records")):
         oid = record.get(object_id_column)
         known_type = object_type.get(oid)
         record_type = record.get(object_type_column, known_type)
@@ -392,7 +399,7 @@ def apply(
     rows = []
     header_len = len(header)
 
-    event_records = list(enumerate(ocel.events.to_dict("records")))
+    event_records = list(enumerate(ocel.events.to_dict(orient="records")))
     event_records = sorted(
         event_records,
         key=lambda item: (_timestamp_sort_key(item[1][event_timestamp_column]), item[0]),

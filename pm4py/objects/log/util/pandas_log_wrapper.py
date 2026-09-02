@@ -60,18 +60,18 @@ class PandasTraceWrapper(Sequence):
             start = key.start % len(self.dataframe)
             stop = key.stop % len(self.dataframe)
             sli = slice(start, stop - 1, key.step)
-            return self.dataframe.loc[sli].to_dict("records")
+            return self.dataframe.loc[sli].to_dict(orient="records")
         key = key % len(self.dataframe)
         return self.dataframe.loc[key].to_dict()
 
     def __iter__(self):
-        return iter(self.dataframe.to_dict("records"))
+        return iter(self.dataframe.to_dict(orient="records"))
 
     def __len__(self):
         return len(self.dataframe)
 
     def _get_list(self):
-        return self.dataframe.to_dict("records")
+        return self.dataframe.to_dict(orient="records")
 
     _list = property(_get_list)
 

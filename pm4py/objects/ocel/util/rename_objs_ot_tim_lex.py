@@ -72,7 +72,7 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None) -> OCEL:
     )
     objects_ot0 = ocel.objects[
         [ocel.object_id_column, ocel.object_type_column]
-    ].to_dict("records")
+    ].to_dict(orient="records")
     objects_ot0 = [
         (x[ocel.object_id_column], x[ocel.object_type_column])
         for x in objects_ot0

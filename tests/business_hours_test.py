@@ -102,6 +102,57 @@ class BusinessHoursTest(unittest.TestCase):
         self.assertEqual(tuple(slots), dfg.business_hour_slots)
         self.assertIn('label="4D"', graph.source)
 
+    def test_pandas_performance_dfg_keeps_business_day_for_visualization(self):
+        import pandas as pd
+        import pm4py
+
+        slots = weekday_slots(8, 16)
+        dataframe = pd.DataFrame(
+            [
+                {
+                    "case": 1,
+                    "activity": "start",
+                    "timestamp": datetime(2025, 1, 7, 8),
+                },
+                {
+                    "case": 1,
+                    "activity": "finish",
+                    "timestamp": datetime(2025, 1, 10, 16),
+                },
+            ]
+        )
+        dataframe = pm4py.format_dataframe(
+            dataframe,
+            case_id="case",
+            activity_key="activity",
+            timestamp_key="timestamp",
+        )
+
+        # Keep the default "all" aggregation used in the issue reproducer.
+        dfg, start_activities, end_activities = (
+            pm4py.discover_performance_dfg(
+                dataframe,
+                business_hours=True,
+                business_hour_slots=slots,
+            )
+        )
+        with patch("pm4py.visualization.dfg.visualizer.view") as view:
+            pm4py.view_performance_dfg(
+                dfg,
+                start_activities,
+                end_activities,
+                aggregation_measure="median",
+            )
+        graph = view.call_args.args[0]
+
+        self.assertEqual(
+            4 * 8 * 60 * 60,
+            dfg[("start", "finish")]["median"],
+        )
+        self.assertEqual(tuple(slots), dfg.business_hour_slots)
+        self.assertIn('label="4D"', graph.source)
+        self.assertNotIn('label="1D"', graph.source)
+
     def test_variant_duration_uses_configured_working_day(self):
         from pm4py.visualization.variants_duration.variants.classic import (
             _format_duration,

@@ -158,7 +158,7 @@ def apply(
     if keep_first_occurrence:
         df_red = df_red.groupby(index_column + "_out").first().reset_index()
 
-    stream_red = df_red.to_dict("records")
+    stream_red = df_red.to_dict(orient="records")
     associations = {}
     for el in stream_red:
         if el[index_column + "_out"] not in associations:

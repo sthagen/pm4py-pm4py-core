@@ -552,21 +552,23 @@ def __parse_attribute(elem, store, key, value, tree):
             store[key] = value
     else:
         if elem.tag.endswith(xes_constants.TAG_LIST):
-            store[key] = {
+            attribute = {
                 xes_constants.KEY_VALUE: value,
                 xes_constants.KEY_CHILDREN: list(),
             }
-            tree[elem] = store[key][xes_constants.KEY_CHILDREN]
         elif elem.tag.endswith(xes_constants.TAG_CONTAINER):
-            store[key] = {
+            attribute = {
                 xes_constants.KEY_VALUE: value,
                 xes_constants.KEY_CHILDREN: set(),
             }
-            tree[elem] = store[key][xes_constants.KEY_CHILDREN]
         else:
-            store[key] = {
+            attribute = {
                 xes_constants.KEY_VALUE: value,
                 xes_constants.KEY_CHILDREN: dict(),
             }
-            tree[elem] = store[key][xes_constants.KEY_CHILDREN]
+        if type(store) is list:
+            store.append((key, attribute))
+        else:
+            store[key] = attribute
+        tree[elem] = attribute[xes_constants.KEY_CHILDREN]
     return tree

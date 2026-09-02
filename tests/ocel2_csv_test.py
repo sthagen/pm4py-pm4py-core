@@ -477,6 +477,196 @@ class Ocel2CsvTest(unittest.TestCase):
             if os.path.exists(source):
                 os.remove(source)
 
+    def test_ocel2_csv_escapes_special_characters_in_references(self):
+        source = os.path.join(OUTPUT_DIR, "ocel2_escaping_source.ocel.csv")
+        exported = os.path.join(OUTPUT_DIR, "ocel2_escaping_exported.ocel.csv")
+        dataframe = pd.DataFrame(
+            [
+                {
+                    "id": "e1",
+                    "activity": "pay/order",
+                    "timestamp": "2024-01-01T10:00:00Z",
+                    "ot:orders": "o\\/1#with\\#hash",
+                    "ot:items": "i\\{1",
+                },
+                {
+                    "id": "o/1",
+                    "activity": "o2o",
+                    "timestamp": "",
+                    "ot:orders": "",
+                    "ot:items": "i\\{1#part\\/of",
+                },
+            ]
+        )
+        try:
+            dataframe.to_csv(source, index=False)
+            ocel = pm4py.read_ocel2_csv(source)
+            self.assertEqual(
+                sorted(ocel.objects[ocel.object_id_column]), ["i{1", "o/1"]
+            )
+            self.assertEqual(
+                sorted(ocel.relations["ocel:qualifier"]), ["", "with#hash"]
+            )
+            self.assertEqual(ocel.o2o["ocel:qualifier"].tolist(), ["part/of"])
+
+            pm4py.write_ocel2(ocel, exported)
+            imported = pm4py.read_ocel2(exported)
+            self.assertEqual(
+                sorted(imported.objects[imported.object_id_column]), ["i{1", "o/1"]
+            )
+            self.assertEqual(
+                sorted(imported.relations["ocel:qualifier"]), ["", "with#hash"]
+            )
+            self.assertEqual(imported.o2o["ocel:qualifier"].tolist(), ["part/of"])
+        finally:
+            for path in (source, exported):
+                if os.path.exists(path):
+                    os.remove(path)
+
+    def test_ocel2_csv_rejects_invalid_escape_sequences(self):
+        source = os.path.join(OUTPUT_DIR, "ocel2_bad_escape.ocel.csv")
+        dataframe = pd.DataFrame(
+            [
+                {
+                    "id": "e1",
+                    "activity": "a",
+                    "timestamp": "2024-01-01T10:00:00Z",
+                    "ot:orders": "o\\x1",
+                }
+            ]
+        )
+        try:
+            dataframe.to_csv(source, index=False)
+            with self.assertRaises(ValueError):
+                pm4py.read_ocel2_csv(source)
+        finally:
+            if os.path.exists(source):
+                os.remove(source)
+
+    def test_ocel2_csv_numbers_require_canonical_form(self):
+        source = os.path.join(OUTPUT_DIR, "ocel2_canonical_numbers.ocel.csv")
+        dataframe = pd.DataFrame(
+            [
+                {
+                    "id": "e1",
+                    "activity": "a",
+                    "timestamp": "2024-01-01T10:00:00Z",
+                    "code": "007",
+                    "count": "5",
+                    "big": "9223372036854775808",
+                    "padded": "1.50",
+                    "ratio": "1.5",
+                    "ot:orders": "o1",
+                },
+                {
+                    "id": "e2",
+                    "activity": "a",
+                    "timestamp": "2024-01-01T11:00:00Z",
+                    "code": "12",
+                    "count": "7",
+                    "big": "3",
+                    "padded": "2.25",
+                    "ratio": "2.25",
+                    "ot:orders": "o1",
+                },
+            ]
+        )
+        try:
+            dataframe.to_csv(source, index=False)
+            ocel = pm4py.read_ocel2_csv(source)
+            events = ocel.events.sort_values(ocel.event_id_column)
+            self.assertEqual(events["code"].tolist(), ["007", "12"])
+            self.assertEqual(events["count"].tolist(), [5, 7])
+            self.assertEqual(
+                events["big"].tolist(), ["9223372036854775808", "3"]
+            )
+            self.assertEqual(events["padded"].tolist(), ["1.50", "2.25"])
+            self.assertEqual(events["ratio"].tolist(), [1.5, 2.25])
+        finally:
+            if os.path.exists(source):
+                os.remove(source)
+
+    def test_ocel2_bundle_keeps_time0_attributes_only_in_objects(self):
+        bundle_dir = os.path.join(OUTPUT_DIR, "ocel2_time0_bundle")
+        event_time = pd.Timestamp("2024-01-01T10:00:00Z")
+        epoch = pd.Timestamp("1970-01-01T00:00:00Z")
+        change_time = pd.Timestamp("2024-01-02T10:00:00Z")
+        ocel = OCEL(
+            events=pd.DataFrame(
+                [
+                    {
+                        "ocel:eid": "e1",
+                        "ocel:activity": "act",
+                        "ocel:timestamp": event_time,
+                    }
+                ]
+            ),
+            objects=pd.DataFrame(
+                [{"ocel:oid": "o1", "ocel:type": "orders", "amount": 10}]
+            ),
+            relations=pd.DataFrame(
+                [
+                    {
+                        "ocel:eid": "e1",
+                        "ocel:activity": "act",
+                        "ocel:timestamp": event_time,
+                        "ocel:oid": "o1",
+                        "ocel:type": "orders",
+                        "ocel:qualifier": "",
+                    }
+                ]
+            ),
+            object_changes=pd.DataFrame(
+                [
+                    {
+                        "ocel:oid": "o1",
+                        "ocel:type": "orders",
+                        "ocel:timestamp": epoch,
+                        "ocel:field": "amount",
+                        "amount": 10,
+                    },
+                    {
+                        "ocel:oid": "o1",
+                        "ocel:type": "orders",
+                        "ocel:timestamp": epoch,
+                        "ocel:field": "status",
+                        "status": "new",
+                    },
+                    {
+                        "ocel:oid": "o1",
+                        "ocel:type": "orders",
+                        "ocel:timestamp": change_time,
+                        "ocel:field": "amount",
+                        "amount": 12,
+                    },
+                ]
+            ),
+        )
+        try:
+            pm4py.write_ocel2_bundle(ocel, bundle_dir, storage_format="csv")
+            changes_file = os.path.join(
+                bundle_dir, "object_changes", "object_changes_orders.csv"
+            )
+            with open(changes_file, "r", newline="") as file:
+                changes_text = file.read()
+            self.assertNotIn("1970-01-01", changes_text)
+
+            imported = pm4py.read_ocel2_bundle(bundle_dir)
+            self.assertEqual(len(imported.object_changes), 1)
+            self.assertEqual(imported.objects["status"].tolist(), ["new"])
+            self.assertEqual(imported.objects["amount"].tolist(), [10])
+
+            with open(changes_file, "r", newline="") as file:
+                content = file.read()
+            content += "o1,1970-01-01T00:00:00+00:00,amount,10,\r\n"
+            with open(changes_file, "w", newline="") as file:
+                file.write(content)
+            with self.assertRaises(ValueError):
+                pm4py.read_ocel2_bundle(bundle_dir)
+        finally:
+            if os.path.isdir(bundle_dir):
+                shutil.rmtree(bundle_dir)
+
     def test_ocel2_csv_writer_uses_canonical_extension(self):
         source = os.path.join(OUTPUT_DIR, "ocel2_extension_source.ocel.csv")
         target = os.path.join(OUTPUT_DIR, "ocel2_extension_target.csv")

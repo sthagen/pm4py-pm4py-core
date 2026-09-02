@@ -207,7 +207,7 @@ def apply(
                 "@@std",
             ]
         ].to_dict(
-            "records"
+            orient="records"
         )
 
     for el in efg:

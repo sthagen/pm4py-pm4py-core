@@ -115,7 +115,7 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
         relations_merged[ocel.event_id_column + left_suffix]
         != relations_merged[ocel.event_id_column + right_suffix]
     ]
-    relations_merged = relations_merged.to_dict("records")
+    relations_merged = relations_merged.to_dict(orient="records")
 
     ret = {}
     for el in relations_merged:

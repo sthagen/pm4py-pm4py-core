@@ -273,17 +273,18 @@ class ConformanceDecisionDeepCoverageTest(unittest.TestCase):
         with self.assertRaises(Exception):
             decision_mining.get_decision_points(net, pre_decision_points=["missing"])
 
-        table, points = decision_mining.get_decisions_table(
-            copy.deepcopy(log),
-            net,
-            initial,
-            final,
-            attributes=["amount", "group"],
-            use_trace_attributes=True,
-            k=2,
-            pre_decision_points=["choice", "missing"],
-            parameters={decision_mining.Parameters.ACTIVITY_KEY: "e_concept:name"},
-        )
+        with mock.patch.object(decision_mining, "token_replay", token_replay):
+            table, points = decision_mining.get_decisions_table(
+                copy.deepcopy(log),
+                net,
+                initial,
+                final,
+                attributes=["amount", "group"],
+                use_trace_attributes=True,
+                k=2,
+                pre_decision_points=["choice", "missing"],
+                parameters={decision_mining.Parameters.ACTIVITY_KEY: "e_concept:name"},
+            )
         self.assertTrue(table["choice"])
         dataframe = pm4py.convert_to_dataframe(log)
         class RecordingClassifier:
@@ -295,6 +296,8 @@ class ConformanceDecisionDeepCoverageTest(unittest.TestCase):
         from pm4py.util import ml_utils
 
         with mock.patch.object(
+            decision_mining, "token_replay", token_replay
+        ), mock.patch.object(
             ml_utils, "DecisionTreeClassifier", return_value=RecordingClassifier()
         ):
             classifier, columns, targets = decision_mining.get_decision_tree(
@@ -307,9 +310,10 @@ class ConformanceDecisionDeepCoverageTest(unittest.TestCase):
             )
         self.assertTrue(columns)
         self.assertEqual({"B", "C"}, set(targets))
-        data_net, _, _ = decision_mining.create_data_petri_nets_with_decisions(
-            log, net, initial, final
-        )
+        with mock.patch.object(decision_mining, "token_replay", token_replay):
+            data_net, _, _ = decision_mining.create_data_petri_nets_with_decisions(
+                log, net, initial, final
+            )
         self.assertTrue(data_net.transitions)
         prepared = decision_mining.prepare_event_log(copy.deepcopy(log))
         self.assertIn("t_region", prepared[0].attributes)

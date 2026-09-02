@@ -60,7 +60,7 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
 
     events_activities = ocel.events[
         [ocel.event_id_column, ocel.event_activity]
-    ].to_dict("records")
+    ].to_dict(orient="records")
     events_activities = {
         x[ocel.event_id_column]: x[ocel.event_activity]
         for x in events_activities

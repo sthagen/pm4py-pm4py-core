@@ -73,7 +73,7 @@ def apply(
     )
 
     columns = list({timestamp_key, start_timestamp_key, case_id_key})
-    stream = df[columns].to_dict("records")
+    stream = df[columns].to_dict(orient="records")
 
     points = []
     cases = []

@@ -75,13 +75,8 @@ def _split_entries(value: Any) -> List[str]:
         return []
 
     value = str(value)
-    if "/" not in value:
+    if not any(char in value for char in ("/", "{", "\\")):
         return [value] if value else []
-    if "{" not in value:
-        entries = value.split("/")
-        if any(entry == "" for entry in entries):
-            raise ValueError("Object reference cells cannot contain empty references.")
-        return entries
 
     entries = []
     current = []
@@ -96,7 +91,7 @@ def _split_entries(value: Any) -> List[str]:
             continue
         if char == "\\":
             current.append(char)
-            if in_string:
+            if json_depth == 0 or in_string:
                 escape = True
             continue
         if char == '"':
@@ -118,6 +113,8 @@ def _split_entries(value: Any) -> List[str]:
                 continue
         current.append(char)
 
+    if escape:
+        raise ValueError("Object reference cells cannot end with a dangling escape character.")
     entry = "".join(current)
     if not entry:
         raise ValueError("Object reference cells cannot contain empty references.")
@@ -125,42 +122,77 @@ def _split_entries(value: Any) -> List[str]:
     return entries
 
 
+def _find_unescaped(value: str, target: str) -> int:
+    escape = False
+    for index, char in enumerate(value):
+        if escape:
+            escape = False
+        elif char == "\\":
+            escape = True
+        elif char == target:
+            return index
+    return -1
+
+
+def _unescape_reference_part(value: str, name: str) -> str:
+    result = []
+    escape = False
+    for char in value:
+        if escape:
+            if char not in ("/", "#", "{", "\\"):
+                raise ValueError(
+                    "Invalid escape sequence '\\%s' in an OCEL2 CSV %s." % (char, name)
+                )
+            result.append(char)
+            escape = False
+        elif char == "\\":
+            escape = True
+        elif char in ("/", "#", "{"):
+            raise ValueError(
+                "Unescaped '%s' in an OCEL2 CSV %s; escape it as '\\%s'." % (char, name, char)
+            )
+        else:
+            result.append(char)
+    if escape:
+        raise ValueError("Dangling escape character in an OCEL2 CSV %s." % name)
+    return "".join(result)
+
+
 def _split_reference(value: str) -> Tuple[str, Optional[str], Dict[str, Any]]:
     attrs = {}
     value = value.strip()
 
-    if value.endswith("}"):
-        json_start = value.find("{")
-        if json_start >= 0:
-            json_part = value[json_start:]
-            value = value[:json_start]
-            if json_part:
-                attrs = json.loads(
-                    json_part,
-                    parse_constant=lambda constant: (_ for _ in ()).throw(
-                        ValueError(
-                            "Non-finite JSON number '%s' is not valid JSON."
-                            % constant
-                        )
-                    ),
+    json_start = _find_unescaped(value, "{")
+    if json_start >= 0:
+        json_part = value[json_start:]
+        value = value[:json_start]
+        attrs = json.loads(
+            json_part,
+            parse_constant=lambda constant: (_ for _ in ()).throw(
+                ValueError(
+                    "Non-finite JSON number '%s' is not valid JSON."
+                    % constant
                 )
-                if not isinstance(attrs, dict):
-                    raise ValueError("Object reference JSON attributes must be a JSON object.")
+            ),
+        )
+        if not isinstance(attrs, dict):
+            raise ValueError("Object reference JSON attributes must be a JSON object.")
 
-    if "#" in value:
-        object_id, qualifier = value.split("#", 1)
+    hash_pos = _find_unescaped(value, "#")
+    if hash_pos >= 0:
+        object_id, qualifier = value[:hash_pos], value[hash_pos + 1:]
     else:
         object_id, qualifier = value, None
 
-    object_id = object_id.strip()
-    qualifier = qualifier.strip() if qualifier is not None else None
+    object_id = _unescape_reference_part(object_id, "object id").strip()
+    qualifier = (
+        _unescape_reference_part(qualifier, "qualifier").strip()
+        if qualifier is not None
+        else None
+    )
 
     if not object_id:
         raise ValueError("Object references must contain a non-empty object id.")
-    if any(char in object_id for char in ("/", "#", "{")):
-        raise ValueError("Object ids in OCEL2 CSV references cannot contain '/', '#', or '{'.")
-    if qualifier is not None and any(char in qualifier for char in ("/", "#", "{")):
-        raise ValueError("Qualifiers in OCEL2 CSV references cannot contain '/', '#', or '{'.")
     _validate_attribute_values(attrs)
 
     return object_id, qualifier, attrs
@@ -193,11 +225,36 @@ def _instantiate_dataframe(records: List[Dict[str, Any]], columns: List[str]):
 
 
 _TIMEZONE_RE = re.compile(r"(?:Z|[+-]\d{2}:?\d{2})$")
-_INTEGER_RE = re.compile(r"^[+-]?\d+$")
-_FLOAT_RE = re.compile(
-    r"^[+-]?(?:(?:\d+(?:\.\d*)?)|(?:\.\d+))(?:[eE][+-]?\d+)?$"
-)
+_CANONICAL_INTEGER_RE = re.compile(r"^-?(?:0|[1-9]\d*)$")
+_INT64_MIN = -(2 ** 63)
+_INT64_MAX = 2 ** 63 - 1
 _EPOCH = pd.Timestamp("1970-01-01T00:00:00Z")
+
+
+def _parse_canonical_integer(text: str):
+    """Parses text only when it is the canonical form of a 64-bit integer."""
+    if not _CANONICAL_INTEGER_RE.match(text):
+        return None
+    parsed = int(text)
+    if parsed < _INT64_MIN or parsed > _INT64_MAX:
+        return None
+    return parsed
+
+
+def _parse_canonical_float(text: str):
+    """Parses text only when it round-trips through an IEEE 754 double."""
+    try:
+        parsed = float(text)
+    except ValueError:
+        return None
+    if not math.isfinite(parsed):
+        return None
+    if repr(parsed) == text:
+        return parsed
+    integer = _parse_canonical_integer(text)
+    if integer is not None and float(integer) == integer:
+        return float(integer)
+    return None
 
 
 def _parse_timestamp(value, strip_whitespace=True):
@@ -259,8 +316,11 @@ def _try_parse_integer(values):
             return None
         if isinstance(value, int):
             parsed.append(value)
-        elif isinstance(value, str) and _INTEGER_RE.match(value):
-            parsed.append(int(value))
+        elif isinstance(value, str):
+            parsed_value = _parse_canonical_integer(value)
+            if parsed_value is None:
+                return None
+            parsed.append(parsed_value)
         else:
             return None
     return parsed
@@ -273,8 +333,10 @@ def _try_parse_float(values):
             return None
         if isinstance(value, (int, float)) and not isinstance(value, bool):
             parsed_value = float(value)
-        elif isinstance(value, str) and _FLOAT_RE.match(value):
-            parsed_value = float(value)
+        elif isinstance(value, str):
+            parsed_value = _parse_canonical_float(value)
+            if parsed_value is None:
+                return None
         else:
             return None
         if not math.isfinite(parsed_value):
@@ -547,7 +609,7 @@ def apply(
     relation_keys = set()
     o2o_keys = set()
 
-    records = table.to_dict("records")
+    records = table.to_dict(orient="records")
     object_type_column_pairs = [
         (column, str(column)[len(object_type_prefix):]) for column in object_type_columns
     ]

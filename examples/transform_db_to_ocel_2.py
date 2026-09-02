@@ -15,9 +15,9 @@ from typing import Iterator
 def execute_script():
     conn = sqlite3.connect("../tests/input_data/db/northwind.sqlite")
     employees: DataFrame | Iterator[DataFrame] = pd.read_sql("SELECT EmployeeID, BirthDate, HireDate FROM Employees", conn)
-    employees = employees.to_dict("records")
+    employees = employees.to_dict(orient="records")
     orders: DataFrame | Iterator[DataFrame] = pd.read_sql("SELECT OrderID, CustomerID, EmployeeID, OrderDate, RequiredDate, ShippedDate FROM Orders", conn)
-    orders = orders.to_dict("records")
+    orders = orders.to_dict(orient="records")
 
     events = []
     relations = []

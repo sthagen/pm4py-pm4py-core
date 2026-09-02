@@ -3,6 +3,7 @@ import io
 import os
 import tempfile
 import unittest
+import warnings
 from unittest import mock
 
 import numpy as np
@@ -375,9 +376,11 @@ class SerializationLogUtilsCoverageTest(unittest.TestCase):
         )
         self.assertEqual(pandas_utils.get_attribute_values_count(valid, self.activity)["a"], 2)
         self.assertEqual(pandas_utils.df_row_count(valid), 3)
-        pivot = pandas_utils.get_pivot_timestamp_distribution(
-            valid.copy(), frequency_alias="D"
-        )
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", UserWarning)
+            pivot = pandas_utils.get_pivot_timestamp_distribution(
+                valid.copy(), frequency_alias="D"
+            )
         self.assertIn("@@evcount_2024-01-01", pivot)
 
         try:

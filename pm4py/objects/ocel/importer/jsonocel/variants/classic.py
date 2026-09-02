@@ -189,7 +189,7 @@ def get_base_ocel(json_obj: Any, parameters: Optional[Dict[Any, Any]] = None):
             timest_format=pm4_constants.DEFAULT_XES_TIMESTAMP_PARSE_FORMAT,
             timest_columns=[event_timestamp],
         )
-        obj_id_map = objects[[object_id, object_type]].to_dict("records")
+        obj_id_map = objects[[object_id, object_type]].to_dict(orient="records")
         obj_id_map = {x[object_id]: x[object_type] for x in obj_id_map}
         object_changes[object_type] = object_changes[object_id].map(obj_id_map)
 

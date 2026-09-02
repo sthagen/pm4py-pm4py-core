@@ -89,7 +89,7 @@ def apply(
 
     obj_type_map = ocel.objects[
         [ocel.object_id_column, ocel.object_type_column]
-    ].to_dict("records")
+    ].to_dict(orient="records")
     obj_type_map = {
         x[ocel.object_id_column]: x[ocel.object_type_column]
         for x in obj_type_map

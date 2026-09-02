@@ -1,5 +1,6 @@
 import os
 import unittest
+import warnings
 import pandas as pd
 
 from pm4py.algo.filtering.pandas.attributes import attributes_filter
@@ -16,6 +17,22 @@ from pm4py.util import constants, pandas_utils
 
 
 class DataframePrefilteringTest(unittest.TestCase):
+    def test_filter_on_case_size_does_not_reindex_mask(self):
+        dataframe = pd.DataFrame(
+            {"case": ["c1", "c2", "c2", "c3", "c3", "c3"]}
+        )
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", UserWarning)
+            filtered = case_filter.filter_on_case_size(
+                dataframe,
+                case_id_glue="case",
+                min_case_size=2,
+                max_case_size=2,
+            )
+
+        self.assertEqual(filtered["case"].tolist(), ["c2", "c2"])
+
     def test_prefiltering_dataframe(self):
         # to avoid static method warnings in tests,
         # that by construction of the unittest package have to be expressed in such way

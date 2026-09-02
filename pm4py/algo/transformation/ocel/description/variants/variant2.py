@@ -57,16 +57,16 @@ def apply(
 
     object_ots = ocel.objects[
         [ocel.object_id_column, ocel.object_type_column]
-    ].to_dict("records")
+    ].to_dict(orient="records")
     object_ots = {
         x[ocel.object_id_column]: x[ocel.object_type_column]
         for x in object_ots
     }
     events = ocel.events.sort_values(
         [ocel.event_timestamp, ocel.event_activity, ocel.event_id_column]
-    ).to_dict("records")
+    ).to_dict(orient="records")
     objects = ocel.objects.sort_values(ocel.object_id_column).to_dict(
-        "records"
+        orient="records"
     )
     relations = ocel.relations.sort_values(
         [

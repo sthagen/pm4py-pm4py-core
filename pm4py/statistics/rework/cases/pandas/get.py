@@ -70,7 +70,7 @@ def apply(
         df.groupby(case_id_key)[activity_key]
         .agg(["count", "nunique"])
         .reset_index()
-        .to_dict("records")
+        .to_dict(orient="records")
     )
     rework_cases = {}
     for el in grouped_df:

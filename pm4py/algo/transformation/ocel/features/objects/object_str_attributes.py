@@ -73,7 +73,7 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
             objects_attr_not_na = (
                 ocel.objects[[ocel.object_id_column, attr]]
                 .dropna(subset=[attr])
-                .to_dict("records")
+                .to_dict(orient="records")
             )
             if objects_attr_not_na:
                 objects_attr_not_na = {

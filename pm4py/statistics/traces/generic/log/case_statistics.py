@@ -54,6 +54,7 @@ class Parameters(Enum):
     WORKCALENDAR = "workcalendar"
 
     INDEXED_LOG = "indexed_log"
+    BW_METHOD = "bw_method"
 
 
 def get_variant_statistics(
@@ -420,6 +421,7 @@ def get_kde_caseduration(log, parameters=None):
     parameters
         Possible parameters of the algorithm, including:
             Parameters.GRAPH_POINTS -> number of points to include in the graph
+            Parameters.BW_METHOD -> bandwidth method passed to scipy.stats.gaussian_kde
 
     Returns
     --------------
@@ -451,6 +453,7 @@ def get_kde_caseduration_json(log, parameters=None):
         Possible parameters of the algorithm, including:
             Parameters.GRAPH_POINTS -> number of points to include in the graph
             Parameters.CASE_ID_KEY -> Column hosting the Case ID
+            Parameters.BW_METHOD -> bandwidth method passed to scipy.stats.gaussian_kde
 
     Returns
     --------------

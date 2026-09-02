@@ -66,13 +66,13 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
 
     G = nx_utils.MultiDiGraph()
 
-    stream = ocel.events.to_dict("records")
+    stream = ocel.events.to_dict(orient="records")
     stream = to_event_stream.__postprocess_stream(stream)
     for ev in stream:
         ev["type"] = "EVENT"
         G.add_node(ev[ocel.event_id_column], attr=ev)
 
-    stream = ocel.objects.to_dict("records")
+    stream = ocel.objects.to_dict(orient="records")
     stream = to_event_stream.__postprocess_stream(stream)
     for obj in stream:
         obj["type"] = "OBJECT"
@@ -81,7 +81,7 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     rel_cols = {ocel.event_id_column, ocel.object_id_column, ocel.qualifier}
 
     relations = ocel.relations[list(rel_cols)]
-    stream = relations.to_dict("records")
+    stream = relations.to_dict(orient="records")
     for rel in stream:
         qualifier = rel[ocel.qualifier]
         if qualifier is None:
@@ -95,7 +95,7 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     obj_relations = ocel.o2o[
         [ocel.object_id_column, ocel.object_id_column + "_2", ocel.qualifier]
     ]
-    stream = obj_relations.to_dict("records")
+    stream = obj_relations.to_dict(orient="records")
     for rel in stream:
         qualifier = rel[ocel.qualifier]
         if qualifier is None:
@@ -120,7 +120,7 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
                 )
 
     if include_object_changes:
-        object_changes = ocel.object_changes.to_dict("records")
+        object_changes = ocel.object_changes.to_dict(orient="records")
         for i in range(len(object_changes)):
             change_id = "@@change##%d" % i
             change_dict = copy(object_changes[i])

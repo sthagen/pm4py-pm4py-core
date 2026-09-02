@@ -98,7 +98,7 @@ def apply(exploded_ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
             exploded_ocel.event_activity,
             exploded_ocel.event_timestamp,
         ]
-    ].to_dict("records")
+    ].to_dict(orient="records")
     all_activities = set()
     evid_act_map = {}
     evid_timest_map = {}

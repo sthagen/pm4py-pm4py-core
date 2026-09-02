@@ -60,7 +60,7 @@ def to_dict_records(df):
     if is_polars_lazyframe(df):
         return df.collect().to_dicts()
 
-    return df.to_dict("records")
+    return df.to_dict(orient="records")
 
 
 def to_dict_index(df):
@@ -84,7 +84,7 @@ def to_dict_index(df):
             for idx, row in enumerate(collected_df.iter_rows(named=True))
         }
 
-    return df.to_dict("index")
+    return df.to_dict(orient="index")
 
 
 def insert_index(
@@ -943,7 +943,10 @@ def get_pivot_timestamp_distribution(
 
     """
     # Create column for binning
-    dataframe["@@binning"] = dataframe[timestamp_col].dt.to_period(frequency_alias).astype(str)
+    timestamps_without_timezone = dataframe[timestamp_col].dt.tz_localize(None)
+    dataframe["@@binning"] = timestamps_without_timezone.dt.to_period(
+        frequency_alias
+    ).astype(str)
 
     # Pivot table: cases as rows, yearmonths as columns, counts as values
     pivot = dataframe.pivot_table(

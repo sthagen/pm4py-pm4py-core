@@ -524,7 +524,7 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
     if filter_per_type is not None:
         object_type = ocel.objects[
             [ocel.object_id_column, ocel.object_type_column]
-        ].to_dict("records")
+        ].to_dict(orient="records")
         object_type = {
             x[ocel.object_id_column]: x[ocel.object_type_column]
             for x in object_type

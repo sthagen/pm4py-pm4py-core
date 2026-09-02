@@ -241,7 +241,7 @@ def get_ocel_from_extended_table(
         chunk = filtered_df.iloc[chunk_start:chunk_end]
 
         # Convert small chunk to records for faster processing
-        chunk_records = chunk.to_dict('records')
+        chunk_records = chunk.to_dict(orient='records')
 
         # Create chunk-specific temporary lists
         chunk_ev_ids = []

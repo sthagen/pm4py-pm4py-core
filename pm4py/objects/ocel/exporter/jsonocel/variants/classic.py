@@ -102,7 +102,7 @@ def get_base_json_object(
     base_object[constants.OCEL_EVENTS_KEY] = {}
     base_object[constants.OCEL_OBJECTS_KEY] = {}
 
-    events_items = events_items.to_dict("records")
+    events_items = events_items.to_dict(orient="records")
     i = 0
     while i < len(events_items):
         event = events_items[i]
@@ -125,7 +125,7 @@ def get_base_json_object(
         i = i + 1
     del events_items
 
-    objects_items = objects_items.to_dict("records")
+    objects_items = objects_items.to_dict(orient="records")
     i = 0
     while i < len(objects_items):
         object = objects_items[i]

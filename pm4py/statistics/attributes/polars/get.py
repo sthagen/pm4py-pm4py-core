@@ -38,6 +38,7 @@ class Parameters(Enum):
     CASE_ID_KEY = constants.PARAMETER_CONSTANT_CASEID_KEY
     MAX_NO_POINTS_SAMPLE = "max_no_of_points_to_sample"
     KEEP_ONCE_PER_CASE = "keep_once_per_case"
+    BW_METHOD = "bw_method"
 
 
 def __add_left_0(stri: str, target_length: int) -> str:
@@ -219,6 +220,7 @@ def get_kde_numeric_attribute(
     parameters
         Possible parameters of the algorithm, including:
             graph_points -> number of points to include in the graph
+            bw_method -> bandwidth method passed to scipy.stats.gaussian_kde
 
 
     Returns
@@ -263,6 +265,7 @@ def get_kde_numeric_attribute_json(lf, attribute, parameters=None):
     parameters
         Possible parameters of the algorithm, including:
             graph_points -> number of points to include in the graph
+            bw_method -> bandwidth method passed to scipy.stats.gaussian_kde
 
     Returns
     --------------
@@ -291,6 +294,7 @@ def get_kde_date_attribute(
     parameters
         Possible parameters of the algorithm, including:
             graph_points -> number of points to include in the graph
+            bw_method -> bandwidth method passed to scipy.stats.gaussian_kde
 
 
     Returns
@@ -337,6 +341,7 @@ def get_kde_date_attribute_json(
     parameters
         Possible parameters of the algorithm, including:
             graph_points -> number of points to include in the graph
+            bw_method -> bandwidth method passed to scipy.stats.gaussian_kde
 
     Returns
     --------------

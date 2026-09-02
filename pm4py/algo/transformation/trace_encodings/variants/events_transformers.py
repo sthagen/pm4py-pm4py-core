@@ -99,7 +99,7 @@ def apply(log: pd.DataFrame, parameters: Optional[Dict[Any, Any]] = None) -> Tup
     from sentence_transformers import SentenceTransformer
     model = SentenceTransformer(embedding_model)
 
-    log = log[[event_id_key] + event_attributes].to_dict("records")
+    log = log[[event_id_key] + event_attributes].to_dict(orient="records")
 
     for entry in log:
         event_identifiers.append(entry[event_id_key])

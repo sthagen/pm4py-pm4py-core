@@ -98,9 +98,10 @@ def filter_on_case_size(
     element_group_size = (
         df[[case_id_glue]].groupby(case_id_glue).transform("size")
     )
-    df = df[element_group_size >= min_case_size]
+    size_filter = element_group_size >= min_case_size
     if max_case_size is not None:
-        df = df[element_group_size <= max_case_size]
+        size_filter &= element_group_size <= max_case_size
+    df = df[size_filter]
     df.attrs = copy(df0.attrs) if hasattr(df0, "attrs") else {}
     return df
 

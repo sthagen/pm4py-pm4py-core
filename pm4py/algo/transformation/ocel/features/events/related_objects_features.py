@@ -64,7 +64,7 @@ def apply(ocel: OCEL, parameters: Optional[Dict[Any, Any]] = None):
 
     stream = ocel.relations[
         [ocel.event_id_column, ocel.object_id_column]
-    ].to_dict("records")
+    ].to_dict(orient="records")
     ev_rel_objs = {}
 
     for cou in stream:

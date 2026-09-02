@@ -102,7 +102,7 @@ def apply(
         position_activity = position_activity.last()
     position_activity = position_activity.reset_index()[
         [case_id_key, index_in_trace_key]
-    ].to_dict("records")
+    ].to_dict(orient="records")
     position_activity = {
         x[case_id_key]: x[index_in_trace_key] for x in position_activity
     }
